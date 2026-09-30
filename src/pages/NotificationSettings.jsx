@@ -6,7 +6,7 @@ import { Utils } from '../common/utils';
 import { showSuccessToast } from '../config/key';
 import { requireAuth } from '../services/guestAuth';
 import { Disclaimer, Skeleton, SkeletonText } from '../components/ui';
-import '../design/pages/notification-settings.css';
+// import '../design/pages/notification-settings.css';
 
 const NOTIFICATION_TYPES = [
   {

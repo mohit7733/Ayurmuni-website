@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import AppShell from '../components/AppShell';
-import { Images } from '../common/images';
+import dietCoverImg from '/images/login/14.jpg';
 import useDietPlans from '../diet/useDietPlans';
 
 const DEMO_MEALS = [
@@ -189,7 +189,7 @@ export default function WeeklyMeal() {
                     className="weekly-meal-card"
                     onClick={item.raw ? () => openMeal(item) : undefined}
                   >
-                    <img src={item.image || Images.journeyDiet} alt="" />
+                    <img src={item.image || dietCoverImg} alt="" />
                     <div>
                       <div className="weekly-meal-top">
                         <small>{item.type}</small>

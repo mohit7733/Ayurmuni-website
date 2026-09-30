@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Bell, Menu, Search, ShoppingBag, UserRound, X } from 'lucide-react';
-import { Images } from '../common/images';
+import logoImg from '/greenlogo.png';
 import { Utils } from '../common/utils';
 import { useCart } from '../hooks/useCart';
 import { useUnreadNotificationCount } from '../hooks/useNotifications';
@@ -72,7 +72,7 @@ export default function SiteHeader() {
     <header className={`site-header ${menuOpen ? 'is-menu-open' : ''}`}>
       <div className="site-header-inner">
         <Link to="/home" className="site-brand" aria-label="Ayurmuni home">
-          <img src={Images.FinalLogo2} alt="Ayurmuni" width="176" height="44" />
+          <img src={logoImg} alt="Ayurmuni" width="176" height="44" />
         </Link>
 
         <nav className="site-nav" aria-label="Primary">

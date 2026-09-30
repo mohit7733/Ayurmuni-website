@@ -1,7 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { Images } from '../common/images';
+import consultImg from '/images/login/10.png';
+import medicineImg from '/images/login/9.png';
+import deliveryImg from '/images/login/delivery.png';
+import dietImg from '/images/login/14.jpg';
+import yogaImg from '/images/login/8.png';
+import login11Img from '/images/login/11.png';
+import login12Img from '/images/login/12.png';
+import login13Img from '/images/login/13.png';
+import logoImg from '/greenlogo.png';
 import { Utils } from '../common/utils';
 import { showSuccessToast } from '../config/key';
 import MarqueeCollage from '../components/MarqueeCollage';
@@ -19,35 +27,17 @@ const COLUMNS = [
   {
     id: 'left',
     direction: 'up',
-    images: [
-      Images.journeyConsult,
-      Images.journeyMedicine,
-      Images.journeyDelivery,
-      Images.journeyConsult,
-      Images.journeyMedicine,
-    ],
+    images: [consultImg, medicineImg, deliveryImg, consultImg, medicineImg],
   },
   {
     id: 'center',
     direction: 'down',
-    images: [
-      Images.journeyDiet,
-      Images.journeyYoga,
-      Images.login11,
-      Images.journeyDiet,
-      Images.journeyYoga,
-    ],
+    images: [dietImg, yogaImg, login11Img, dietImg, yogaImg],
   },
   {
     id: 'right',
     direction: 'up',
-    images: [
-      Images.login12,
-      Images.login13,
-      Images.journeyDelivery,
-      Images.journeyConsult,
-      Images.journeyYoga,
-    ],
+    images: [login12Img, login13Img, deliveryImg, consultImg, yogaImg],
   },
 ];
 
@@ -314,7 +304,7 @@ export default function OtpVerify() {
 
   return (
     <section className="au-page au-auth">
-      <MarqueeCollage columns={COLUMNS} logo={Images.FinalLogo2} hint={T.brandHint} />
+      <MarqueeCollage columns={COLUMNS} logo={logoImg} hint={T.brandHint} />
       <div className="au-sheet">
         <div className="au-sheet__handle" aria-hidden />
         <p className="au-kicker">{T.otpKicker}</p>

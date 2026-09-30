@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import AppShell from '../components/AppShell';
-import { Images } from '../common/images';
+import yogaPosterImg from '/images/login/8.png';
 import { getYogaSession } from '../services/yogaService';
 import {
   itemMatchesHealthConcern,
@@ -15,7 +15,7 @@ function YogaListThumb({ item }) {
   const videoUri = resolveYogaVideoUri(item);
   const thumbUri = resolveYogaThumbnailUri(item);
   const [failed, setFailed] = useState(false);
-  const poster = thumbUri || Images.journeyYoga;
+  const poster = thumbUri || yogaPosterImg;
 
   if (!videoUri || failed) {
     return (

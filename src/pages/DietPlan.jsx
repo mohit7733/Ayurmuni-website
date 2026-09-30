@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import AppShell from '../components/AppShell';
-import { Images } from '../common/images';
+import dietCoverImg from '/images/login/14.jpg';
 import { formatRupee } from '../home/catalog';
 import { showSuccessToast } from '../config/key';
 import useDietPlans from '../diet/useDietPlans';
@@ -70,7 +70,7 @@ export default function DietPlan() {
     const day = getPlanJsonDays(planDetail)[0] || 'day_1';
     return mapPlanJsonMeals(planDetail, day, []);
   }, [isStarted, meals, planDetail]);
-  const cover = gallery[galleryIndex]?.image_url || gallery[0]?.image_url || Images.journeyDiet;
+  const cover = gallery[galleryIndex]?.image_url || gallery[0]?.image_url || dietCoverImg;
   const rating = getDietPlanRatingLabel(plan);
   const price =
     plan?.is_paid === false || Number(plan?.price) === 0 ? 'Free' : formatRupee(plan?.price);
@@ -269,7 +269,7 @@ export default function DietPlan() {
                       className={`diet-meal ${meal.status === 'done' ? 'done' : ''}`}
                       onClick={() => navigate(`/diet/${planId}/meals/${meal.id}`, { state: { meal, planId } })}
                     >
-                      <img src={meal.image || Images.journeyDiet} alt="" />
+                      <img src={meal.image || dietCoverImg} alt="" />
                       <div>
                         <small>{meal.type}</small>
                         <strong>{meal.title}</strong>
@@ -294,7 +294,7 @@ export default function DietPlan() {
                           navigate(`/diet/${planId}/meals/${meal.id}`, { state: { meal, planId } })
                         }
                       >
-                        <img src={meal.image || Images.journeyDiet} alt="" />
+                        <img src={meal.image || dietCoverImg} alt="" />
                         <div>
                           <small>{meal.type}</small>
                           <strong>{meal.title}</strong>

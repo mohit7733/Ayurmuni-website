@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import AppShell from '../components/AppShell';
-import { Images } from '../common/images';
+import dietCoverImg from '/images/login/14.jpg';
 import { requireAuth } from '../services/guestAuth';
 import { updateDietPlanProgress } from '../services/dietService';
 import { nowIso } from '../diet/utils';
@@ -84,7 +84,7 @@ export default function MealDetails() {
         </header>
 
         <div className="diet-hero">
-          <img src={item.image || Images.journeyDiet} alt="" />
+          <img src={item.image || dietCoverImg} alt="" />
         </div>
 
         <div className="diet-nutrition">

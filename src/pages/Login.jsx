@@ -1,7 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Check } from 'lucide-react';
-import { Images } from '../common/images';
+import consultImg from '/images/login/10.png';
+import medicineImg from '/images/login/9.png';
+import deliveryImg from '/images/login/delivery.png';
+import dietImg from '/images/login/14.jpg';
+import yogaImg from '/images/login/8.png';
+import login2Img from '/images/login/2.png';
+import login11Img from '/images/login/11.png';
+import login12Img from '/images/login/12.png';
+import login13Img from '/images/login/13.png';
+import logoImg from '/greenlogo.png';
 import { Utils } from '../common/utils';
 import { showSuccessToast } from '../config/key';
 import MarqueeCollage from '../components/MarqueeCollage';
@@ -23,23 +32,17 @@ const COLUMNS = [
   {
     id: 'left',
     direction: 'up',
-    images: [
-      Images.journeyConsult,
-      Images.journeyMedicine,
-      Images.journeyDelivery,
-      Images.journeyDiet,
-      Images.journeyYoga,
-    ],
+    images: [consultImg, medicineImg, deliveryImg, dietImg, yogaImg],
   },
   {
     id: 'center',
     direction: 'down',
-    images: [Images.login11, Images.login12, Images.login13, Images.login2, Images.login10],
+    images: [login11Img, login12Img, login13Img, login2Img, consultImg],
   },
   {
     id: 'right',
     direction: 'up',
-    images: [Images.login8, Images.login14, Images.journeyConsult, Images.journeyDiet, Images.login11],
+    images: [yogaImg, dietImg, consultImg, dietImg, login11Img],
   },
 ];
 
@@ -184,7 +187,7 @@ export default function Login() {
 
   return (
     <section className="au-page au-auth">
-      <MarqueeCollage columns={COLUMNS} logo={Images.FinalLogo2} hint={T.brandHint} />
+      <MarqueeCollage columns={COLUMNS} logo={logoImg} hint={T.brandHint} />
       <div className="au-sheet">
         <div className="au-sheet__handle" aria-hidden />
         <p className="au-kicker">{T.loginKicker}</p>

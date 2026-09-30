@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Images } from '../common/images';
+import leaf1Img from '/images/leaf1.png';
+import leaf2Img from '/images/leaf2.png';
+import logoImg from '/greenlogo.png';
 import { Utils } from '../common/utils';
 import * as ProfileServices from '../services/profileService';
 import {
@@ -86,8 +88,8 @@ export default function Splash() {
 
   return (
     <section className="sx-splash" aria-busy="true" aria-label={T.splashPrep}>
-      <img className="sx-splash__leaf sx-splash__leaf--tl" src={Images.leaf1} alt="" />
-      <img className="sx-splash__leaf sx-splash__leaf--br" src={Images.leaf2} alt="" />
+      <img className="sx-splash__leaf sx-splash__leaf--tl" src={leaf1Img} alt="" />
+      <img className="sx-splash__leaf sx-splash__leaf--br" src={leaf2Img} alt="" />
 
       <div className="sx-splash__layout">
         <div>
@@ -104,7 +106,7 @@ export default function Splash() {
         <div className="sx-splash__logo-wrap">
           <div className="sx-splash__pulse" aria-hidden />
           <div className="sx-splash__logo">
-            <img src={Images.FinalLogo2} alt="Ayurmuni" />
+            <img src={logoImg} alt="Ayurmuni" />
           </div>
         </div>
       </div>

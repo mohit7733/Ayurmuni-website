@@ -12,11 +12,6 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
-    resolve: {
-      alias: {
-        '@app-assets': path.resolve(__dirname, '../src/assets'),
-      },
-    },
     server: {
       port: 5173,
       proxy: {

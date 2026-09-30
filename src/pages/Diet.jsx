@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import AppShell from '../components/AppShell';
-import { Images } from '../common/images';
+import dietCoverImg from '/images/login/14.jpg';
 import { formatRupee } from '../home/catalog';
 import useDietPlans from '../diet/useDietPlans';
 import {
@@ -146,7 +146,7 @@ export default function Diet() {
         ) : (
           <div className="diet-grid">
             {visible.map((item) => {
-              const cover = getDietPlanCoverUrl(item) || Images.journeyDiet;
+              const cover = getDietPlanCoverUrl(item) || dietCoverImg;
               const rating = getDietPlanRatingLabel(item);
               const status = statusLabel(item);
               const price =

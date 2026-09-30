@@ -1,4 +1,5 @@
-import { Images } from '../common/images';
+import yesHumanImg from '/images/Yes.png';
+import noHumanImg from '/images/No.png';
 import { DOSHA } from './configs';
 import { computeDoshaScores, dominantDosha } from './doshaScoreUtils';
 import { getStepKey } from './utils';
@@ -41,10 +42,10 @@ export default function QuestLayout({ flow, onExit }) {
 
   const resolveImage = (item) => {
     if (currentStep?.key === 'knowPrakriti' && item?.value === 'Yes') {
-      return Images.yesHuman;
+      return yesHumanImg;
     }
     if (currentStep?.key === 'knowPrakriti' && item?.value === 'No') {
-      return Images.noHuman;
+      return noHumanImg;
     }
     return item?.image_path || '';
   };

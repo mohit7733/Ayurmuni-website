@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import AppShell from '../components/AppShell';
 import ShareButton from '../components/ShareButton';
-import { Images } from '../common/images';
+import yogaPosterImg from '/images/login/8.png';
 import { getYogaSessionDetail } from '../services/yogaService';
 import {
   getYogaInstructor,
@@ -55,7 +55,7 @@ export default function YogaSession() {
 
   const videoUri = useMemo(() => resolveYogaVideoUri(session), [session]);
   const posterUri = useMemo(
-    () => resolveYogaThumbnailUri(session) || Images.journeyYoga,
+    () => resolveYogaThumbnailUri(session) || yogaPosterImg,
     [session],
   );
   const breakdown = useMemo(() => getYogaSessionBreakdown(session), [session]);

@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { Images, Videos } from '../common/images';
+import consultImg from '/images/login/10.png';
+import medicineImg from '/images/login/9.png';
+import deliveryImg from '/images/login/delivery.png';
+import dietImg from '/images/login/14.jpg';
+import yogaImg from '/images/login/8.png';
+import logoImg from '/greenlogo.png';
+import welcomeVideo from '/videos/welcome.mp4';
 import { Button } from '../components/ui';
 import { AUTH_COPY as T } from '../content/auth';
 import '../design/pages/auth.css';
@@ -9,11 +15,11 @@ import '../design/pages/auth.css';
 const IMAGE_AUTO_MS = 4200;
 
 const STORY_SOURCES = {
-  consult: Images.journeyConsult,
-  medicine: Images.journeyMedicine,
-  delivery: Images.journeyDelivery,
-  lifestyle: Images.journeyDiet,
-  transform: Images.journeyYoga,
+  consult: consultImg,
+  medicine: medicineImg,
+  delivery: deliveryImg,
+  lifestyle: dietImg,
+  transform: yogaImg,
 };
 
 export default function Welcome() {
@@ -75,7 +81,7 @@ export default function Welcome() {
               {item.kind === 'video' && !videoFailed ? (
                 <video
                   key={`welcome-video-${videoKey}`}
-                  src={Videos.welcome}
+                  src={welcomeVideo}
                   autoPlay
                   muted
                   playsInline
@@ -84,7 +90,7 @@ export default function Welcome() {
                 />
               ) : (
                 <img
-                  src={STORY_SOURCES[item.key] || Images.journeyConsult}
+                  src={STORY_SOURCES[item.key] || consultImg}
                   alt={item.title}
                 />
               )}
@@ -97,7 +103,7 @@ export default function Welcome() {
       <div className="au-welcome__panel">
         <div className="au-welcome__brand">
           <div className="au-welcome__logo">
-            <img src={Images.FinalLogo2} alt="" />
+            <img src={logoImg} alt="" />
           </div>
           <div>
             <strong>{T.brand}</strong>

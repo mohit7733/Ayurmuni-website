@@ -1,28 +1,73 @@
 /* Auth flow (au-*) — welcome, login, otp, access, policy */
 
 .au-page {
+  --au-sheet-radius: 20px;
   display: flex;
   flex-direction: column;
   width: 100%;
-  min-height: calc(100dvh - var(--am-header-h, 64px) - 80px);
+  min-height: calc(100dvh - var(--am-header-h));
+}
+
+body:has(.auth-shell .au-welcome),
+body:has(.auth-shell .au-auth),
+html:has(.auth-shell .au-welcome),
+html:has(.auth-shell .au-auth),
+html:has(.auth-shell .au-welcome) #root,
+html:has(.auth-shell .au-auth) #root {
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+.auth-shell:has(.au-welcome),
+.auth-shell:has(.au-auth) {
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+.auth-shell:has(.au-welcome) .app-shell-body,
+.auth-shell:has(.au-auth) .app-shell-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.au-page.au-welcome,
+.au-page.au-auth {
+  flex: 1 1 0;
+  min-height: 0;
+  height: auto;
+  overflow: hidden;
 }
 
 /* —— Welcome —— */
 .au-welcome {
-  display: grid;
-  grid-template-rows: minmax(32vh, 1fr) auto;
-  min-height: inherit;
-  background: var(--am-surface);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  grid-template-columns: none;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--am-green-900);
 }
 
 .au-welcome__media {
-  position: relative;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
-  background: var(--am-ink-900, #13231e);
+  background: var(--am-green-900);
 }
 
 .au-welcome__track {
   display: flex;
+  width: 100%;
   height: 100%;
   transition: transform 0.45s var(--am-ease-standard);
 }
@@ -30,6 +75,7 @@
 .au-welcome__slide {
   position: relative;
   flex: 0 0 100%;
+  width: 100%;
   height: 100%;
 }
 
@@ -38,6 +84,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
 }
 
 .au-welcome__fade {
@@ -45,18 +92,27 @@
   inset: 0;
   background: linear-gradient(
     180deg,
-    transparent 40%,
-    color-mix(in srgb, var(--am-ink-900, #13231e) 55%, transparent) 100%
+    color-mix(in srgb, var(--am-green-900) 22%, transparent) 0%,
+    transparent 38%,
+    color-mix(in srgb, var(--am-green-900) 72%, transparent) 100%
   );
   pointer-events: none;
 }
 
 .au-welcome__panel {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   gap: var(--am-space-3);
-  padding: var(--am-space-3) var(--am-gutter) var(--am-space-4);
-  background: var(--am-surface);
+  width: 100%;
+  max-height: 52dvh;
+  overflow-y: auto;
+  padding: var(--am-space-4) var(--am-gutter) var(--am-space-5);
+  border-top: 1px solid color-mix(in srgb, #fff 18%, transparent);
+  background: color-mix(in srgb, var(--am-surface) 94%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .au-welcome__brand {
@@ -68,9 +124,10 @@
 .au-welcome__logo {
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   overflow: hidden;
+  border: 1px solid var(--am-line);
   border-radius: var(--am-radius-md);
   background: var(--am-primary-soft);
 }
@@ -85,7 +142,7 @@
   display: block;
   font-family: var(--am-font-display);
   font-size: var(--am-text-lg);
-  letter-spacing: 0.04em;
+  letter-spacing: var(--am-tracking-display);
 }
 
 .au-welcome__brand span {
@@ -95,24 +152,25 @@
 
 .au-welcome__kicker {
   margin: 0 0 var(--am-space-2);
-  color: var(--am-primary);
+  color: var(--am-accent-strong);
   font-size: var(--am-text-xs);
   font-weight: var(--am-weight-semibold);
-  letter-spacing: 0.08em;
+  letter-spacing: var(--am-tracking-caps);
   text-transform: uppercase;
 }
 
 .au-welcome__copy h2 {
   margin: 0 0 var(--am-space-2);
+  font-family: var(--am-font-display);
   font-size: var(--am-text-2xl);
   line-height: var(--am-leading-tight);
 }
 
 .au-welcome__copy > p:not(.au-welcome__kicker) {
-  margin: 0 0 var(--am-space-2);
+  margin: 0 0 var(--am-space-3);
   color: var(--am-text-soft);
   font-size: var(--am-text-sm);
-  line-height: var(--am-leading-relaxed);
+  line-height: var(--am-leading-normal);
 }
 
 .au-welcome__progress {
@@ -122,63 +180,121 @@
 }
 
 .au-welcome__progress button {
+  position: relative;
   flex: 1 1 auto;
-  min-height: 36px;
-  height: 36px;
-  padding: 16px 0;
+  height: 3px;
+  padding: 0;
   border: 0;
   border-radius: 999px;
   background: var(--am-line);
-  background-clip: content-box;
   cursor: pointer;
+}
+
+.au-welcome__progress button::before {
+  content: '';
+  position: absolute;
+  inset: -16px 0;
 }
 
 .au-welcome__progress button.is-on {
   background: var(--am-primary);
 }
 
+.au-welcome .am-btn--block {
+  min-height: 44px;
+}
+
 /* —— Login / OTP sheet over collage —— */
 .au-auth {
   position: relative;
-  display: grid;
-  grid-template-rows: minmax(28vh, 1fr) auto;
-  min-height: inherit;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  grid-template-columns: none;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--am-green-900);
 }
 
 .au-auth .collage {
-  min-height: 28vh;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  pointer-events: none;
+}
+
+.au-auth .collage-row {
+  display: flex;
+  min-height: 0;
+  height: 100%;
+  padding: 8px;
+  gap: 8px;
+}
+
+.au-auth .marquee {
+  min-height: 0;
+  height: 100%;
+}
+
+.au-auth .marquee img {
+  height: 28vh;
+  max-height: none;
+}
+
+.au-auth .collage-overlay {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--am-green-900) 28%, transparent) 0%,
+    transparent 42%,
+    color-mix(in srgb, var(--am-green-900) 55%, var(--am-surface) 45%) 100%
+  );
+}
+
+.au-auth .collage-logo {
+  z-index: 1;
 }
 
 .au-sheet {
   position: relative;
-  z-index: 1;
-  margin-top: -16px;
-  padding: var(--am-space-3) var(--am-gutter) var(--am-space-4);
-  border-radius: var(--am-radius-xl) var(--am-radius-xl) 0 0;
-  background: var(--am-surface);
+  z-index: 2;
+  width: 100%;
+  max-height: 58dvh;
+  overflow-y: auto;
+  margin: 0;
+  padding: var(--am-space-4) var(--am-gutter) var(--am-space-5);
+  border: 1px solid color-mix(in srgb, #fff 16%, transparent);
+  border-bottom: 0;
+  border-radius: var(--au-sheet-radius) var(--au-sheet-radius) 0 0;
+  background: color-mix(in srgb, var(--am-surface) 94%, transparent);
   box-shadow: var(--am-shadow-sm);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .au-sheet__handle {
-  width: 40px;
+  width: 36px;
   height: 4px;
-  margin: 0 auto var(--am-space-2);
+  margin: 0 auto var(--am-space-4);
   border-radius: 999px;
-  background: var(--am-line);
+  background: var(--am-line-strong);
 }
 
 .au-kicker {
   margin: 0 0 var(--am-space-2);
-  color: var(--am-primary);
+  color: var(--am-accent-strong);
   font-size: var(--am-text-xs);
   font-weight: var(--am-weight-semibold);
-  letter-spacing: 0.08em;
+  letter-spacing: var(--am-tracking-caps);
   text-transform: uppercase;
 }
 
 .au-headline {
   margin: 0 0 var(--am-space-2);
-  min-height: 2.6em;
+  min-height: 2.4em;
+  font-family: var(--am-font-display);
   font-size: var(--am-text-xl);
   line-height: var(--am-leading-snug);
 }
@@ -186,7 +302,7 @@
 .au-dots {
   display: flex;
   gap: 6px;
-  margin-bottom: var(--am-space-3);
+  margin-bottom: var(--am-space-4);
 }
 
 .au-dots i {
@@ -211,28 +327,30 @@
   display: flex;
   align-items: center;
   gap: var(--am-space-2);
-  min-height: 36px;
-  margin-bottom: var(--am-space-3);
-  padding: 0 var(--am-space-2);
-  border: 1px solid var(--am-line);
-  border-radius: var(--am-radius-lg);
+  min-height: 44px;
+  margin-bottom: var(--am-space-4);
+  padding: 0 var(--am-space-2) 0 var(--am-space-3);
+  border: 1px solid var(--am-border-input);
+  border-radius: var(--am-radius-md);
   background: var(--am-surface);
+  box-shadow: var(--am-shadow-xs);
   transition: border-color var(--am-dur-fast) var(--am-ease-standard),
     box-shadow var(--am-dur-fast) var(--am-ease-standard);
 }
 
 .au-phone.is-focus {
   border-color: var(--am-primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--am-primary) 18%, transparent);
+  box-shadow: var(--am-focus-ring);
 }
 
 .au-phone__code {
   display: inline-flex;
   align-items: center;
   gap: var(--am-space-1);
-  padding: var(--am-space-2) var(--am-space-3);
+  padding: var(--am-space-1) var(--am-space-2);
   border-radius: var(--am-radius-md);
-  background: var(--am-surface-muted);
+  background: var(--am-primary-soft);
+  color: var(--am-primary-strong);
   font-size: var(--am-text-sm);
   font-weight: var(--am-weight-semibold);
   white-space: nowrap;
@@ -241,7 +359,7 @@
 .au-phone input {
   flex: 1 1 auto;
   min-width: 0;
-  min-height: 36px;
+  min-height: 44px;
   border: 0;
   background: transparent;
   font: inherit;
@@ -254,7 +372,7 @@
 }
 
 .au-note {
-  margin: 0 0 var(--am-space-3);
+  margin: 0 0 var(--am-space-4);
   color: var(--am-text-muted);
   font-size: var(--am-text-xs);
   line-height: var(--am-leading-relaxed);
@@ -263,9 +381,8 @@
 .au-terms {
   display: flex;
   align-items: flex-start;
-  gap: var(--am-space-2);
-  min-height: 36px;
-  margin: 0 0 var(--am-space-3);
+  gap: var(--am-space-3);
+  margin: 0 0 var(--am-space-4);
   color: var(--am-text-soft);
   font-size: var(--am-text-sm);
   line-height: var(--am-leading-relaxed);
@@ -288,12 +405,13 @@
   font: inherit;
   font-weight: var(--am-weight-semibold);
   text-decoration: underline;
+  text-underline-offset: 2px;
   cursor: pointer;
 }
 
 .au-alert {
-  margin: 0 0 var(--am-space-3);
-  padding: var(--am-space-2) var(--am-space-3);
+  margin: 0 0 var(--am-space-4);
+  padding: var(--am-space-3);
   border: 1px solid color-mix(in srgb, var(--am-warning, #b45309) 35%, var(--am-line));
   border-radius: var(--am-radius-md);
   background: color-mix(in srgb, var(--am-warning, #b45309) 10%, var(--am-surface));
@@ -308,7 +426,8 @@
 }
 
 .au-title {
-  margin: 0 0 var(--am-space-2);
+  margin: 0 0 var(--am-space-3);
+  font-family: var(--am-font-display);
   font-size: var(--am-text-2xl);
   line-height: var(--am-leading-tight);
 }
@@ -318,8 +437,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--am-space-3);
-  min-height: 36px;
-  margin-bottom: var(--am-space-3);
+  margin-bottom: var(--am-space-4);
   font-size: var(--am-text-sm);
   color: var(--am-text-soft);
 }
@@ -328,40 +446,54 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--am-space-2);
+  max-width: 240px;
   margin-bottom: var(--am-space-3);
 }
 
 .au-otp input {
+  aspect-ratio: 1;
   width: 100%;
-  min-height: 36px;
-  height: 40px;
-  border: 1px solid var(--am-line);
+  min-height: 48px;
+  border: 1px solid var(--am-border-input);
   border-radius: var(--am-radius-md);
-  background: var(--am-surface);
+  background: var(--am-surface-muted);
   text-align: center;
-  font-size: 16px;
+  font-size: var(--am-text-xl);
   font-weight: var(--am-weight-semibold);
   font-variant-numeric: tabular-nums;
   outline: none;
-  transition: border-color var(--am-dur-fast) var(--am-ease-standard);
+  transition:
+    border-color var(--am-dur-fast) var(--am-ease-standard),
+    background-color var(--am-dur-fast) var(--am-ease-standard),
+    box-shadow var(--am-dur-fast) var(--am-ease-standard);
 }
 
-.au-otp input.is-filled,
+.au-otp input.is-filled {
+  border-color: var(--am-primary);
+  background: var(--am-surface);
+}
+
 .au-otp input:focus {
   border-color: var(--am-primary);
+  background: var(--am-surface);
+  box-shadow: var(--am-focus-ring);
 }
 
 .au-otp-meta {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: var(--am-space-3);
+  margin-bottom: var(--am-space-4);
 }
 
 .au-secure {
-  margin: var(--am-space-2) 0 0;
+  margin: var(--am-space-3) 0 0;
   color: var(--am-text-muted);
   font-size: var(--am-text-xs);
   text-align: center;
+}
+
+.au-sheet > .am-btn--block {
+  min-height: 44px;
 }
 
 /* —— Access mode —— */
@@ -681,33 +813,45 @@
 }
 
 @media (min-width: 768px) {
-  .au-welcome {
-    grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
-    grid-template-rows: 1fr;
-    min-height: calc(100dvh - var(--am-header-h, 64px) - 100px);
+  .au-welcome,
+  .au-auth {
+    display: flex;
+    flex-direction: column;
+    grid-template-columns: none;
   }
 
   .au-welcome__panel {
-    justify-content: center;
-    padding: var(--am-space-6) var(--am-space-4);
+    justify-content: flex-end;
+    width: min(440px, calc(100% - 32px));
+    max-height: 56dvh;
+    margin: 0 auto var(--am-space-5);
+    padding: var(--am-space-5);
+    border: 1px solid var(--am-line);
+    border-radius: var(--au-sheet-radius);
   }
 
-  .au-auth {
-    grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
-    grid-template-rows: 1fr;
+  .au-auth .collage-overlay {
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--am-green-900) 22%, transparent) 0%,
+      transparent 44%,
+      color-mix(in srgb, var(--am-green-900) 50%, var(--am-surface) 50%) 100%
+    );
   }
 
-  .au-auth .collage {
-    min-height: 100%;
+  .au-auth .marquee img {
+    height: 32vh;
+    max-height: none;
   }
 
   .au-sheet {
-    margin-top: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    border-radius: 0;
-    box-shadow: none;
+    width: min(440px, calc(100% - 32px));
+    max-height: 62dvh;
+    margin: 0 auto var(--am-space-5);
+    padding: var(--am-space-5);
+    border: 1px solid var(--am-line);
+    border-radius: var(--au-sheet-radius);
+    box-shadow: var(--am-shadow-sm);
   }
 
   .au-sheet__handle {
@@ -745,6 +889,17 @@
   }
 }
 
+@media (min-width: 900px) {
+  .au-auth .collage-overlay {
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--am-green-900) 22%, transparent) 0%,
+      transparent 44%,
+      color-mix(in srgb, var(--am-green-900) 50%, var(--am-surface) 50%) 100%
+    );
+  }
+}
+
 @media (min-width: 1024px) {
   .au-welcome__copy h2 {
     font-size: var(--am-text-3xl);
@@ -755,7 +910,12 @@
   }
 }
 
-/* Auth shell: hide tab-like chrome density */
+/* Auth shell: welcome / login / otp fill the viewport like Home */
+.auth-shell:has(.au-welcome) .site-footer,
+.auth-shell:has(.au-auth) .site-footer {
+  display: none;
+}
+
 .auth-shell .site-footer {
   margin-top: 0;
 }

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Leaf, Package, Stethoscope, UserRound } from 'lucide-react';
-import { Images } from '../common/images';
+import leaf1Img from '/images/leaf1.png';
+import logoImg from '/greenlogo.png';
 import { markAsGuest } from '../services/guestAuth';
 import { Badge, Button } from '../components/ui';
 import { AUTH_COPY as T } from '../content/auth';
@@ -36,7 +37,7 @@ export default function AccessMode() {
   return (
     <section className="au-page au-access">
       <div className="au-access__hero">
-        <img className="au-access__leaf" src={Images.leaf1} alt="" />
+        <img className="au-access__leaf" src={leaf1Img} alt="" />
         <div className="au-access__hero-inner">
           <div className="au-access__top">
             <Badge tone="success">{T.accessVerified}</Badge>
@@ -47,7 +48,7 @@ export default function AccessMode() {
 
           <div className="au-access__brand">
             <div className="au-access__logo">
-              <img src={Images.FinalLogo2} alt="Ayurmuni" />
+              <img src={logoImg} alt="Ayurmuni" />
             </div>
             <div>
               <strong>Ayurmuni</strong>

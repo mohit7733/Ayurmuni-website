@@ -5,7 +5,8 @@ import AppShell from '../components/AppShell';
 import DoctorCard from '../components/DoctorCard';
 import PageHeader from '../components/PageHeader';
 import ProductCard from '../components/ProductCard';
-import { Images } from '../common/images';
+import dietCoverImg from '/images/login/14.jpg';
+import yogaPosterImg from '/images/login/8.png';
 import { mapDietPlanForHome, mapProductCategory, normalizeApiList } from '../home/catalog';
 import { getDoctors } from '../services/consultService';
 import { getDietPlans } from '../services/dietService';
@@ -371,7 +372,7 @@ export default function CategoryDoctor() {
                 {dietPlans.map((item) => (
                   <RailItem key={item.id} size="wide">
                     <MediaCard
-                      image={item.thumbnail_url || Images.journeyDiet}
+                      image={item.thumbnail_url || dietCoverImg}
                       title={item.title}
                       fallbackIcon={Salad}
                       onClick={() => navigate(`/diet/${item.id}`, { state: { item } })}
@@ -397,7 +398,7 @@ export default function CategoryDoctor() {
                 {yogaSessions.map((item) => (
                   <RailItem key={item.id} size="wide">
                     <MediaCard
-                      image={resolveYogaThumbnailUri(item) || Images.journeyYoga}
+                      image={resolveYogaThumbnailUri(item) || yogaPosterImg}
                       title={item.title || item.name}
                       fallbackIcon={Flower2}
                       onClick={() => navigate(`/yoga/${item.id}`, { state: { item } })}

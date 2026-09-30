@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { BadgeCheck, Leaf, LockKeyhole, ShieldCheck } from 'lucide-react';
-import { Images } from '../common/images';
+import logoImg from '/greenlogo.png';
 import { COPY } from '../content/copy';
 import { FOOTER_COLUMNS, FOOTER_LEGAL } from '../site/nav';
 
@@ -31,7 +31,7 @@ export default function SiteFooter() {
 
       <div className="site-footer-inner">
         <div className="site-footer-brand">
-          <img src={Images.FinalLogo2} alt="Ayurmuni" width="208" height="52" loading="lazy" />
+          <img src={logoImg} alt="Ayurmuni" width="208" height="52" loading="lazy" />
           <p className="site-footer-tagline">{COPY.brandTagline}</p>
           <p>{COPY.brandMission}</p>
         </div>

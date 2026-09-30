@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Images } from '../common/images';
+import logoImg from '/images/FinalLogo.png';
 import { PRAKRITI_IMAGES } from '../questionnaire/configs';
 import * as ProfileServices from '../services/profileService';
 
@@ -168,7 +168,7 @@ export default function PrakritiProfile() {
     return (
       <section className="prakriti-page">
         <div className="empty-prakriti">
-          <img src={Images.FinalLogo} alt="Ayurmuni" />
+          <img src={logoImg} alt="Ayurmuni" />
           <h1>Know your Prakriti</h1>
           <p>
             A short Ayurvedic assessment reveals your body constitution and unlocks
