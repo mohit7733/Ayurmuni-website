@@ -1,0 +1,402 @@
+/* Consult, doctors list and concern pages (cs-*) — mobile-first, tokens only */
+
+.cs-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--am-space-8);
+  width: 100%;
+  max-width: var(--am-container);
+  margin: 0 auto;
+  padding: var(--am-space-5) var(--am-gutter) var(--am-space-8);
+}
+
+.cs-page > .am-page-header {
+  margin-bottom: 0;
+}
+
+.cs-section {
+  min-width: 0;
+}
+
+/* ---------- Consult hero ---------- */
+.cs-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--am-space-6);
+  padding: var(--am-space-6) var(--am-space-5);
+  border: 1px solid var(--am-line);
+  border-radius: var(--am-radius-xl);
+  background:
+    radial-gradient(80% 90% at 100% 0%, var(--am-accent-soft), transparent 60%),
+    linear-gradient(180deg, var(--am-surface), var(--am-primary-soft));
+}
+
+.cs-hero__copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--am-space-3);
+  min-width: 0;
+}
+
+.cs-hero__copy .am-eyebrow {
+  margin: 0;
+}
+
+.cs-hero h1 {
+  margin: 0;
+  max-width: 20ch;
+  font-size: var(--am-text-3xl);
+  line-height: var(--am-leading-tight);
+  color: var(--am-text);
+}
+
+.cs-hero__lede {
+  margin: 0;
+  max-width: 56ch;
+  color: var(--am-text-soft);
+  font-size: var(--am-text-base);
+  line-height: var(--am-leading-normal);
+}
+
+.cs-hero .am-search {
+  margin-top: var(--am-space-2);
+}
+
+.cs-hero__ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--am-space-2);
+}
+
+.cs-hero__ctas > .am-btn--primary {
+  flex: 1 1 220px;
+}
+
+.cs-steps {
+  display: grid;
+  gap: var(--am-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: none;
+}
+
+.cs-steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--am-space-3);
+  padding: var(--am-space-3) var(--am-space-4);
+  border: 1px solid var(--am-line);
+  border-radius: var(--am-radius-md);
+  background: var(--am-surface);
+}
+
+.cs-steps__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--am-primary);
+  color: var(--am-on-primary);
+  font-size: var(--am-text-sm);
+  font-weight: var(--am-weight-semibold);
+}
+
+.cs-steps strong {
+  display: block;
+  font-size: var(--am-text-sm);
+  color: var(--am-text);
+}
+
+.cs-steps p {
+  margin: 2px 0 0;
+  color: var(--am-text-muted);
+  font-size: var(--am-text-xs);
+  line-height: var(--am-leading-normal);
+}
+
+/* ---------- Doctors list: filters + results ---------- */
+.cs-browse {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--am-space-6);
+  align-items: start;
+}
+
+.cs-filters {
+  display: none;
+}
+
+.cs-filters__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--am-space-2);
+  margin-bottom: var(--am-space-2);
+}
+
+.cs-filters__head h2 {
+  margin: 0;
+  font-family: var(--am-font-body);
+  font-size: var(--am-text-base);
+  font-weight: var(--am-weight-semibold);
+}
+
+.cs-filter-group {
+  margin: 0;
+  padding: var(--am-space-4) 0;
+  border: 0;
+  border-top: 1px solid var(--am-line);
+  min-width: 0;
+}
+
+.cs-filter-group:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.cs-filter-group legend {
+  float: left;
+  width: 100%;
+  margin-bottom: var(--am-space-3);
+  padding: 0;
+  color: var(--am-text);
+  font-size: var(--am-text-sm);
+  font-weight: var(--am-weight-semibold);
+}
+
+.cs-chip-wrap {
+  clear: both;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--am-space-2);
+}
+
+.cs-results {
+  display: flex;
+  flex-direction: column;
+  gap: var(--am-space-4);
+  min-width: 0;
+}
+
+.cs-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--am-space-3);
+  min-height: var(--am-tap-min);
+}
+
+.cs-count {
+  margin: 0;
+  color: var(--am-text-soft);
+  font-size: var(--am-text-sm);
+  font-weight: var(--am-weight-medium);
+}
+
+.cs-filter-btn__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  margin-left: var(--am-space-1);
+  padding: 0 6px;
+  border-radius: var(--am-radius-pill);
+  background: var(--am-primary);
+  color: var(--am-on-primary);
+  font-size: var(--am-text-2xs);
+}
+
+.cs-active {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--am-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cs-active__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--am-space-1);
+  min-height: 36px;
+  padding: 0 var(--am-space-3);
+  border: 1px solid var(--am-primary-tint);
+  border-radius: var(--am-radius-pill);
+  background: var(--am-primary-soft);
+  color: var(--am-primary-strong);
+  font-size: var(--am-text-sm);
+  font-weight: var(--am-weight-medium);
+}
+
+.cs-active__chip:hover {
+  border-color: var(--am-primary);
+}
+
+.cs-disclaimer {
+  margin-top: var(--am-space-2);
+}
+
+/* ---------- Concern page ---------- */
+.cs-about {
+  display: flex;
+  gap: var(--am-space-3);
+  padding: var(--am-space-4) var(--am-space-5);
+  border: 1px solid var(--am-line);
+  border-radius: var(--am-radius-lg);
+  background: var(--am-surface);
+}
+
+.cs-about__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--am-primary-soft);
+  color: var(--am-primary);
+}
+
+.cs-about p {
+  margin: 0;
+  color: var(--am-text-soft);
+  font-size: var(--am-text-sm);
+  line-height: var(--am-leading-relaxed);
+}
+
+.cs-about small {
+  display: block;
+  margin-top: var(--am-space-1);
+  color: var(--am-text-muted);
+  font-size: var(--am-text-xs);
+}
+
+.cs-conditions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--am-space-3);
+  min-width: 0;
+}
+
+.cs-conditions__title {
+  margin: 0;
+  font-family: var(--am-font-body);
+  font-size: var(--am-text-sm);
+  font-weight: var(--am-weight-semibold);
+  color: var(--am-text-soft);
+}
+
+.cs-chip-row {
+  display: flex;
+  gap: var(--am-space-2);
+  margin: 0 calc(var(--am-gutter) * -1);
+  padding: var(--am-space-1) var(--am-gutter);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.cs-chip-row::-webkit-scrollbar {
+  display: none;
+}
+
+.cs-chip-row > * {
+  flex-shrink: 0;
+}
+
+.cs-chip-img {
+  width: 24px;
+  height: 24px;
+  margin-left: calc(var(--am-space-2) * -1);
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--am-surface-muted);
+}
+
+/* ---------- Shared bits ---------- */
+.cs-more {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--am-space-5);
+}
+
+.cs-foot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--am-space-3);
+}
+
+.cs-foot > .am-disclaimer {
+  width: 100%;
+}
+
+/* ---------- Tablet ---------- */
+@media (min-width: 768px) {
+  .cs-page {
+    gap: var(--am-space-10);
+    padding-top: var(--am-space-8);
+  }
+
+  .cs-hero {
+    padding: var(--am-space-8);
+  }
+
+  .cs-steps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .cs-chip-row {
+    flex-wrap: wrap;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+  }
+}
+
+/* ---------- Desktop ---------- */
+@media (min-width: 1024px) {
+  .cs-hero {
+    grid-template-columns: minmax(0, 1.4fr) minmax(280px, 1fr);
+    align-items: center;
+    gap: var(--am-space-10);
+    padding: var(--am-space-10);
+  }
+
+  .cs-hero__ctas > .am-btn--primary {
+    flex: 0 0 auto;
+  }
+
+  .cs-steps {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cs-browse {
+    grid-template-columns: 280px minmax(0, 1fr);
+    gap: var(--am-space-8);
+  }
+
+  .cs-filters {
+    position: sticky;
+    top: calc(var(--am-header-h) + var(--am-space-4));
+    display: block;
+    max-height: calc(100dvh - var(--am-header-h) - var(--am-space-8));
+    overflow-y: auto;
+    padding: var(--am-space-5);
+    border: 1px solid var(--am-line);
+    border-radius: var(--am-radius-lg);
+    background: var(--am-surface);
+  }
+
+  .cs-toolbar .cs-filter-btn,
+  .cs-results .cs-active {
+    display: none;
+  }
+}

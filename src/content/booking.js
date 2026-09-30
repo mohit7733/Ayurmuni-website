@@ -1,0 +1,102 @@
+export const BOOKING_COPY = {
+  steps: ['Select slot', 'Confirm & pay', 'Confirmed'],
+  stepsLabel: 'Booking progress',
+
+  // Slot page
+  slotTitle: 'Book appointment',
+  slotRefresh: 'Refresh',
+  slotRefreshing: 'Refreshing…',
+  selectDate: 'Select a date',
+  selectSlot: 'Available times',
+  loadingSlots: 'Loading slots…',
+  noSlots: 'No slots on this date',
+  noSlotsText: 'Try another day, or move to the next month.',
+  prevMonth: 'Previous month',
+  nextMonth: 'Next month',
+  concernTitle: 'Your concern',
+  concernHint: 'Optional — helps the doctor prepare for your visit.',
+  concernPlaceholder: 'Briefly describe your symptoms or questions…',
+  recordsTitle: 'Medical records',
+  recordsHint: 'Attach reports the doctor should review before the call.',
+  noRecords: 'No saved records yet.',
+  uploadRecord: 'Upload record',
+  uploading: 'Uploading…',
+  continue: 'Continue to pay',
+  pickSlot: 'Pick a slot',
+  consultFee: 'Consult fee',
+
+  // Pay page
+  payTitle: 'Confirm & pay',
+  noSlotTitle: 'No slot selected',
+  noSlotText: 'Go back and choose a date and time to continue.',
+  pickASlot: 'Pick a slot',
+  patientTitle: 'Consulting for',
+  concernLabel: 'Concern',
+  attachedRecords: 'Attached records',
+  billTitle: 'Bill details',
+  calculating: 'Calculating fees…',
+  consultation: 'Consultation',
+  discount: 'Discount',
+  subTotal: 'Sub total',
+  toPay: 'To pay',
+  payNow: 'Pay now',
+  starting: 'Starting…',
+  verifyingTitle: 'Verifying payment',
+  verifyingText: 'Please do not close this page. This may take a few seconds.',
+
+  // Confirm page
+  confirmTitle: 'Booking confirmed',
+  confirmLede: 'Your consultation is booked. Save the details below or add them to your calendar.',
+  missingTitle: 'No booking found',
+  missingText: 'Your last appointment confirmation is not available in this session.',
+  consultHome: 'Consult home',
+  home: 'Go to home',
+  date: 'Date',
+  time: 'Time',
+  mode: 'Mode',
+  paid: 'Paid',
+  details: 'Appointment details',
+  patient: 'Patient',
+  clinic: 'Clinic',
+  calendar: 'Add to calendar',
+  share: 'Share',
+  appointments: 'My appointments',
+  shareTitle: 'Share details',
+  shareLede: 'Send this appointment summary',
+  cancel: 'Cancel',
+  bookingId: 'Booking ID',
+
+  // Calendar page
+  calTitle: 'Add to calendar',
+  calSubtitle: 'Save this visit',
+  calHeroTitle: 'Never miss your consult',
+  calHeroLede: 'Add this appointment to your calendar for timely reminders.',
+  calMissing: 'Appointment details missing',
+  calChoose: 'Choose calendar',
+  calDone: 'Done',
+  calLater: 'I’ll do it later',
+  location: 'Location',
+  videoDefault: 'Video consultation',
+};
+
+export const BOOKING_STATUS_TONE = {
+  CONFIRMED: 'success',
+  BOOKED: 'success',
+  COMPLETED: 'success',
+  CANCELLED: 'danger',
+  UPCOMING: 'warning',
+  PENDING: 'warning',
+};
+
+export const bookingStatusLabel = (status) => {
+  const key = String(status || '').toUpperCase();
+  const labels = {
+    CONFIRMED: 'Confirmed',
+    BOOKED: 'Booked',
+    COMPLETED: 'Completed',
+    CANCELLED: 'Cancelled',
+    UPCOMING: 'Upcoming',
+    PENDING: 'Pending',
+  };
+  return labels[key] || (key ? key.replace(/_/g, ' ') : 'Confirmed');
+};

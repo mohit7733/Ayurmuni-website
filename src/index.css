@@ -1,0 +1,73 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--am-font-body);
+  font-size: var(--am-text-body);
+  line-height: var(--am-leading-normal);
+  background: var(--am-bg);
+  color: var(--am-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+.screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.coming-soon {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--am-bg);
+  padding: var(--am-space-8);
+  text-align: center;
+}
+
+.coming-soon h1 {
+  margin: var(--am-space-3) 0 var(--am-space-2);
+  color: var(--am-primary-strong);
+}
+
+.coming-soon p {
+  color: var(--am-text-muted);
+  max-width: 420px;
+}
+
+.coming-soon a {
+  margin-top: var(--am-space-5);
+  color: var(--am-primary-strong);
+  font-weight: var(--am-weight-semibold);
+}
