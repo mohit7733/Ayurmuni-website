@@ -26,6 +26,16 @@ const hasCustomerIdentity = (profile) =>
       (profile.customer_id || profile.id),
   );
 
+export function readAuthenticated() {
+  try {
+    const raw = localStorage.getItem(`ayurmuni_${ACCESS_KEYS.TOKEN}`);
+    if (raw == null) return false;
+    return !!JSON.parse(raw);
+  } catch {
+    return false;
+  }
+}
+
 export async function isAuthenticated() {
   const token = await Utils.getData(ACCESS_KEYS.TOKEN);
   return !!token;

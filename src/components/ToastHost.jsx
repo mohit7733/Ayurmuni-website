@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AlertCircle, CheckCircle2, Info, X } from 'lucide-react';
 import { COPY } from '../content/copy';
+import PrescriptionRequiredModalHost from './PrescriptionRequiredModalHost';
 
 const ICONS = {
   success: CheckCircle2,
@@ -43,6 +44,8 @@ export default function ToastHost() {
   }, [dismiss]);
 
   return (
+    <>
+    <PrescriptionRequiredModalHost />
     <div className="am-toast-host" aria-live="polite" aria-relevant="additions">
       {toasts.map((t) => {
         const Icon = ICONS[t.type] || Info;
@@ -61,5 +64,6 @@ export default function ToastHost() {
         );
       })}
     </div>
+    </>
   );
 }

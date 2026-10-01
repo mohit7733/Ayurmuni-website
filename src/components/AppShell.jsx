@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom';
 import { House, LayoutGrid, Pill, ShoppingBag, Stethoscope } from 'lucide-react';
 import { COPY } from '../content/copy';
 import { useCart } from '../hooks/useCart';
+import useLoggedIn from '../hooks/useLoggedIn';
 import { TAB_ITEMS } from '../site/nav';
 import SiteFooter from './SiteFooter';
 import SiteHeader from './SiteHeader';
@@ -15,9 +16,10 @@ const TAB_ICONS = {
 };
 
 export default function AppShell({ children, tab = 'home' }) {
+  const loggedIn = useLoggedIn();
   const { itemCount } = useCart();
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${loggedIn ? '' : 'is-logged-out'}`}>
       <a className="am-skip-link" href="#main">
         {COPY.skipToContent}
       </a>
@@ -26,6 +28,7 @@ export default function AppShell({ children, tab = 'home' }) {
         {children}
       </main>
       <SiteFooter />
+      {loggedIn ? (
       <nav className="tab-bar" aria-label="Main">
         {TAB_ITEMS.map((item) => {
           const Icon = TAB_ICONS[item.id];
@@ -48,6 +51,7 @@ export default function AppShell({ children, tab = 'home' }) {
           );
         })}
       </nav>
+      ) : null}
     </div>
   );
 }

@@ -9,6 +9,7 @@ import {
   isProductOutOfStock,
 } from '../product/stock';
 import { requireAuth } from '../services/guestAuth';
+import { showPrescriptionRequired } from '../services/prescriptionGate';
 import { showSuccessToast } from '../config/key';
 import { toggleWishlistProduct } from '../services/productService';
 import Badge from './ui/Badge';
@@ -41,16 +42,7 @@ export default function ProductCard({ item, onWishlistChange }) {
       return;
     }
     if (nextQty > cartQty && isPrescriptionRequired(item)) {
-      showSuccessToast(
-        'This medicine needs a valid prescription before it can be added to cart.',
-        'error',
-      );
-      navigate(
-        `/medicines/prescription?variant=${encodeURIComponent(variantId)}&name=${encodeURIComponent(
-          item.name || '',
-        )}`,
-        { state: { variantIds: [variantId], productName: item.name } },
-      );
+      showPrescriptionRequired({ variantId, productName: item.name });
       return;
     }
     await syncCartQuantity(item, nextQty);

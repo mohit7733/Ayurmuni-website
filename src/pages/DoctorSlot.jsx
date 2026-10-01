@@ -60,6 +60,9 @@ export default function DoctorSlot() {
   const [records, setRecords] = useState([]);
   const [selectedRecords, setSelectedRecords] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [pickedFile, setPickedFile] = useState(null);
+  const [recordName, setRecordName] = useState('');
+  const [recordType, setRecordType] = useState('');
 
   const monthLabel = useMemo(
     () =>
@@ -138,14 +141,36 @@ export default function DoctorSlot() {
     setSelectedRecords((prev) => (prev.includes(key) ? prev.filter((item) => item !== key) : [...prev, key]));
   };
 
-  const uploadRecord = async (file) => {
+  const pickFile = (file) => {
     if (!file) return;
+    const type = file.type || '';
+    const allowed =
+      type.startsWith('image/') ||
+      type === 'application/pdf' ||
+      (!type && /\.(jpe?g|png|webp|gif|heic|pdf)$/i.test(file.name || ''));
+    if (!allowed) {
+      showSuccessToast('Please choose a PDF or image file', 'error');
+      return;
+    }
+    setPickedFile(file);
+    setRecordName(file.name || '');
+    setRecordType('');
+  };
+
+  const closeUpload = () => {
+    if (uploading) return;
+    setPickedFile(null);
+    setRecordName('');
+    setRecordType('');
+  };
+
+  const uploadRecord = async () => {
+    if (!pickedFile || !recordName.trim() || !recordType) return;
     if (!(await requireAuth('Please login to attach medical records'))) return;
-    const type = file.type?.includes('pdf') ? 'lab_report' : 'prescription';
     setUploading(true);
     try {
       const body = new FormData();
-      body.append('image', file);
+      body.append('image', pickedFile);
       body.append('dir', 'customer_avatar');
       const uploadResponse = await UploadProfilePhoto(body);
       const fileUrl = extractUploadUrl(uploadResponse);
@@ -154,9 +179,11 @@ export default function DoctorSlot() {
         return;
       }
       const res = await addMedicalRecord({
-        medical_record_type: type,
-        file_type: file.type?.includes('pdf') ? 'pdf' : 'image',
-        description: file.name || 'Medical record',
+        medical_record_type: recordType,
+        file_type: `${pickedFile.type || ''} ${pickedFile.name || ''}`.toLowerCase().includes('pdf')
+          ? 'pdf'
+          : 'image',
+        description: recordName.trim(),
         file_url: fileUrl,
       });
       if (res?.success === false) {
@@ -165,6 +192,9 @@ export default function DoctorSlot() {
       }
       const savedId = String(res?.data?.id || res?.data?.record_id || '');
       showSuccessToast('Record uploaded', 'success');
+      setPickedFile(null);
+      setRecordName('');
+      setRecordType('');
       await loadRecords();
       if (savedId) setSelectedRecords((prev) => [...new Set([...prev, savedId])]);
     } catch {
@@ -353,20 +383,37 @@ export default function DoctorSlot() {
               ) : (
                 <p className="bk-card__hint">{T.noRecords}</p>
               )}
-              <label className={`bk-upload am-btn am-btn--secondary am-btn--sm${uploading ? ' is-loading' : ''}`}>
-                <Upload size={16} aria-hidden />
-                <span className="am-btn__label">{uploading ? T.uploading : T.uploadRecord}</span>
-                <input
-                  type="file"
-                  accept="image/*,application/pdf"
-                  disabled={uploading}
-                  onChange={(event) => {
-                    const file = event.target.files?.[0];
-                    event.target.value = '';
-                    uploadRecord(file);
-                  }}
-                />
-              </label>
+              <div className="bk-upload-row">
+                <label className={`bk-upload am-btn am-btn--secondary am-btn--sm${uploading ? ' is-loading' : ''}`}>
+                  <Upload size={16} aria-hidden />
+                  <span className="am-btn__label">{T.takePhoto}</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    disabled={uploading}
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      event.target.value = '';
+                      pickFile(file);
+                    }}
+                  />
+                </label>
+                <label className={`bk-upload am-btn am-btn--secondary am-btn--sm${uploading ? ' is-loading' : ''}`}>
+                  <Upload size={16} aria-hidden />
+                  <span className="am-btn__label">{uploading ? T.uploading : T.chooseFile}</span>
+                  <input
+                    type="file"
+                    accept="image/*,application/pdf"
+                    disabled={uploading}
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      event.target.value = '';
+                      pickFile(file);
+                    }}
+                  />
+                </label>
+              </div>
             </section>
 
             <div className="bk-aside__cta">
@@ -379,6 +426,53 @@ export default function DoctorSlot() {
           </aside>
         </div>
       </div>
+
+      {pickedFile ? (
+        <div className="web-modal" role="dialog">
+          <div className="web-modal-card">
+            <h3>{T.uploadTitle}</h3>
+            <p className="muted">{pickedFile.name}</p>
+            <label className="form-field">
+              {T.recordName} *
+              <input value={recordName} onChange={(event) => setRecordName(event.target.value)} disabled={uploading} />
+            </label>
+            <div className="form-field">
+              {T.recordType} *
+              <div className="variant-row">
+                <button
+                  type="button"
+                  className={`chip ${recordType === 'prescription' ? 'on' : ''}`}
+                  disabled={uploading}
+                  onClick={() => setRecordType('prescription')}
+                >
+                  {T.recordPrescription}
+                </button>
+                <button
+                  type="button"
+                  className={`chip ${recordType === 'lab_report' ? 'on' : ''}`}
+                  disabled={uploading}
+                  onClick={() => setRecordType('lab_report')}
+                >
+                  {T.recordLab}
+                </button>
+              </div>
+            </div>
+            <div className="detail-cta">
+              <button type="button" className="ghost" onClick={closeUpload} disabled={uploading}>
+                {T.uploadCancel}
+              </button>
+              <button
+                type="button"
+                className="cta"
+                disabled={uploading || !recordName.trim() || !recordType}
+                onClick={uploadRecord}
+              >
+                {uploading ? T.uploading : T.uploadSubmit}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <div className="bk-sticky" role="region" aria-label={T.continue}>
         <div className="bk-sticky__meta">

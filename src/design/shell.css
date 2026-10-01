@@ -340,11 +340,11 @@
 }
 
 @media (max-width: 767px) {
-  .app-shell:not(.auth-shell) .app-shell-body {
+  .app-shell:not(.auth-shell):not(.is-logged-out) .app-shell-body {
     padding-bottom: calc(var(--am-tabbar-h) + var(--am-space-8) + env(safe-area-inset-bottom));
   }
 
-  .app-shell:not(.auth-shell) .site-footer {
+  .app-shell:not(.auth-shell):not(.is-logged-out) .site-footer {
     padding-bottom: calc(var(--am-tabbar-h) + var(--am-space-5) + env(safe-area-inset-bottom));
   }
 }

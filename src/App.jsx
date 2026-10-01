@@ -97,6 +97,7 @@ import { LocationProvider } from './context/LocationContext';
 import FloatingVideoOverlay from './components/FloatingVideoOverlay';
 import AuthShell from './components/AuthShell';
 import NetworkGuard from './components/NetworkGuard';
+import RequireAuth from './components/RequireAuth';
 import './design/tokens.css';
 import './index.css';
 import './styles.css';
@@ -121,8 +122,8 @@ const LoginPage = withAuthChrome(Login);
 const OtpPage = withAuthChrome(OtpVerify);
 const AccessModePage = withAuthChrome(AccessMode);
 const OnboardingPage = withAuthChrome(Onboarding);
-// const PolicyAcceptPage = withAuthChrome(PolicyAccept);
-// const PolicyDetailPage = withAuthChrome(PolicyDetail);
+//  const PolicyAcceptPage = withAuthChrome(PolicyAccept);
+const PolicyDetailPage = withAuthChrome(PolicyDetail);
 const AssessmentPage = withAuthChrome(AssessmentType);
 const PatientFaqPage = withAuthChrome(PatientFAQ);
 const PrakritiProfilePage = withAuthChrome(PrakritiProfile);
@@ -154,10 +155,9 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/otp" element={<OtpPage />} />
         <Route path="/access-mode" element={<AccessModePage />} />
-        <Route path="/home" element={<Home />} />
         <Route path="/onboarding" element={<OnboardingPage />} />
         {/* <Route path="/policy-accept" element={<PolicyAcceptPage />} /> */}
-        {/* <Route path="/policy-detail" element={<PolicyDetailPage />} /> */}
+        <Route path="/policy-detail" element={<PolicyDetailPage />} />
         <Route path="/terms" element={<TermsCondition />} />
         <Route path="/network-error" element={<NetworkError />} />
         <Route path="/about" element={<About />} />
@@ -179,6 +179,8 @@ export default function App() {
         <Route path="/medical-history" element={<MedicalHistory />} />
         <Route path="/prakriti-profile" element={<PrakritiProfilePage />} />
         <Route path="/complete-details" element={<CompleteDetailsPage />} />
+        <Route element={<RequireAuth />}>
+        <Route path="/home" element={<Home />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/products" element={<Products />} />
         <Route path="/products/top" element={<TopCategories />} />
@@ -253,6 +255,7 @@ export default function App() {
         <Route path="/diet/:planId" element={<DietPlan />} />
         <Route path="/diet/:planId/meals/:mealId" element={<MealDetails />} />
         <Route path="/search" element={<ProductSearch />} />
+        </Route>
       </Routes>
       </NetworkGuard>
       </CartProvider>

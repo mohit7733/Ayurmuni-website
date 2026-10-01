@@ -672,6 +672,19 @@ html:has(.auth-shell .au-auth) #root {
   opacity: 0.9;
 }
 
+.au-access__boot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40vh;
+}
+
+.au-access__boot p {
+  margin: 0;
+  color: var(--am-text-muted);
+  font-size: var(--am-text-sm);
+}
+
 .au-access__note {
   margin: 0;
   color: var(--am-text-muted);

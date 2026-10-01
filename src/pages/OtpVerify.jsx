@@ -15,7 +15,8 @@ import { showSuccessToast } from '../config/key';
 import MarqueeCollage from '../components/MarqueeCollage';
 import * as AuthService from '../services/authService';
 import * as ProfileServices from '../services/profileService';
-import { markAsGuest, syncAccessFromProfile } from '../services/guestAuth';
+import { acceptPolicies } from '../services/policyService';
+import { isProfileComplete, markAsGuest, syncAccessFromProfile } from '../services/guestAuth';
 import { parsePolicyAcceptedCustomer } from '../utils/policyUtils';
 import { Button, Modal } from '../components/ui';
 import { AUTH_COPY as T } from '../content/auth';
@@ -47,7 +48,6 @@ export default function OtpVerify() {
   const params = location.state || {};
   const phoneNumber = params.phone;
   const NEW_CUSTOMER = params.customer;
-  const policyAcceptedCustomer = params.policyAcceptedCustomer === true;
   const accountDeleted = params.accountDeleted === true;
   const retentionDays = params.retentionDays;
 
@@ -127,6 +127,29 @@ export default function OtpVerify() {
     return result === 'granted';
   };
 
+  const recordPolicyAcceptance = async () => {
+    try {
+      await acceptPolicies({ type: 'all' });
+      await Utils.storeData('_POLICY_ACCEPTED_CUSTOMER', true);
+    } catch {
+      try {
+        await Utils.storeData('_POLICY_ACCEPTED_CUSTOMER', true);
+      } catch {
+        // Acceptance is still recorded locally when the request fails.
+      }
+    }
+  };
+
+  const goAfterProfile = async (profile) => {
+    const level = await syncAccessFromProfile(profile);
+    if (level === 'full' || isProfileComplete(profile)) {
+      navigate('/home', { replace: true });
+      return;
+    }
+    await markAsGuest();
+    navigate('/access-mode', { replace: true });
+  };
+
   const submitRegisterWithNotificationPreference = async (isNotificationEnabled) => {
     const otpCode = pendingRegisterOtpRef.current || otp.join('');
     if (otpCode.length !== 4) {
@@ -166,7 +189,18 @@ export default function OtpVerify() {
 
         await markAsGuest();
         showSuccessToast(response?.message || 'OTP verified successfully', 'success');
-        navigate('/access-mode', { replace: true });
+        try {
+          const profileRes = await ProfileServices.user_profile();
+          if (profileRes?.data) {
+            await Utils.storeData('_USER_INFO', profileRes.data);
+          }
+          await recordPolicyAcceptance();
+          await goAfterProfile(profileRes?.data);
+        } catch {
+          await recordPolicyAcceptance();
+          await markAsGuest();
+          navigate('/access-mode', { replace: true });
+        }
       } else {
         showSuccessToast(response?.message || 'Failed to verify OTP', 'error');
       }
@@ -174,6 +208,53 @@ export default function OtpVerify() {
       showSuccessToast(error?.message || 'Something went wrong. Please try again.', 'error');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const finishLoginSession = async (response) => {
+    showSuccessToast(response.message || 'OTP verified successfully', 'success');
+
+    const userId = response?.data?.user_id;
+    await Utils.storeData('_USER_ID', userId);
+    await Utils.storeData('_TOKEN', response?.data?.access);
+    if (response?.data?.refresh) {
+      await Utils.storeData('_REFRESH_TOKEN', response.data.refresh);
+    }
+
+    if (userId) {
+      try {
+        await requestWebNotification();
+      } catch {
+        // Browser notification permission must not block login.
+      }
+    }
+
+    const customerOnboard = response?.data?.customer;
+    const loginFlags = {
+      ...(typeof response?.data === 'object' ? response.data : {}),
+      ...(typeof customerOnboard === 'object' ? customerOnboard : {}),
+    };
+
+    try {
+      const profileRes = await ProfileServices.user_profile();
+      if (profileRes?.data) {
+        await Utils.storeData('_USER_INFO', profileRes.data);
+      }
+      await recordPolicyAcceptance();
+      const mergedProfile = {
+        ...loginFlags,
+        ...(profileRes?.data || {}),
+      };
+      await goAfterProfile(mergedProfile);
+    } catch {
+      await recordPolicyAcceptance();
+      if (isProfileComplete(loginFlags)) {
+        await syncAccessFromProfile(loginFlags);
+        navigate('/home', { replace: true });
+      } else {
+        await markAsGuest();
+        navigate('/access-mode', { replace: true });
+      }
     }
   };
 
@@ -186,77 +267,51 @@ export default function OtpVerify() {
 
     setIsLoading(true);
     try {
-      const send_data = {
+      const response = await AuthService.verify_otp_login({
         phone_number: `+91${phoneNumber}`,
         otp: otpCode,
-      };
-      const response = await AuthService.verify_otp_login(send_data);
+      });
 
       if (response?.success) {
-        showSuccessToast(response.message || 'OTP verified successfully', 'success');
-
-        const userId = response?.data?.user_id;
-        await Utils.storeData('_USER_ID', userId);
-        await Utils.storeData('_TOKEN', response?.data?.access);
-        await Utils.storeData('_REFRESH_TOKEN', response?.data?.refresh);
-
-        const customerOnboard = response?.data?.customer;
-        const hasCustomer = !!customerOnboard && customerOnboard.customer_id != null;
-
-        if (!hasCustomer) {
-          await markAsGuest();
-          navigate('/access-mode', { replace: true });
-          return;
-        }
-
-        try {
-          const profileRes = await ProfileServices.user_profile();
-          if (profileRes?.data) {
-            await Utils.storeData('_USER_INFO', profileRes.data);
-          }
-
-          const storedPolicy = await Utils.getData('_POLICY_ACCEPTED_CUSTOMER');
-          const loginPolicyOk =
-            policyAcceptedCustomer ||
-            storedPolicy === true ||
-            parsePolicyAcceptedCustomer(response);
-          if (loginPolicyOk) {
-            await Utils.storeData('_POLICY_ACCEPTED_CUSTOMER', true);
-          }
-
-          const level = await syncAccessFromProfile(profileRes?.data);
-          if (level === 'full') {
-            if (!loginPolicyOk) {
-              navigate('/policy-accept', {
-                replace: true,
-                state: { nextRoute: { name: 'Home' } },
-              });
-            } else {
-              navigate('/home', { replace: true });
-            }
-          } else {
-            await markAsGuest();
-            navigate('/access-mode', { replace: true });
-          }
-        } catch {
-          await markAsGuest();
-          const storedPolicy = await Utils.getData('_POLICY_ACCEPTED_CUSTOMER');
-          const loginPolicyOk =
-            policyAcceptedCustomer ||
-            storedPolicy === true ||
-            parsePolicyAcceptedCustomer(response);
-          if (!loginPolicyOk && hasCustomer) {
-            navigate('/policy-accept', {
-              replace: true,
-              state: { nextRoute: { name: 'Home' } },
-            });
-          } else {
-            navigate('/home', { replace: true });
-          }
-        }
+        await finishLoginSession(response);
       } else {
         showSuccessToast(response?.message || 'Failed to verify OTP', 'error');
       }
+    } catch {
+      showSuccessToast('Something went wrong. Please try again.', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const recoverDeletedAccount = async () => {
+    const otpCode = otp.join('');
+    if (otpCode.length !== 4) {
+      showSuccessToast('Please enter valid OTP', 'error');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await ProfileServices.recoverAccount({
+        phone_number: `+91${phoneNumber}`,
+        otp: otpCode,
+      });
+
+      if (!response?.success) {
+        showSuccessToast(response?.message || 'Unable to recover this account.', 'error');
+        return;
+      }
+
+      await Utils.removeData('_DELETED_ACCOUNT_HOLD');
+
+      if (!response?.data?.access) {
+        showSuccessToast(response?.message || 'Account recovered. Sign in to continue.', 'success');
+        navigate('/login', { replace: true });
+        return;
+      }
+
+      await finishLoginSession(response);
     } catch {
       showSuccessToast('Something went wrong. Please try again.', 'error');
     } finally {
@@ -274,7 +329,11 @@ export default function OtpVerify() {
     setNotifPromptVisible(true);
   };
 
-  const onVerify = NEW_CUSTOMER ? LoginVerfiyOTP : handleVerifyOTP;
+  const onVerify = accountDeleted
+    ? recoverDeletedAccount
+    : NEW_CUSTOMER
+      ? LoginVerfiyOTP
+      : handleVerifyOTP;
   const otpComplete = otp.join('').length === OTP_LEN;
 
   const onResendPress = async () => {
@@ -366,7 +425,7 @@ export default function OtpVerify() {
 
       <Modal
         open={notifPromptVisible}
-        onClose={() => setNotifPromptVisible(false)}
+        onClose={() => submitRegisterWithNotificationPreference(false)}
         title={T.notifTitle}
         description={T.notifText}
         footer={

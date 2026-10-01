@@ -5,11 +5,10 @@ import dietCoverImg from '/images/login/14.jpg';
 import { formatRupee } from '../home/catalog';
 import { showSuccessToast } from '../config/key';
 import useDietPlans from '../diet/useDietPlans';
+import WaterGoalStart from '../diet/WaterGoalStart';
+import WaterLog from '../diet/WaterLog';
 import {
   canShowDietPlanRateButton,
-  WATER_GLASS_ML,
-  WATER_GOAL_OPTIONS,
-  formatWaterLiters,
   getDietListStatus,
   getDietPlanGallery,
   getDietPlanRatingLabel,
@@ -35,7 +34,6 @@ export default function DietPlan() {
   const routeItem = location.state?.item || null;
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [waterModal, setWaterModal] = useState(false);
-  const [waterGoal, setWaterGoal] = useState(3000);
   const [confirm, setConfirm] = useState(null);
   const [conflict, setConflict] = useState(null);
 
@@ -76,6 +74,7 @@ export default function DietPlan() {
     plan?.is_paid === false || Number(plan?.price) === 0 ? 'Free' : formatRupee(plan?.price);
   const status = getDietListStatus(plan);
   const waterGoalMl = getWaterGoalMl(plan);
+  const dayLabel = planDays.find((day) => day.dayKey === currentDayKey)?.label || '';
   const [dietReviewed, setDietReviewed] = useState(false);
 
   useEffect(() => {
@@ -217,32 +216,13 @@ export default function DietPlan() {
                   ))}
                 </div>
 
-                <div className="diet-water">
-                  <div>
-                    <strong>Hydration</strong>
-                    <small>
-                      {formatWaterLiters(waterMl)} / {formatWaterLiters(waterGoalMl)}
-                    </small>
-                  </div>
-                  <div className="diet-water-actions">
-                    <button
-                      type="button"
-                      className="ghost"
-                      disabled={updatingWater || waterMl <= 0}
-                      onClick={() => updateWaterIntake(waterMl - WATER_GLASS_ML)}
-                    >
-                      − Glass
-                    </button>
-                    <button
-                      type="button"
-                      className="cta"
-                      disabled={updatingWater || waterMl >= waterGoalMl}
-                      onClick={() => updateWaterIntake(waterMl + WATER_GLASS_ML)}
-                    >
-                      + Glass
-                    </button>
-                  </div>
-                </div>
+                <WaterLog
+                  waterMl={waterMl}
+                  waterGoalMl={waterGoalMl}
+                  dayLabel={dayLabel}
+                  updating={updatingWater}
+                  onSetIntake={updateWaterIntake}
+                />
 
                 <div className="diet-days">
                   {planDays.map((day) => (
@@ -373,40 +353,18 @@ export default function DietPlan() {
       </section>
 
       {waterModal ? (
-        <div className="web-modal" role="dialog">
-          <div className="web-modal-card">
-            <h3>Daily water goal</h3>
-            <p>Choose how much water you want to drink each day.</p>
-            <div className="diet-chips">
-              {WATER_GOAL_OPTIONS.map((item) => (
-                <button
-                  key={item.value}
-                  type="button"
-                  className={`chip ${waterGoal === item.value ? 'on' : ''}`}
-                  onClick={() => setWaterGoal(item.value)}
-                >
-                  {item.label}
-                  {item.recommended ? ' • recommended' : ''}
-                </button>
-              ))}
-            </div>
-            <div className="detail-cta">
-              <button type="button" className="ghost" onClick={() => setWaterModal(false)}>
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="cta"
-                onClick={() => {
-                  setWaterModal(false);
-                  runStart({ daily_water_intake_goal: waterGoal });
-                }}
-              >
-                Start
-              </button>
-            </div>
-          </div>
-        </div>
+        <WaterGoalStart
+          planName={plan?.name || plan?.title}
+          loading={starting}
+          onClose={() => {
+            if (starting) return;
+            setWaterModal(false);
+          }}
+          onConfirm={(goalMl) => {
+            setWaterModal(false);
+            runStart({ daily_water_intake_goal: goalMl });
+          }}
+        />
       ) : null}
 
       {confirm ? (

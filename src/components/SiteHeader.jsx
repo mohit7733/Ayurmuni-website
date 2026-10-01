@@ -5,6 +5,7 @@ import logoImg from '/greenlogo.png';
 import { Utils } from '../common/utils';
 import { useCart } from '../hooks/useCart';
 import { useUnreadNotificationCount } from '../hooks/useNotifications';
+import useLoggedIn from '../hooks/useLoggedIn';
 import { requireAuth } from '../services/guestAuth';
 import { PRIMARY_NAV } from '../site/nav';
 import IconButton from './ui/IconButton';
@@ -21,6 +22,7 @@ function ProgressRing({ progress, children }) {
 export default function SiteHeader() {
   const navigate = useNavigate();
   const location = useLocation();
+  const loggedIn = useLoggedIn();
   const { itemCount } = useCart();
   const { unreadCount } = useUnreadNotificationCount();
   const [user, setUser] = useState(null);
@@ -71,18 +73,21 @@ export default function SiteHeader() {
   return (
     <header className={`site-header ${menuOpen ? 'is-menu-open' : ''}`}>
       <div className="site-header-inner">
-        <Link to="/home" className="site-brand" aria-label="Ayurmuni home">
+        <Link to={loggedIn ? '/home' : '/welcome'} className="site-brand" aria-label="Ayurmuni home">
           <img src={logoImg} alt="Ayurmuni" width="176" height="44" />
         </Link>
 
-        <nav className="site-nav" aria-label="Primary">
-          {PRIMARY_NAV.map((item) => (
-            <NavLink key={item.to} to={item.to} className={navClass}>
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
+        {loggedIn ? (
+          <nav className="site-nav" aria-label="Primary">
+            {PRIMARY_NAV.map((item) => (
+              <NavLink key={item.to} to={item.to} className={navClass}>
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+        ) : null}
 
+        {loggedIn ? (
         <div className="site-header-actions">
           <IconButton label="Search" variant="ghost" onClick={() => navigate('/search')}>
             <Search size={20} aria-hidden />
@@ -137,8 +142,10 @@ export default function SiteHeader() {
             {menuOpen ? <X size={22} aria-hidden /> : <Menu size={22} aria-hidden />}
           </IconButton>
         </div>
+        ) : null}
       </div>
 
+      {loggedIn ? (
       <nav id="site-mobile-nav" className="site-nav-mobile" aria-label="Mobile" hidden={!menuOpen}>
         {PRIMARY_NAV.map((item) => (
           <NavLink key={item.to} to={item.to} className={navClass}>
@@ -149,6 +156,7 @@ export default function SiteHeader() {
           Profile
         </NavLink>
       </nav>
+      ) : null}
     </header>
   );
 }

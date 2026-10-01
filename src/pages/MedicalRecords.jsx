@@ -130,7 +130,9 @@ export default function MedicalRecords() {
         return;
       }
       showSuccessToast('Record uploaded', 'success');
-      closeUpload();
+      setPickedFile(null);
+      setDescription('');
+      setRecordType('');
       await load();
     } catch {
       showSuccessToast('Unable to upload record', 'error');
@@ -152,13 +154,8 @@ export default function MedicalRecords() {
   };
 
   const openPreview = (item) => {
-    const url = item?.file_url;
-    if (!url) return;
-    if (isImageRecord(item)) {
-      setPreview(item);
-      return;
-    }
-    window.open(url, '_blank', 'noopener,noreferrer');
+    if (!item?.file_url) return;
+    setPreview(item);
   };
 
   return (
@@ -241,12 +238,13 @@ export default function MedicalRecords() {
             const title = item?.title || item?.description || item?.file_name || 'Medical record';
             const typeLabel = formatRecordType(item?.medical_record_type);
             const dateLabel = formatRecordDate(item?.created_at || item?.uploaded_at || item?.updated_at);
+            const thumb = item?.file_url || item?.thumbnail_url || '';
             const image = isImageRecord(item);
             return (
               <div key={item.id} className="record-row">
                 <button type="button" className="record-main" onClick={() => openPreview(item)}>
-                  {image && item.file_url ? (
-                    <img src={item.file_url} alt="" />
+                  {image && thumb ? (
+                    <img src={thumb} alt="" />
                   ) : (
                     <span className="record-file">{String(item.file_type || 'FILE').toUpperCase()}</span>
                   )}
@@ -316,7 +314,16 @@ export default function MedicalRecords() {
         <div className="web-modal" role="dialog" onClick={() => setPreview(null)}>
           <div className="web-modal-card record-preview" onClick={(e) => e.stopPropagation()}>
             <h3>{preview.title || preview.description || 'Record'}</h3>
-            <img src={preview.file_url} alt="" />
+            {isImageRecord(preview) ? (
+              <img src={preview.file_url} alt="" />
+            ) : (
+              <div className="record-preview-pdf">
+                <strong>PDF document</strong>
+                <a href={preview.file_url} target="_blank" rel="noopener noreferrer">
+                  Open PDF
+                </a>
+              </div>
+            )}
             <button type="button" className="ghost" onClick={() => setPreview(null)}>
               Close
             </button>

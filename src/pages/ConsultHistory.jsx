@@ -15,7 +15,7 @@ import { getConsultHistory } from '../services/consultService';
 const TABS = [
   { key: 'all', label: 'All' },
   { key: 'last_30_days', label: 'Last 30 Days' },
-  { key: 'last_90_days', label: 'Last 90 Days' },
+  { key: 'last_6_months', label: 'Last 6 Months' },
 ];
 
 const PAGE_SIZE = 5;
@@ -59,6 +59,7 @@ export default function ConsultHistory() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebounced(search.trim().toLowerCase()), 400);
@@ -83,7 +84,7 @@ export default function ConsultHistory() {
     return () => {
       alive = false;
     };
-  }, [tab]);
+  }, [tab, reload]);
 
   const filtered = useMemo(() => {
     if (!debounced) return history;
@@ -116,8 +117,9 @@ export default function ConsultHistory() {
     if (lookupId) navigate(`/profile/appointments/${lookupId}`);
   };
 
-  const openSlots = (item) => {
+  const openSlots = (item, { reschedule = false } = {}) => {
     if (!item.doctorId) return;
+    const lookupId = resolveAppointmentLookupId({ rawData: item.raw, ...item });
     navigate(`/consult/doctors/${item.doctorId}/slots`, {
       state: {
         doctor: item.raw?.doctor || {
@@ -125,7 +127,7 @@ export default function ConsultHistory() {
           full_name: item.doctorName,
           profile_image: item.image,
         },
-        appointmentId: item.appointmentId,
+        ...(reschedule ? { appointmentId: lookupId || item.appointmentId } : {}),
       },
     });
   };
@@ -134,12 +136,17 @@ export default function ConsultHistory() {
     <AppShell tab="consult">
       <section className="catalog-page history-page">
         <header className="catalog-head">
-          <button type="button" className="text-back" onClick={() => navigate(-1)}>
-            ← Back
-          </button>
           <div>
+            <button type="button" className="text-back" onClick={() => navigate(-1)}>
+              ← Back
+            </button>
             <h1>Consultation History</h1>
             <p>Track your medical journey</p>
+          </div>
+          <div className="catalog-head-actions">
+            <button type="button" disabled={loading} onClick={() => setReload((n) => n + 1)}>
+              Refresh
+            </button>
           </div>
         </header>
 
@@ -246,7 +253,7 @@ export default function ConsultHistory() {
                         </button>
                       ) : null}
                       {showReschedule ? (
-                        <button type="button" className="cta" onClick={() => openDetails(item)}>
+                        <button type="button" className="cta" onClick={() => openSlots(item, { reschedule: true })}>
                           {status === 'reschedule' ? 'Request Change' : 'Reschedule'}
                         </button>
                       ) : showBookAgain && item.doctorId ? (

@@ -19,6 +19,7 @@ import {
   toggleWishlistProduct,
 } from '../services/productService';
 import { requireAuth } from '../services/guestAuth';
+import { showPrescriptionRequired } from '../services/prescriptionGate';
 import { showSuccessToast } from '../config/key';
 import {
   extractReviewsList,
@@ -157,16 +158,10 @@ export default function ProductDetails() {
       return;
     }
     if (isPrescriptionRequired(active) || isPrescriptionRequired(product)) {
-      showSuccessToast(
-        'This medicine needs a valid prescription before it can be added to cart.',
-        'error',
-      );
-      navigate(
-        `/medicines/prescription?variant=${encodeURIComponent(cartVariantId)}&name=${encodeURIComponent(
-          product?.name || active?.name || '',
-        )}`,
-        { state: { variantIds: [cartVariantId], productName: product?.name || active?.name } },
-      );
+      showPrescriptionRequired({
+        variantId: cartVariantId,
+        productName: product?.name || active?.name,
+      });
       return;
     }
     const ok = await syncCartQuantity({ ...active, variant_id: cartVariantId }, addQty);

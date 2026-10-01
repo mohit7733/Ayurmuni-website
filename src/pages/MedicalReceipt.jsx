@@ -8,6 +8,7 @@ import { showSuccessToast } from '../config/key';
 import { requireAuth } from '../services/guestAuth';
 import { getMedicalReceipt } from '../services/consultService';
 import { formatDisplayIdHash, formatReceiptId } from '../utils/formatDisplayId';
+import { parseConsultationReceiptBreakdown } from '../utils/consultationReceiptUtils';
 import { saveBrowserFile } from '../utils/prescriptionDetailUtils';
 import { getEmailShareUrl } from '../utils/shareUtils';
 import ShareButton from '../components/ShareButton';
@@ -19,27 +20,38 @@ const formatReceiptDate = (value) => {
   return date.toISOString().split('T')[0];
 };
 
-const buildReceiptText = (receipt) => {
+const buildReceiptText = (receipt, breakdown) => {
   const specialization = Array.isArray(receipt?.info?.doctor_specialization)
     ? receipt.info.doctor_specialization.join(', ')
     : receipt?.info?.doctor_specialization || '';
   const doctorName = receipt?.info?.doctor_name || receipt?.doctor_name || 'Doctor';
-  const total = receipt?.total_amount ?? receipt?.consultation_fees ?? 0;
+  const statusLabel = breakdown.paymentStatus
+    ? breakdown.paymentStatus.charAt(0).toUpperCase() + breakdown.paymentStatus.slice(1)
+    : '';
+  const legacyAdmin = Number(receipt?.administrative_charges ?? 0);
+  const legacyDigital = Number(receipt?.digital_report_access ?? 0);
   return [
     'TruIndyaWellness Private Limited',
     'DIGITAL CONSULTATION RECEIPT',
     '----------------------------------------',
-    `Receipt No.: ${formatDisplayIdHash('RCP', receipt?.payment_id ?? receipt?.consultation_id)}`,
+    `Receipt No.: ${formatDisplayIdHash('RCP', breakdown.paymentId || receipt?.payment_id || receipt?.consultation_id)}`,
     `Date: ${formatReceiptDate(receipt?.date)}`,
     `Patient: ${receipt?.patient_name || '-'}`,
-    `Payment Method: ${receipt?.payment_method ?? receipt?.payment_type ?? '—'}`,
+    `Payment Method: ${breakdown.paymentMethod}`,
+    statusLabel ? `Payment Status: ${statusLabel}` : '',
+    breakdown.bank ? `Bank: ${breakdown.bank}` : '',
+    breakdown.paymentId ? `Payment ID: ${breakdown.paymentId}` : '',
+    breakdown.orderId ? `Order ID: ${breakdown.orderId}` : '',
+    breakdown.bankTransactionId ? `Bank Transaction ID: ${breakdown.bankTransactionId}` : '',
     `Doctor: ${doctorName}`,
     specialization ? `Specialization: ${specialization}` : '',
     '----------------------------------------',
-    `Consultation Fee: ${formatRupee(receipt?.consultation_fees ?? 0)}`,
-    `Administrative Charges: ${formatRupee(receipt?.administrative_charges ?? 0)}`,
-    `Digital Report Access: ${formatRupee(receipt?.digital_report_access ?? 0)}`,
-    `Total Paid: ${formatRupee(total)}`,
+    `Consultation Fee: ${formatRupee(breakdown.consultationFee)}`,
+    breakdown.platformFee > 0 ? `Platform Fee: ${formatRupee(breakdown.platformFee)}` : '',
+    breakdown.gstAmount > 0 ? `GST: ${formatRupee(breakdown.gstAmount)}` : '',
+    legacyAdmin > 0 ? `Administrative Charges: ${formatRupee(legacyAdmin)}` : '',
+    legacyDigital > 0 ? `Digital Report Access: ${formatRupee(legacyDigital)}` : '',
+    `Total Paid: ${formatRupee(breakdown.totalPaid)}`,
     '----------------------------------------',
     'THIS IS A COMPUTER GENERATED RECEIPT. NO SIGNATURE IS REQUIRED.',
   ]
@@ -88,6 +100,13 @@ export default function MedicalReceipt() {
     : receipt?.info?.doctor_specialization || '';
   const doctorName = receipt?.info?.doctor_name || receipt?.doctor_name || 'Doctor';
   const doctor = receipt?.info || { doctor_name: doctorName, doctor_image: receipt?.info?.doctor_image };
+  const breakdown = receipt ? parseConsultationReceiptBreakdown(receipt) : null;
+  const statusLabel = breakdown?.paymentStatus
+    ? breakdown.paymentStatus.charAt(0).toUpperCase() + breakdown.paymentStatus.slice(1)
+    : '';
+  const legacyAdmin = Number(receipt?.administrative_charges ?? 0);
+  const legacyDigital = Number(receipt?.digital_report_access ?? 0);
+  const receiptText = receipt && breakdown ? buildReceiptText(receipt, breakdown) : '';
 
   const downloadReceipt = () => {
     if (!receipt) {
@@ -98,7 +117,12 @@ export default function MedicalReceipt() {
       const fileName = `Medical_Receipt_${formatReceiptId(
         receipt?.consultation_id ?? receipt?.payment_id,
       ).replace(/[^a-zA-Z0-9._-]/g, '_')}.txt`;
-      saveBrowserFile(new Blob([buildReceiptText(receipt)], { type: 'text/plain;charset=utf-8' }), fileName);
+      saveBrowserFile(
+        new Blob([buildReceiptText(receipt, parseConsultationReceiptBreakdown(receipt))], {
+          type: 'text/plain;charset=utf-8',
+        }),
+        fileName,
+      );
     } catch (error) {
       showSuccessToast(error?.message || 'Unable to save receipt', 'error');
     }
@@ -132,7 +156,10 @@ export default function MedicalReceipt() {
                 <div>
                   <small>Receipt No.</small>
                   <strong>
-                    {formatDisplayIdHash('RCP', receipt?.payment_id ?? receipt?.consultation_id)}
+                    {formatDisplayIdHash(
+                      'RCP',
+                      breakdown.paymentId || receipt?.payment_id || receipt?.consultation_id,
+                    )}
                   </strong>
                 </div>
                 <div>
@@ -147,11 +174,32 @@ export default function MedicalReceipt() {
                 </div>
                 <div>
                   <small>Payment Method</small>
-                  <strong className="receipt-pay">
-                    {receipt?.payment_method ?? receipt?.payment_type ?? '—'}
-                  </strong>
+                  <strong className="receipt-pay">{breakdown.paymentMethod}</strong>
                 </div>
               </div>
+              {statusLabel || breakdown.bank ? (
+                <div className="receipt-row">
+                  {statusLabel ? (
+                    <div>
+                      <small>Payment Status</small>
+                      <strong>{statusLabel}</strong>
+                    </div>
+                  ) : null}
+                  {breakdown.bank ? (
+                    <div>
+                      <small>Bank</small>
+                      <strong>{breakdown.bank}</strong>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+              {breakdown.paymentId ? (
+                <p className="muted">Payment ID: {breakdown.paymentId}</p>
+              ) : null}
+              {breakdown.orderId ? <p className="muted">Order ID: {breakdown.orderId}</p> : null}
+              {breakdown.bankTransactionId ? (
+                <p className="muted">Bank Transaction ID: {breakdown.bankTransactionId}</p>
+              ) : null}
 
               <hr />
 
@@ -173,22 +221,36 @@ export default function MedicalReceipt() {
 
               <div className="receipt-price">
                 <span>Consultation Fee</span>
-                <strong>{formatRupee(receipt?.consultation_fees ?? 0)}</strong>
+                <strong>{formatRupee(breakdown.consultationFee)}</strong>
               </div>
-              <div className="receipt-price">
-                <span>Administrative Charges</span>
-                <strong>{formatRupee(receipt?.administrative_charges ?? 0)}</strong>
-              </div>
-              <div className="receipt-price">
-                <span>Digital Report Access</span>
-                <strong>{formatRupee(receipt?.digital_report_access ?? 0)}</strong>
-              </div>
+              {breakdown.platformFee > 0 ? (
+                <div className="receipt-price">
+                  <span>Platform Fee</span>
+                  <strong>{formatRupee(breakdown.platformFee)}</strong>
+                </div>
+              ) : null}
+              {breakdown.gstAmount > 0 ? (
+                <div className="receipt-price">
+                  <span>GST</span>
+                  <strong>{formatRupee(breakdown.gstAmount)}</strong>
+                </div>
+              ) : null}
+              {legacyAdmin > 0 ? (
+                <div className="receipt-price">
+                  <span>Administrative Charges</span>
+                  <strong>{formatRupee(legacyAdmin)}</strong>
+                </div>
+              ) : null}
+              {legacyDigital > 0 ? (
+                <div className="receipt-price">
+                  <span>Digital Report Access</span>
+                  <strong>{formatRupee(legacyDigital)}</strong>
+                </div>
+              ) : null}
               <hr />
               <div className="receipt-total">
                 <span>Total Paid</span>
-                <strong>
-                  {formatRupee(receipt?.total_amount ?? receipt?.consultation_fees ?? 0)}
-                </strong>
+                <strong>{formatRupee(breakdown.totalPaid)}</strong>
               </div>
               <p className="receipt-note">
                 THIS IS A COMPUTER GENERATED RECEIPT. NO SIGNATURE IS REQUIRED.
@@ -197,7 +259,7 @@ export default function MedicalReceipt() {
             <div className="history-actions receipt-actions">
               <ShareButton
                 title="Medical Receipt - Ayurmuni"
-                text={buildReceiptText(receipt)}
+                text={receiptText}
                 url={window.location.href}
                 variant="soft"
                 size="sm"
@@ -208,7 +270,7 @@ export default function MedicalReceipt() {
                 onClick={() => {
                   window.location.href = getEmailShareUrl(
                     'Medical Receipt - Ayurmuni',
-                    buildReceiptText(receipt),
+                    receiptText,
                   );
                 }}
               >

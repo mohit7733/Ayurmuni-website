@@ -7,6 +7,7 @@ import { formatRupee } from '../home/catalog';
 import { useCart } from '../hooks/useCart';
 import { buildCartSections, CHECKOUT_KEY } from '../cart/mapCart';
 import { getAddQtyBlockMessage, isPrescriptionRequired } from '../product/stock';
+import { showPrescriptionRequired } from '../services/prescriptionGate';
 import { getOrderFeeQuote } from '../services/orderService';
 import { getStatusLabel, isPrescriptionApproved, isPrescriptionRejected } from '../services/prescriptionService';
 import { requireAuth } from '../services/guestAuth';
@@ -174,26 +175,13 @@ export default function Cart() {
     const oldQty = Math.max(0, Number(item.quantity) || 0);
 
     if (isPrescribed && action === 'remove') return;
+
+    if (rxRequired && (isPrescribed || action === 'plus')) {
+      showPrescriptionRequired({ variantId: item.variant_id, productName: item.name });
+      return;
+    }
+
     if (isPrescribed && action === 'minus' && oldQty <= 1) return;
-
-    if (isPrescribed && rxRequired && action === 'plus') {
-      showSuccessToast('This prescribed medicine cannot be increased from cart.', 'error');
-      return;
-    }
-
-    if (!isPrescribed && rxRequired && action === 'plus') {
-      showSuccessToast(
-        'This medicine needs a valid prescription before more can be added.',
-        'error',
-      );
-      navigate(
-        `/medicines/prescription?variant=${encodeURIComponent(item.variant_id)}&name=${encodeURIComponent(
-          item.name || '',
-        )}`,
-        { state: { variantIds: [item.variant_id], productName: item.name } },
-      );
-      return;
-    }
 
     const nextQty = action === 'minus' ? Math.max(isPrescribed ? 1 : 0, oldQty - 1) : oldQty + 1;
     const stockMsg = getAddQtyBlockMessage(item, nextQty, { cartLine: true });

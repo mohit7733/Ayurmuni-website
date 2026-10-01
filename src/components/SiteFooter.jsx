@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { BadgeCheck, Leaf, LockKeyhole, ShieldCheck } from 'lucide-react';
 import logoImg from '/greenlogo.png';
 import { COPY } from '../content/copy';
+import useLoggedIn from '../hooks/useLoggedIn';
 import { FOOTER_COLUMNS, FOOTER_LEGAL } from '../site/nav';
 
 const TRUST_ICONS = {
@@ -11,7 +12,20 @@ const TRUST_ICONS = {
   private: ShieldCheck,
 };
 
+const PUBLIC_FOOTER_LINKS = new Set(['/about', '/contact', '/terms']);
+
 export default function SiteFooter() {
+  const loggedIn = useLoggedIn();
+  const columns = loggedIn
+    ? FOOTER_COLUMNS
+    : FOOTER_COLUMNS.map((column) => ({
+        ...column,
+        links: column.links.filter((item) => PUBLIC_FOOTER_LINKS.has(item.to)),
+      })).filter((column) => column.links.length > 0);
+  const legal = loggedIn
+    ? FOOTER_LEGAL
+    : FOOTER_LEGAL.filter((item) => PUBLIC_FOOTER_LINKS.has(item.to));
+
   return (
     <footer className="site-footer">
       <ul className="site-footer-trust" aria-label="Why Ayurmuni">
@@ -35,7 +49,7 @@ export default function SiteFooter() {
           <p className="site-footer-tagline">{COPY.brandTagline}</p>
           <p>{COPY.brandMission}</p>
         </div>
-        {FOOTER_COLUMNS.map((column) => (
+        {columns.map((column) => (
           <nav key={column.title} className="site-footer-col" aria-label={column.title}>
             <h2>{column.title}</h2>
             <ul>
@@ -54,7 +68,7 @@ export default function SiteFooter() {
         <div className="site-footer-legal">
           <span>© {new Date().getFullYear()} Ayurmuni. All rights reserved.</span>
           <nav aria-label="Legal">
-            {FOOTER_LEGAL.map((item) => (
+            {legal.map((item) => (
               <Link key={item.to} to={item.to}>
                 {item.label}
               </Link>

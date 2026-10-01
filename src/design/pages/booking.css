@@ -312,12 +312,19 @@
   font-size: var(--am-text-xs);
 }
 
+.bk-upload-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: var(--am-space-3);
+}
+
 .bk-upload {
   position: relative;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-top: var(--am-space-3);
+  margin-top: 0;
   cursor: pointer;
 }
 

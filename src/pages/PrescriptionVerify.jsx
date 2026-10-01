@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
+import PrescriptionFilePreview from '../components/PrescriptionFilePreview';
 import { showSuccessToast } from '../config/key';
 import { UploadProfilePhoto } from '../services/profileService';
 import {
@@ -29,9 +30,7 @@ export default function PrescriptionVerify() {
   const [previews, setPreviews] = useState([]);
 
   useEffect(() => {
-    const urls = files.map((file) =>
-      file?.type === 'application/pdf' ? '' : URL.createObjectURL(file),
-    );
+    const urls = files.map((file) => (file instanceof File ? URL.createObjectURL(file) : ''));
     setPreviews(urls);
     return () => urls.forEach((url) => url && URL.revokeObjectURL(url));
   }, [files]);
@@ -142,18 +141,12 @@ export default function PrescriptionVerify() {
 
         <div className="home-rail">
           {(savedFiles.length ? savedFiles : files).map((item, index) => (
-            <div key={item.uri || item.name || index} className="media-card">
-              <div className="media-thumb">
-                {item.uri && !/\.pdf/i.test(item.uri || '') ? (
-                  <img src={item.uri} alt="" />
-                ) : previews[index] ? (
-                  <img src={previews[index]} alt="" />
-                ) : (
-                  <span>Rx</span>
-                )}
-              </div>
-              <p>{item.name || `File ${index + 1}`}</p>
-            </div>
+            <PrescriptionFilePreview
+              key={item.uri || item.name || index}
+              uri={item.uri || previews[index]}
+              fileType={item.fileType || item.type}
+              label={item.name || `File ${index + 1}`}
+            />
           ))}
         </div>
 

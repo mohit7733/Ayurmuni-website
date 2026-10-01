@@ -16,6 +16,7 @@ import {
   isPrepaidVerifyAcceptable,
 } from '../cart/mapCart';
 import { calculateOrderFees, feeRateLabel, parseFeeQuoteConfig } from '../cart/feeQuote';
+import { toRazorpayPaise } from '../consult/doctors';
 import { getOrderFeeQuote, placeOrder, verifyOrderPayment } from '../services/orderService';
 import { getAddresses, listAddresses, user_profile } from '../services/profileService';
 import { formatOrderStockError } from '../product/stock';
@@ -349,39 +350,50 @@ export default function Checkout() {
       const orderId = String(
         payment?.razorpay_order_id ?? payment?.razorpayOrderId ?? payment?.rzp_order_id ?? '',
       ).trim();
-      const amount = Math.round(Number(payment?.amount) || total * 100);
       if (!key || !orderId) {
-        if (isOrderSuccessful(result)) {
-          await finishOrder(result);
-          return;
-        }
-        showSuccessToast('Payment details missing. Please try again.', 'error');
+        showSuccessToast('Payment gateway not ready. Please try again.', 'error');
         return;
       }
+      const contactDigits = String(
+        customer?.phone_number ?? customer?.mobile ?? selectedAddress?.phone_number ?? selectedAddress?.phone ?? '',
+      ).replace(/\D/g, '');
+      const customerName = String(
+        customer?.first_name ?? customer?.full_name ?? selectedAddress?.full_name ?? selectedAddress?.name ?? 'AyurMuni Customer',
+      );
+      const customerEmail = String(customer?.email ?? selectedAddress?.email ?? 'customer@ayurmuni.com');
+      const amount = toRazorpayPaise(payment?.amount, total);
       const Razorpay = await loadRazorpay();
       await new Promise((resolve) => {
+        let settled = false;
+        const finish = () => {
+          if (settled) return;
+          settled = true;
+          resolve();
+        };
         const rzp = new Razorpay({
           key,
           amount,
           currency: payment?.currency || 'INR',
-          name: 'Ayurmuni',
-          description: 'Product order',
+          name: customerName,
+          description: 'Product Order Payment',
           order_id: orderId,
           prefill: {
-            name: customer?.first_name || '',
-            email: customer?.email || '',
-            contact: customer?.phone_number || customer?.phone || '',
+            name: customerName,
+            email: customerEmail,
+            contact: contactDigits ? `91${contactDigits.slice(-10)}` : '919999999999',
           },
           theme: { color: '#0D614E' },
           handler: async (response) => {
             setVerifying(true);
             try {
               const verify = await verifyOrderPayment({
-                razorpay_order_id: response.razorpay_order_id,
+                payment_id: payment?.payment_id,
+                razorpay_order_id: response.razorpay_order_id || orderId,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
               });
               if (isPrepaidVerifyAcceptable(verify, response)) {
+                showSuccessToast('Payment Successful', 'success');
                 await finishOrder(verify?.data ? verify : result);
               } else {
                 const failMsg = failMessage(verify, 'Payment verification failed');
@@ -390,15 +402,21 @@ export default function Checkout() {
               }
             } finally {
               setVerifying(false);
-              resolve();
+              finish();
             }
           },
           modal: {
             ondismiss: () => {
-              showSuccessToast('Payment cancelled', 'error');
-              resolve();
+              if (settled) return;
+              showSuccessToast('Payment cancelled. You can try again anytime.', 'error');
+              finish();
             },
           },
+        });
+        rzp.on('payment.failed', () => {
+          if (settled) return;
+          showSuccessToast('Unable to complete payment. Please try again.', 'error');
+          finish();
         });
         rzp.open();
       });
