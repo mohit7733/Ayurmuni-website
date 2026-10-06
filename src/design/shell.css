@@ -122,7 +122,10 @@
   height: 32px;
   padding: 2px;
   border-radius: 50%;
-  background: conic-gradient(var(--am-accent) var(--am-progress, 0deg), var(--am-line) 0deg);
+  background: conic-gradient(
+    var(--am-accent) var(--am-progress, 0deg),
+    var(--am-line) 0deg
+  );
 }
 
 .progress-ring-inner {
@@ -213,7 +216,7 @@
   }
 
   .site-nav-link.active::after {
-    content: '';
+    content: "";
     position: absolute;
     left: 50%;
     bottom: 4px;
@@ -341,11 +344,15 @@
 
 @media (max-width: 767px) {
   .app-shell:not(.auth-shell):not(.is-logged-out) .app-shell-body {
-    padding-bottom: calc(var(--am-tabbar-h) + var(--am-space-8) + env(safe-area-inset-bottom));
+    padding-bottom: calc(
+      var(--am-tabbar-h) + var(--am-space-8) + env(safe-area-inset-bottom)
+    );
   }
 
   .app-shell:not(.auth-shell):not(.is-logged-out) .site-footer {
-    padding-bottom: calc(var(--am-tabbar-h) + var(--am-space-5) + env(safe-area-inset-bottom));
+    padding-bottom: calc(
+      var(--am-tabbar-h) + var(--am-space-5) + env(safe-area-inset-bottom)
+    );
   }
 }
 
