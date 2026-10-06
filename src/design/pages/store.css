@@ -359,6 +359,7 @@
   border-radius: var(--am-radius-lg);
   background: var(--am-surface);
   flex-wrap: wrap;
+  margin-bottom: var(--am-space-6);
 }
 
 .st-controls__info {
@@ -446,6 +447,20 @@
   border-radius: 14px;
   background: var(--am-surface);
   color: var(--am-muted, #64748b);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.st-filter-chip:hover {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--am-line);
+  border-radius: 14px;
+  background: var(--am-primary);
+  color: var(--am-text-inverse, #fff);
   font-size: 12px;
   cursor: pointer;
 }

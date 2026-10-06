@@ -40,6 +40,12 @@
   outline: none;
 }
 
+.enhanced-search-input:focus {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
 .enhanced-search-input::placeholder {
   color: var(--am-text-muted);
 }

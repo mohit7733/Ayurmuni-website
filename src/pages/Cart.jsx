@@ -1,17 +1,24 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Leaf, Minus, Plus, RefreshCw, Search } from 'lucide-react';
-import AppShell from '../components/AppShell';
-import PageHeader from '../components/PageHeader';
-import { formatRupee } from '../home/catalog';
-import { useCart } from '../hooks/useCart';
-import { buildCartSections, CHECKOUT_KEY } from '../cart/mapCart';
-import { getAddQtyBlockMessage, isPrescriptionRequired } from '../product/stock';
-import { showPrescriptionRequired } from '../services/prescriptionGate';
-import { getOrderFeeQuote } from '../services/orderService';
-import { getStatusLabel, isPrescriptionApproved, isPrescriptionRejected } from '../services/prescriptionService';
-import { requireAuth } from '../services/guestAuth';
-import { showSuccessToast } from '../config/key';
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Leaf, Minus, Plus, RefreshCw, Search } from "lucide-react";
+import AppShell from "../components/AppShell";
+import PageHeader from "../components/PageHeader";
+import { formatRupee } from "../home/catalog";
+import { useCart } from "../hooks/useCart";
+import { buildCartSections, CHECKOUT_KEY } from "../cart/mapCart";
+import {
+  getAddQtyBlockMessage,
+  isPrescriptionRequired,
+} from "../product/stock";
+import { showPrescriptionRequired } from "../services/prescriptionGate";
+import { getOrderFeeQuote } from "../services/orderService";
+import {
+  getStatusLabel,
+  isPrescriptionApproved,
+  isPrescriptionRejected,
+} from "../services/prescriptionService";
+import { requireAuth } from "../services/guestAuth";
+import { showSuccessToast } from "../config/key";
 import {
   Badge,
   Button,
@@ -22,27 +29,34 @@ import {
   Skeleton,
   SkeletonText,
   Tabs,
-} from '../components/ui';
-import { CART_COPY as T } from '../content/cart';
-import '../design/pages/cart.css';
+} from "../components/ui";
+import { CART_COPY as T } from "../content/cart";
+import "../design/pages/cart.css";
 
 const rxTone = (item) => {
-  if (isPrescriptionApproved(item)) return { label: T.rxApproved, tone: 'success' };
-  if (isPrescriptionRejected(item)) return { label: T.rxRejected, tone: 'danger' };
-  return { label: getStatusLabel(item) || T.rxWaiting, tone: 'warning' };
+  if (isPrescriptionApproved(item))
+    return { label: T.rxApproved, tone: "success" };
+  if (isPrescriptionRejected(item))
+    return { label: T.rxRejected, tone: "danger" };
+  return { label: getStatusLabel(item) || T.rxWaiting, tone: "warning" };
 };
 
 const formatRxDate = (value) => {
-  if (!value) return '';
+  if (!value) return "";
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 };
 
 export default function Cart() {
   const navigate = useNavigate();
-  const { cartData, loading, fetchCart, syncCartQuantity, addingVariantId } = useCart();
-  const [tab, setTab] = useState('cart');
+  const { cartData, loading, fetchCart, syncCartQuantity, addingVariantId } =
+    useCart();
+  const [tab, setTab] = useState("cart");
   const [selected, setSelected] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
@@ -53,20 +67,23 @@ export default function Cart() {
 
   useEffect(() => {
     (async () => {
-      if (!(await requireAuth('Please login to view your cart'))) return;
+      if (!(await requireAuth("Please login to view your cart"))) return;
       fetchCart();
     })();
   }, [fetchCart]);
 
   const sections = useMemo(() => buildCartSections(cartData), [cartData]);
-  const cartSection = sections.find((s) => s.type === 'cart');
-  const prescribedSection = sections.find((s) => s.type === 'prescribed');
+  const cartSection = sections.find((s) => s.type === "cart");
+  const prescribedSection = sections.find((s) => s.type === "prescribed");
   const cartCount = cartSection?.items.length ?? 0;
   const prescribedCount = prescribedSection?.items.length ?? 0;
-  const visible = (tab === 'prescribed' ? prescribedSection : cartSection)?.items || [];
+  const visible =
+    (tab === "prescribed" ? prescribedSection : cartSection)?.items || [];
   const outOfStockCount = visible.filter((item) => item._isOutOfStock).length;
 
-  const idKey = sections.flatMap((s) => s.items.map((item) => item.id)).join(',');
+  const idKey = sections
+    .flatMap((s) => s.items.map((item) => item.id))
+    .join(",");
 
   useEffect(() => {
     if (!sections.length) {
@@ -74,18 +91,23 @@ export default function Cart() {
       return;
     }
     if (prescribedSection?.items?.length && !cartSection?.items?.length) {
-      setTab('prescribed');
+      setTab("prescribed");
     }
     const selectable = sections
       .flatMap((s) => s.items)
       .filter((item) => !item._isOutOfStock)
       .map((item) => item.id);
     setSelected(selectable);
-  }, [idKey, sections, cartSection?.items?.length, prescribedSection?.items?.length]);
+  }, [
+    idKey,
+    sections,
+    cartSection?.items?.length,
+    prescribedSection?.items?.length,
+  ]);
 
   useEffect(() => {
-    if (tab === 'cart' && !cartCount && prescribedCount) setTab('prescribed');
-    if (tab === 'prescribed' && !prescribedCount && cartCount) setTab('cart');
+    if (tab === "cart" && !cartCount && prescribedCount) setTab("prescribed");
+    if (tab === "prescribed" && !prescribedCount && cartCount) setTab("cart");
   }, [tab, cartCount, prescribedCount]);
 
   const selectedProducts = visible.filter(
@@ -96,7 +118,7 @@ export default function Cart() {
     0,
   );
   const cartItemIds = selectedProducts
-    .map((item) => String(item.cart_item_id || item.id || '').trim())
+    .map((item) => String(item.cart_item_id || item.id || "").trim())
     .filter(Boolean);
 
   useEffect(() => {
@@ -113,7 +135,9 @@ export default function Cart() {
         const data = res?.data ?? res;
         const summary = data?.summary ?? {};
         setFees({
-          shipping: Number(summary.shipping_charges ?? summary.delivery_charge ?? 0) || 0,
+          shipping:
+            Number(summary.shipping_charges ?? summary.delivery_charge ?? 0) ||
+            0,
           gst: Number(summary.gst ?? summary.product_gst ?? 0) || 0,
           platform: Number(summary.platform_fee ?? 0) || 0,
           total: Number(summary.total ?? summary.payable ?? 0) || 0,
@@ -127,15 +151,17 @@ export default function Cart() {
     return () => {
       alive = false;
     };
-  }, [cartItemIds.join(',')]);
+  }, [cartItemIds.join(",")]);
 
   const shipping = Number(fees?.shipping) || 0;
   const gst = Number(fees?.gst) || 0;
   const platform = Number(fees?.platform) || 0;
-  const payable = fees ? Math.round(subtotal + shipping + gst + platform) : Math.round(subtotal);
+  const payable = fees
+    ? Math.round(subtotal + shipping + gst + platform)
+    : Math.round(subtotal);
 
   const rxGroups = useMemo(() => {
-    if (tab !== 'prescribed') return [];
+    if (tab !== "prescribed") return [];
     const groups = new Map();
     visible.forEach((item) => {
       const key = String(item.rx_group_id || item.id);
@@ -157,9 +183,15 @@ export default function Cart() {
   };
 
   const toggleAll = () => {
-    const ids = visible.filter((item) => !item._isOutOfStock).map((item) => item.id);
+    const ids = visible
+      .filter((item) => !item._isOutOfStock)
+      .map((item) => item.id);
     const allOn = ids.length > 0 && ids.every((id) => selected.includes(id));
-    setSelected(allOn ? selected.filter((id) => !ids.includes(id)) : [...new Set([...selected, ...ids])]);
+    setSelected(
+      allOn
+        ? selected.filter((id) => !ids.includes(id))
+        : [...new Set([...selected, ...ids])],
+    );
   };
 
   const onRefresh = async () => {
@@ -170,27 +202,34 @@ export default function Cart() {
   };
 
   const changeQty = async (item, action) => {
-    const isPrescribed = item.source === 'prescribed';
-    const rxRequired = isPrescriptionRequired(item) || item.prescription_required;
+    const isPrescribed = item.source === "prescribed";
+    const rxRequired =
+      isPrescriptionRequired(item) || item.prescription_required;
     const oldQty = Math.max(0, Number(item.quantity) || 0);
 
-    if (isPrescribed && action === 'remove') return;
+    if (isPrescribed && action === "remove") return;
 
-    if (rxRequired && (isPrescribed || action === 'plus')) {
-      showPrescriptionRequired({ variantId: item.variant_id, productName: item.name });
+    if (rxRequired && (isPrescribed || action === "plus")) {
+      showPrescriptionRequired({
+        variantId: item.variant_id,
+        productName: item.name,
+      });
       return;
     }
 
-    if (isPrescribed && action === 'minus' && oldQty <= 1) return;
+    if (isPrescribed && action === "minus" && oldQty <= 1) return;
 
-    const nextQty = action === 'minus' ? Math.max(isPrescribed ? 1 : 0, oldQty - 1) : oldQty + 1;
+    const nextQty =
+      action === "minus"
+        ? Math.max(isPrescribed ? 1 : 0, oldQty - 1)
+        : oldQty + 1;
     const stockMsg = getAddQtyBlockMessage(item, nextQty, { cartLine: true });
     if (stockMsg) {
-      showSuccessToast(stockMsg, 'error');
+      showSuccessToast(stockMsg, "error");
       return;
     }
 
-    if (isPrescribed && action === 'plus') {
+    if (isPrescribed && action === "plus") {
       const doctorQty =
         doctorQtyRef.current[item.id] ??
         (Number(item.prescribed_quantity) || oldQty);
@@ -214,29 +253,43 @@ export default function Cart() {
   };
 
   const goCheckout = () => {
-    const checkoutProducts = selectedProducts.filter((item) => !item._isOutOfStock);
+    const checkoutProducts = selectedProducts.filter(
+      (item) => !item._isOutOfStock,
+    );
     if (!checkoutProducts.length) {
-      showSuccessToast('Out of stock. Remove it and continue with in-stock items.', 'error');
+      showSuccessToast(
+        "Out of stock. Remove it and continue with in-stock items.",
+        "error",
+      );
       return;
     }
     const overStock = checkoutProducts.find((item) =>
-      Boolean(getAddQtyBlockMessage(item, Number(item.quantity) || 0, { cartLine: true })),
+      Boolean(
+        getAddQtyBlockMessage(item, Number(item.quantity) || 0, {
+          cartLine: true,
+        }),
+      ),
     );
     if (overStock) {
       showSuccessToast(
-        getAddQtyBlockMessage(overStock, Number(overStock.quantity) || 0, { cartLine: true }) ||
-          'Some items are out of stock. Please update quantities.',
-        'error',
+        getAddQtyBlockMessage(overStock, Number(overStock.quantity) || 0, {
+          cartLine: true,
+        }) || "Some items are out of stock. Please update quantities.",
+        "error",
       );
       return;
     }
     sessionStorage.setItem(CHECKOUT_KEY, JSON.stringify(checkoutProducts));
-    navigate('/checkout', { state: { selectedProducts: checkoutProducts } });
+    navigate("/checkout", { state: { selectedProducts: checkoutProducts } });
   };
 
   const headerActions = (
     <>
-      <IconButton label={T.search} variant="soft" onClick={() => navigate('/search')}>
+      <IconButton
+        label={T.search}
+        variant="soft"
+        onClick={() => navigate("/search")}
+      >
         <Search size={18} aria-hidden />
       </IconButton>
       <IconButton
@@ -245,16 +298,23 @@ export default function Cart() {
         disabled={refreshing || loading}
         onClick={onRefresh}
       >
-        <RefreshCw size={18} aria-hidden className={refreshing || loading ? 'ct-spin' : undefined} />
+        <RefreshCw
+          size={18}
+          aria-hidden
+          className={refreshing || loading ? "ct-spin" : undefined}
+        />
       </IconButton>
     </>
   );
 
   const renderLine = (item) => {
     const adding = addingVariantId === item.variant_id;
-    const isPrescribed = item.source === 'prescribed';
+    const isPrescribed = item.source === "prescribed";
     return (
-      <article key={item.id} className={`ct-line${item._isOutOfStock ? ' is-oos' : ''}`}>
+      <article
+        key={item.id}
+        className={`ct-line${item._isOutOfStock ? " is-oos" : ""}`}
+      >
         <input
           type="checkbox"
           className="ct-line__check"
@@ -289,38 +349,45 @@ export default function Cart() {
               variant="ghost"
               size="sm"
               onClick={() =>
-                navigate(`/profile/prescriptions/${item.consultation_id || item.appointment_id}`, {
-                  state: {
-                    appointment_id: item.appointment_id,
-                    consultation_id: item.consultation_id,
-                    prescription_id: item.prescription_id,
-                    doctorData: {
-                      doctor_name: item.doctorName,
-                      id: item.doctor_id,
-                      doctor_id: item.doctor_id,
+                navigate(
+                  `/profile/prescriptions/${item.consultation_id || item.appointment_id}`,
+                  {
+                    state: {
+                      appointment_id: item.appointment_id,
+                      consultation_id: item.consultation_id,
+                      prescription_id: item.prescription_id,
+                      doctorData: {
+                        doctor_name: item.doctorName,
+                        id: item.doctor_id,
+                        doctor_id: item.doctor_id,
+                      },
                     },
                   },
-                })
+                )
               }
             >
               {T.viewPrescription}
             </Button>
           ) : null}
-          <div className="am-stepper ct-line__qty" role="group" aria-label={`Quantity of ${item.name || 'item'}`}>
+          <div
+            className="am-stepper ct-line__qty"
+            role="group"
+            aria-label={`Quantity of ${item.name || "item"}`}
+          >
             <button
               type="button"
               aria-label={T.decreaseQty}
               disabled={adding || (isPrescribed && item.quantity <= 1)}
-              onClick={() => changeQty(item, 'minus')}
+              onClick={() => changeQty(item, "minus")}
             >
               <Minus size={16} aria-hidden />
             </button>
-            <span aria-live="polite">{adding ? '…' : item.quantity}</span>
+            <span aria-live="polite">{adding ? "…" : item.quantity}</span>
             <button
               type="button"
               aria-label={T.increaseQty}
               disabled={adding || item._isOutOfStock}
-              onClick={() => changeQty(item, 'plus')}
+              onClick={() => changeQty(item, "plus")}
             >
               <Plus size={16} aria-hidden />
             </button>
@@ -338,7 +405,9 @@ export default function Cart() {
       <section className="ct-page">
         <PageHeader
           title={T.title}
-          subtitle={visible.length ? T.itemsCount(visible.length) : T.subtitleEmpty}
+          subtitle={
+            visible.length ? T.itemsCount(visible.length) : T.subtitleEmpty
+          }
           hideBack
           actions={headerActions}
         />
@@ -349,28 +418,36 @@ export default function Cart() {
             value={tab}
             onChange={setTab}
             items={[
-              { id: 'cart', label: T.tabCart, count: cartCount || undefined },
-              { id: 'prescribed', label: T.tabPrescribed, count: prescribedCount || undefined },
+              { id: "cart", label: T.tabCart, count: cartCount || undefined },
+              {
+                id: "prescribed",
+                label: T.tabPrescribed,
+                count: prescribedCount || undefined,
+              },
             ]}
           />
         ) : null}
 
         {loading && !sections.length ? (
           <div className="ct-skel" aria-busy="true" aria-label={T.loading}>
-            <Skeleton style={{ height: 96, borderRadius: 'var(--am-radius-lg)' }} />
-            <Skeleton style={{ height: 96, borderRadius: 'var(--am-radius-lg)' }} />
+            <Skeleton
+              style={{ height: 96, borderRadius: "var(--am-radius-lg)" }}
+            />
+            <Skeleton
+              style={{ height: 96, borderRadius: "var(--am-radius-lg)" }}
+            />
             <SkeletonText lines={3} />
           </div>
         ) : isEmpty ? (
           <EmptyState
-            title={tab === 'prescribed' ? T.emptyRxTitle : T.emptyTitle}
-            description={tab === 'prescribed' ? T.emptyRxText : T.emptyText}
+            title={tab === "prescribed" ? T.emptyRxTitle : T.emptyTitle}
+            description={tab === "prescribed" ? T.emptyRxText : T.emptyText}
             action={
               <>
-                <Button variant="secondary" onClick={() => navigate('/search')}>
+                <Button variant="secondary" onClick={() => navigate("/search")}>
                   {T.search}
                 </Button>
-                <Button variant="primary" onClick={() => navigate('/products')}>
+                <Button variant="primary" onClick={() => navigate("/products")}>
                   {T.shopProducts}
                 </Button>
               </>
@@ -390,7 +467,9 @@ export default function Cart() {
               <input
                 type="checkbox"
                 checked={
-                  visible.filter((i) => !i._isOutOfStock).every((i) => selected.includes(i.id)) &&
+                  visible
+                    .filter((i) => !i._isOutOfStock)
+                    .every((i) => selected.includes(i.id)) &&
                   visible.some((i) => !i._isOutOfStock)
                 }
                 onChange={toggleAll}
@@ -399,7 +478,7 @@ export default function Cart() {
             </label>
 
             <div className="ct-list">
-              {tab === 'prescribed'
+              {tab === "prescribed"
                 ? rxGroups.map((group) => {
                     const meta = group.meta || {};
                     const tone = rxTone(meta);
@@ -407,7 +486,8 @@ export default function Cart() {
                       .filter((line) => !line._isOutOfStock)
                       .map((line) => line.id);
                     const groupSelected =
-                      groupIds.length > 0 && groupIds.every((id) => selected.includes(id));
+                      groupIds.length > 0 &&
+                      groupIds.every((id) => selected.includes(id));
                     return (
                       <div
                         key={meta.id || group.items[0]?.rx_group_id}
@@ -422,24 +502,33 @@ export default function Cart() {
                               onChange={() => {
                                 setSelected((prev) =>
                                   groupSelected
-                                    ? prev.filter((id) => !groupIds.includes(id))
+                                    ? prev.filter(
+                                        (id) => !groupIds.includes(id),
+                                      )
                                     : [...new Set([...prev, ...groupIds])],
                                 );
                               }}
                             />
                             <div>
-                              <p className="ct-rx-group__kicker">{T.doctorRx}</p>
+                              <p className="ct-rx-group__kicker">
+                                {T.doctorRx}
+                              </p>
                               <p className="ct-rx-group__name">
-                                {meta.doctor_name || group.items[0]?.doctorName || 'Doctor'}
+                                {meta.doctor_name ||
+                                  group.items[0]?.doctorName ||
+                                  "Doctor"}
                               </p>
                               <p className="ct-rx-group__meta">
                                 {[
                                   meta.patient_name,
-                                  formatRxDate(meta.created_at || group.items[0]?.rx_created_at),
+                                  formatRxDate(
+                                    meta.created_at ||
+                                      group.items[0]?.rx_created_at,
+                                  ),
                                   T.itemsCount(group.items.length),
                                 ]
                                   .filter(Boolean)
-                                  .join(' · ')}
+                                  .join(" · ")}
                               </p>
                             </div>
                           </label>
@@ -461,24 +550,28 @@ export default function Cart() {
                   </p>
                   <p className="ct-bill__row">
                     <span>{T.delivery}</span>
-                    <strong>{feeLoading ? '…' : formatRupee(shipping)}</strong>
+                    <strong>{feeLoading ? "…" : formatRupee(shipping)}</strong>
                   </p>
                   <p className="ct-bill__row">
                     <span>{T.gst}</span>
-                    <strong>{feeLoading ? '…' : formatRupee(gst)}</strong>
+                    <strong>{feeLoading ? "…" : formatRupee(gst)}</strong>
                   </p>
                   <p className="ct-bill__row">
                     <span>{T.platformFee}</span>
-                    <strong>{feeLoading ? '…' : formatRupee(platform)}</strong>
+                    <strong>{feeLoading ? "…" : formatRupee(platform)}</strong>
                   </p>
                 </div>
               ) : null}
               <div className="ct-sticky__row">
                 <div className="ct-sticky__meta">
                   <small>{T.toPay}</small>
-                  <strong>{feeLoading ? '…' : formatRupee(payable)}</strong>
+                  <strong>{feeLoading ? "…" : formatRupee(payable)}</strong>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => setShowDetails((open) => !open)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowDetails((open) => !open)}
+                >
                   {showDetails ? T.hideBill : T.viewBill}
                 </Button>
                 <Button
@@ -487,7 +580,9 @@ export default function Cart() {
                   onClick={goCheckout}
                 >
                   {T.checkout}
-                  {selectedProducts.length ? ` (${selectedProducts.length})` : ''}
+                  {selectedProducts.length
+                    ? ` (${selectedProducts.length})`
+                    : ""}
                 </Button>
               </div>
             </div>

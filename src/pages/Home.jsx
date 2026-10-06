@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   BadgeCheck,
@@ -15,35 +15,35 @@ import {
   ShoppingBag,
   Sparkles,
   Stethoscope,
-} from 'lucide-react';
-import AppShell from '../components/AppShell';
-import DiseaseSelectionModal from '../components/DiseaseSelectionModal';
-import { Utils } from '../common/utils';
-import { getBannerImageUri } from '../home/catalog';
+} from "lucide-react";
+import AppShell from "../components/AppShell";
+import DiseaseSelectionModal from "../components/DiseaseSelectionModal";
+import { Utils } from "../common/utils";
+import { getBannerImageUri } from "../home/catalog";
 import {
   mapAppScreenToPath,
   resolveBannerNavigation,
   resolveServiceCategoryKey,
-} from '../home/serviceCategories';
-import useHomeData from '../hooks/useHomeData';
-import DoctorCard from '../components/DoctorCard';
-import DummyOfferCard from '../components/DummyOfferCard';
-import ProductCard from '../components/ProductCard';
-import HomeJoinAppointments from '../components/HomeJoinAppointments';
-import { getDoctorId } from '../consult/doctors';
-import { requireAuth } from '../services/guestAuth';
-import { useLocation } from '../context/LocationContext';
-import LocationSheet from '../components/LocationSheet';
-import useActiveDietHome from '../hooks/useActiveDietHome';
-import useRecentVisitedDoctors from '../hooks/useRecentVisitedDoctors';
-import useUpcomingAppointments from '../hooks/useUpcomingAppointments';
+} from "../home/serviceCategories";
+import useHomeData from "../hooks/useHomeData";
+import DoctorCard from "../components/DoctorCard";
+import DummyOfferCard from "../components/DummyOfferCard";
+import ProductCard from "../components/ProductCard";
+import HomeJoinAppointments from "../components/HomeJoinAppointments";
+import { getDoctorId } from "../consult/doctors";
+import { requireAuth } from "../services/guestAuth";
+import { useLocation } from "../context/LocationContext";
+import LocationSheet from "../components/LocationSheet";
+import useActiveDietHome from "../hooks/useActiveDietHome";
+import useRecentVisitedDoctors from "../hooks/useRecentVisitedDoctors";
+import useUpcomingAppointments from "../hooks/useUpcomingAppointments";
 import {
   getAddresses,
   listAddresses,
   updateAddress,
-} from '../services/profileService';
-import { savedAddressToParsed } from '../services/locationService';
-import BannerCarousel from '../components/BannerCarousel';
+} from "../services/profileService";
+import { savedAddressToParsed } from "../services/locationService";
+import BannerCarousel from "../components/BannerCarousel";
 import {
   Button,
   Disclaimer,
@@ -57,11 +57,14 @@ import {
   SectionHeader,
   Tile,
   TileGrid,
-} from '../components/ui';
-import { HOME_COPY as T } from '../content/home';
-import { DUMMY_CONSULT_PACKAGES, DUMMY_LAB_TESTS } from '../data/homeDummySections';
-import '../design/pages/home.css';
-import '../design/pages/dummy-offers.css';
+} from "../components/ui";
+import { HOME_COPY as T } from "../content/home";
+import {
+  DUMMY_CONSULT_PACKAGES,
+  DUMMY_LAB_TESTS,
+} from "../data/homeDummySections";
+import "../design/pages/home.css";
+import "../design/pages/dummy-offers.css";
 
 let prakritiModalShownThisSession = false;
 let diseaseModalShownThisSession = false;
@@ -84,7 +87,12 @@ const HERO_TRUST = [
 
 function ViewAll({ onClick, label }) {
   return (
-    <Button variant="ghost" size="sm" onClick={onClick} trailingIcon={<ArrowRight size={16} aria-hidden />}>
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={onClick}
+      trailingIcon={<ArrowRight size={16} aria-hidden />}
+    >
       {T.viewAll}
       <span className="am-sr-only"> {label}</span>
     </Button>
@@ -120,12 +128,13 @@ export default function Home() {
     fetchCustomerData,
   } = useHomeData();
   const { preview: activeDietPreview } = useActiveDietHome();
-  const { doctors: visitedDoctors, loading: loadingVisitedDoctors } = useRecentVisitedDoctors();
+  const { doctors: visitedDoctors, loading: loadingVisitedDoctors } =
+    useRecentVisitedDoctors();
   const { appointments: upcomingAppointments, loading: loadingAppointments } =
     useUpcomingAppointments();
 
-  const [name, setName] = useState('');
-  const [activeHomeModal, setActiveHomeModal] = useState('none');
+  const [name, setName] = useState("");
+  const [activeHomeModal, setActiveHomeModal] = useState("none");
   const [showDiseaseModal, setShowDiseaseModal] = useState(false);
   const [showPrakritiModal, setShowPrakritiModal] = useState(false);
   const [showLocationSheet, setShowLocationSheet] = useState(false);
@@ -146,8 +155,8 @@ export default function Home() {
 
   useEffect(() => {
     (async () => {
-      const info = await Utils.getData('_USER_INFO');
-      setName(info?.first_name || customerData?.first_name || 'Guest');
+      const info = await Utils.getData("_USER_INFO");
+      setName(info?.first_name || customerData?.first_name || "Guest");
     })();
   }, [customerData]);
 
@@ -161,7 +170,7 @@ export default function Home() {
 
   useEffect(() => {
     if (loadingCustomer || !customerData) return;
-    if (activeHomeModal !== 'none') return;
+    if (activeHomeModal !== "none") return;
 
     const hasDiseases =
       customerData?.has_health_diseases === true ||
@@ -172,7 +181,7 @@ export default function Home() {
 
     if (!hasDiseases && !diseaseModalShownThisSession) {
       diseaseModalShownThisSession = true;
-      setActiveHomeModal('disease');
+      setActiveHomeModal("disease");
       setShowDiseaseModal(true);
       return;
     }
@@ -183,7 +192,7 @@ export default function Home() {
 
     if (prakritiIncomplete && !prakritiModalShownThisSession) {
       prakritiModalShownThisSession = true;
-      setActiveHomeModal('prakriti');
+      setActiveHomeModal("prakriti");
       setShowPrakritiModal(true);
     }
   }, [loadingCustomer, customerData, activeHomeModal]);
@@ -191,7 +200,7 @@ export default function Home() {
   const onDiseaseModalDone = useCallback(
     async (saved) => {
       setShowDiseaseModal(false);
-      setActiveHomeModal('none');
+      setActiveHomeModal("none");
       if (saved) {
         try {
           await fetchCustomerData();
@@ -205,66 +214,95 @@ export default function Home() {
 
   const closePrakritiModal = () => {
     setShowPrakritiModal(false);
-    setActiveHomeModal('none');
+    setActiveHomeModal("none");
   };
 
   const handleCategoryPress = (item) => {
-    const nameKey = item?.name?.trim().toLowerCase() ?? '';
+    const nameKey = item?.name?.trim().toLowerCase() ?? "";
     const serviceKey = resolveServiceCategoryKey(item) ?? nameKey;
     const path = mapAppScreenToPath(serviceKey);
-    navigate(path && path !== '/home' ? path : '/products');
+    navigate(path && path !== "/home" ? path : "/products");
   };
 
   const handleBannerPress = (item) => {
     const target = resolveBannerNavigation(item);
     if (!target) return;
     if (target.external) {
-      window.open(target.href, '_blank', 'noopener,noreferrer');
+      window.open(target.href, "_blank", "noopener,noreferrer");
       return;
     }
     navigate(target.path);
   };
 
-  const prakritiProgress = Math.round(Number(customerData?.prakriti_progress) || 0);
+  const prakritiProgress = Math.round(
+    Number(customerData?.prakriti_progress) || 0,
+  );
   const prakritiComplete = prakritiProgress >= 100;
 
   const openPrakriti = async (allowBack = true) => {
     if (prakritiComplete) {
-      navigate('/prakriti-profile');
+      navigate("/prakriti-profile");
       return;
     }
-    if (!(await requireAuth('Complete your profile to start prakriti assessment'))) return;
-    navigate('/patient-faq', { state: { allowBack } });
+    if (
+      !(await requireAuth("Complete your profile to start prakriti assessment"))
+    )
+      return;
+    navigate("/patient-faq", { state: { allowBack } });
   };
 
   const prakritiName = String(
     customerData?.prakriti_type ||
       customerData?.prakriti_result ||
       customerData?.prakriti_name ||
-      '',
+      "",
   ).trim();
 
   const defaultAddress = useMemo(
-    () => savedAddresses.find((item) => item?.is_default) || savedAddresses[0] || null,
+    () =>
+      savedAddresses.find((item) => item?.is_default) ||
+      savedAddresses[0] ||
+      null,
     [savedAddresses],
   );
 
   const shortAddress = useMemo(() => {
     if (defaultAddress) {
-      const line = defaultAddress.address_line_1 || defaultAddress.address_type_name || '';
-      const city = defaultAddress.city || '';
-      return ([line, city].filter(Boolean).join(', ') || 'Saved address').slice(0, 44);
+      const line =
+        defaultAddress.address_line_1 || defaultAddress.address_type_name || "";
+      const city = defaultAddress.city || "";
+      return ([line, city].filter(Boolean).join(", ") || "Saved address").slice(
+        0,
+        44,
+      );
     }
-    if (deliveryLocation?.formatted_address || deliveryLocation?.address_line_1) {
-      const area = deliveryLocation.address_line_1 || deliveryLocation.city || deliveryLocation.formatted_address;
-      return String(area || 'Selected location').slice(0, 44);
+    if (
+      deliveryLocation?.formatted_address ||
+      deliveryLocation?.address_line_1
+    ) {
+      const area =
+        deliveryLocation.address_line_1 ||
+        deliveryLocation.city ||
+        deliveryLocation.formatted_address;
+      return String(area || "Selected location").slice(0, 44);
     }
-    if (loadingLocation) return 'Detecting location...';
+    if (loadingLocation) return "Detecting location...";
     if (locationEnabled && currentAddress) {
-      return String(currentAddress.address_line_1 || currentAddress.city || currentAddress.formatted_address || '').slice(0, 44);
+      return String(
+        currentAddress.address_line_1 ||
+          currentAddress.city ||
+          currentAddress.formatted_address ||
+          "",
+      ).slice(0, 44);
     }
-    return 'Select location';
-  }, [defaultAddress, deliveryLocation, loadingLocation, locationEnabled, currentAddress]);
+    return "Select location";
+  }, [
+    defaultAddress,
+    deliveryLocation,
+    loadingLocation,
+    locationEnabled,
+    currentAddress,
+  ]);
 
   const openLocationSheet = async () => {
     setShowLocationSheet(true);
@@ -288,12 +326,13 @@ export default function Home() {
   const comingSoonItems = useMemo(() => {
     const items = [];
     if (!yogaSessions?.length && !dietProducts?.length) {
-      items.push({ title: 'Diet & Yoga', icon: Salad });
+      items.push({ title: "Diet & Yoga", icon: Salad });
     } else {
-      if (!dietProducts?.length) items.push({ title: 'Diet plans', icon: Salad });
-      if (!yogaSessions?.length) items.push({ title: 'Yoga', icon: Flower2 });
+      if (!dietProducts?.length)
+        items.push({ title: "Diet plans", icon: Salad });
+      if (!yogaSessions?.length) items.push({ title: "Yoga", icon: Flower2 });
     }
-    items.push({ title: 'Panchakarma', icon: Leaf });
+    items.push({ title: "Panchakarma", icon: Leaf });
     return items;
   }, [yogaSessions?.length, dietProducts?.length]);
 
@@ -331,117 +370,186 @@ export default function Home() {
       <div className="hm-page">
         <section className="hm-hero" aria-labelledby="hm-hero-title">
           <div className="hm-hero__inner">
-            <div className="hm-hero__copy">
-              <div className="hm-hero__topline">
-                <p className="hm-hero__hello">
-                  {name ? `${T.greeting}, ${name}` : T.greeting}
-                </p>
+            {/* LEFT — Main hero content */}
+            <div className="hm-hero__main">
+              <div className="hm-hero__copy">
+                <div className="hm-hero__hello-wrap">
+                  <p className="hm-hero__hello">
+                    {name ? `${T.greeting}, ${name}` : T.greeting}
+                  </p>
+                </div>
+
+                <h1 id="hm-hero-title" className="hm-hero__title">
+                  {T.heroTitle}
+                </h1>
+
+                <p className="hm-hero__lede">{T.heroLede}</p>
+
+                <div className="hm-hero__ctas">
+                  <Button
+                    variant="accent"
+                    size="lg"
+                    onClick={() => navigate("/consult")}
+                    leadingIcon={<Stethoscope size={18} aria-hidden />}
+                  >
+                    {T.ctaConsult}
+                  </Button>
+
+                  <Button
+                    variant="secondary"
+                    size="lg"
+                    className="hm-hero__ghost"
+                    onClick={() => navigate("/medicines")}
+                  >
+                    {T.ctaMedicines}
+                  </Button>
+                </div>
+
                 <button
                   type="button"
-                  className="hm-location"
-                  onClick={openLocationSheet}
-                  aria-label={`${T.deliverTo}: ${shortAddress}. ${T.changeLocation}`}
+                  className="hm-search"
+                  onClick={() => navigate("/search")}
                 >
-                  <MapPin size={16} aria-hidden />
-                  <span className="hm-location__text">{shortAddress}</span>
-                  <ChevronDown size={16} aria-hidden />
+                  <Search size={18} aria-hidden />
+                  <span>{T.searchPlaceholder}</span>
                 </button>
+
+                <ul className="hm-hero__trust">
+                  {HERO_TRUST.map(({ icon: Icon, label }) => (
+                    <li key={label}>
+                      <Icon size={16} aria-hidden />
+                      {label}
+                    </li>
+                  ))}
+                </ul>
               </div>
-
-              <h1 id="hm-hero-title" className="hm-hero__title">
-                {T.heroTitle}
-              </h1>
-              <p className="hm-hero__lede">{T.heroLede}</p>
-
-              <div className="hm-hero__ctas">
-                <Button
-                  variant="accent"
-                  size="lg"
-                  onClick={() => navigate('/consult')}
-                  leadingIcon={<Stethoscope size={18} aria-hidden />}
-                >
-                  {T.ctaConsult}
-                </Button>
-                <Button variant="secondary" size="lg" className="hm-hero__ghost" onClick={() => navigate('/medicines')}>
-                  {T.ctaMedicines}
-                </Button>
-              </div>
-
-              <button type="button" className="hm-search" onClick={() => navigate('/search')}>
-                <Search size={18} aria-hidden />
-                <span>{T.searchPlaceholder}</span>
-              </button>
-
-              <ul className="hm-hero__trust">
-                {HERO_TRUST.map(({ icon: Icon, label }) => (
-                  <li key={label}>
-                    <Icon size={16} aria-hidden />
-                    {label}
-                  </li>
-                ))}
-              </ul>
             </div>
 
-            <aside className="hm-prakriti" aria-labelledby="hm-prakriti-title">
-              <span className="hm-prakriti__icon" aria-hidden>
-                <Sparkles size={22} />
-              </span>
-              {prakritiComplete ? (
-                <>
-                  <p className="am-eyebrow">{T.prakritiDoneEyebrow}</p>
-                  <h2 id="hm-prakriti-title" className="hm-prakriti__title">
-                    {prakritiName || T.prakritiDoneFallback}
-                  </h2>
-                  <p className="hm-prakriti__text">{T.prakritiDoneText}</p>
-                  <Button variant="secondary" block onClick={() => openPrakriti(true)}>
-                    {T.prakritiView}
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <p className="am-eyebrow">{T.prakritiEyebrow}</p>
-                  <h2 id="hm-prakriti-title" className="hm-prakriti__title">
-                    {T.prakritiTitle}
-                  </h2>
-                  <p className="hm-prakriti__text">{T.prakritiText}</p>
-                  <div
-                    className="hm-progress"
-                    role="progressbar"
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-valuenow={prakritiProgress}
-                    aria-label={T.prakritiProgressLabel}
-                  >
-                    <span style={{ '--hm-progress': `${prakritiProgress}%` }} />
-                  </div>
-                  <p className="hm-prakriti__meta">
-                    {prakritiProgress}% {T.complete}
-                  </p>
-                  <Button variant="primary" block onClick={() => openPrakriti(true)}>
-                    {prakritiProgress > 0 ? T.prakritiContinue : T.prakritiStart}
-                  </Button>
-                </>
-              )}
+            {/* RIGHT — Personal context */}
+            <aside className="hm-hero__aside">
+              <div className="hm-hero__aside-header">
+                <span className="hm-hero__aside-eyebrow">
+                  Your care, your way
+                </span>
+                <span className="hm-hero__aside-status">
+                  <span className="hm-hero__aside-status-dot" />
+                  Personalised
+                </span>
+              </div>
+
+              <button
+                type="button"
+                className="hm-location"
+                onClick={openLocationSheet}
+                aria-label={`${T.deliverTo}: ${shortAddress}. ${T.changeLocation}`}
+              >
+                <span className="hm-location__icon">
+                  <MapPin size={18} aria-hidden />
+                </span>
+
+                <span className="hm-location__content">
+                  <span className="hm-location__label">{T.deliverTo}</span>
+                  <span className="hm-location__text">{shortAddress}</span>
+                  <span className="hm-location__action">
+                    {T.changeLocation}
+                    <ChevronDown size={14} aria-hidden />
+                  </span>
+                </span>
+              </button>
+
+              <div className="hm-hero__aside-divider" />
+
+              <div className="hm-prakriti" aria-labelledby="hm-prakriti-title">
+                {prakritiComplete ? (
+                  <>
+                    <p className="am-eyebrow">{T.prakritiDoneEyebrow}</p>
+
+                    <h2 id="hm-prakriti-title" className="hm-prakriti__title">
+                      {prakritiName || T.prakritiDoneFallback}
+                    </h2>
+
+                    <p className="hm-prakriti__text">{T.prakritiDoneText}</p>
+
+                    <Button
+                      variant="secondary"
+                      block
+                      onClick={() => openPrakriti(true)}
+                    >
+                      {T.prakritiView}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <p className="am-eyebrow">{T.prakritiEyebrow}</p>
+
+                    <h2 id="hm-prakriti-title" className="hm-prakriti__title">
+                      {T.prakritiTitle}
+                    </h2>
+
+                    <p className="hm-prakriti__text">{T.prakritiText}</p>
+
+                    <div
+                      className="hm-progress"
+                      role="progressbar"
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={prakritiProgress}
+                      aria-label={T.prakritiProgressLabel}
+                    >
+                      <span
+                        style={{ "--hm-progress": `${prakritiProgress}%` }}
+                      />
+                    </div>
+
+                    <p className="hm-prakriti__meta">
+                      {prakritiProgress}% {T.complete}
+                    </p>
+
+                    <Button
+                      variant="primary"
+                      block
+                      onClick={() => openPrakriti(true)}
+                    >
+                      {prakritiProgress > 0
+                        ? T.prakritiContinue
+                        : T.prakritiStart}
+                    </Button>
+                  </>
+                )}
+              </div>
             </aside>
           </div>
         </section>
 
         <div className="hm-body">
           {serviceList.length > 0 ? (
-            <section className="hm-section hm-services" aria-labelledby="hm-services-title">
+            <section
+              className="hm-section hm-services"
+              aria-labelledby="hm-services-title"
+            >
               <h2 id="hm-services-title" className="am-sr-only">
                 {T.servicesTitle}
               </h2>
               <ul className="hm-services__grid">
                 {serviceList.map((item) => {
-                  const key = resolveServiceCategoryKey(item) || String(item.name || '').toLowerCase();
+                  const key =
+                    resolveServiceCategoryKey(item) ||
+                    String(item.name || "").toLowerCase();
                   const image = item.image_url || item.image || item.icon_url;
                   const Icon = SERVICE_ICONS[key] || Leaf;
                   return (
                     <li key={item.id}>
-                      <button type="button" className="hm-service" onClick={() => handleCategoryPress(item)}>
+                      <button
+                        type="button"
+                        className="hm-service"
+                        onClick={() => handleCategoryPress(item)}
+                      >
                         <span className="hm-service__tile" aria-hidden>
-                          {image ? <img src={image} alt="" loading="lazy" /> : <Icon size={24} />}
+                          {image ? (
+                            <img src={image} alt="" loading="lazy" />
+                          ) : (
+                            <Icon size={24} />
+                          )}
                         </span>
                         <span className="hm-service__label">{item.name}</span>
                       </button>
@@ -462,13 +570,19 @@ export default function Home() {
               />
             </div>
 
-            {activeDietPreview || loadingAppointments || upcomingAppointments?.length ? (
+            {activeDietPreview ||
+            loadingAppointments ||
+            upcomingAppointments?.length ? (
               <aside className="hm-dash__side" aria-label={T.yourPlan}>
                 {activeDietPreview ? (
                   <article className="hm-diet">
                     <div className="hm-diet__img">
                       {activeDietPreview.thumbnailUrl ? (
-                        <img src={activeDietPreview.thumbnailUrl} alt="" loading="lazy" />
+                        <img
+                          src={activeDietPreview.thumbnailUrl}
+                          alt=""
+                          loading="lazy"
+                        />
                       ) : (
                         <Salad size={26} aria-hidden />
                       )}
@@ -479,13 +593,16 @@ export default function Home() {
                         <button
                           type="button"
                           className="am-stretched"
-                          onClick={() => navigate(`/diet/${activeDietPreview.planId}`)}
+                          onClick={() =>
+                            navigate(`/diet/${activeDietPreview.planId}`)
+                          }
                         >
                           {activeDietPreview.title}
                         </button>
                       </h2>
                       <p className="hm-diet__meta">
-                        {T.day} {activeDietPreview.currentDay}/{activeDietPreview.totalDays} ·{' '}
+                        {T.day} {activeDietPreview.currentDay}/
+                        {activeDietPreview.totalDays} ·{" "}
                         {activeDietPreview.progressPercent}%
                       </p>
                       <div
@@ -493,30 +610,52 @@ export default function Home() {
                         role="progressbar"
                         aria-valuemin={0}
                         aria-valuemax={100}
-                        aria-valuenow={Number(activeDietPreview.progressPercent) || 0}
+                        aria-valuenow={
+                          Number(activeDietPreview.progressPercent) || 0
+                        }
                         aria-label={T.dietProgressLabel}
                       >
-                        <span style={{ '--hm-progress': `${Number(activeDietPreview.progressPercent) || 0}%` }} />
+                        <span
+                          style={{
+                            "--hm-progress": `${Number(activeDietPreview.progressPercent) || 0}%`,
+                          }}
+                        />
                       </div>
                       {activeDietPreview.focusLabel ? (
-                        <p className="hm-diet__focus">{activeDietPreview.focusLabel}</p>
+                        <p className="hm-diet__focus">
+                          {activeDietPreview.focusLabel}
+                        </p>
                       ) : null}
                     </div>
                   </article>
                 ) : null}
-                <HomeJoinAppointments appointments={upcomingAppointments} loading={loadingAppointments} />
+                <HomeJoinAppointments
+                  appointments={upcomingAppointments}
+                  loading={loadingAppointments}
+                />
               </aside>
             ) : null}
           </div>
 
           {healthConcerns.length > 0 ? (
-            <Reveal as="section" className="hm-section" aria-labelledby="hm-concerns-title">
+            <Reveal
+              as="section"
+              className="hm-section"
+              aria-labelledby="hm-concerns-title"
+            >
               <SectionHeader
                 id="hm-concerns-title"
                 eyebrow={T.concernsEyebrow}
                 title={T.concernsTitle}
                 description={T.concernsText}
-                action={healthConcerns.length > 1 ? <ViewAll label={T.concernsTitle} onClick={() => navigate('/consult')} /> : null}
+                action={
+                  healthConcerns.length > 1 ? (
+                    <ViewAll
+                      label={T.concernsTitle}
+                      onClick={() => navigate("/consult")}
+                    />
+                  ) : null
+                }
               />
               <TileGrid label={T.concernsTitle}>
                 {healthConcerns.map((item) => (
@@ -527,9 +666,16 @@ export default function Home() {
                     onClick={() =>
                       navigate(
                         `/consult/concern/${item.id}?name=${encodeURIComponent(item.name)}${
-                          item.description ? `&desc=${encodeURIComponent(item.description)}` : ''
+                          item.description
+                            ? `&desc=${encodeURIComponent(item.description)}`
+                            : ""
                         }`,
-                        { state: { categoryName: item.name, categoryDesc: item.description } },
+                        {
+                          state: {
+                            categoryName: item.name,
+                            categoryDesc: item.description,
+                          },
+                        },
                       )
                     }
                   />
@@ -546,11 +692,22 @@ export default function Home() {
           ) : null}
 
           {visitedDoctors.length > 0 ? (
-            <Reveal as="section" className="hm-section" aria-labelledby="hm-visited-title">
+            <Reveal
+              as="section"
+              className="hm-section"
+              aria-labelledby="hm-visited-title"
+            >
               <SectionHeader
                 id="hm-visited-title"
                 title={T.visitedTitle}
-                action={visitedDoctors.length > 1 ? <ViewAll label={T.visitedTitle} onClick={() => navigate('/consult')} /> : null}
+                action={
+                  visitedDoctors.length > 1 ? (
+                    <ViewAll
+                      label={T.visitedTitle}
+                      onClick={() => navigate("/consult")}
+                    />
+                  ) : null
+                }
               />
               <Rail label={T.visitedTitle}>
                 {visitedDoctors.map((item) => (
@@ -558,9 +715,17 @@ export default function Home() {
                     <MediaCard
                       image={item.doctor_image}
                       title={item.doctor_name}
-                      subtitle={item.doctor_designation || item.qualification || T.ayurvedicDoctor}
+                      subtitle={
+                        item.doctor_designation ||
+                        item.qualification ||
+                        T.ayurvedicDoctor
+                      }
                       fallbackIcon={Stethoscope}
-                      onClick={() => navigate(`/consult/doctors/${item.doctor_id || item.id}`)}
+                      onClick={() =>
+                        navigate(
+                          `/consult/doctors/${item.doctor_id || item.id}`,
+                        )
+                      }
                     />
                   </RailItem>
                 ))}
@@ -576,13 +741,24 @@ export default function Home() {
           ) : null}
 
           {doctors.length > 0 ? (
-            <Reveal as="section" className="hm-section" aria-labelledby="hm-doctors-title">
+            <Reveal
+              as="section"
+              className="hm-section"
+              aria-labelledby="hm-doctors-title"
+            >
               <SectionHeader
                 id="hm-doctors-title"
                 eyebrow={T.doctorsEyebrow}
                 title={T.doctorsTitle}
                 description={T.doctorsText}
-                action={doctors.length > 1 ? <ViewAll label={T.doctorsTitle} onClick={() => navigate('/consult/doctors')} /> : null}
+                action={
+                  doctors.length > 1 ? (
+                    <ViewAll
+                      label={T.doctorsTitle}
+                      onClick={() => navigate("/consult/doctors")}
+                    />
+                  ) : null
+                }
               />
               <ul className="am-doctor-grid" aria-label={T.doctorsTitle}>
                 {doctors.slice(0, 4).map((item) => (
@@ -602,11 +778,22 @@ export default function Home() {
           ) : null}
 
           {medicineProducts.length > 0 ? (
-            <Reveal as="section" className="hm-section" aria-labelledby="hm-medicines-title">
+            <Reveal
+              as="section"
+              className="hm-section"
+              aria-labelledby="hm-medicines-title"
+            >
               <SectionHeader
                 id="hm-medicines-title"
                 title={T.medicinesTitle}
-                action={medicineProducts.length > 1 ? <ViewAll label={T.medicinesTitle} onClick={() => navigate('/medicines')} /> : null}
+                action={
+                  medicineProducts.length > 1 ? (
+                    <ViewAll
+                      label={T.medicinesTitle}
+                      onClick={() => navigate("/medicines")}
+                    />
+                  ) : null
+                }
               />
               {renderProductRail(medicineProducts, T.medicinesTitle)}
             </Reveal>
@@ -620,11 +807,22 @@ export default function Home() {
           ) : null}
 
           {storeProducts.length > 0 ? (
-            <Reveal as="section" className="hm-section" aria-labelledby="hm-products-title">
+            <Reveal
+              as="section"
+              className="hm-section"
+              aria-labelledby="hm-products-title"
+            >
               <SectionHeader
                 id="hm-products-title"
                 title={T.productsTitle}
-                action={storeProducts.length > 1 ? <ViewAll label={T.productsTitle} onClick={() => navigate('/products')} /> : null}
+                action={
+                  storeProducts.length > 1 ? (
+                    <ViewAll
+                      label={T.productsTitle}
+                      onClick={() => navigate("/products")}
+                    />
+                  ) : null
+                }
               />
               {renderProductRail(storeProducts, T.productsTitle)}
             </Reveal>
@@ -632,11 +830,23 @@ export default function Home() {
 
           {Object.entries(sections).map(([key, items]) =>
             items?.length ? (
-              <Reveal as="section" className="hm-section" key={key} aria-labelledby={`hm-sec-${key}`}>
+              <Reveal
+                as="section"
+                className="hm-section"
+                key={key}
+                aria-labelledby={`hm-sec-${key}`}
+              >
                 <SectionHeader
                   id={`hm-sec-${key}`}
                   title={sectionLabels[key] || key}
-                  action={items.length > 1 ? <ViewAll label={sectionLabels[key] || key} onClick={() => navigate('/products')} /> : null}
+                  action={
+                    items.length > 1 ? (
+                      <ViewAll
+                        label={sectionLabels[key] || key}
+                        onClick={() => navigate("/products")}
+                      />
+                    ) : null
+                  }
                 />
                 {renderProductRail(items, sectionLabels[key] || key)}
               </Reveal>
@@ -644,12 +854,23 @@ export default function Home() {
           )}
 
           {yogaSessions.length > 0 ? (
-            <Reveal as="section" className="hm-section" aria-labelledby="hm-yoga-title">
+            <Reveal
+              as="section"
+              className="hm-section"
+              aria-labelledby="hm-yoga-title"
+            >
               <SectionHeader
                 id="hm-yoga-title"
                 eyebrow={T.yogaEyebrow}
                 title={T.yogaTitle}
-                action={yogaSessions.length > 1 ? <ViewAll label={T.yogaTitle} onClick={() => navigate('/yoga')} /> : null}
+                action={
+                  yogaSessions.length > 1 ? (
+                    <ViewAll
+                      label={T.yogaTitle}
+                      onClick={() => navigate("/yoga")}
+                    />
+                  ) : null
+                }
               />
               <Rail label={T.yogaTitle}>
                 {yogaSessions.map((item) => (
@@ -659,7 +880,9 @@ export default function Home() {
                       title={item.title}
                       subtitle={item.short_description}
                       fallbackIcon={Flower2}
-                      onClick={() => navigate(`/yoga/${item.id}`, { state: { item } })}
+                      onClick={() =>
+                        navigate(`/yoga/${item.id}`, { state: { item } })
+                      }
                     />
                   </RailItem>
                 ))}
@@ -668,12 +891,21 @@ export default function Home() {
           ) : null}
 
           {dietProducts.length > 0 ? (
-            <Reveal as="section" className="hm-section" aria-labelledby="hm-diet-title">
+            <Reveal
+              as="section"
+              className="hm-section"
+              aria-labelledby="hm-diet-title"
+            >
               <SectionHeader
                 id="hm-diet-title"
                 eyebrow={T.dietEyebrow}
                 title={T.dietTitle}
-                action={<ViewAll label={T.dietTitle} onClick={() => navigate('/diet?view=all')} />}
+                action={
+                  <ViewAll
+                    label={T.dietTitle}
+                    onClick={() => navigate("/diet?view=all")}
+                  />
+                }
               />
               <Rail label={T.dietTitle}>
                 {dietProducts.map((item) => (
@@ -683,7 +915,9 @@ export default function Home() {
                       title={item.title}
                       subtitle={item.short_description}
                       fallbackIcon={Salad}
-                      onClick={() => navigate(`/diet/${item.id}`, { state: { item } })}
+                      onClick={() =>
+                        navigate(`/diet/${item.id}`, { state: { item } })
+                      }
                     />
                   </RailItem>
                 ))}
@@ -691,31 +925,54 @@ export default function Home() {
             </Reveal>
           ) : null}
 
-          <Reveal as="section" className="hm-section" aria-labelledby="hm-packages-title">
+          <Reveal
+            as="section"
+            className="hm-section"
+            aria-labelledby="hm-packages-title"
+          >
             <SectionHeader
               id="hm-packages-title"
               title={T.packagesTitle}
-              action={<ViewAll label={T.packagesTitle} onClick={() => navigate('/packages')} />}
+              action={
+                <ViewAll
+                  label={T.packagesTitle}
+                  onClick={() => navigate("/packages")}
+                />
+              }
             />
             <Rail label={T.packagesTitle}>
               {DUMMY_CONSULT_PACKAGES.slice(0, 6).map((item) => (
                 <RailItem key={item.id} size="product">
-                  <DummyOfferCard item={item} kind="package" onClick={() => navigate('/packages')} />
+                  <DummyOfferCard
+                    item={item}
+                    kind="package"
+                    onClick={() => navigate("/packages")}
+                  />
                 </RailItem>
               ))}
             </Rail>
           </Reveal>
 
-          <Reveal as="section" className="hm-section" aria-labelledby="hm-lab-title">
+          <Reveal
+            as="section"
+            className="hm-section"
+            aria-labelledby="hm-lab-title"
+          >
             <SectionHeader
               id="hm-lab-title"
               title={T.labTitle}
-              action={<ViewAll label={T.labTitle} onClick={() => navigate('/labs')} />}
+              action={
+                <ViewAll label={T.labTitle} onClick={() => navigate("/labs")} />
+              }
             />
             <Rail label={T.labTitle}>
               {DUMMY_LAB_TESTS.map((item) => (
                 <RailItem key={item.id} size="product">
-                  <DummyOfferCard item={item} kind="lab" onClick={() => navigate('/labs')} />
+                  <DummyOfferCard
+                    item={item}
+                    kind="lab"
+                    onClick={() => navigate("/labs")}
+                  />
                 </RailItem>
               ))}
             </Rail>
@@ -740,7 +997,10 @@ export default function Home() {
           ) : null}
 
           {comingSoonItems.length > 0 ? (
-            <section className="hm-section hm-soon" aria-labelledby="hm-soon-title">
+            <section
+              className="hm-section hm-soon"
+              aria-labelledby="hm-soon-title"
+            >
               <h2 id="hm-soon-title" className="hm-soon__title">
                 {T.soonTitle}
               </h2>
@@ -774,13 +1034,18 @@ export default function Home() {
       </div>
 
       <DiseaseSelectionModal
-        visible={showDiseaseModal && activeHomeModal === 'disease'}
+        visible={showDiseaseModal && activeHomeModal === "disease"}
         serviceCategoryId={medicineCategoryId}
         onDone={onDiseaseModalDone}
       />
 
       <Modal
-        open={Boolean(showPrakritiModal && activeHomeModal === 'prakriti' && customerData && !loadingCustomer)}
+        open={Boolean(
+          showPrakritiModal &&
+          activeHomeModal === "prakriti" &&
+          customerData &&
+          !loadingCustomer,
+        )}
         onClose={closePrakritiModal}
         size="sm"
         title={T.prakritiModalTitle}
@@ -811,7 +1076,7 @@ export default function Home() {
           aria-valuenow={prakritiProgress}
           aria-label={T.prakritiProgressLabel}
         >
-          <span style={{ '--hm-progress': `${prakritiProgress}%` }} />
+          <span style={{ "--hm-progress": `${prakritiProgress}%` }} />
         </div>
         <p className="hm-prakriti__meta">
           {prakritiProgress}% {T.complete}
@@ -827,28 +1092,28 @@ export default function Home() {
         onSelectAddress={selectSavedAddress}
         onViewAll={() => {
           setShowLocationSheet(false);
-          navigate('/profile/addresses');
+          navigate("/profile/addresses");
         }}
         onAddAddress={() => {
           setShowLocationSheet(false);
-          navigate('/profile/addresses/new');
+          navigate("/profile/addresses/new");
         }}
         onOpenMap={() => {
           setShowLocationSheet(false);
-          navigate('/location-picker', {
+          navigate("/location-picker", {
             state: {
-              returnScreen: 'AddEditAddress',
-              returnParams: { type: 'ADD' },
+              returnScreen: "AddEditAddress",
+              returnParams: { type: "ADD" },
             },
           });
         }}
         onUseGps={() => {
           setShowLocationSheet(false);
-          navigate('/location-picker', {
+          navigate("/location-picker", {
             state: {
               useGps: true,
-              returnScreen: 'AddEditAddress',
-              returnParams: { type: 'ADD' },
+              returnScreen: "AddEditAddress",
+              returnParams: { type: "ADD" },
             },
           });
         }}
