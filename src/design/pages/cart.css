@@ -125,6 +125,8 @@
 }
 
 .ct-line__qty {
+  align-self: flex-start;
+  width: fit-content;
   margin-top: var(--am-space-2);
 }
 

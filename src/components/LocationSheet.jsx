@@ -62,7 +62,12 @@ export default function LocationSheet({
           Saved addresses {savedAddresses.length > 0 ? `(${savedAddresses.length})` : ''}
         </h3>
         {savedAddresses.length > 2 && onViewAll ? (
-          <Button variant="ghost" size="sm" onClick={onViewAll}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onViewAll}
+            trailingIcon={<ChevronRight size={16} aria-hidden />}
+          >
             View all
           </Button>
         ) : null}

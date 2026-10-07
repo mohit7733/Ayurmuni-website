@@ -21,6 +21,7 @@ export default function Button({
     'am-btn',
     `am-btn--${variant}`,
     `am-btn--${size}`,
+    trailingIcon && 'am-btn--with-arrow',
     block && 'am-btn--block',
     loading && 'is-loading',
     className,

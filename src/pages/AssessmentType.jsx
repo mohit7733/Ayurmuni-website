@@ -63,7 +63,9 @@ export default function AssessmentType() {
               Discover your Ayurvedic constitution — Vata, Pitta, Kapha — and get
               guidance that fits you.
             </p>
-            <strong>Begin →</strong>
+            <strong>
+              Begin <span aria-hidden="true">→</span>
+            </strong>
           </button>
         ) : null}
 
@@ -79,7 +81,9 @@ export default function AssessmentType() {
             </div>
             <h2>Vikriti assessment</h2>
             <p>Gut and metabolic evaluation/constitution.</p>
-            <strong>Begin →</strong>
+            <strong>
+              Begin <span aria-hidden="true">→</span>
+            </strong>
           </button>
         ) : null}
 

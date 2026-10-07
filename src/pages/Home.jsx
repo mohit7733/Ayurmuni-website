@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   BadgeCheck,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Flower2,
   Leaf,
   LockKeyhole,
@@ -68,6 +70,69 @@ import "../design/pages/dummy-offers.css";
 
 let prakritiModalShownThisSession = false;
 let diseaseModalShownThisSession = false;
+
+function AutoScrollRail({ label, children }) {
+  const railRef = useRef(null);
+  const [paused, setPaused] = useState(false);
+
+  const moveRail = useCallback((direction, wrap = false) => {
+    const rail = railRef.current;
+    if (!rail) return;
+
+    const items = Array.from(rail.children);
+    if (items.length < 2 || rail.scrollWidth <= rail.clientWidth + 1) return;
+
+    const firstItem = items[0];
+    const gap = Number.parseFloat(window.getComputedStyle(rail).columnGap) || 0;
+    const distance = firstItem.getBoundingClientRect().width + gap;
+    const maxScroll = rail.scrollWidth - rail.clientWidth;
+    const nextScroll = rail.scrollLeft + direction * distance;
+    const target = wrap && nextScroll > maxScroll ? 0 : Math.max(0, Math.min(nextScroll, maxScroll));
+
+    rail.scrollTo({ left: target, behavior: "smooth" });
+  }, []);
+
+  useEffect(() => {
+    if (paused || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return undefined;
+    }
+
+    const timer = window.setInterval(() => moveRail(1, true), 3000);
+    return () => window.clearInterval(timer);
+  }, [moveRail, paused]);
+
+  return (
+    <div
+      className="hm-auto-rail"
+      onPointerEnter={() => setPaused(true)}
+      onPointerLeave={() => setPaused(false)}
+      onFocusCapture={() => setPaused(true)}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false);
+      }}
+    >
+      <button
+        type="button"
+        className="hm-auto-rail__control"
+        aria-label={`Scroll ${label} left`}
+        onClick={() => moveRail(-1)}
+      >
+        <ChevronLeft size={20} aria-hidden />
+      </button>
+      <ul ref={railRef} className="am-rail hm-auto-rail__track" aria-label={label}>
+        {children}
+      </ul>
+      <button
+        type="button"
+        className="hm-auto-rail__control"
+        aria-label={`Scroll ${label} right`}
+        onClick={() => moveRail(1)}
+      >
+        <ChevronRight size={20} aria-hidden />
+      </button>
+    </div>
+  );
+}
 
 const SERVICE_ICONS = {
   consult: Stethoscope,
@@ -355,15 +420,18 @@ export default function Home() {
     play: T.playOffers,
   };
 
-  const renderProductRail = (items, label) => (
-    <Rail label={label}>
-      {items.map((item) => (
-        <RailItem key={`${item.variant_id || item.id}`} size="product">
-          <ProductCard item={item} />
-        </RailItem>
-      ))}
-    </Rail>
-  );
+  const renderProductRail = (items, label, autoScroll = false) => {
+    const railItems = items.map((item) => (
+      <RailItem key={`${item.variant_id || item.id}`} size="product">
+        <ProductCard item={item} />
+      </RailItem>
+    ));
+    return autoScroll ? (
+      <AutoScrollRail label={label}>{railItems}</AutoScrollRail>
+    ) : (
+      <Rail label={label}>{railItems}</Rail>
+    );
+  };
 
   return (
     <AppShell tab="home">
@@ -657,7 +725,7 @@ export default function Home() {
                   ) : null
                 }
               />
-              <TileGrid label={T.concernsTitle}>
+              <TileGrid label={T.concernsTitle} className="hm-concerns__grid">
                 {healthConcerns.map((item) => (
                   <Tile
                     key={item.id}
@@ -848,7 +916,11 @@ export default function Home() {
                     ) : null
                   }
                 />
-                {renderProductRail(items, sectionLabels[key] || key)}
+                {renderProductRail(
+                  items,
+                  sectionLabels[key] || key,
+                  ["featured", "trending", "recently_viewed"].includes(key),
+                )}
               </Reveal>
             ) : null,
           )}
@@ -940,7 +1012,7 @@ export default function Home() {
                 />
               }
             />
-            <Rail label={T.packagesTitle}>
+            <AutoScrollRail label={T.packagesTitle}>
               {DUMMY_CONSULT_PACKAGES.slice(0, 6).map((item) => (
                 <RailItem key={item.id} size="product">
                   <DummyOfferCard
@@ -950,7 +1022,7 @@ export default function Home() {
                   />
                 </RailItem>
               ))}
-            </Rail>
+            </AutoScrollRail>
           </Reveal>
 
           <Reveal

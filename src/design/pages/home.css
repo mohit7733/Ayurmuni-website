@@ -875,6 +875,84 @@
   margin-top: var(--am-space-6);
 }
 
+.hm-auto-rail {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 36px;
+  align-items: center;
+  gap: var(--am-space-2);
+  width: 100%;
+  min-width: 0;
+}
+
+.hm-auto-rail > .hm-auto-rail__track {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: var(--am-space-2) 4px var(--am-space-4);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-padding-inline: 4px;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none;
+}
+
+.hm-auto-rail > .hm-auto-rail__track::-webkit-scrollbar {
+  display: none !important;
+  width: 0;
+  height: 0;
+}
+
+.hm-auto-rail > .hm-auto-rail__track > .am-rail__item {
+  flex: 0 0 calc(50% - 8px);
+}
+
+.hm-auto-rail__control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--am-line-strong);
+  border-radius: 50%;
+  background: var(--am-surface);
+  color: var(--am-primary);
+  box-shadow: 0 2px 8px rgba(10, 40, 32, 0.1);
+  transition:
+    background-color var(--am-dur-fast) var(--am-ease-standard),
+    border-color var(--am-dur-fast) var(--am-ease-standard),
+    box-shadow var(--am-dur-base) var(--am-ease-standard),
+    transform var(--am-dur-base) var(--am-ease-out);
+}
+
+.hm-auto-rail__control:hover {
+  border-color: var(--am-primary);
+  background: var(--am-primary-soft);
+  box-shadow: 0 5px 14px rgba(13, 97, 78, 0.16);
+  transform: scale(1.06);
+}
+
+.hm-auto-rail__control:active {
+  transform: scale(0.94);
+}
+
+.hm-auto-rail__control:focus-visible {
+  outline: 2px solid var(--am-primary);
+  outline-offset: 2px;
+}
+
+@media (min-width: 640px) {
+  .hm-auto-rail > .hm-auto-rail__track > .am-rail__item {
+    flex-basis: calc(33.333% - 10.667px);
+  }
+}
+
+@media (min-width: 1024px) {
+  .hm-auto-rail > .hm-auto-rail__track > .am-rail__item {
+    flex-basis: calc(25% - 12px);
+  }
+}
+
 /* ---------- Services ---------- */
 
 .hm-services {
@@ -1432,6 +1510,14 @@
 }
 
 @media (min-width: 1024px) {
+  .hm-concerns__grid {
+    grid-template-columns: repeat(9, minmax(0, 1fr));
+  }
+
+  .hm-concerns__grid > li:nth-child(n + 10) {
+    display: none;
+  }
+
   .hm-hero__inner {
     grid-template-columns: minmax(0, 1.55fr) minmax(320px, 380px);
     align-items: stretch;
