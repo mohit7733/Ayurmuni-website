@@ -1,3 +1,4 @@
+import { ArrowLeft } from 'lucide-react';
 import yesHumanImg from '/images/Yes.png';
 import noHumanImg from '/images/No.png';
 import { DOSHA } from './configs';
@@ -61,7 +62,7 @@ export default function QuestLayout({ flow, onExit }) {
   if (loading && !currentStep) {
     return (
       <section className={`quest ${isMedical ? 'medical' : ''}`}>
-        <div className="quest-loader">
+        <div className="quest-loader" role="status" aria-live="polite">
           {isMedical ? 'Preparing your health quest…' : 'Opening the temple gates…'}
         </div>
       </section>
@@ -71,7 +72,7 @@ export default function QuestLayout({ flow, onExit }) {
   if (loadError && !currentStep) {
     return (
       <section className={`quest ${isMedical ? 'medical' : ''}`}>
-        <div className="quest-loader">
+        <div className="quest-loader" role="alert">
           <p>{loadError}</p>
           <button className="cta" type="button" onClick={retryLoad}>
             Retry
@@ -89,8 +90,8 @@ export default function QuestLayout({ flow, onExit }) {
   return (
     <section className={`quest ${isMedical ? 'medical' : ''}`}>
       <header className="quest-top">
-        <button type="button" onClick={onHeaderBack}>
-          ←
+        <button type="button" onClick={onHeaderBack} aria-label="Go back">
+          <ArrowLeft size={19} aria-hidden />
         </button>
         <div>
           <strong>{isMedical ? 'Health Quest' : 'Prakriti Quest'}</strong>
@@ -120,24 +121,34 @@ export default function QuestLayout({ flow, onExit }) {
         {streak > 1 ? <span className="streak">{streak}x</span> : null}
       </div>
 
-      <div className="track">
+      <div
+        className="track"
+        role="progressbar"
+        aria-label="Assessment progress"
+        aria-valuemin={0}
+        aria-valuemax={totalLevels}
+        aria-valuenow={level}
+        aria-valuetext={`Question ${level} of ${totalLevels}`}
+      >
         <div>
-          LEVEL {level} OF {totalLevels}
+          QUESTION {level} OF {totalLevels}
         </div>
         <div className="track-bar">
           <i style={{ width: `${progress}%`, background: accent }} />
         </div>
       </div>
 
-      <div className="quest-stage">
+      <div className="quest-stage" key={step}>
         <div className="level-badge" style={{ background: accent }}>
-          LEVEL {level}
+          QUESTION {level}
         </div>
-        <h2>
+        <h2 id="quest-question" aria-live="polite">
           {basicInfoStep ? 'Share your basic information' : currentStep.question}
         </h2>
         {currentStep.answer_type === 'multi_choice' ? (
           <p className="multi-hint">Select all that apply</p>
+        ) : currentStep.answer_type !== 'text' && !basicInfoStep ? (
+          <p className="multi-hint">Choose the answer that feels most like you</p>
         ) : null}
 
         {basicInfoStep && rawQuestions && handleBasicInfoChange ? (
@@ -174,7 +185,7 @@ export default function QuestLayout({ flow, onExit }) {
           </>
         ) : (
           <>
-            <div className="quest-options">
+            <div className="quest-options" role="group" aria-labelledby="quest-question">
               {choices.map((item, index) => {
                 const full = String(item?.value ?? '');
                 const [optTitle, ...rest] = full.split(' - ');
@@ -193,6 +204,7 @@ export default function QuestLayout({ flow, onExit }) {
                     key={`${item?.index}-${index}`}
                     className={`quest-opt ${active ? 'on' : ''}`}
                     style={{ borderColor: active ? color : undefined }}
+                    aria-pressed={active}
                     onClick={() => handleSelect(item)}
                   >
                     <span className="opt-num" style={{ background: active ? color : '#eee' }}>

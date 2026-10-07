@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import AutoScrollRail from './AutoScrollRail';
 import ProductCard from './ProductCard';
 import { SectionHeader } from './ui';
 import { getProductDiscovery, PRODUCT_SECTION_LABELS } from '../services/productService';
@@ -40,11 +41,16 @@ export default function ProductDiscoveryRails({ productId, excludeVariantId }) {
       {entries.map((section) => (
         <section key={section} className="pd-discovery__rail">
           <SectionHeader title={PRODUCT_SECTION_LABELS[section] || section} />
-          <div className="pd-discovery__grid">
+          <AutoScrollRail
+            label={`${PRODUCT_SECTION_LABELS[section] || section} products`}
+            className="pd-auto-rail"
+            trackClassName="pd-discovery__grid"
+            itemClassName="pd-discovery__item"
+          >
             {rails[section].map((item) => (
               <ProductCard key={item.variant_id || item.id} item={item} />
             ))}
-          </div>
+          </AutoScrollRail>
         </section>
       ))}
     </div>

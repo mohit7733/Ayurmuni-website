@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
+import { useEffect, useLayoutEffect } from 'react';
+import { BrowserRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { setNavigate } from './navigation/nav';
 import ToastHost from './components/ToastHost';
 import Splash from './pages/Splash';
@@ -106,6 +106,8 @@ import './ui.css';
 import './design/base.css';
 import './design/components.css';
 import './design/shell.css';
+import './questionnaire/quest.css';
+import './questionnaire/assessment.css';
 
 function withAuthChrome(Page) {
   return function AuthChromePage() {
@@ -139,6 +141,16 @@ function NavBinder() {
   return null;
 }
 
+function ScrollToTop() {
+  const location = useLocation();
+
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.key]);
+
+  return null;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -146,6 +158,7 @@ export default function App() {
       <LocationProvider>
       <CartProvider>
       <NavBinder />
+      <ScrollToTop />
       <ToastHost />
       <FloatingVideoOverlay />
       <NetworkGuard>

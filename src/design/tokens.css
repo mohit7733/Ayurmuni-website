@@ -17,6 +17,7 @@
   --am-green-800: #0b4136;
   --am-green-900: #0a2f27;
 
+  --am-sand-25: #fefdf9;
   --am-sand-50: #fdfbf6;
   --am-sand-100: #f9f5ec;
   --am-sand-200: #f2ebdc;
@@ -36,7 +37,7 @@
   --am-ink-300: #7b8a83;
 
   /* ---------- Semantic colour ---------- */
-  --am-bg: var(--am-sand-50);
+  --am-bg: var(--am-sand-25);
   --am-surface: #ffffff;
   --am-surface-muted: var(--am-sand-50);
   --am-surface-sunken: var(--am-sand-200);
