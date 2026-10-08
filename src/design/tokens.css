@@ -37,9 +37,9 @@
   --am-ink-300: #7b8a83;
 
   /* ---------- Semantic colour ---------- */
-  --am-bg: var(--am-sand-25);
+  --am-bg: #f4f3eb;
   --am-surface: #ffffff;
-  --am-surface-muted: var(--am-sand-50);
+  --am-surface-muted: #faf9f3;
   --am-surface-sunken: var(--am-sand-200);
   --am-surface-inverse: var(--am-green-900);
 

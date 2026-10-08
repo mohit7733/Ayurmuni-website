@@ -103,19 +103,19 @@ export default function Welcome() {
 
       <div className="au-welcome__panel">
         <div className="au-welcome__brand">
-          <div style={{ display: "block" }}>
-            <img src={logoImg} alt="" />
-          </div>
-          <div style={{ display: "block" }}>
-            <span>{T.tagline}</span>
-          </div>
+          <img className="au-welcome__logo" src={logoImg} alt={T.brand} />
+          <span className="au-welcome__tagline">
+            {T.tagline}
+          </span>
         </div>
 
         <div className="au-welcome__copy">
           <p className="au-welcome__kicker">{active.eyebrow}</p>
           <h2>{active.title}</h2>
           <p>{active.body}</p>
+        </div>
 
+        <div className="au-welcome__actions">
           <div
             className="au-welcome__progress"
             role="tablist"
@@ -136,6 +136,7 @@ export default function Welcome() {
           <Button
             variant="primary"
             block
+            className="au-welcome__cta"
             trailingIcon={<ArrowRight size={18} aria-hidden />}
             onClick={() => navigate("/login")}
           >

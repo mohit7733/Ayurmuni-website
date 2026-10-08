@@ -61,7 +61,7 @@ export default function QuestLayout({ flow, onExit }) {
 
   if (loading && !currentStep) {
     return (
-      <section className={`quest ${isMedical ? 'medical' : ''}`}>
+      <section className={`quest ${isMedical ? 'medical' : 'prakriti'}`}>
         <div className="quest-loader" role="status" aria-live="polite">
           {isMedical ? 'Preparing your health quest…' : 'Opening the temple gates…'}
         </div>
@@ -71,7 +71,7 @@ export default function QuestLayout({ flow, onExit }) {
 
   if (loadError && !currentStep) {
     return (
-      <section className={`quest ${isMedical ? 'medical' : ''}`}>
+      <section className={`quest ${isMedical ? 'medical' : 'prakriti'}`}>
         <div className="quest-loader" role="alert">
           <p>{loadError}</p>
           <button className="cta" type="button" onClick={retryLoad}>
@@ -88,7 +88,7 @@ export default function QuestLayout({ flow, onExit }) {
   const stepKey = getStepKey(currentStep);
 
   return (
-    <section className={`quest ${isMedical ? 'medical' : ''}`}>
+    <section className={`quest ${isMedical ? 'medical' : 'prakriti'}`}>
       <header className="quest-top">
         <button type="button" onClick={onHeaderBack} aria-label="Go back">
           <ArrowLeft size={19} aria-hidden />

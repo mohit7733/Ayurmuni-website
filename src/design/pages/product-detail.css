@@ -1,5 +1,9 @@
 /* Product detail (pd-*) — layout foundation + enhancement layer */
 
+html:has(.pd-page) {
+  overflow-x: clip;
+}
+
 .pd-page {
   display: flex;
   flex-direction: column;

@@ -87,13 +87,19 @@ function AutoScrollRail({ label, children }) {
     const distance = firstItem.getBoundingClientRect().width + gap;
     const maxScroll = rail.scrollWidth - rail.clientWidth;
     const nextScroll = rail.scrollLeft + direction * distance;
-    const target = wrap && nextScroll > maxScroll ? 0 : Math.max(0, Math.min(nextScroll, maxScroll));
+    const target =
+      wrap && nextScroll > maxScroll
+        ? 0
+        : Math.max(0, Math.min(nextScroll, maxScroll));
 
     rail.scrollTo({ left: target, behavior: "smooth" });
   }, []);
 
   useEffect(() => {
-    if (paused || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (
+      paused ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
       return undefined;
     }
 
@@ -108,7 +114,8 @@ function AutoScrollRail({ label, children }) {
       onPointerLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}
       onBlurCapture={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false);
+        if (!event.currentTarget.contains(event.relatedTarget))
+          setPaused(false);
       }}
     >
       <button
@@ -119,7 +126,11 @@ function AutoScrollRail({ label, children }) {
       >
         <ChevronLeft size={20} aria-hidden />
       </button>
-      <ul ref={railRef} className="am-rail hm-auto-rail__track" aria-label={label}>
+      <ul
+        ref={railRef}
+        className="am-rail hm-auto-rail__track"
+        aria-label={label}
+      >
         {children}
       </ul>
       <button

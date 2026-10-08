@@ -362,7 +362,7 @@ export default function OtpVerify() {
   };
 
   return (
-    <section className="au-page au-auth">
+    <section className="au-page au-auth au-auth--otp">
       <MarqueeCollage columns={COLUMNS} logo={logoImg} hint={T.brandHint} />
       <div className="au-sheet">
         <div className="au-sheet__handle" aria-hidden />

@@ -522,3 +522,289 @@
     transform: translateY(0);
   }
 }
+
+/* Prakriti questionnaire alignment */
+.quest.prakriti {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--am-space-4);
+  padding-inline: max(var(--am-gutter), calc((100% - 1120px) / 2));
+}
+
+.quest.prakriti .quest-top,
+.quest.prakriti .quest-hud,
+.quest.prakriti > .track,
+.quest.prakriti .quest-stage,
+.quest.prakriti .quest-foot {
+  width: 100%;
+  max-width: 960px;
+  margin-inline: auto;
+}
+
+.quest.prakriti .quest-top {
+  flex: 0 0 auto;
+}
+
+.quest.prakriti .quest-top > div {
+  min-width: 0;
+}
+
+.quest.prakriti .quest-top strong,
+.quest.prakriti .quest-top small {
+  display: block;
+}
+
+.quest.prakriti .quest-hud {
+  flex-wrap: wrap;
+  padding-inline: 2px;
+}
+
+.quest.prakriti > .track {
+  flex: 0 0 auto;
+  margin-block: 0 var(--am-space-1);
+}
+
+.quest.prakriti .quest-stage {
+  flex: 0 0 auto;
+  min-height: 340px;
+  padding: clamp(var(--am-space-6), 4vw, var(--am-space-10));
+}
+
+.quest.prakriti .quest-stage h2 {
+  max-width: 58ch;
+  margin-bottom: var(--am-space-6);
+  text-wrap: pretty;
+}
+
+.quest.prakriti .quest-options {
+  align-items: stretch;
+  gap: var(--am-space-4);
+}
+
+.quest.prakriti .quest-opt {
+  min-width: 0;
+  min-height: 76px;
+  padding: var(--am-space-4);
+}
+
+.quest.prakriti .opt-copy {
+  flex: 1;
+}
+
+.quest.prakriti .quest-foot {
+  flex: 0 0 auto;
+  min-height: 50px;
+}
+
+@media (min-width: 1200px) {
+  .quest.prakriti .quest-stage {
+    min-height: 380px;
+  }
+}
+
+@media (max-width: 680px) {
+  .quest.prakriti {
+    gap: var(--am-space-3);
+    padding-inline: var(--am-gutter);
+  }
+
+  .quest.prakriti .quest-stage {
+    min-height: 0;
+    padding: var(--am-space-5) var(--am-space-4);
+  }
+
+  .quest.prakriti .quest-stage h2 {
+    margin-bottom: var(--am-space-4);
+  }
+
+  .quest.prakriti .quest-opt {
+    min-height: 62px;
+    padding: var(--am-space-3);
+  }
+
+  .quest.prakriti .quest-foot {
+    flex-wrap: wrap;
+  }
+}
+
+/* Medical questionnaire alignment */
+.quest.medical {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--am-space-4);
+  padding-inline: max(var(--am-gutter), calc((100% - 1120px) / 2));
+  --quest-border: rgba(13, 122, 111, 0.16);
+}
+
+.quest.medical .quest-top,
+.quest.medical .quest-hud,
+.quest.medical > .track,
+.quest.medical .quest-stage,
+.quest.medical .quest-foot {
+  width: 100%;
+  max-width: 960px;
+  margin-inline: auto;
+}
+
+.quest.medical .quest-top {
+  flex: 0 0 auto;
+}
+
+.quest.medical .quest-top > div {
+  min-width: 0;
+}
+
+.quest.medical .quest-top strong,
+.quest.medical .quest-top small {
+  display: block;
+}
+
+.quest.medical .xp-badge {
+  border-color: rgba(208, 237, 231, 0.32);
+  background: rgba(135, 209, 194, 0.17);
+  color: #e5fbf5;
+}
+
+.quest.medical .quest-hud {
+  flex-wrap: wrap;
+  padding-inline: 2px;
+}
+
+.quest.medical .quest-hud .pill {
+  border-color: rgba(13, 122, 111, 0.14);
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.quest.medical > .track {
+  flex: 0 0 auto;
+  margin-block: 0 var(--am-space-1);
+}
+
+.quest.medical .track-bar {
+  overflow: hidden;
+  border-radius: var(--am-radius-pill);
+}
+
+.quest.medical .track-bar i {
+  background-image: linear-gradient(90deg, #0d7a6f, #53b39e);
+}
+
+.quest.medical .quest-stage {
+  flex: 0 0 auto;
+  min-height: 340px;
+  padding: clamp(var(--am-space-6), 4vw, var(--am-space-10));
+  border-top: 3px solid var(--quest-accent);
+  box-shadow: 0 18px 48px rgba(7, 63, 60, 0.1);
+}
+
+.quest.medical .level-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border-radius: var(--am-radius-pill);
+}
+
+.quest.medical .quest-stage h2 {
+  max-width: 58ch;
+  margin-bottom: var(--am-space-6);
+  text-wrap: pretty;
+}
+
+.quest.medical .quest-options {
+  align-items: stretch;
+  gap: var(--am-space-4);
+}
+
+.quest.medical .quest-opt {
+  min-width: 0;
+  min-height: 76px;
+  padding: var(--am-space-4);
+}
+
+.quest.medical .opt-copy {
+  flex: 1;
+}
+
+.quest.medical .quest-opt:hover {
+  border-color: var(--quest-accent);
+  background: var(--quest-accent-soft);
+}
+
+.quest.medical .quest-opt.on {
+  border-color: var(--quest-accent);
+  background: var(--quest-accent-soft);
+}
+
+.quest.medical .quest-opt:focus-visible,
+.quest.medical .quest-stage .cta:focus-visible {
+  outline-color: var(--quest-accent);
+}
+
+.quest.medical .quest-foot {
+  flex: 0 0 auto;
+  min-height: 50px;
+}
+
+.quest.medical .quest-foot .exit {
+  border-color: var(--quest-border);
+}
+
+.quest.medical .quest-foot .exit:hover {
+  border-color: var(--am-danger);
+}
+
+.quest.medical .basic-info {
+  align-items: start;
+  gap: var(--am-space-5);
+}
+
+.quest.medical .basic-info label {
+  display: grid;
+  gap: var(--am-space-2);
+}
+
+.quest.medical .bmi-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--am-space-1);
+  padding: var(--am-space-4);
+}
+
+@media (min-width: 1200px) {
+  .quest.medical .quest-stage {
+    min-height: 380px;
+  }
+}
+
+@media (max-width: 900px) {
+  .quest.medical .quest-options {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .quest.medical {
+    gap: var(--am-space-3);
+    padding-inline: var(--am-gutter);
+  }
+
+  .quest.medical .quest-stage {
+    min-height: 0;
+    padding: var(--am-space-5) var(--am-space-4);
+  }
+
+  .quest.medical .quest-stage h2 {
+    margin-bottom: var(--am-space-4);
+  }
+
+  .quest.medical .quest-opt {
+    min-height: 62px;
+    padding: var(--am-space-3);
+  }
+
+  .quest.medical .quest-foot {
+    flex-wrap: wrap;
+  }
+}

@@ -15,7 +15,11 @@ body {
   font-family: var(--am-font-body);
   font-size: var(--am-text-body);
   line-height: var(--am-leading-normal);
-  background: var(--am-bg);
+  background:
+    radial-gradient(ellipse at 8% 8%, rgba(201, 151, 47, 0.08), transparent 30rem),
+    radial-gradient(ellipse at 92% 26%, rgba(44, 122, 94, 0.075), transparent 36rem),
+    linear-gradient(135deg, #f6f4ec 0%, var(--am-bg) 48%, #f0f2e9 100%);
+  background-attachment: fixed;
   color: var(--am-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -43,6 +47,7 @@ img {
 .screen {
   min-height: 100vh;
   min-height: 100dvh;
+  background: transparent;
 }
 
 .coming-soon {
@@ -51,7 +56,7 @@ img {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: var(--am-bg);
+  background: transparent;
   padding: var(--am-space-8);
   text-align: center;
 }

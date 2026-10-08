@@ -2,9 +2,15 @@ import { COPY } from '../content/copy';
 import SiteFooter from './SiteFooter';
 import SiteHeader from './SiteHeader';
 
-export default function AuthShell({ children, hideFooter = false }) {
+export default function AuthShell({
+  children,
+  hideFooter = false,
+  welcomeMode = hideFooter,
+}) {
   return (
-    <div className={`app-shell auth-shell ${hideFooter ? 'auth-shell--welcome' : ''}`}>
+    <div
+      className={`app-shell auth-shell ${welcomeMode ? 'auth-shell--welcome' : ''}`}
+    >
       <a className="am-skip-link" href="#main">
         {COPY.skipToContent}
       </a>

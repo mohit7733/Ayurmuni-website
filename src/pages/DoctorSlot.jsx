@@ -229,7 +229,7 @@ export default function DoctorSlot() {
 
   return (
     <AppShell tab="consult">
-      <div className="bk-page">
+      <div className="bk-page bk-slots-page">
         <PageHeader
           title={T.slotTitle}
           subtitle={name}
@@ -474,7 +474,7 @@ export default function DoctorSlot() {
         </div>
       ) : null}
 
-      <div className="bk-sticky" role="region" aria-label={T.continue}>
+      <div className="bk-sticky bk-slots-sticky" role="region" aria-label={T.continue}>
         <div className="bk-sticky__meta">
           <strong>{feeLabel || T.consultFee}</strong>
           <small>{slotLabel}</small>
