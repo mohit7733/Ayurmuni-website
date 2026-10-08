@@ -109,17 +109,17 @@ import './design/shell.css';
 import './questionnaire/quest.css';
 import './questionnaire/assessment.css';
 
-function withAuthChrome(Page) {
+function withAuthChrome(Page, { hideFooter = false } = {}) {
   return function AuthChromePage() {
     return (
-      <AuthShell>
+      <AuthShell hideFooter={hideFooter}>
         <Page />
       </AuthShell>
     );
   };
 }
 
-const WelcomePage = withAuthChrome(Welcome);
+const WelcomePage = withAuthChrome(Welcome, { hideFooter: true });
 const LoginPage = withAuthChrome(Login);
 const OtpPage = withAuthChrome(OtpVerify);
 const AccessModePage = withAuthChrome(AccessMode);

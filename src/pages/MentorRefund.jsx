@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
 import { formatRupee } from '../home/catalog';
 import { showSuccessToast } from '../config/key';
+import '../design/pages/mentor-flow.css';
 
 const REASONS = ['Product damaged', 'Wrong item received', 'Quality not as expected', 'Other'];
 const METHODS = [
@@ -42,7 +43,7 @@ export default function MentorRefund() {
           </div>
         </header>
 
-        <div className="checkout-card">
+        <div className="checkout-card mentor-flow__item">
           <p className="muted">MEDICINES</p>
           <h3>Prescription Bundle</h3>
           <p>Included: 3 items · Qty: 1</p>
@@ -56,6 +57,7 @@ export default function MentorRefund() {
             type="button"
             className={`menu-row ${reason === item ? 'on' : ''}`}
             onClick={() => setReason(item)}
+            aria-pressed={reason === item}
           >
             <span>{item}</span>
             <i className={`loc-radio ${reason === item ? 'on' : ''}`} />
@@ -69,6 +71,7 @@ export default function MentorRefund() {
             type="button"
             className={`menu-row ${method === item.id ? 'on' : ''}`}
             onClick={() => setMethod(item.id)}
+            aria-pressed={method === item.id}
           >
             <span>
               {item.title}

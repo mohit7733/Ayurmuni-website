@@ -1,16 +1,16 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
-import consultImg from '/images/login/10.png';
-import medicineImg from '/images/login/9.png';
-import deliveryImg from '/images/login/delivery.png';
-import dietImg from '/images/login/14.jpg';
-import yogaImg from '/images/login/8.png';
-import logoImg from '/greenlogo.png';
-import welcomeVideo from '/videos/welcome.mp4';
-import { Button } from '../components/ui';
-import { AUTH_COPY as T } from '../content/auth';
-import '../design/pages/auth.css';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
+import consultImg from "/images/login/10.png";
+import medicineImg from "/images/login/9.png";
+import deliveryImg from "/images/login/delivery.png";
+import dietImg from "/images/login/14.jpg";
+import yogaImg from "/images/login/8.png";
+import logoImg from "/images/FinalLogo2.png";
+import welcomeVideo from "/videos/welcome.mp4";
+import { Button } from "../components/ui";
+import { AUTH_COPY as T } from "../content/auth";
+import "../design/pages/auth.css";
 
 const IMAGE_AUTO_MS = 4200;
 
@@ -29,7 +29,7 @@ export default function Welcome() {
   const [videoKey, setVideoKey] = useState(0);
   const indexRef = useRef(0);
   const stories = T.stories;
-  const videoIndex = stories.findIndex((s) => s.kind === 'video');
+  const videoIndex = stories.findIndex((s) => s.kind === "video");
 
   useEffect(() => {
     indexRef.current = index;
@@ -37,7 +37,8 @@ export default function Welcome() {
 
   const goTo = useCallback(
     (next) => {
-      const clamped = ((next % stories.length) + stories.length) % stories.length;
+      const clamped =
+        ((next % stories.length) + stories.length) % stories.length;
       if (clamped === videoIndex) {
         setVideoKey((k) => k + 1);
       }
@@ -48,7 +49,7 @@ export default function Welcome() {
 
   useEffect(() => {
     const slide = stories[index];
-    const onVideoSlide = slide?.kind === 'video' && !videoFailed;
+    const onVideoSlide = slide?.kind === "video" && !videoFailed;
     if (onVideoSlide) return undefined;
 
     const timer = setInterval(() => {
@@ -78,7 +79,7 @@ export default function Welcome() {
         >
           {stories.map((item) => (
             <div className="au-welcome__slide" key={item.key}>
-              {item.kind === 'video' && !videoFailed ? (
+              {item.kind === "video" && !videoFailed ? (
                 <video
                   key={`welcome-video-${videoKey}`}
                   src={welcomeVideo}
@@ -102,11 +103,10 @@ export default function Welcome() {
 
       <div className="au-welcome__panel">
         <div className="au-welcome__brand">
-          <div className="au-welcome__logo">
+          <div style={{ display: "block" }}>
             <img src={logoImg} alt="" />
           </div>
-          <div>
-            <strong>{T.brand}</strong>
+          <div style={{ display: "block" }}>
             <span>{T.tagline}</span>
           </div>
         </div>
@@ -116,12 +116,16 @@ export default function Welcome() {
           <h2>{active.title}</h2>
           <p>{active.body}</p>
 
-          <div className="au-welcome__progress" role="tablist" aria-label={T.welcomeStoriesLabel}>
+          <div
+            className="au-welcome__progress"
+            role="tablist"
+            aria-label={T.welcomeStoriesLabel}
+          >
             {stories.map((s, i) => (
               <button
                 key={s.key}
                 type="button"
-                className={i === index ? 'is-on' : ''}
+                className={i === index ? "is-on" : ""}
                 onClick={() => goTo(i)}
                 aria-label={s.title}
                 aria-selected={i === index}
@@ -133,7 +137,7 @@ export default function Welcome() {
             variant="primary"
             block
             trailingIcon={<ArrowRight size={18} aria-hidden />}
-            onClick={() => navigate('/login')}
+            onClick={() => navigate("/login")}
           >
             {T.welcomeCta}
           </Button>

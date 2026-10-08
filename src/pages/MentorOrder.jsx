@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
 import { formatRupee } from '../home/catalog';
 import { loadMentorBooking } from '../mentor/data';
+import '../design/pages/mentor-flow.css';
 
 const TIMELINE = [
   { title: 'Ordered', time: '12 Oct, 10:30 AM' },
@@ -29,12 +30,12 @@ export default function MentorOrder() {
           </div>
         </header>
 
-        <div className="status-card ok">
+        <div className="status-card ok mentor-flow__status">
           <strong>DELIVERED</strong>
           <p>Your order was successfully delivered on Oct 14.</p>
         </div>
 
-        <div className="checkout-card">
+        <div className="checkout-card mentor-flow__order-facts">
           <div className="receipt-price">
             <span>Order identification</span>
             <strong>#ORD-98231</strong>
@@ -45,7 +46,7 @@ export default function MentorOrder() {
           </div>
         </div>
 
-        <div className="checkout-card">
+        <div className="checkout-card mentor-flow__order-item">
           <h3>Items in this order</h3>
           <p>
             <strong>{title}</strong>
@@ -56,13 +57,13 @@ export default function MentorOrder() {
           </p>
         </div>
 
-        <div className="checkout-card">
+        <div className="checkout-card mentor-flow__address">
           <h3>Delivery Address</h3>
           <p>Home · Default Address</p>
           <p>42-B, Sanctuary Heights, Green Valley, Near Wellness Plaza, Mumbai - 400012</p>
         </div>
 
-        <div className="checkout-card">
+        <div className="checkout-card mentor-flow__timeline-card">
           <h3>Order Timeline</h3>
           {TIMELINE.map((item, index) => (
             <div key={item.title} className="mentor-timeline">

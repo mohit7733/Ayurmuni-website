@@ -5,6 +5,7 @@ import { formatRupee } from '../home/catalog';
 import { EMI_PLANS, loadMentorBooking, MENTOR } from '../mentor/data';
 import { showSuccessToast } from '../config/key';
 import { getPatientList, listPatients } from '../services/patientService';
+import '../design/pages/mentor-flow.css';
 
 const PAYMENTS = [
   { id: '1', title: 'Credit Card', subtitle: '**** **** **** 4290' },
@@ -74,7 +75,7 @@ export default function MentorCheckout() {
         </div>
 
         <h3 className="profile-section">Patient Details</h3>
-        <button type="button" className="menu-row" onClick={() => setOpenPatients((v) => !v)}>
+        <button type="button" className="menu-row" onClick={() => setOpenPatients((v) => !v)} aria-expanded={openPatients}>
           <span>
             FULL NAME
             <small>{selectedPatient}</small>
@@ -87,6 +88,7 @@ export default function MentorCheckout() {
                 key={name}
                 type="button"
                 className="menu-row"
+                aria-pressed={selectedPatient === name}
                 onClick={() => {
                   setSelectedPatient(name);
                   setOpenPatients(false);
@@ -107,6 +109,7 @@ export default function MentorCheckout() {
             type="button"
             className={`menu-row ${activePay === item.id ? 'on' : ''}`}
             onClick={() => setActivePay(item.id)}
+            aria-pressed={activePay === item.id}
           >
             <span>
               {item.title}
@@ -137,10 +140,10 @@ export default function MentorCheckout() {
       </section>
 
       {showEmi ? (
-        <div className="web-modal" role="dialog">
+        <div className="web-modal mentor-flow__modal" role="dialog" aria-modal="true" aria-labelledby="mentor-payment-title">
           <div className="web-modal-card loc-sheet-card">
             <div className="loc-sheet-head">
-              <h3>Payment Plan</h3>
+              <h3 id="mentor-payment-title">Payment Plan</h3>
               <button type="button" className="text-back" onClick={() => setShowEmi(false)}>
                 Close
               </button>
@@ -156,6 +159,7 @@ export default function MentorCheckout() {
                 type="button"
                 className={`mentor-emi ${emiPlan === item.id ? 'on' : ''}`}
                 onClick={() => setEmiPlan(item.id)}
+                aria-pressed={emiPlan === item.id}
               >
                 {item.recommended ? <em>Recommended</em> : null}
                 <span>
