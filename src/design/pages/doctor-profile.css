@@ -337,7 +337,7 @@
   height: 40px;
   border-radius: 50%;
   background: var(--am-primary-soft);
-  color: var(--am-primary);
+  color: var(--am-surface);
 }
 
 .dp-avail strong {
@@ -769,75 +769,75 @@
 
 @media (min-width: 768px) {
   .dp-page {
-      padding-top: var(--am-space-8);
+    padding-top: var(--am-space-8);
   }
 
   .dp-hero {
-      padding: var(--am-space-7, var(--am-space-6));
+    padding: var(--am-space-7, var(--am-space-6));
   }
 
   .dp-sticky {
-      display: none;
+    display: none;
   }
 
   .dp-reviews {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 @media (min-width: 1024px) {
   .dp-page {
-      padding-right: var(--am-space-6);
-      padding-left: var(--am-space-6);
+    padding-right: var(--am-space-6);
+    padding-left: var(--am-space-6);
   }
 
   .dp-layout {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
-      align-items: start;
-      gap: var(--am-space-6);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+    align-items: start;
+    gap: var(--am-space-6);
   }
 
   .dp-main {
-      gap: var(--am-space-5);
+    gap: var(--am-space-5);
   }
 
   .dp-aside {
-      position: sticky;
-      top: calc(var(--am-header-h) + var(--am-space-4));
-      max-height: calc(100dvh - var(--am-header-h) - var(--am-space-8));
-      overflow-y: auto;
+    position: sticky;
+    top: calc(var(--am-header-h) + var(--am-space-4));
+    max-height: calc(100dvh - var(--am-header-h) - var(--am-space-8));
+    overflow-y: auto;
   }
 
   .dp-hero__top {
-      align-items: center;
-      gap: var(--am-space-5);
+    align-items: center;
+    gap: var(--am-space-5);
   }
 
   .dp-photo {
-      flex-basis: 104px;
-      width: 104px;
-      height: 104px;
+    flex-basis: 104px;
+    width: 104px;
+    height: 104px;
   }
 
   .dp-stats {
-      gap: var(--am-space-3);
+    gap: var(--am-space-3);
   }
 
   .dp-reviews {
-      grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .dp-fee {
-      box-shadow:
-        0 2px 4px rgba(10, 40, 32, 0.1),
+    box-shadow:
+      0 2px 4px rgba(10, 40, 32, 0.1),
       0 28px 54px rgba(13, 97, 78, 0.36);
   }
 }
 
 @media (min-width: 1440px) {
   .dp-layout {
-      grid-template-columns: minmax(0, 1fr) 360px;
-      gap: var(--am-space-8);
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: var(--am-space-8);
   }
 }
 

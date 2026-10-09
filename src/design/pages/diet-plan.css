@@ -1,0 +1,473 @@
+.diet-detail.catalog-page {
+  display: flex;
+  width: min(var(--am-container), calc(100% - var(--am-gutter) - var(--am-gutter)));
+  max-width: var(--am-container);
+  flex-direction: column;
+  gap: var(--am-space-4);
+  margin-inline: auto;
+  padding: var(--am-space-6) var(--am-gutter) var(--am-space-12);
+}
+
+.diet-detail .catalog-head {
+  position: relative;
+  overflow: hidden;
+  margin: 0;
+  padding: var(--am-space-6);
+  border: 1px solid color-mix(in srgb, var(--am-primary) 18%, var(--am-line));
+  border-radius: var(--am-radius-xl);
+  background:
+    radial-gradient(circle at 94% 0, color-mix(in srgb, var(--am-accent) 22%, transparent), transparent 34%),
+    linear-gradient(130deg, var(--am-primary-soft), var(--am-surface) 76%);
+  box-shadow: var(--am-shadow-sm);
+}
+
+.diet-detail .catalog-head .text-back {
+  min-height: 38px;
+  margin-bottom: var(--am-space-3);
+  padding-inline: var(--am-space-3);
+  border: 1px solid var(--am-primary-tint);
+  border-radius: var(--am-radius-pill);
+  background: color-mix(in srgb, var(--am-surface) 84%, transparent);
+  color: var(--am-primary-strong);
+}
+
+.diet-detail .catalog-head .text-back:hover:not(:disabled) {
+  border-color: var(--am-primary);
+  background: var(--am-primary-tint);
+  color: var(--am-primary-strong);
+}
+
+.diet-detail .catalog-head h1 {
+  color: var(--am-primary-strong);
+  font-family: var(--am-font-display);
+  font-size: var(--am-text-3xl);
+  letter-spacing: var(--am-tracking-display);
+}
+
+.diet-detail .catalog-head p {
+  margin-top: var(--am-space-2);
+  color: var(--am-text-muted);
+  font-size: var(--am-text-sm);
+}
+
+.diet-detail > .muted,
+.diet-detail .diet-start-hint {
+  margin: 0;
+  padding: var(--am-space-4);
+  border: 1px solid var(--am-line);
+  border-left: 4px solid var(--am-primary);
+  border-radius: var(--am-radius-lg);
+  background: var(--am-primary-soft);
+  color: var(--am-primary-strong);
+  font-size: var(--am-text-sm);
+  line-height: var(--am-leading-normal);
+}
+
+.diet-detail .diet-hero {
+  position: relative;
+  height: clamp(240px, 36vw, 440px);
+  margin: 0;
+  border: 1px solid var(--am-line);
+  border-radius: var(--am-radius-xl);
+  background: var(--am-surface-muted);
+  box-shadow: var(--am-shadow-sm);
+}
+
+.diet-detail .diet-hero img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.diet-detail .gallery-thumbs {
+  gap: var(--am-space-2);
+  margin: calc(var(--am-space-2) * -1) 0 0;
+  padding: var(--am-space-1) 0;
+}
+
+.diet-detail .gallery-thumbs button {
+  width: 64px;
+  height: 64px;
+  flex: 0 0 auto;
+  overflow: hidden;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: var(--am-radius-lg);
+  background: var(--am-surface);
+  cursor: pointer;
+}
+
+.diet-detail .gallery-thumbs button.on {
+  border-color: var(--am-primary);
+  box-shadow: 0 0 0 2px var(--am-primary-soft);
+}
+
+.diet-detail .gallery-thumbs button:focus-visible,
+.diet-detail .diet-days button:focus-visible,
+.diet-detail .diet-meal:focus-visible,
+.diet-detail .diet-cta button:focus-visible {
+  outline: 2px solid var(--am-primary);
+  outline-offset: 3px;
+}
+
+.diet-detail .yoga-badges {
+  gap: var(--am-space-2);
+  margin: 0;
+}
+
+.diet-detail .yoga-badge {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  padding: var(--am-space-1) var(--am-space-3);
+  border: 1px solid var(--am-primary-tint);
+  border-radius: var(--am-radius-pill);
+  background: var(--am-primary-soft);
+  color: var(--am-primary-strong);
+  font-size: var(--am-text-xs);
+  font-weight: var(--am-weight-semibold);
+}
+
+.diet-detail .yoga-badge.level {
+  border-color: var(--am-primary);
+  background: var(--am-primary);
+  color: var(--am-on-primary);
+}
+
+.diet-detail > .yoga-subtitle {
+  max-width: 82ch;
+  margin: 0;
+  color: var(--am-text-muted);
+  font-size: var(--am-text-base);
+  line-height: var(--am-leading-relaxed);
+}
+
+.diet-detail .diet-nutrition {
+  gap: var(--am-space-3);
+  margin: 0;
+}
+
+.diet-detail .diet-nutrition > div {
+  min-width: 0;
+  padding: var(--am-space-4) var(--am-space-3);
+  border: 1px solid var(--am-line);
+  border-radius: var(--am-radius-xl);
+  background: linear-gradient(145deg, var(--am-surface), var(--am-primary-soft));
+  box-shadow: var(--am-shadow-xs);
+}
+
+.diet-detail .diet-nutrition strong {
+  color: var(--am-primary-strong);
+  font-family: var(--am-font-display);
+  font-size: var(--am-text-xl);
+}
+
+.diet-detail .diet-nutrition small {
+  display: block;
+  margin-top: var(--am-space-1);
+  color: var(--am-text-muted);
+  font-size: var(--am-text-xs);
+  font-weight: var(--am-weight-semibold);
+  text-transform: capitalize;
+}
+
+.diet-detail .diet-macros {
+  gap: var(--am-space-2);
+  margin: 0;
+}
+
+.diet-detail .diet-macros > div {
+  min-height: 42px;
+  padding: var(--am-space-2) var(--am-space-3) var(--am-space-4);
+  border: 1px solid var(--am-line);
+  border-radius: var(--am-radius-lg);
+  background: var(--am-surface);
+}
+
+.diet-detail .diet-macros span {
+  color: var(--am-text-soft);
+  font-size: var(--am-text-xs);
+  font-weight: var(--am-weight-semibold);
+}
+
+.diet-detail .diet-macros b {
+  font-size: var(--am-text-xs);
+}
+
+.diet-detail .diet-macros i {
+  bottom: 5px;
+  height: 5px;
+  border-radius: var(--am-radius-pill);
+}
+
+.diet-detail .diet-days {
+  gap: var(--am-space-2);
+  margin: 0 calc(var(--am-gutter) * -1);
+  padding: var(--am-space-2) var(--am-gutter);
+  scrollbar-width: thin;
+}
+
+.diet-detail .diet-days button {
+  min-width: 88px;
+  min-height: 58px;
+  flex: 0 0 auto;
+  padding: var(--am-space-2) var(--am-space-3);
+  border: 1px solid var(--am-line);
+  border-radius: var(--am-radius-lg);
+  background: var(--am-surface);
+  color: var(--am-text);
+  cursor: pointer;
+  transition:
+    border-color var(--am-dur-fast) var(--am-ease-standard),
+    background var(--am-dur-fast) var(--am-ease-standard),
+    color var(--am-dur-fast) var(--am-ease-standard);
+}
+
+.diet-detail .diet-days button:hover:not(:disabled) {
+  border-color: var(--am-primary-tint);
+  background: var(--am-primary-soft);
+  color: var(--am-primary-strong);
+}
+
+.diet-detail .diet-days button.on {
+  border-color: var(--am-primary);
+  background: var(--am-primary);
+  color: var(--am-on-primary);
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--am-primary) 20%, transparent);
+}
+
+.diet-detail .diet-days button.on small {
+  color: color-mix(in srgb, var(--am-on-primary) 78%, transparent);
+}
+
+.diet-detail .diet-days button.locked {
+  border-style: dashed;
+  background: var(--am-surface-muted);
+  cursor: not-allowed;
+}
+
+.diet-detail .diet-detail-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--am-space-3);
+  margin-top: var(--am-space-2);
+  padding-bottom: var(--am-space-3);
+  border-bottom: 1px solid var(--am-line);
+}
+
+.diet-detail .diet-detail-section-heading h2 {
+  margin: 0;
+  color: var(--am-text);
+  font-family: var(--am-font-display);
+  font-size: var(--am-text-xl);
+  line-height: var(--am-leading-tight);
+}
+
+.diet-detail .diet-detail-section-heading > span {
+  flex: 0 0 auto;
+  padding: var(--am-space-1) var(--am-space-3);
+  border: 1px solid var(--am-line);
+  border-radius: var(--am-radius-pill);
+  background: var(--am-surface);
+  color: var(--am-text-muted);
+  font-size: var(--am-text-xs);
+  font-weight: var(--am-weight-medium);
+}
+
+.diet-detail .diet-meals {
+  gap: var(--am-space-2);
+}
+
+.diet-detail .diet-meal {
+  min-width: 0;
+  gap: var(--am-space-3);
+  padding: var(--am-space-3);
+  border: 1px solid var(--am-line);
+  border-radius: var(--am-radius-xl);
+  background: linear-gradient(145deg, var(--am-surface), var(--am-surface-muted));
+  box-shadow: var(--am-shadow-xs);
+  cursor: pointer;
+  transition:
+    border-color var(--am-dur-fast) var(--am-ease-standard),
+    background var(--am-dur-base) var(--am-ease-standard),
+    box-shadow var(--am-dur-base) var(--am-ease-standard),
+    transform var(--am-dur-base) var(--am-ease-out);
+}
+
+.diet-detail .diet-meal:hover {
+  transform: translateY(-1px);
+  border-color: var(--am-primary-tint);
+  background: linear-gradient(110deg, var(--am-primary-soft), var(--am-surface) 76%);
+  color: var(--am-text);
+  box-shadow: var(--am-shadow-sm);
+}
+
+.diet-detail .diet-meal.done {
+  border-color: color-mix(in srgb, var(--am-success) 42%, var(--am-line));
+  background: linear-gradient(110deg, var(--am-success-soft), var(--am-surface) 80%);
+}
+
+.diet-detail .diet-meal img {
+  width: 72px;
+  height: 72px;
+  flex: 0 0 auto;
+  border: 1px solid var(--am-line);
+  border-radius: var(--am-radius-lg);
+}
+
+.diet-detail .diet-meal > div {
+  min-width: 0;
+  flex: 1;
+}
+
+.diet-detail .diet-meal small {
+  color: var(--am-primary);
+  font-size: var(--am-text-2xs);
+  font-weight: var(--am-weight-bold);
+  letter-spacing: var(--am-tracking-caps);
+  text-transform: uppercase;
+}
+
+.diet-detail .diet-meal strong {
+  display: block;
+  margin-top: var(--am-space-1);
+  color: var(--am-text);
+  font-size: var(--am-text-sm);
+  line-height: var(--am-leading-snug);
+}
+
+.diet-detail .diet-meal p {
+  margin-top: var(--am-space-1);
+  color: var(--am-text-muted);
+  font-size: var(--am-text-xs);
+}
+
+.diet-detail .diet-meal > span {
+  flex: 0 0 auto;
+  padding: var(--am-space-1) var(--am-space-3);
+  border: 1px solid var(--am-primary-tint);
+  border-radius: var(--am-radius-pill);
+  background: var(--am-primary-soft);
+  color: var(--am-primary-strong);
+  font-size: var(--am-text-2xs);
+  font-weight: var(--am-weight-semibold);
+}
+
+.diet-detail .diet-meal.done > span {
+  border-color: color-mix(in srgb, var(--am-success) 30%, var(--am-line));
+  background: var(--am-success-soft);
+  color: var(--am-success);
+}
+
+.diet-detail .diet-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--am-space-2);
+  margin-top: var(--am-space-2);
+  padding: var(--am-space-3);
+  border: 1px solid var(--am-line);
+  border-radius: var(--am-radius-xl);
+  background: var(--am-surface);
+  box-shadow: var(--am-shadow-xs);
+}
+
+.diet-detail .diet-cta > button {
+  min-height: 44px;
+  flex: 1 1 auto;
+  padding-inline: var(--am-space-4);
+  border-radius: var(--am-radius-pill);
+  font-weight: var(--am-weight-semibold);
+}
+
+.diet-detail .diet-cta > .cta {
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--am-primary) 18%, transparent);
+}
+
+.diet-detail .diet-cta > button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+@media (max-width: 640px) {
+  .diet-detail.catalog-page {
+    gap: var(--am-space-3);
+    padding: var(--am-space-4) var(--am-gutter) var(--am-space-10);
+  }
+
+  .diet-detail .catalog-head {
+    padding: var(--am-space-4);
+  }
+
+  .diet-detail .catalog-head h1 {
+    font-size: var(--am-text-2xl);
+  }
+
+  .diet-detail .diet-hero {
+    height: clamp(200px, 58vw, 320px);
+  }
+
+  .diet-detail .diet-nutrition {
+    gap: var(--am-space-2);
+  }
+
+  .diet-detail .diet-nutrition > div {
+    padding: var(--am-space-3) var(--am-space-2);
+  }
+
+  .diet-detail .diet-nutrition strong {
+    font-size: var(--am-text-lg);
+  }
+
+  .diet-detail .diet-meal {
+    gap: var(--am-space-2);
+    padding: var(--am-space-2);
+  }
+
+  .diet-detail .diet-meal img {
+    width: 56px;
+    height: 56px;
+  }
+
+  .diet-detail .diet-meal > span {
+    padding-inline: var(--am-space-2);
+  }
+
+  .diet-detail .diet-cta {
+    position: sticky;
+    bottom: calc(var(--am-tabbar-h) + var(--am-space-2));
+    z-index: 2;
+    margin-inline: calc(var(--am-gutter) * -1);
+    padding: var(--am-space-2) var(--am-gutter);
+    border-radius: var(--am-radius-xl) var(--am-radius-xl) 0 0;
+    background: color-mix(in srgb, var(--am-surface) 94%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+}
+
+@media (max-width: 420px) {
+  .diet-detail .diet-nutrition {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .diet-detail .diet-nutrition strong {
+    font-size: var(--am-text-md);
+  }
+
+  .diet-detail .diet-cta > button {
+    min-width: calc(50% - var(--am-space-1));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .diet-detail .diet-days button,
+  .diet-detail .diet-meal {
+    transition: none;
+  }
+
+  .diet-detail .diet-meal:hover {
+    transform: none;
+  }
+}

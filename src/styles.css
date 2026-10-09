@@ -2501,7 +2501,7 @@
   z-index: 1;
   inset: 0;
 
-  content: '';
+  content: "";
   pointer-events: none;
   background: linear-gradient(
     110deg,
@@ -3496,7 +3496,6 @@
   display: flex;
   gap: 8px;
   margin-top: 18px;
-  position: sticky;
   bottom: 76px;
 }
 

@@ -9,6 +9,7 @@ import {
   getDietPlanCoverUrl,
   getDietPlanRatingLabel,
 } from '../diet/utils';
+import '../design/pages/diet.css';
 
 const PRAKRITI = ['all', 'Vata', 'Pitta', 'Kapha', 'Vata-Pitta', 'Pitta-Kapha', 'Vata-Kapha'];
 const STATUS_TABS = [
@@ -77,7 +78,7 @@ export default function Diet() {
             <h1>{categoryName ? `${categoryName} Diet` : 'Diet Plans'}</h1>
             <p>Personalized Ayurveda meal plans</p>
           </div>
-          <div className="diet-chips">
+          <div className="diet-chips" role="group" aria-label="Diet plan shortcuts">
             <button type="button" className="chip" onClick={() => navigate('/diet/weekly')}>
               Weekly planner
             </button>
@@ -106,7 +107,11 @@ export default function Diet() {
           </button>
         </form>
 
-        <div className="diet-chips">
+        <div
+          className="diet-chips diet-prakriti-filters"
+          role="group"
+          aria-label="Filter by prakriti"
+        >
           {PRAKRITI.map((item) => (
             <button
               key={item}
@@ -119,7 +124,11 @@ export default function Diet() {
           ))}
         </div>
 
-        <div className="diet-chips">
+        <div
+          className="diet-chips diet-status-filters"
+          role="group"
+          aria-label="Filter by plan status"
+        >
           {STATUS_TABS.map((tab) => (
             <button
               key={tab.key}
@@ -144,36 +153,52 @@ export default function Diet() {
             </p>
           </div>
         ) : (
-          <div className="diet-grid">
-            {visible.map((item) => {
-              const cover = getDietPlanCoverUrl(item) || dietCoverImg;
-              const rating = getDietPlanRatingLabel(item);
-              const status = statusLabel(item);
-              const price =
-                item.is_paid === false || Number(item.price) === 0
-                  ? 'Free'
-                  : formatRupee(item.price);
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  className="diet-card"
-                  onClick={() => navigate(`/diet/${item.id}`, { state: { item } })}
-                >
-                  <div className="diet-card-media">
-                    <img src={cover} alt="" />
-                    {status ? <span className={`diet-status ${getDietListStatus(item)}`}>{status}</span> : null}
-                  </div>
-                  <strong>{item.title || item.name}</strong>
-                  <small>
-                    {[item.prakriti, item.season, price].filter(Boolean).join(' • ')}
-                  </small>
-                  {rating ? <em>★ {rating}</em> : null}
-                  {item.short_description ? <p>{item.short_description}</p> : null}
-                </button>
-              );
-            })}
-          </div>
+          <>
+            <div className="diet-results-heading">
+              <h2>
+                {statusTab === 'active'
+                  ? 'Active plans'
+                  : statusTab === 'inactive'
+                    ? 'Past plans'
+                    : 'Available plans'}
+              </h2>
+              <span>
+                {visible.length} {visible.length === 1 ? 'plan' : 'plans'}
+              </span>
+            </div>
+            <div className="diet-grid">
+              {visible.map((item) => {
+                const cover = getDietPlanCoverUrl(item) || dietCoverImg;
+                const rating = getDietPlanRatingLabel(item);
+                const status = statusLabel(item);
+                const price =
+                  item.is_paid === false || Number(item.price) === 0
+                    ? 'Free'
+                    : formatRupee(item.price);
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className="diet-card"
+                    onClick={() => navigate(`/diet/${item.id}`, { state: { item } })}
+                  >
+                    <div className="diet-card-media">
+                      <img src={cover} alt="" />
+                      {status ? (
+                        <span className={`diet-status ${getDietListStatus(item)}`}>{status}</span>
+                      ) : null}
+                    </div>
+                    <strong>{item.title || item.name}</strong>
+                    <small>
+                      {[item.prakriti, item.season, price].filter(Boolean).join(' • ')}
+                    </small>
+                    {rating ? <em>★ {rating}</em> : null}
+                    {item.short_description ? <p>{item.short_description}</p> : null}
+                  </button>
+                );
+              })}
+            </div>
+          </>
         )}
 
         {hasMore && plans.length > 0 ? (

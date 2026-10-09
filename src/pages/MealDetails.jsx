@@ -6,6 +6,7 @@ import { requireAuth } from '../services/guestAuth';
 import { updateDietPlanProgress } from '../services/dietService';
 import { nowIso } from '../diet/utils';
 import { showSuccessToast } from '../config/key';
+import '../design/pages/meal-details.css';
 
 export default function MealDetails() {
   const navigate = useNavigate();
@@ -17,7 +18,7 @@ export default function MealDetails() {
   if (!item) {
     return (
       <AppShell tab="home">
-        <section className="catalog-page">
+        <section className="catalog-page meal-page meal-unavailable">
           <header className="catalog-head">
             <div>
               <button type="button" className="text-back" onClick={() => navigate(`/diet/${planId}`)}>
@@ -107,8 +108,8 @@ export default function MealDetails() {
         </div>
 
         {ingredients.length ? (
-          <>
-            <h3 className="yoga-section">Ingredients</h3>
+          <section className="meal-detail-section" aria-labelledby="meal-ingredients-title">
+            <h3 className="yoga-section" id="meal-ingredients-title">Ingredients</h3>
             <ul className="meal-list">
               {ingredients.map((food, index) => (
                 <li key={index}>
@@ -118,23 +119,23 @@ export default function MealDetails() {
                 </li>
               ))}
             </ul>
-          </>
+          </section>
         ) : null}
 
         {steps.length ? (
-          <>
-            <h3 className="yoga-section">Preparation</h3>
+          <section className="meal-detail-section" aria-labelledby="meal-preparation-title">
+            <h3 className="yoga-section" id="meal-preparation-title">Preparation</h3>
             <ol className="meal-steps">
               {steps.map((step, index) => (
                 <li key={index}>{step}</li>
               ))}
             </ol>
-          </>
+          </section>
         ) : null}
 
         {videos.length ? (
-          <>
-            <h3 className="yoga-section">Prep videos</h3>
+          <section className="meal-detail-section" aria-labelledby="meal-videos-title">
+            <h3 className="yoga-section" id="meal-videos-title">Prep videos</h3>
             <div className="diet-chips">
               {videos.map((url) => (
                 <a key={url} className="chip" href={url} target="_blank" rel="noreferrer">
@@ -142,11 +143,17 @@ export default function MealDetails() {
                 </a>
               ))}
             </div>
-          </>
+          </section>
         ) : null}
 
         <div className="detail-cta">
-          <button type="button" className="cta" disabled={logging} onClick={onLogMeal}>
+          <button
+            type="button"
+            className={`cta ${logged ? 'meal-done' : ''}`}
+            disabled={logging}
+            aria-pressed={logged}
+            onClick={onLogMeal}
+          >
             {logging ? 'Saving…' : logged ? 'Mark as pending' : 'Mark as done'}
           </button>
         </div>
