@@ -269,7 +269,6 @@ export default function App() {
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/profile/edit" element={<EditProfile />} />
                   <Route path="/profile/settings" element={<Settings />} />
-                  /* Till here checked */
                   <Route
                     path="/profile/settings/notifications"
                     element={<NotificationSettings />}
@@ -380,6 +379,8 @@ export default function App() {
                   />
                   <Route path="/yoga" element={<Yoga />} />
                   <Route path="/yoga/:sessionId" element={<YogaSession />} />
+                  ********************* Till here checked
+                  **********************************************/
                   <Route path="/diet" element={<Diet />} />
                   <Route path="/diet/weekly" element={<WeeklyMeal />} />
                   <Route path="/diet/:planId/weekly" element={<WeeklyMeal />} />

@@ -1,0 +1,249 @@
+.catalog-page.review-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--am-space-4);
+  width: 100%;
+  max-width: var(--am-container);
+  margin-inline: auto;
+  padding: var(--am-space-5) var(--am-gutter) calc(var(--am-space-12) + var(--am-tabbar-h));
+}
+
+.review-page .catalog-head {
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--am-space-3);
+  margin: 0;
+}
+
+.review-page .catalog-head .text-back {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.review-page .catalog-head > div {
+  min-width: 0;
+}
+
+.review-page .catalog-head h1 {
+  color: var(--am-text);
+  font-family: var(--am-font-display);
+  font-size: var(--am-text-2xl);
+  letter-spacing: var(--am-tracking-display);
+}
+
+.review-page .catalog-head p {
+  margin-top: var(--am-space-1);
+  font-size: var(--am-text-sm);
+}
+
+.review-page .review-hero {
+  position: relative;
+  overflow: hidden;
+  margin: 0;
+  padding: var(--am-space-6);
+  border: 1px solid color-mix(in srgb, var(--am-primary) 18%, transparent);
+  border-radius: var(--am-radius-xl);
+  background:
+    radial-gradient(circle at 92% 5%, color-mix(in srgb, var(--am-accent) 25%, transparent), transparent 38%),
+    linear-gradient(135deg, var(--am-primary-strong), var(--am-primary) 72%, var(--am-green-500));
+  box-shadow: 0 12px 28px rgba(10, 47, 39, 0.16);
+}
+
+.review-page .review-hero small {
+  color: var(--am-green-100);
+  font-size: var(--am-text-xs);
+  font-weight: var(--am-weight-semibold);
+  letter-spacing: var(--am-tracking-caps);
+}
+
+.review-page .review-hero strong {
+  margin-top: var(--am-space-2);
+  font-family: var(--am-font-display);
+  font-size: var(--am-text-xl);
+  line-height: var(--am-leading-snug);
+  overflow-wrap: anywhere;
+}
+
+.review-page .review-hero p {
+  margin-top: var(--am-space-2);
+  color: var(--am-text-on-dark-muted);
+  line-height: var(--am-leading-normal);
+}
+
+.review-page .review-section {
+  margin: 0;
+  padding: var(--am-space-5);
+  border: 1px solid var(--am-line);
+  border-radius: var(--am-radius-xl);
+  background: color-mix(in srgb, var(--am-surface) 94%, var(--am-primary-soft));
+  box-shadow: var(--am-shadow-sm);
+}
+
+.review-page .review-section h3 {
+  margin: 0 0 var(--am-space-3);
+  color: var(--am-text);
+  font-size: var(--am-text-md);
+  font-weight: var(--am-weight-semibold);
+}
+
+.review-page .review-section--rating {
+  text-align: center;
+}
+
+.review-page .review-stars {
+  justify-content: center;
+  gap: var(--am-space-2);
+}
+
+.review-page .review-stars button {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border: 1px solid var(--am-line);
+  border-radius: var(--am-radius-lg);
+  background: var(--am-surface);
+  color: var(--am-line-strong);
+  font-size: 28px;
+  transition:
+    color var(--am-dur-fast) var(--am-ease-standard),
+    border-color var(--am-dur-fast) var(--am-ease-standard),
+    background-color var(--am-dur-fast) var(--am-ease-standard),
+    transform var(--am-dur-fast) var(--am-ease-standard);
+}
+
+.review-page .review-stars button:hover {
+  transform: translateY(-2px);
+}
+
+.review-page .review-stars button.on {
+  border-color: var(--am-gold-300);
+  background: var(--am-accent-soft);
+  color: var(--am-accent-strong);
+}
+
+.review-page .review-stars button:focus-visible,
+.review-page .review-add-tile:focus-within,
+.review-page .review-media-tile button:focus-visible,
+.review-page .review-submit:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--am-primary) 35%, transparent);
+  outline-offset: 3px;
+}
+
+.review-page .review-section--rating .muted {
+  margin: var(--am-space-3) 0 0;
+  color: var(--am-text-muted);
+  font-size: var(--am-text-sm);
+}
+
+.review-page .review-text {
+  min-height: 150px;
+  padding: var(--am-space-3) var(--am-space-4);
+  border-color: var(--am-line-strong);
+  border-radius: var(--am-radius-md);
+  background: var(--am-surface);
+  color: var(--am-text);
+  line-height: var(--am-leading-normal);
+  transition:
+    border-color var(--am-dur-fast) var(--am-ease-standard),
+    box-shadow var(--am-dur-fast) var(--am-ease-standard);
+}
+
+.review-page .review-text:focus {
+  border-color: var(--am-primary);
+  outline: none;
+  box-shadow: var(--am-focus-ring);
+}
+
+.review-page .review-section--text > .muted {
+  display: block;
+  margin-top: var(--am-space-2);
+  color: var(--am-text-subtle);
+  text-align: right;
+}
+
+.review-page .review-media-head {
+  flex-wrap: wrap;
+  gap: var(--am-space-2);
+  margin-bottom: var(--am-space-4);
+}
+
+.review-page .review-media-head h3 {
+  margin: 0;
+}
+
+.review-page .review-media-head small {
+  color: var(--am-text-muted);
+  font-size: var(--am-text-xs);
+}
+
+.review-page .review-media-grid {
+  gap: var(--am-space-3);
+}
+
+.review-page .review-media-tile,
+.review-page .review-add-tile {
+  width: 96px;
+  height: 96px;
+  border-radius: var(--am-radius-lg);
+}
+
+.review-page .review-add-tile {
+  border: 1px dashed var(--am-primary-tint);
+  background: var(--am-primary-soft);
+  color: var(--am-primary-strong);
+  font-size: var(--am-text-sm);
+  transition:
+    border-color var(--am-dur-fast) var(--am-ease-standard),
+    background-color var(--am-dur-fast) var(--am-ease-standard),
+    transform var(--am-dur-fast) var(--am-ease-standard);
+}
+
+.review-page .review-add-tile:hover {
+  transform: translateY(-2px);
+  border-color: var(--am-primary);
+  background: var(--am-primary-tint);
+}
+
+.review-page .review-submit {
+  min-height: 48px;
+  margin: 0;
+  border-radius: var(--am-radius-pill);
+  box-shadow: 0 8px 18px rgba(13, 97, 78, 0.18);
+  font-weight: var(--am-weight-semibold);
+}
+
+.review-page .review-submit:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+@media (max-width: 480px) {
+  .catalog-page.review-page {
+    gap: var(--am-space-3);
+    padding-top: var(--am-space-4);
+  }
+
+  .review-page .catalog-head {
+    align-items: flex-start;
+  }
+
+  .review-page .catalog-head .text-back {
+    min-height: 36px;
+    padding-inline: var(--am-space-3);
+  }
+
+  .review-page .review-hero,
+  .review-page .review-section {
+    padding: var(--am-space-4);
+  }
+
+  .review-page .review-stars {
+    gap: var(--am-space-1);
+  }
+
+  .review-page .review-stars button {
+    width: 44px;
+    height: 44px;
+  }
+}

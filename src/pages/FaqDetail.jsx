@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { HelpCircle } from 'lucide-react';
+import { ArrowLeft, HelpCircle } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import PageHeader from '../components/PageHeader';
 import { FAQ_CATEGORIES, formatFaqUpdatedLabel, getFaqDetail } from '../services/faqService';
 import { Button, Disclaimer, EmptyState, Skeleton, SkeletonText } from '../components/ui';
 import { STATIC_COPY as T } from '../content/static';
 import '../design/pages/static.css';
+import '../design/pages/faq-detail.css';
 
 export default function FaqDetail() {
   const navigate = useNavigate();
@@ -47,7 +48,7 @@ export default function FaqDetail() {
 
   return (
     <AppShell tab="profile">
-      <section className="sx-page sx-narrow">
+      <section className="sx-page sx-narrow sx-faq-detail">
         <PageHeader
           title={T.faqTitle}
           subtitle={categoryLabel || T.faqArticle}
@@ -70,6 +71,12 @@ export default function FaqDetail() {
           />
         ) : (
           <article className="sx-article">
+            <div className="sx-faq-detail__eyebrow">
+              <span className="sx-faq-detail__icon" aria-hidden="true">
+                <HelpCircle size={19} />
+              </span>
+              <span>{categoryLabel || T.faqTitle}</span>
+            </div>
             <h2>{faq.question}</h2>
             {formatFaqUpdatedLabel(faq) ? (
               <span className="sx-article__meta">{formatFaqUpdatedLabel(faq)}</span>
@@ -86,6 +93,14 @@ export default function FaqDetail() {
                 ))}
               </ol>
             ) : null}
+            <Button
+              variant="secondary"
+              className="sx-faq-detail__back"
+              leadingIcon={<ArrowLeft size={17} aria-hidden />}
+              onClick={() => navigate('/profile/faq')}
+            >
+              {T.faqTitle}
+            </Button>
           </article>
         )}
         <Disclaimer />

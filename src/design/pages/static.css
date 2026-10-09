@@ -195,7 +195,7 @@
 .sx-policy-banner {
   position: relative;
   overflow: hidden;
-  padding: var(--am-space-6) var(--am-space-5);
+  padding: var(--am-space-4) var(--am-space-3);
   background:
     radial-gradient(
       70% 120% at 100% 0%,
@@ -230,6 +230,7 @@
 .sx-policy-content {
   gap: var(--am-space-5);
   line-height: 1.75;
+  margin-bottom: var(--am-space-6);
 }
 .sx-policy-content h2 {
   letter-spacing: -0.02em;
@@ -821,7 +822,10 @@
 
 /* ---------- Contact page ---------- */
 .sx-contact-page {
-  width: min(var(--am-container), calc(100% - var(--am-gutter) - var(--am-gutter)));
+  width: min(
+    var(--am-container),
+    calc(100% - var(--am-gutter) - var(--am-gutter))
+  );
   margin-inline: auto;
   padding-block: var(--am-space-8) var(--am-space-12);
 }

@@ -12,6 +12,7 @@ import {
   listPatients,
   switchPatient,
 } from '../services/patientService';
+import '../design/pages/patients.css';
 
 const AVATAR_COLORS = ['#CBD5E1', '#BAE6FD', '#BBF7D0', '#FDE68A', '#FBCFE8', '#DDD6FE'];
 
@@ -155,7 +156,13 @@ export default function Patients() {
             </div>
 
             <div className="home-section-head">
-              <h2>Patient list</h2>
+              <div>
+                <h2>Patient list</h2>
+                <p>Switch between profiles or manage family members.</p>
+              </div>
+              <span className="patient-count">
+                {patients.length} {patients.length === 1 ? 'family member' : 'family members'}
+              </span>
             </div>
 
             {patients.length === 0 ? (
