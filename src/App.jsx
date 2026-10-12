@@ -152,7 +152,10 @@ const PatientFaqPage = withAuthChrome(PatientFAQ, {
   welcomeMode: false,
   className: 'auth-shell--assessment',
 });
-const PrakritiProfilePage = withAuthChrome(PrakritiProfile);
+const PrakritiProfilePage = withAuthChrome(PrakritiProfile, {
+  hideFooter: true,
+  welcomeMode: false,
+});
 const CompleteDetailsPage = withAuthChrome(CompleteDetails);
 
 function NavBinder() {
