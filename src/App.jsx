@@ -117,11 +117,15 @@ import "./questionnaire/assessment.css";
 
 function withAuthChrome(
   Page,
-  { hideFooter = false, welcomeMode = hideFooter } = {},
+  { hideFooter = false, welcomeMode = hideFooter, className = '' } = {},
 ) {
   return function AuthChromePage() {
     return (
-      <AuthShell hideFooter={hideFooter} welcomeMode={welcomeMode}>
+      <AuthShell
+        hideFooter={hideFooter}
+        welcomeMode={welcomeMode}
+        className={className}
+      >
         <Page />
       </AuthShell>
     );
@@ -138,8 +142,16 @@ const OnboardingPage = withAuthChrome(Onboarding, {
 });
 //  const PolicyAcceptPage = withAuthChrome(PolicyAccept);
 const PolicyDetailPage = withAuthChrome(PolicyDetail);
-const AssessmentPage = withAuthChrome(AssessmentType);
-const PatientFaqPage = withAuthChrome(PatientFAQ);
+const AssessmentPage = withAuthChrome(AssessmentType, {
+  hideFooter: true,
+  welcomeMode: false,
+  className: 'auth-shell--assessment',
+});
+const PatientFaqPage = withAuthChrome(PatientFAQ, {
+  hideFooter: true,
+  welcomeMode: false,
+  className: 'auth-shell--assessment',
+});
 const PrakritiProfilePage = withAuthChrome(PrakritiProfile);
 const CompleteDetailsPage = withAuthChrome(CompleteDetails);
 
@@ -196,7 +208,11 @@ export default function App() {
                 <Route
                   path="/assessment-medical"
                   element={
-                    <AuthShell>
+                    <AuthShell
+                      hideFooter
+                      welcomeMode={false}
+                      className="auth-shell--assessment"
+                    >
                       <Questionnaire mode="medical" />
                     </AuthShell>
                   }
