@@ -6,10 +6,11 @@ export default function AuthShell({
   children,
   hideFooter = false,
   welcomeMode = hideFooter,
+  className = '',
 }) {
   return (
     <div
-      className={`app-shell auth-shell ${welcomeMode ? 'auth-shell--welcome' : ''}`}
+      className={`app-shell auth-shell ${welcomeMode ? 'auth-shell--welcome' : ''} ${className}`}
     >
       <a className="am-skip-link" href="#main">
         {COPY.skipToContent}
