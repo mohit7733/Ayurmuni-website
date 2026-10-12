@@ -6,6 +6,30 @@
   background: #f6f7f2;
 }
 
+.auth-shell--assessment .assess,
+.auth-shell--assessment .quest {
+  min-height: calc(100dvh - var(--am-header-h));
+}
+
+.auth-shell--assessment .quest > .quest-loader {
+  display: grid;
+  flex: 1 1 0;
+  min-height: 0;
+  place-content: center;
+  text-align: center;
+}
+
+.auth-shell--assessment {
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.auth-shell--assessment .app-shell-body {
+  min-height: 0;
+  overflow: hidden;
+}
+
 .assess-hero {
   position: relative;
   overflow: hidden;
@@ -596,6 +620,194 @@
   .skip-link,
   .skip-btn {
     transition: none;
+  }
+}
+
+@media (min-width: 901px) {
+  .auth-shell--assessment .assess {
+    height: 100%;
+    min-height: 0;
+  }
+
+  .auth-shell--assessment .assess-options:not(.assess-options--single) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .auth-shell--assessment .assess-sheet {
+    min-height: 0;
+    overflow-y: auto;
+    padding: clamp(var(--am-space-5), 3vh, var(--am-space-10))
+      clamp(var(--am-space-4), 3vw, var(--am-space-8));
+  }
+
+  .auth-shell--assessment .assess-card,
+  .auth-shell--assessment .assess-options:not(.assess-options--single) .assess-card {
+    min-height: 0;
+    padding: var(--am-space-4);
+  }
+
+  .auth-shell--assessment .assess-card__copy {
+    margin-top: var(--am-space-3);
+  }
+
+  .auth-shell--assessment .assess-card__tags {
+    margin-top: var(--am-space-3);
+  }
+
+  .auth-shell--assessment .assess-card__action {
+    padding-top: var(--am-space-3);
+  }
+
+  .auth-shell--assessment .assess-tip {
+    padding: var(--am-space-3);
+  }
+}
+
+@media (max-width: 900px) {
+  .auth-shell--assessment .assess {
+    display: flex;
+    height: 100%;
+    min-height: 0;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .auth-shell--assessment .assess-hero {
+    flex: 0 0 auto;
+    padding: var(--am-space-3) var(--am-gutter) var(--am-space-6);
+  }
+
+  .auth-shell--assessment .assess-row {
+    margin-bottom: var(--am-space-3);
+  }
+
+  .auth-shell--assessment .assess-hero__copy {
+    gap: var(--am-space-3);
+  }
+
+  .auth-shell--assessment .assess-hero__icon {
+    flex-basis: 44px;
+    width: 44px;
+    height: 44px;
+  }
+
+  .auth-shell--assessment .assess-hero__copy h1 {
+    font-size: var(--am-text-2xl);
+  }
+
+  .auth-shell--assessment .assess-hero__copy p {
+    margin-top: var(--am-space-1);
+    font-size: var(--am-text-xs);
+    line-height: var(--am-leading-normal);
+  }
+
+  .auth-shell--assessment .assess-hero__promise {
+    gap: var(--am-space-2) var(--am-space-4);
+    margin-top: var(--am-space-3);
+    padding-left: 0;
+  }
+
+  .auth-shell--assessment .assess-sheet {
+    width: calc(100% - (var(--am-gutter) * 2));
+    min-height: 0;
+    flex: 1 1 auto;
+    margin: calc(var(--am-space-4) * -1) auto 0;
+    padding: var(--am-space-4);
+    overflow-y: auto;
+  }
+
+  .auth-shell--assessment .assess-sheet__heading {
+    margin-bottom: var(--am-space-3);
+  }
+
+  .auth-shell--assessment .assess-sheet__heading h2 {
+    margin-top: var(--am-space-1);
+    font-size: var(--am-text-lg);
+  }
+
+  .auth-shell--assessment .assess-sheet__heading p {
+    margin-top: var(--am-space-1);
+    font-size: var(--am-text-xs);
+  }
+
+  .auth-shell--assessment .assess-options,
+  .auth-shell--assessment .assess-options--single {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--am-space-2);
+  }
+
+  .auth-shell--assessment .assess-card {
+    min-height: 0;
+    padding: var(--am-space-3) var(--am-space-4);
+  }
+
+  .auth-shell--assessment .assess-card__icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .auth-shell--assessment .assess-card__time {
+    top: var(--am-space-3);
+    right: var(--am-space-3);
+  }
+
+  .auth-shell--assessment .assess-card__copy {
+    gap: var(--am-space-1);
+    margin-top: var(--am-space-2);
+  }
+
+  .auth-shell--assessment .assess-card__copy strong {
+    font-size: var(--am-text-base);
+  }
+
+  .auth-shell--assessment .assess-card__copy > span {
+    font-size: var(--am-text-xs);
+  }
+
+  .auth-shell--assessment .assess-card__tags {
+    gap: var(--am-space-1) var(--am-space-3);
+    margin-top: var(--am-space-2);
+  }
+
+  .auth-shell--assessment .assess-card__action {
+    padding-top: var(--am-space-2);
+    font-size: var(--am-text-xs);
+  }
+
+  .auth-shell--assessment .assess-tip {
+    margin-top: var(--am-space-2);
+    padding: var(--am-space-2) var(--am-space-3);
+  }
+
+  .auth-shell--assessment .assess-tip__icon {
+    display: none;
+  }
+
+  .auth-shell--assessment .skip-btn {
+    min-height: 36px;
+    margin-top: var(--am-space-2);
+  }
+}
+
+@media (max-width: 900px) and (max-height: 680px) {
+  .auth-shell--assessment .assess-hero__promise,
+  .auth-shell--assessment .assess-tip {
+    display: none;
+  }
+
+  .auth-shell--assessment .assess-hero {
+    padding-bottom: var(--am-space-5);
+  }
+
+  .auth-shell--assessment .assess-card__copy > span {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .auth-shell--assessment .assess-card__tags {
+    display: none;
   }
 }
 
