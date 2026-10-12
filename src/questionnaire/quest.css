@@ -808,3 +808,115 @@
     flex-wrap: wrap;
   }
 }
+
+.auth-shell--assessment .quest {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.auth-shell--assessment .quest-top,
+.auth-shell--assessment .quest-hud,
+.auth-shell--assessment .quest > .track,
+.auth-shell--assessment .quest-foot {
+  flex: 0 0 auto;
+}
+
+.auth-shell--assessment .quest-stage,
+.auth-shell--assessment .quest.medical .quest-stage,
+.auth-shell--assessment .quest.prakriti .quest-stage {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.auth-shell--assessment .quest-stage textarea {
+  min-height: 100px;
+  max-height: 24vh;
+  resize: vertical;
+}
+
+@media (max-height: 760px) {
+  .auth-shell--assessment .quest {
+    gap: var(--am-space-2);
+    padding-top: var(--am-space-2);
+    padding-bottom: var(--am-space-2);
+  }
+
+  .auth-shell--assessment .quest-hud {
+    min-height: 30px;
+  }
+
+  .auth-shell--assessment .quest-stage,
+  .auth-shell--assessment .quest.medical .quest-stage {
+    padding: var(--am-space-4);
+  }
+
+  .auth-shell--assessment .quest-stage h2 {
+    margin-bottom: var(--am-space-3);
+  }
+
+  .auth-shell--assessment .quest-options,
+  .auth-shell--assessment .quest.medical .quest-options {
+    gap: var(--am-space-2);
+  }
+
+  .auth-shell--assessment .quest-opt,
+  .auth-shell--assessment .quest.medical .quest-opt {
+    min-height: 52px;
+    padding: var(--am-space-2) var(--am-space-3);
+  }
+
+  .auth-shell--assessment .quest-stage .cta {
+    min-height: 42px;
+    margin-top: var(--am-space-3);
+  }
+}
+
+@media (max-width: 680px) {
+  .auth-shell--assessment .quest {
+    gap: var(--am-space-2);
+    padding: var(--am-space-2) var(--am-gutter) var(--am-space-2);
+  }
+
+  .auth-shell--assessment .quest-top {
+    min-height: 44px;
+  }
+
+  .auth-shell--assessment .quest-hud {
+    min-height: 28px;
+  }
+
+  .auth-shell--assessment .quest-stage,
+  .auth-shell--assessment .quest.medical .quest-stage {
+    padding: var(--am-space-3);
+  }
+
+  .auth-shell--assessment .quest-stage h2 {
+    margin-bottom: var(--am-space-3);
+    font-size: var(--am-text-lg);
+  }
+
+  .auth-shell--assessment .quest-options,
+  .auth-shell--assessment .quest.medical .quest-options {
+    gap: var(--am-space-2);
+  }
+
+  .auth-shell--assessment .quest-opt,
+  .auth-shell--assessment .quest.medical .quest-opt {
+    min-height: 48px;
+    padding: var(--am-space-2);
+  }
+
+  .auth-shell--assessment .quest-foot,
+  .auth-shell--assessment .quest.medical .quest-foot {
+    min-height: 38px;
+  }
+
+  .auth-shell--assessment .quest-foot > button,
+  .auth-shell--assessment .quest-foot > div > button {
+    min-height: 34px;
+  }
+}
