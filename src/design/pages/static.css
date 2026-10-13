@@ -15,7 +15,7 @@
 }
 
 .sx-narrow {
-  max-width: 720px;
+  max-width: none;
 }
 
 /* Splash */
@@ -306,8 +306,8 @@
 }
 
 .sx-sticky-footer__inner {
-  max-width: 720px;
-  margin: 0 auto;
+  max-width: none;
+  margin: 0;
 }
 
 /* Hub list rows */

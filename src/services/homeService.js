@@ -1,7 +1,7 @@
 import { apiClient } from './apiClient';
 
 export const getHomeCategory = async () =>
-  apiClient('customers/dashboard/categories/', { method: 'GET' });
+  apiClient('customers/dashboard/categories/', { method: 'GET' }, false);
 
 export const getSuggestedDoctor = async () =>
   apiClient('customers/doctors/?suggested=true', { method: 'GET' });

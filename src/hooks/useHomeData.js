@@ -11,7 +11,12 @@ import {
   normalizeApiList,
   normalizeYogaSessionList,
 } from '../home/catalog';
-import { getServiceCategoryId, normalizeServiceCategories } from '../home/serviceCategories';
+import {
+  FALLBACK_SERVICE_CATEGORIES,
+  getServiceCategoryId,
+  mapServiceCategory,
+  normalizeServiceCategories,
+} from '../home/serviceCategories';
 
 const SECTION_LABELS = {
   featured: 'Featured Products',
@@ -107,15 +112,12 @@ export default function useHomeData() {
 
     const cats = await safe(async () => {
       const res = await HomeServices.getHomeCategory();
-      return normalizeServiceCategories(res?.data ?? res)
-        .map((item) => ({
-          ...item,
-          id: String(item?.id ?? item?.service_category_id ?? ''),
-          name: String(item?.name ?? item?.category_name ?? item?.title ?? ''),
-          image_url: item?.image_url || item?.image || item?.icon_url || '',
-        }))
-        .filter((item) => item.id);
-    }, []);
+      const list = normalizeServiceCategories(res?.data ?? res)
+        .map(mapServiceCategory)
+        .filter((item) => item.id)
+        .sort((a, b) => a.sequence - b.sequence);
+      return list.length ? list : FALLBACK_SERVICE_CATEGORIES;
+    }, FALLBACK_SERVICE_CATEGORIES);
     setCategories(cats);
     const medicineId = getServiceCategoryId(cats, 'medicine');
 
@@ -173,7 +175,13 @@ export default function useHomeData() {
     setStoreProducts(products);
     setYogaSessions(yoga);
     setDietProducts(diet);
-    setBanners(Array.isArray(bannerRes?.data) ? bannerRes.data : []);
+    setBanners(
+      Array.isArray(bannerRes?.data)
+        ? bannerRes.data
+        : Array.isArray(bannerRes)
+          ? bannerRes
+          : [],
+    );
     setSections({
       featured,
       trending,

@@ -34,6 +34,7 @@ import {
   SkeletonGrid,
   Tile,
   TileGrid,
+  ConcernCarousel,
 } from '../components/ui';
 import { STORE_COPY as T } from '../content/store';
 import '../design/pages/store.css';
@@ -253,9 +254,10 @@ export default function Medicines() {
                     ) : null
                   }
                 />
-                <TileGrid label={T.shopByConcern}>
+                <ConcernCarousel label={T.shopByConcern}>
                   {concerns.map((item) => (
                     <Tile
+                      cutout
                       key={item.id}
                       image={item.image_url}
                       label={item.name}
@@ -268,7 +270,7 @@ export default function Medicines() {
                       }
                     />
                   ))}
-                </TileGrid>
+                </ConcernCarousel>
               </Reveal>
             ) : null}
 

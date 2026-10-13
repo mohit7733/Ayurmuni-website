@@ -166,11 +166,20 @@ export const doctorFeeLabel = (item) => {
 
 export const getBannerImageUri = (item) => {
   if (typeof item === 'string' && /^https?:\/\//i.test(item.trim())) return item.trim();
+  const nestedImage =
+    item?.image && typeof item.image === 'object'
+      ? item.image.media_url || item.image.url || item.image.image_url
+      : '';
   const uri =
     item?.media_url ||
     item?.image_url ||
     item?.banner_image ||
+    item?.banner_url ||
+    item?.web_image ||
+    item?.desktop_image ||
+    item?.file_url ||
     (typeof item?.image === 'string' ? item.image : '') ||
+    nestedImage ||
     item?.url ||
     item?.cover_image?.media_url ||
     '';

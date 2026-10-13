@@ -45,7 +45,7 @@ export const HOME_COPY = {
   concernsEyebrow: 'Find care',
   concernsTitle: 'Health concerns',
   concernsText: 'Pick a concern to see specialist doctors, remedies, diet and yoga for it.',
-  visitedTitle: 'Doctors you’ve visited',
+  visitedTitle: 'Recently Viewed',
   ayurvedicDoctor: 'Ayurvedic doctor',
   doctorsEyebrow: 'Top rated',
   doctorsTitle: 'Suggested doctors',

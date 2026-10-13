@@ -1,13 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
   BadgeCheck,
-  ChevronDown,
   Flower2,
   Leaf,
   LockKeyhole,
-  MapPin,
   Pill,
   RefreshCw,
   Salad,
@@ -15,6 +13,8 @@ import {
   ShoppingBag,
   Sparkles,
   Stethoscope,
+  Users,
+  Heart,
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import DiseaseSelectionModal from '../components/DiseaseSelectionModal';
@@ -26,23 +26,15 @@ import {
   resolveServiceCategoryKey,
 } from '../home/serviceCategories';
 import useHomeData from '../hooks/useHomeData';
-import DoctorCard from '../components/DoctorCard';
+import SuggestedDoctorCard from '../components/SuggestedDoctorCard';
 import DummyOfferCard from '../components/DummyOfferCard';
 import ProductCard from '../components/ProductCard';
 import HomeJoinAppointments from '../components/HomeJoinAppointments';
 import { getDoctorId } from '../consult/doctors';
 import { requireAuth } from '../services/guestAuth';
-import { useLocation } from '../context/LocationContext';
-import LocationSheet from '../components/LocationSheet';
 import useActiveDietHome from '../hooks/useActiveDietHome';
 import useRecentVisitedDoctors from '../hooks/useRecentVisitedDoctors';
 import useUpcomingAppointments from '../hooks/useUpcomingAppointments';
-import {
-  getAddresses,
-  listAddresses,
-  updateAddress,
-} from '../services/profileService';
-import { savedAddressToParsed } from '../services/locationService';
 import BannerCarousel from '../components/BannerCarousel';
 import {
   Button,
@@ -56,7 +48,7 @@ import {
   Reveal,
   SectionHeader,
   Tile,
-  TileGrid,
+  ConcernCarousel,
 } from '../components/ui';
 import { HOME_COPY as T } from '../content/home';
 import { DUMMY_CONSULT_PACKAGES, DUMMY_LAB_TESTS } from '../data/homeDummySections';
@@ -68,12 +60,16 @@ let diseaseModalShownThisSession = false;
 
 const SERVICE_ICONS = {
   consult: Stethoscope,
+  doctor: Stethoscope,
   medicine: Pill,
   medicines: Pill,
   products: ShoppingBag,
   yoga: Flower2,
   diet: Salad,
+  diets: Salad,
   prakriti: Sparkles,
+  packages: Heart,
+  'care plan': Heart,
 };
 
 const HERO_TRUST = [
@@ -81,6 +77,29 @@ const HERO_TRUST = [
   { icon: LockKeyhole, label: T.trustPayments },
   { icon: Leaf, label: T.trustAuthentic },
 ];
+
+const PRAKRITI_BENEFITS = [
+  { icon: Sparkles, label: 'Personalised recommendations' },
+  { icon: Heart, label: 'Better health outcomes' },
+  { icon: Users, label: 'Trusted by thousands' },
+];
+
+function CategoryRow({ items, renderItem }) {
+  return (
+    <ul className="hm-services__grid">
+      {items.length
+        ? items.map((item) => renderItem(item))
+        : Array.from({ length: 7 }).map((_, index) => (
+            <li key={`service-skel-${index}`}>
+              <div className="hm-service is-skeleton" aria-hidden>
+                <span className="hm-service__tile" />
+                <span className="hm-service__label" />
+              </div>
+            </li>
+          ))}
+    </ul>
+  );
+}
 
 function ViewAll({ onClick, label }) {
   return (
@@ -93,13 +112,6 @@ function ViewAll({ onClick, label }) {
 
 export default function Home() {
   const navigate = useNavigate();
-  const {
-    currentAddress,
-    deliveryLocation,
-    loadingLocation,
-    locationEnabled,
-    setDeliveryLocation,
-  } = useLocation();
   const {
     categories,
     doctors,
@@ -128,8 +140,6 @@ export default function Home() {
   const [activeHomeModal, setActiveHomeModal] = useState('none');
   const [showDiseaseModal, setShowDiseaseModal] = useState(false);
   const [showPrakritiModal, setShowPrakritiModal] = useState(false);
-  const [showLocationSheet, setShowLocationSheet] = useState(false);
-  const [savedAddresses, setSavedAddresses] = useState([]);
 
   const serviceList = useMemo(
     () => (Array.isArray(categories) ? categories.filter(Boolean) : []),
@@ -149,14 +159,6 @@ export default function Home() {
       const info = await Utils.getData('_USER_INFO');
       setName(info?.first_name || customerData?.first_name || 'Guest');
     })();
-  }, [customerData]);
-
-  useEffect(() => {
-    if (Array.isArray(customerData?.addresses)) {
-      setSavedAddresses(customerData.addresses);
-      return;
-    }
-    setSavedAddresses([]);
   }, [customerData]);
 
   useEffect(() => {
@@ -209,10 +211,37 @@ export default function Home() {
   };
 
   const handleCategoryPress = (item) => {
+    const fromRedirect = resolveBannerNavigation({
+      redirect_url: item?.redirect_url || item?.app_screen || item?.screen,
+    });
+    if (fromRedirect?.path && fromRedirect.path !== '/home') {
+      navigate(fromRedirect.path);
+      return;
+    }
     const nameKey = item?.name?.trim().toLowerCase() ?? '';
     const serviceKey = resolveServiceCategoryKey(item) ?? nameKey;
     const path = mapAppScreenToPath(serviceKey);
     navigate(path && path !== '/home' ? path : '/products');
+  };
+
+  const renderServiceItem = (item) => {
+    const key = resolveServiceCategoryKey(item) || String(item.name || '').toLowerCase();
+    const image = item.image_url || item.image || item.icon_url;
+    const Icon = SERVICE_ICONS[key] || Leaf;
+    return (
+      <li key={item.id}>
+        <button
+          type="button"
+          className="hm-service"
+          onClick={() => handleCategoryPress(item)}
+        >
+          <span className="hm-service__tile" aria-hidden>
+            {image ? <img src={image} alt="" /> : <Icon size={28} />}
+          </span>
+          <span className="hm-service__label">{item.name}</span>
+        </button>
+      </li>
+    );
   };
 
   const handleBannerPress = (item) => {
@@ -243,47 +272,6 @@ export default function Home() {
       customerData?.prakriti_name ||
       '',
   ).trim();
-
-  const defaultAddress = useMemo(
-    () => savedAddresses.find((item) => item?.is_default) || savedAddresses[0] || null,
-    [savedAddresses],
-  );
-
-  const shortAddress = useMemo(() => {
-    if (defaultAddress) {
-      const line = defaultAddress.address_line_1 || defaultAddress.address_type_name || '';
-      const city = defaultAddress.city || '';
-      return ([line, city].filter(Boolean).join(', ') || 'Saved address').slice(0, 44);
-    }
-    if (deliveryLocation?.formatted_address || deliveryLocation?.address_line_1) {
-      const area = deliveryLocation.address_line_1 || deliveryLocation.city || deliveryLocation.formatted_address;
-      return String(area || 'Selected location').slice(0, 44);
-    }
-    if (loadingLocation) return 'Detecting location...';
-    if (locationEnabled && currentAddress) {
-      return String(currentAddress.address_line_1 || currentAddress.city || currentAddress.formatted_address || '').slice(0, 44);
-    }
-    return 'Select location';
-  }, [defaultAddress, deliveryLocation, loadingLocation, locationEnabled, currentAddress]);
-
-  const openLocationSheet = async () => {
-    setShowLocationSheet(true);
-    if (!savedAddresses.length) {
-      const res = await getAddresses();
-      if (res?.success !== false) {
-        setSavedAddresses(listAddresses(res));
-      }
-    }
-  };
-
-  const selectSavedAddress = async (item) => {
-    await setDeliveryLocation(savedAddressToParsed(item));
-    if (!item?.is_default && item?.id) {
-      await updateAddress(item.id, { is_default: true });
-      fetchCustomerData?.();
-    }
-    setShowLocationSheet(false);
-  };
 
   const comingSoonItems = useMemo(() => {
     const items = [];
@@ -316,6 +304,33 @@ export default function Home() {
     play: T.playOffers,
   };
 
+  const showVisitedDoctors =
+    (loadingVisitedDoctors && visitedDoctors.length === 0) || visitedDoctors.length > 0;
+  const showSuggestedDoctors = (loading && !doctors.length) || doctors.length > 0;
+  const splitDoctorRow = showVisitedDoctors && showSuggestedDoctors;
+  const visitedRowRef = useRef(null);
+  const suggestedRowRef = useRef(null);
+  const [visitedOverflow, setVisitedOverflow] = useState(false);
+  const [suggestedOverflow, setSuggestedOverflow] = useState(false);
+  const suggestedDoctors = doctors.slice(0, 4);
+
+  useEffect(() => {
+    const measure = () => {
+      const overflows = (node) => Boolean(node && node.scrollWidth > node.clientWidth + 1);
+      setVisitedOverflow(overflows(visitedRowRef.current));
+      setSuggestedOverflow(overflows(suggestedRowRef.current));
+    };
+    measure();
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure);
+    if (visitedRowRef.current) observer?.observe(visitedRowRef.current);
+    if (suggestedRowRef.current) observer?.observe(suggestedRowRef.current);
+    window.addEventListener('resize', measure);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, [visitedDoctors.length, suggestedDoctors.length, splitDoctorRow]);
+
   const renderProductRail = (items, label) => (
     <Rail label={label}>
       {items.map((item) => (
@@ -330,26 +345,17 @@ export default function Home() {
     <AppShell tab="home">
       <div className="hm-page">
         <section className="hm-hero" aria-labelledby="hm-hero-title">
-          <div className="hm-hero__inner">
+          <div className="hm-hero__inner"style={{ marginTop: "20px",padding:"54px", marginBottom: "25px" }}>
+            
+            
             <div className="hm-hero__copy">
-              <div className="hm-hero__topline">
-                <p className="hm-hero__hello">
-                  {name ? `${T.greeting}, ${name}` : T.greeting}
-                </p>
-                <button
-                  type="button"
-                  className="hm-location"
-                  onClick={openLocationSheet}
-                  aria-label={`${T.deliverTo}: ${shortAddress}. ${T.changeLocation}`}
-                >
-                  <MapPin size={16} aria-hidden />
-                  <span className="hm-location__text">{shortAddress}</span>
-                  <ChevronDown size={16} aria-hidden />
-                </button>
-              </div>
+              <p className="hm-hero__hello">
+                {name ? `NAMASTE, ${name.toUpperCase()}` : 'NAMASTE'}
+              </p>
 
               <h1 id="hm-hero-title" className="hm-hero__title">
-                {T.heroTitle}
+                Ayurveda care,{' '}<br />
+                made <span className="hm-hero__gold">personal.</span>
               </h1>
               <p className="hm-hero__lede">{T.heroLede}</p>
 
@@ -357,12 +363,20 @@ export default function Home() {
                 <Button
                   variant="accent"
                   size="lg"
+                  className="hm-hero__primary"
                   onClick={() => navigate('/consult')}
-                  leadingIcon={<Stethoscope size={18} aria-hidden />}
+                  leadingIcon={<Stethoscope size={16} aria-hidden />}
+                  trailingIcon={<ArrowRight size={16} aria-hidden />}
                 >
                   {T.ctaConsult}
                 </Button>
-                <Button variant="secondary" size="lg" className="hm-hero__ghost" onClick={() => navigate('/medicines')}>
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  className="hm-hero__ghost"
+                  onClick={() => navigate('/medicines')}
+                  leadingIcon={<Leaf size={16} aria-hidden />}
+                >
                   {T.ctaMedicines}
                 </Button>
               </div>
@@ -370,6 +384,9 @@ export default function Home() {
               <button type="button" className="hm-search" onClick={() => navigate('/search')}>
                 <Search size={18} aria-hidden />
                 <span>{T.searchPlaceholder}</span>
+                <span className="hm-search__go" aria-hidden>
+                  <ArrowRight size={16} />
+                </span>
               </button>
 
               <ul className="hm-hero__trust">
@@ -382,75 +399,53 @@ export default function Home() {
               </ul>
             </div>
 
+            <div className="hm-hero__artwork" aria-hidden>
+              <img src="/home/hero-still-life.png?v=1" alt="" />
+            </div>
+
             <aside className="hm-prakriti" aria-labelledby="hm-prakriti-title">
-              <span className="hm-prakriti__icon" aria-hidden>
-                <Sparkles size={22} />
-              </span>
-              {prakritiComplete ? (
-                <>
-                  <p className="am-eyebrow">{T.prakritiDoneEyebrow}</p>
-                  <h2 id="hm-prakriti-title" className="hm-prakriti__title">
-                    {prakritiName || T.prakritiDoneFallback}
-                  </h2>
-                  <p className="hm-prakriti__text">{T.prakritiDoneText}</p>
-                  <Button variant="secondary" block onClick={() => openPrakriti(true)}>
-                    {T.prakritiView}
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <p className="am-eyebrow">{T.prakritiEyebrow}</p>
-                  <h2 id="hm-prakriti-title" className="hm-prakriti__title">
-                    {T.prakritiTitle}
-                  </h2>
-                  <p className="hm-prakriti__text">{T.prakritiText}</p>
-                  <div
-                    className="hm-progress"
-                    role="progressbar"
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-valuenow={prakritiProgress}
-                    aria-label={T.prakritiProgressLabel}
-                  >
-                    <span style={{ '--hm-progress': `${prakritiProgress}%` }} />
-                  </div>
-                  <p className="hm-prakriti__meta">
-                    {prakritiProgress}% {T.complete}
-                  </p>
-                  <Button variant="primary" block onClick={() => openPrakriti(true)}>
-                    {prakritiProgress > 0 ? T.prakritiContinue : T.prakritiStart}
-                  </Button>
-                </>
-              )}
+              <img className="hm-prakriti__art" src="/home/prakriti-meditation.jpg" alt="" />
+              <div className="hm-prakriti__head">
+                <span className="hm-prakriti__icon" aria-hidden>
+                  <Sparkles size={15} />
+                </span>
+                <p className="hm-prakriti__eyebrow">
+                  {prakritiComplete ? T.prakritiDoneEyebrow : 'Your Prakriti'}
+                </p>
+              </div>
+              <h2 id="hm-prakriti-title" className="hm-prakriti__title">
+                {prakritiComplete ? (prakritiName || T.prakritiDoneFallback) : T.prakritiDoneFallback}
+              </h2>
+              <p className="hm-prakriti__text">{T.prakritiDoneText}</p>
+              <button
+                type="button"
+                className="hm-prakriti__cta"
+                onClick={() => openPrakriti(true)}
+              >
+                {prakritiComplete ? T.prakritiView : T.prakritiStart}
+                <ArrowRight size={16} aria-hidden />
+              </button>
+              <ul className="hm-prakriti__benefits">
+                {PRAKRITI_BENEFITS.map(({ icon: Icon, label }) => (
+                  <li key={label}>
+                    <span className="hm-prakriti__benefit-icon" aria-hidden>
+                      <Icon size={14} />
+                    </span>
+                    {label}
+                  </li>
+                ))}
+              </ul>
             </aside>
           </div>
         </section>
 
         <div className="hm-body">
-          {serviceList.length > 0 ? (
-            <section className="hm-section hm-services" aria-labelledby="hm-services-title">
-              <h2 id="hm-services-title" className="am-sr-only">
-                {T.servicesTitle}
-              </h2>
-              <ul className="hm-services__grid">
-                {serviceList.map((item) => {
-                  const key = resolveServiceCategoryKey(item) || String(item.name || '').toLowerCase();
-                  const image = item.image_url || item.image || item.icon_url;
-                  const Icon = SERVICE_ICONS[key] || Leaf;
-                  return (
-                    <li key={item.id}>
-                      <button type="button" className="hm-service" onClick={() => handleCategoryPress(item)}>
-                        <span className="hm-service__tile" aria-hidden>
-                          {image ? <img src={image} alt="" loading="lazy" /> : <Icon size={24} />}
-                        </span>
-                        <span className="hm-service__label">{item.name}</span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </section>
-          ) : null}
+          <section className="hm-section hm-services" aria-labelledby="hm-services-title">
+            <h2 id="hm-services-title" className="am-sr-only">
+              {T.servicesTitle}
+            </h2>
+            <CategoryRow items={serviceList} renderItem={renderServiceItem} />
+          </section>
 
           <div className="hm-dash">
             <div className="hm-dash__main">
@@ -513,14 +508,16 @@ export default function Home() {
             <Reveal as="section" className="hm-section" aria-labelledby="hm-concerns-title">
               <SectionHeader
                 id="hm-concerns-title"
+                align="center"
                 eyebrow={T.concernsEyebrow}
                 title={T.concernsTitle}
                 description={T.concernsText}
                 action={healthConcerns.length > 1 ? <ViewAll label={T.concernsTitle} onClick={() => navigate('/consult')} /> : null}
               />
-              <TileGrid label={T.concernsTitle}>
+              <ConcernCarousel label={T.concernsTitle}>
                 {healthConcerns.map((item) => (
                   <Tile
+                    cutout
                     key={item.id}
                     image={item.image_url}
                     label={item.name}
@@ -534,64 +531,76 @@ export default function Home() {
                     }
                   />
                 ))}
-              </TileGrid>
+              </ConcernCarousel>
             </Reveal>
           ) : null}
 
-          {loadingVisitedDoctors && visitedDoctors.length === 0 ? (
-            <section className="hm-section" aria-busy="true">
-              <SectionHeader title={T.visitedTitle} />
-              <RailSkeleton variant="doctor" />
-            </section>
-          ) : null}
+          {showVisitedDoctors || showSuggestedDoctors ? (
+            <div className={splitDoctorRow ? 'hm-doctor-row hm-doctor-row--split' : 'hm-doctor-row'}>
+              {loadingVisitedDoctors && visitedDoctors.length === 0 ? (
+                <section className="hm-section" aria-busy="true">
+                  <SectionHeader title={T.visitedTitle} />
+                  <RailSkeleton variant="doctor" />
+                </section>
+              ) : null}
 
-          {visitedDoctors.length > 0 ? (
-            <Reveal as="section" className="hm-section" aria-labelledby="hm-visited-title">
-              <SectionHeader
-                id="hm-visited-title"
-                title={T.visitedTitle}
-                action={visitedDoctors.length > 1 ? <ViewAll label={T.visitedTitle} onClick={() => navigate('/consult')} /> : null}
-              />
-              <Rail label={T.visitedTitle}>
-                {visitedDoctors.map((item) => (
-                  <RailItem key={item.doctor_id || item.id}>
-                    <MediaCard
-                      image={item.doctor_image}
-                      title={item.doctor_name}
-                      subtitle={item.doctor_designation || item.qualification || T.ayurvedicDoctor}
-                      fallbackIcon={Stethoscope}
-                      onClick={() => navigate(`/consult/doctors/${item.doctor_id || item.id}`)}
-                    />
-                  </RailItem>
-                ))}
-              </Rail>
-            </Reveal>
-          ) : null}
+              {visitedDoctors.length > 0 ? (
+                <Reveal as="section" className="hm-section" aria-labelledby="hm-visited-title">
+                  <SectionHeader
+                    id="hm-visited-title"
+                    title={T.visitedTitle}
+                    action={
+                      visitedOverflow ? (
+                        <ViewAll label={T.visitedTitle} onClick={() => navigate('/consult')} />
+                      ) : null
+                    }
+                  />
+                  <ul
+                    ref={visitedRowRef}
+                    className="am-doctor-grid am-doctor-grid--portrait"
+                    aria-label={T.visitedTitle}
+                  >
+                    {visitedDoctors.map((item) => (
+                      <li key={item.doctor_id || item.id}>
+                        <SuggestedDoctorCard item={item} fallbackSpeciality={T.ayurvedicDoctor} />
+                      </li>
+                    ))}
+                  </ul>
+                </Reveal>
+              ) : null}
 
-          {loading && !doctors.length ? (
-            <section className="hm-section" aria-busy="true">
-              <SectionHeader title={T.doctorsTitle} />
-              <RailSkeleton variant="doctor" />
-            </section>
-          ) : null}
+              {loading && !doctors.length ? (
+                <section className="hm-section" aria-busy="true">
+                  <SectionHeader title={T.doctorsTitle} />
+                  <RailSkeleton variant="doctor" />
+                </section>
+              ) : null}
 
-          {doctors.length > 0 ? (
-            <Reveal as="section" className="hm-section" aria-labelledby="hm-doctors-title">
-              <SectionHeader
-                id="hm-doctors-title"
-                eyebrow={T.doctorsEyebrow}
-                title={T.doctorsTitle}
-                description={T.doctorsText}
-                action={doctors.length > 1 ? <ViewAll label={T.doctorsTitle} onClick={() => navigate('/consult/doctors')} /> : null}
-              />
-              <ul className="am-doctor-grid" aria-label={T.doctorsTitle}>
-                {doctors.slice(0, 4).map((item) => (
-                  <li key={getDoctorId(item) || item.id}>
-                    <DoctorCard item={item} />
-                  </li>
-                ))}
-              </ul>
-            </Reveal>
+              {doctors.length > 0 ? (
+                <Reveal as="section" className="hm-section" aria-labelledby="hm-doctors-title">
+                  <SectionHeader
+                    id="hm-doctors-title"
+                    title={T.doctorsTitle}
+                    action={
+                      doctors.length > suggestedDoctors.length || suggestedOverflow ? (
+                        <ViewAll label={T.doctorsTitle} onClick={() => navigate('/consult/doctors')} />
+                      ) : null
+                    }
+                  />
+                  <ul
+                    ref={suggestedRowRef}
+                    className="am-doctor-grid am-doctor-grid--portrait"
+                    aria-label={T.doctorsTitle}
+                  >
+                    {suggestedDoctors.map((item) => (
+                      <li key={getDoctorId(item) || item.id}>
+                        <SuggestedDoctorCard item={item} />
+                      </li>
+                    ))}
+                  </ul>
+                </Reveal>
+              ) : null}
+            </div>
           ) : null}
 
           {loading && !medicineProducts.length ? (
@@ -817,42 +826,6 @@ export default function Home() {
           {prakritiProgress}% {T.complete}
         </p>
       </Modal>
-
-      <LocationSheet
-        visible={showLocationSheet}
-        onClose={() => setShowLocationSheet(false)}
-        currentAddress={currentAddress || deliveryLocation}
-        loadingLocation={loadingLocation}
-        savedAddresses={savedAddresses}
-        onSelectAddress={selectSavedAddress}
-        onViewAll={() => {
-          setShowLocationSheet(false);
-          navigate('/profile/addresses');
-        }}
-        onAddAddress={() => {
-          setShowLocationSheet(false);
-          navigate('/profile/addresses/new');
-        }}
-        onOpenMap={() => {
-          setShowLocationSheet(false);
-          navigate('/location-picker', {
-            state: {
-              returnScreen: 'AddEditAddress',
-              returnParams: { type: 'ADD' },
-            },
-          });
-        }}
-        onUseGps={() => {
-          setShowLocationSheet(false);
-          navigate('/location-picker', {
-            state: {
-              useGps: true,
-              returnScreen: 'AddEditAddress',
-              returnParams: { type: 'ADD' },
-            },
-          });
-        }}
-      />
     </AppShell>
   );
 }

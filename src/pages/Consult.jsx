@@ -33,7 +33,7 @@ import {
   SectionHeader,
   SkeletonGrid,
   Tile,
-  TileGrid,
+  ConcernCarousel,
 } from '../components/ui';
 import { CONSULT_COPY as T } from '../content/consult';
 import { DUMMY_LAB_TESTS } from '../data/homeDummySections';
@@ -261,9 +261,10 @@ export default function Consult() {
               title={T.concernsTitle}
               description={T.concernsText}
             />
-            <TileGrid label={T.concernsTitle}>
+            <ConcernCarousel label={T.concernsTitle}>
               {concerns.map((item) => (
                 <Tile
+                  cutout
                   key={item.id}
                   image={item.image_url}
                   label={item.name}
@@ -277,7 +278,7 @@ export default function Consult() {
                   }
                 />
               ))}
-            </TileGrid>
+            </ConcernCarousel>
           </Reveal>
         ) : null}
 

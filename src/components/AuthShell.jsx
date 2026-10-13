@@ -8,7 +8,7 @@ export default function AuthShell({ children }) {
       <a className="am-skip-link" href="#main">
         {COPY.skipToContent}
       </a>
-      <SiteHeader />
+      <SiteHeader minimal />
       <main id="main" className="app-shell-body" tabIndex={-1}>
         {children}
       </main>

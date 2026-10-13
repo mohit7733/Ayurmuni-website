@@ -1,20 +1,25 @@
+import { forwardRef } from 'react';
 import { cx } from './cx';
 
-export default function IconButton({
-  label,
-  badge,
-  variant = 'soft',
-  size = 'md',
-  pressed,
-  className,
-  children,
-  type = 'button',
-  ...rest
-}) {
+const IconButton = forwardRef(function IconButton(
+  {
+    label,
+    badge,
+    variant = 'soft',
+    size = 'md',
+    pressed,
+    className,
+    children,
+    type = 'button',
+    ...rest
+  },
+  ref,
+) {
   const count = Number(badge) || 0;
   const badgeText = count > 99 ? '99+' : String(count);
   return (
     <button
+      ref={ref}
       type={type}
       className={cx('am-icon-btn', `am-icon-btn--${variant}`, `am-icon-btn--${size}`, className)}
       aria-label={count > 0 ? `${label} (${badgeText})` : label}
@@ -29,4 +34,6 @@ export default function IconButton({
       ) : null}
     </button>
   );
-}
+});
+
+export default IconButton;

@@ -9,10 +9,18 @@ export function TileGrid({ label, className, children }) {
   );
 }
 
-export default function Tile({ image, icon: Icon = Leaf, label, onClick, className }) {
+export default function Tile({
+  image,
+  icon: Icon = Leaf,
+  label,
+  onClick,
+  className,
+  cutout = false,
+  loopCopy = false,
+}) {
   return (
-    <li>
-      <button type="button" className={cx('am-tile', className)} onClick={onClick}>
+    <li aria-hidden={loopCopy || undefined} inert={loopCopy ? true : undefined}>
+      <button type="button" className={cx('am-tile', cutout && 'am-tile--cutout', className)} onClick={onClick}>
         <span className="am-tile__img" aria-hidden>
           {image ? <img src={image} alt="" loading="lazy" decoding="async" /> : <Icon size={26} />}
         </span>
