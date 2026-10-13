@@ -1,4 +1,4 @@
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Zap } from 'lucide-react';
 import yesHumanImg from '/images/Yes.png';
 import noHumanImg from '/images/No.png';
 import { DOSHA } from './configs';
@@ -42,20 +42,13 @@ export default function QuestLayout({ flow, onExit }) {
   const totalLevels = Math.max(steps.length, 1);
 
   const resolveImage = (item) => {
-    if (currentStep?.key === 'knowPrakriti' && item?.value === 'Yes') {
-      return yesHumanImg;
-    }
-    if (currentStep?.key === 'knowPrakriti' && item?.value === 'No') {
-      return noHumanImg;
-    }
+    if (currentStep?.key === 'knowPrakriti' && item?.value === 'Yes') return yesHumanImg;
+    if (currentStep?.key === 'knowPrakriti' && item?.value === 'No') return noHumanImg;
     return item?.image_path || '';
   };
 
   const onHeaderBack = () => {
-    if (step === 0) {
-      onExit();
-      return;
-    }
+    if (step === 0) { onExit(); return; }
     handleBack();
   };
 
@@ -63,7 +56,8 @@ export default function QuestLayout({ flow, onExit }) {
     return (
       <section className={`quest ${isMedical ? 'medical' : 'prakriti'}`}>
         <div className="quest-loader" role="status" aria-live="polite">
-          {isMedical ? 'Preparing your health quest…' : 'Opening the temple gates…'}
+          <div className="quest-loader__spinner" />
+          <p>{isMedical ? 'Preparing your health quest\u2026' : 'Opening the temple gates\u2026'}</p>
         </div>
       </section>
     );
@@ -74,9 +68,7 @@ export default function QuestLayout({ flow, onExit }) {
       <section className={`quest ${isMedical ? 'medical' : 'prakriti'}`}>
         <div className="quest-loader" role="alert">
           <p>{loadError}</p>
-          <button className="cta" type="button" onClick={retryLoad}>
-            Retry
-          </button>
+          <button className="cta" type="button" onClick={retryLoad}>Retry</button>
         </div>
       </section>
     );
@@ -97,7 +89,9 @@ export default function QuestLayout({ flow, onExit }) {
           <strong>{isMedical ? 'Health Quest' : 'Prakriti Quest'}</strong>
           <small>{isMedical ? 'Your Wellness Path' : 'The Temple Journey'}</small>
         </div>
-        <span className="xp-badge">{xp} XP</span>
+        <span className="xp-badge">
+          <Zap size={13} aria-hidden /> {xp} XP
+        </span>
       </header>
 
       <div className="quest-hud">
@@ -130,8 +124,9 @@ export default function QuestLayout({ flow, onExit }) {
         aria-valuenow={level}
         aria-valuetext={`Question ${level} of ${totalLevels}`}
       >
-        <div>
-          QUESTION {level} OF {totalLevels}
+        <div className="track-label">
+          <span>Question {level} of {totalLevels}</span>
+          <span className="track-pct">{Math.round(progress)}%</span>
         </div>
         <div className="track-bar">
           <i style={{ width: `${progress}%`, background: accent }} />
@@ -140,7 +135,7 @@ export default function QuestLayout({ flow, onExit }) {
 
       <div className="quest-stage" key={step}>
         <div className="level-badge" style={{ background: accent }}>
-          QUESTION {level}
+          Q{level}
         </div>
         <h2 id="quest-question" aria-live="polite">
           {basicInfoStep ? 'Share your basic information' : currentStep.question}
@@ -164,7 +159,7 @@ export default function QuestLayout({ flow, onExit }) {
               disabled={isDisabled || submitting}
               onClick={handleNext}
             >
-              {submitting ? 'Please wait…' : 'Continue'}
+              {submitting ? 'Please wait\u2026' : 'Continue'}
             </button>
           </>
         ) : currentStep.answer_type === 'text' && handleTextChange ? (
@@ -180,7 +175,7 @@ export default function QuestLayout({ flow, onExit }) {
               disabled={isDisabled || submitting}
               onClick={handleNext}
             >
-              {submitting ? 'Please wait…' : isLastStep ? 'Complete Quest' : 'Continue'}
+              {submitting ? 'Please wait\u2026' : isLastStep ? 'Complete Quest' : 'Continue'}
             </button>
           </>
         ) : (
@@ -207,15 +202,15 @@ export default function QuestLayout({ flow, onExit }) {
                     aria-pressed={active}
                     onClick={() => handleSelect(item)}
                   >
-                    <span className="opt-num" style={{ background: active ? color : '#eee' }}>
-                      {index + 1}
+                    <span className="opt-num" style={{ background: active ? color : undefined }}>
+                      {active ? <CheckCircle2 size={14} aria-hidden /> : index + 1}
                     </span>
                     {img ? <img src={img} alt="" /> : null}
                     <span className="opt-copy">
                       <strong>{optTitle || full || `Option ${index + 1}`}</strong>
                       {rest.length ? <small>{rest.join(' - ')}</small> : null}
                     </span>
-                    {active ? <span className="opt-check">✓</span> : null}
+                    {active ? <span className="opt-check" aria-hidden>\u2713</span> : null}
                   </button>
                 );
               })}
@@ -227,7 +222,7 @@ export default function QuestLayout({ flow, onExit }) {
                 disabled={isDisabled || submitting}
                 onClick={handleNext}
               >
-                {submitting ? 'Please wait…' : isLastStep ? 'Complete Quest' : 'Continue'}
+                {submitting ? 'Please wait\u2026' : isLastStep ? 'Complete Quest' : 'Continue'}
               </button>
             )}
           </>
@@ -240,9 +235,7 @@ export default function QuestLayout({ flow, onExit }) {
         </button>
         <div>
           {showSkip ? (
-            <button type="button" onClick={handleSkip}>
-              Skip
-            </button>
+            <button type="button" onClick={handleSkip}>Skip</button>
           ) : null}
           <button type="button" className="exit" onClick={onExit}>
             Exit Quest

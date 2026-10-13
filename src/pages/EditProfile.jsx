@@ -110,61 +110,72 @@ export default function EditProfile() {
                   <span>{(form.first_name || 'U').charAt(0)}</span>
                 )}
               </div>
-              <span className="am-btn am-btn--secondary am-btn--sm" aria-hidden>
-                <span className="am-btn__label">{uploading ? T.uploading : T.changePhoto}</span>
-              </span>
+              <div className="pf-avatar-upload__hint">
+                <strong>{uploading ? T.uploading : T.changePhoto}</strong>
+                <small>JPG, PNG or WebP · max 5 MB</small>
+              </div>
               <input type="file" accept="image/*" onChange={onImage} disabled={uploading} />
             </label>
           </aside>
 
-          <div>
-            <div className="pf-form-grid">
-              <Input
-                label={T.firstName}
-                required
-                value={form.first_name}
-                onChange={(e) => setField('first_name', e.target.value)}
-              />
-              <Input
-                label={T.lastName}
-                value={form.last_name}
-                onChange={(e) => setField('last_name', e.target.value)}
-              />
-              <Input
-                label={T.email}
-                type="email"
-                value={form.email}
-                onChange={(e) => setField('email', e.target.value)}
-              />
-              <Input
-                label={T.secondaryNumber}
-                inputMode="numeric"
-                value={form.secondary_number}
-                onChange={(e) =>
-                  setField('secondary_number', e.target.value.replace(/[^0-9]/g, '').slice(0, 10))
-                }
-              />
-              <Input
-                label={T.dateOfBirth}
-                type="date"
-                value={form.date_of_birth}
-                onChange={(e) => setField('date_of_birth', e.target.value)}
-              />
-              <div className="am-field">
-                <span className="am-field__label">{T.gender}</span>
-                <div className="pf-gender" role="group" aria-label={T.gender}>
-                  {T.genders.map((item) => (
-                    <Chip
-                      key={item.value}
-                      selected={form.gender === item.value}
-                      onClick={() => setField('gender', item.value)}
-                    >
-                      {item.label}
-                    </Chip>
-                  ))}
+          <div className="pf-form-card">
+            <div>
+              <p className="pf-form-section-label">Personal info</p>
+              <div className="pf-form-grid">
+                <Input
+                  label={T.firstName}
+                  required
+                  value={form.first_name}
+                  onChange={(e) => setField('first_name', e.target.value)}
+                />
+                <Input
+                  label={T.lastName}
+                  value={form.last_name}
+                  onChange={(e) => setField('last_name', e.target.value)}
+                />
+                <Input
+                  label={T.dateOfBirth}
+                  type="date"
+                  value={form.date_of_birth}
+                  onChange={(e) => setField('date_of_birth', e.target.value)}
+                />
+                <div className="am-field">
+                  <span className="am-field__label">{T.gender}</span>
+                  <div className="pf-gender" role="group" aria-label={T.gender}>
+                    {T.genders.map((item) => (
+                      <Chip
+                        key={item.value}
+                        selected={form.gender === item.value}
+                        onClick={() => setField('gender', item.value)}
+                      >
+                        {item.label}
+                      </Chip>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
+
+            <div>
+              <p className="pf-form-section-label">Contact details</p>
+              <div className="pf-form-grid">
+                <Input
+                  label={T.email}
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => setField('email', e.target.value)}
+                />
+                <Input
+                  label={T.secondaryNumber}
+                  inputMode="numeric"
+                  value={form.secondary_number}
+                  onChange={(e) =>
+                    setField('secondary_number', e.target.value.replace(/[^0-9]/g, '').slice(0, 10))
+                  }
+                />
+              </div>
+            </div>
+
             <div className="pf-form-actions">
               <Button variant="primary" block loading={loading} onClick={save}>
                 {loading ? T.saving : T.saveProfile}

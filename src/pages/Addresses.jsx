@@ -137,7 +137,7 @@ export default function Addresses() {
         ) : (
           <div className="pf-addr-list">
             {items.map((item) => (
-              <article key={item.id} className="pf-addr-card">
+              <article key={item.id} className={`pf-addr-card${item.is_default ? ' pf-addr-card--default' : ''}`}>
                 <div className="pf-addr-card__head">
                   <h3>{item.address_type_name || item.address_type || 'Address'}</h3>
                   {item.is_default ? <Badge tone="success">{T.default}</Badge> : null}

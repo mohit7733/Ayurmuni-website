@@ -13,6 +13,7 @@ import {
   reverseGeocode,
   searchPlaces,
 } from '../services/locationService';
+import '../design/pages/location-picker.css';
 
 export default function LocationPicker() {
   const navigate = useNavigate();
@@ -193,7 +194,7 @@ export default function LocationPicker() {
 
   return (
     <AppShell tab="home">
-      <section className="catalog-page loc-page">
+      <section className="catalog-page loc-page" aria-label="Location picker">
         <header className="catalog-head">
           <button type="button" className="text-back" onClick={() => navigate(-1)}>
             ← Back
@@ -262,6 +263,7 @@ export default function LocationPicker() {
         {locationError ? <p className="loc-error">{locationError}</p> : null}
 
         <div className="loc-address">
+          <span className="loc-address__label">Selected address</span>
           {geocoding ? (
             <p className="muted">Fetching address…</p>
           ) : (

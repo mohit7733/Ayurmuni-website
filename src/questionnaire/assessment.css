@@ -4,6 +4,12 @@
   min-height: 100vh;
   min-height: 100dvh;
   background: #f6f7f2;
+  animation: assess-page-in 320ms var(--am-ease-out) both;
+}
+
+@keyframes assess-page-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .auth-shell--assessment .assess,
@@ -217,7 +223,7 @@
   margin: 0;
   padding: var(--am-space-6);
   overflow: hidden;
-  border: 1px solid var(--am-line);
+  border: 1.5px solid var(--am-line);
   border-radius: var(--am-radius-xl);
   background: #fff;
   color: var(--am-text);
@@ -226,6 +232,14 @@
     transform var(--am-dur-base) var(--am-ease-out),
     border-color var(--am-dur-base) var(--am-ease-standard),
     box-shadow var(--am-dur-base) var(--am-ease-standard);
+}
+
+.assess-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: var(--am-space-1);
 }
 
 .assess-card::after {
@@ -245,7 +259,12 @@
 .assess-card:hover {
   border-color: var(--am-primary-tint);
   box-shadow: 0 14px 32px rgba(10, 47, 39, 0.12);
-  transform: translateY(-3px);
+  transform: translateY(-4px);
+}
+
+.assess-card:active {
+  transform: translateY(-1px);
+  transition-duration: 80ms;
 }
 
 .assess-card:hover::after {
@@ -286,17 +305,14 @@
 }
 
 .assess-card__time {
-  position: absolute;
-  top: var(--am-space-6);
-  right: var(--am-space-6);
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  min-height: 28px;
+  min-height: 26px;
   padding: 0 10px;
   border: 1px solid var(--am-line);
   border-radius: var(--am-radius-pill);
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.9);
   color: var(--am-text-muted);
   font-size: var(--am-text-2xs);
   font-weight: var(--am-weight-semibold);
@@ -306,7 +322,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--am-space-2);
-  margin-top: var(--am-space-5);
+  margin-top: var(--am-space-4);
 }
 
 .assess-card__copy strong {
