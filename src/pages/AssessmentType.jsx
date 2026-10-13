@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 import {
   ArrowRight,
   Check,
@@ -10,19 +10,19 @@ import {
   Sparkles,
   Star,
   Users,
-} from 'lucide-react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import PrakritiNoteModal from '../components/PrakritiNoteModal';
-import { showSuccessToast } from '../config/key';
-import { markAsGuest } from '../services/guestAuth';
-import * as AssessService from '../services/assessmentService';
+} from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
+import PrakritiNoteModal from "../components/PrakritiNoteModal";
+import { showSuccessToast } from "../config/key";
+import { markAsGuest } from "../services/guestAuth";
+import * as AssessService from "../services/assessmentService";
 
 export default function AssessmentType() {
   const navigate = useNavigate();
   const location = useLocation();
-  const form = location.state?.form || 'all';
-  const showMedical = form === 'medical' || form === 'all';
-  const showPrakriti = form === 'prakriti' || form === 'all';
+  const form = location.state?.form || "all";
+  const showMedical = form === "medical" || form === "all";
+  const showPrakriti = form === "prakriti" || form === "all";
   const [prakritiNoteVisible, setPrakritiNoteVisible] = useState(false);
   const [skipping, setSkipping] = useState(false);
 
@@ -32,13 +32,13 @@ export default function AssessmentType() {
     try {
       const response = await AssessService.SkipAssesment({ is_skipped: true });
       if (!response?.success) {
-        showSuccessToast(response?.message || 'Something went wrong', 'error');
+        showSuccessToast(response?.message || "Something went wrong", "error");
         return;
       }
       await markAsGuest();
-      navigate('/home', { replace: true });
+      navigate("/home", { replace: true });
     } catch {
-      showSuccessToast('Network Error', 'error');
+      showSuccessToast("Network Error", "error");
     } finally {
       setSkipping(false);
     }
@@ -46,7 +46,7 @@ export default function AssessmentType() {
 
   const startPrakriti = () => {
     setPrakritiNoteVisible(false);
-    navigate('/patient-faq', {
+    navigate("/patient-faq", {
       state: { allowBack: true, noteSeen: true, allowIncompleteProfile: true },
     });
   };
@@ -59,21 +59,37 @@ export default function AssessmentType() {
             <span className="assess-step">
               <Sparkles size={15} aria-hidden /> YOUR CARE, YOUR WAY
             </span>
-            <button type="button" className="skip-link" onClick={handleSkip} disabled={skipping}>
-              {skipping ? 'Saving\u2026' : 'Skip for now'}
+            <button
+              type="button"
+              className="skip-link"
+              onClick={handleSkip}
+              disabled={skipping}
+            >
+              {skipping ? "Saving\u2026" : "Skip for now"}
             </button>
           </div>
           <div className="assess-hero__copy">
-            <span className="assess-hero__icon"><HeartPulse size={25} aria-hidden /></span>
+            <span className="assess-hero__icon">
+              <HeartPulse size={25} aria-hidden />
+            </span>
             <div>
               <h1>Personalize your care</h1>
-              <p>Answer a few questions and get wellness recommendations shaped around you.</p>
+              <p>
+                Answer a few questions and get wellness recommendations shaped
+                around you.
+              </p>
             </div>
           </div>
           <div className="assess-hero__promise">
-            <span><ShieldCheck size={16} aria-hidden /> Your answers stay private</span>
-            <span><Clock size={16} aria-hidden /> Takes 5&ndash;10 minutes</span>
-            <span><Users size={16} aria-hidden /> Trusted by 50,000+ users</span>
+            <span>
+              <ShieldCheck size={16} aria-hidden /> Your answers stay private
+            </span>
+            <span>
+              <Clock size={16} aria-hidden /> Takes 5&ndash;10 minutes
+            </span>
+            <span>
+              <Users size={16} aria-hidden /> Trusted by 50,000+ users
+            </span>
           </div>
         </div>
       </div>
@@ -82,10 +98,15 @@ export default function AssessmentType() {
         <div className="assess-sheet__heading">
           <span>CHOOSE YOUR STARTING POINT</span>
           <h2>A little about you goes a long way.</h2>
-          <p>There&apos;s no right or wrong answer &mdash; pick one to get started.</p>
+          <p>
+            There&apos;s no right or wrong answer &mdash; pick one to get
+            started.
+          </p>
         </div>
 
-        <div className={`assess-options ${showPrakriti && showMedical ? '' : 'assess-options--single'}`}>
+        <div
+          className={`assess-options ${showPrakriti && showMedical ? "" : "assess-options--single"}`}
+        >
           {showPrakriti ? (
             <button
               type="button"
@@ -94,20 +115,30 @@ export default function AssessmentType() {
               aria-haspopup="dialog"
             >
               <div className="assess-card__header">
-                <span className="assess-card__icon"><Leaf size={23} aria-hidden /></span>
-                <span className="assess-card__time"><Clock size={13} aria-hidden /> ~5 min</span>
+                <span className="assess-card__icon">
+                  <Leaf size={23} aria-hidden />
+                </span>
+                <span className="assess-card__time">
+                  <Clock size={13} aria-hidden /> ~5 min
+                </span>
               </div>
               <span className="assess-card__copy">
                 <strong>Discover your Prakriti</strong>
                 <span>
-                  Explore your Ayurvedic constitution &mdash; Vata, Pitta &amp; Kapha &mdash; for
-                  guidance that feels uniquely like you.
+                  Explore your Ayurvedic constitution &mdash; Vata, Pitta &amp;
+                  Kapha &mdash; for guidance that feels uniquely like you.
                 </span>
               </span>
               <span className="assess-card__tags">
-                <span><Check size={13} aria-hidden /> Lifestyle insights</span>
-                <span><Check size={13} aria-hidden /> Personalised guidance</span>
-                <span><Star size={13} aria-hidden /> Most popular</span>
+                <span>
+                  <Check size={13} aria-hidden /> Lifestyle insights
+                </span>
+                <span>
+                  <Check size={13} aria-hidden /> Personalised guidance
+                </span>
+                <span>
+                  <Star size={13} aria-hidden /> Most popular
+                </span>
               </span>
               <span className="assess-card__action">
                 Start Prakriti assessment <ArrowRight size={17} aria-hidden />
@@ -119,23 +150,33 @@ export default function AssessmentType() {
             <button
               type="button"
               className="assess-card medical"
-              onClick={() => navigate('/assessment-medical')}
+              onClick={() => navigate("/assessment-medical")}
             >
               <div className="assess-card__header">
-                <span className="assess-card__icon"><ClipboardCheck size={23} aria-hidden /></span>
-                <span className="assess-card__time"><ShieldCheck size={13} aria-hidden /> Private</span>
+                <span className="assess-card__icon">
+                  <ClipboardCheck size={23} aria-hidden />
+                </span>
+                <span className="assess-card__time">
+                  <ShieldCheck size={13} aria-hidden /> Private
+                </span>
               </div>
               <span className="assess-card__copy">
                 <strong>Check in on your health</strong>
                 <span>
-                  Share relevant health details to help tailor your wellness plan and care
-                  recommendations.
+                  Share relevant health details to help tailor your wellness
+                  plan and care recommendations.
                 </span>
               </span>
               <span className="assess-card__tags">
-                <span><Check size={13} aria-hidden /> Health history</span>
-                <span><Check size={13} aria-hidden /> Better care context</span>
-                <span><ShieldCheck size={13} aria-hidden /> Encrypted</span>
+                <span>
+                  <Check size={13} aria-hidden /> Health history
+                </span>
+                <span>
+                  <Check size={13} aria-hidden /> Better care context
+                </span>
+                <span>
+                  <ShieldCheck size={13} aria-hidden /> Encrypted
+                </span>
               </span>
               <span className="assess-card__action">
                 Start health assessment <ArrowRight size={17} aria-hidden />
@@ -145,16 +186,23 @@ export default function AssessmentType() {
         </div>
 
         <div className="assess-tip">
-          <span className="assess-tip__icon"><Sparkles size={19} aria-hidden /></span>
+          <span className="assess-tip__icon">
+            <Sparkles size={19} aria-hidden />
+          </span>
           <p>
-            <strong>Why take an assessment?</strong> Your answers help make doctor, product, and
-            daily wellness recommendations more relevant. You can complete either assessment
-            later from your profile.
+            <strong>Why take an assessment?</strong> Your answers help make
+            doctor, product, and daily wellness recommendations more relevant.
+            You can complete either assessment later from your profile.
           </p>
         </div>
 
-        <button type="button" className="skip-btn" onClick={handleSkip} disabled={skipping}>
-          {skipping ? 'Saving your choice\u2026' : "I'll do this later"}
+        <button
+          type="button"
+          className="skip-btn"
+          onClick={handleSkip}
+          disabled={skipping}
+        >
+          {skipping ? "Saving your choice\u2026" : "I'll do this later"}
           {!skipping ? <ArrowRight size={16} aria-hidden /> : null}
         </button>
       </div>

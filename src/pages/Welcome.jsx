@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import {
+  ArrowRight,
+  Leaf,
+  Stethoscope,
+  Package,
+  Bike,
+  Salad,
+} from "lucide-react";
 import consultImg from "/images/login/10.png";
 import medicineImg from "/images/login/9.png";
 import deliveryImg from "/images/login/delivery.png";
@@ -12,7 +19,7 @@ import { Button } from "../components/ui";
 import { AUTH_COPY as T } from "../content/auth";
 import "../design/pages/auth.css";
 
-const IMAGE_AUTO_MS = 4200;
+const IMAGE_AUTO_MS = 4500;
 
 const STORY_SOURCES = {
   consult: consultImg,
@@ -22,9 +29,24 @@ const STORY_SOURCES = {
   transform: yogaImg,
 };
 
+const PILLS = [
+  { icon: Stethoscope, label: "Expert Consult" },
+  { icon: Package, label: "Medicines" },
+  { icon: Bike, label: "Same-day Delivery" },
+  { icon: Salad, label: "Diet & Yoga" },
+];
+
+const FEATURES = [
+  { icon: Stethoscope, title: "Expert Consult", sub: "MD Ayurvedic doctors" },
+  { icon: Package, title: "Medicines", sub: "Matched to your Prakriti" },
+  { icon: Bike, title: "Same-day Delivery", sub: "Right to your doorstep" },
+  { icon: Salad, title: "Diet & Yoga", sub: "Personalised daily care" },
+];
+
 export default function Welcome() {
   const navigate = useNavigate();
   const [index, setIndex] = useState(0);
+  const [prev, setPrev] = useState(null);
   const [videoFailed, setVideoFailed] = useState(false);
   const [videoKey, setVideoKey] = useState(0);
   const indexRef = useRef(0);
@@ -39,9 +61,8 @@ export default function Welcome() {
     (next) => {
       const clamped =
         ((next % stories.length) + stories.length) % stories.length;
-      if (clamped === videoIndex) {
-        setVideoKey((k) => k + 1);
-      }
+      setPrev(indexRef.current);
+      if (clamped === videoIndex) setVideoKey((k) => k + 1);
       setIndex(clamped);
     },
     [stories.length, videoIndex],
@@ -49,19 +70,10 @@ export default function Welcome() {
 
   useEffect(() => {
     const slide = stories[index];
-    const onVideoSlide = slide?.kind === "video" && !videoFailed;
-    if (onVideoSlide) return undefined;
-
-    const timer = setInterval(() => {
-      setIndex((prev) => {
-        const next = (prev + 1) % stories.length;
-        if (next === videoIndex) setVideoKey((k) => k + 1);
-        return next;
-      });
-    }, IMAGE_AUTO_MS);
-
+    if (slide?.kind === "video" && !videoFailed) return undefined;
+    const timer = setInterval(() => goTo(index + 1), IMAGE_AUTO_MS);
     return () => clearInterval(timer);
-  }, [index, videoFailed, videoIndex, stories]);
+  }, [index, videoFailed, goTo, stories]);
 
   const onVideoEnd = () => {
     if (indexRef.current !== videoIndex) return;
@@ -71,53 +83,81 @@ export default function Welcome() {
   const active = stories[index] ?? stories[0];
 
   return (
-    <section className="au-page au-welcome">
-      <div className="au-welcome__media">
-        <div
-          className="au-welcome__track"
-          style={{ transform: `translateX(-${index * 100}%)` }}
-        >
-          {stories.map((item) => (
-            <div className="au-welcome__slide" key={item.key}>
-              {item.kind === "video" && !videoFailed ? (
-                <video
-                  key={`welcome-video-${videoKey}`}
-                  src={welcomeVideo}
-                  autoPlay
-                  muted
-                  playsInline
-                  onEnded={onVideoEnd}
-                  onError={() => setVideoFailed(true)}
-                />
-              ) : (
-                <img
-                  src={STORY_SOURCES[item.key] || consultImg}
-                  alt={item.title}
-                />
-              )}
-              <div className="au-welcome__fade" />
-            </div>
+    <section className="wlc-root" aria-label="Welcome to Ayurmuni">
+      {/* ── Media side ── */}
+      <div className="wlc-media" aria-hidden="true">
+        {stories.map((item, i) => (
+          <div
+            key={item.key}
+            className={`wlc-slide ${i === index ? "is-active" : ""} ${i === prev ? "is-prev" : ""}`}
+          >
+            {item.kind === "video" && !videoFailed ? (
+              <video
+                key={`wv-${videoKey}`}
+                src={welcomeVideo}
+                autoPlay
+                muted
+                playsInline
+                onEnded={onVideoEnd}
+                onError={() => setVideoFailed(true)}
+              />
+            ) : (
+              <img src={STORY_SOURCES[item.key] || consultImg} alt="" />
+            )}
+          </div>
+        ))}
+
+        {/* Gradient veil */}
+        <div className="wlc-veil" />
+
+        {/* Floating pills */}
+        <ul className="wlc-pills" aria-hidden="true">
+          {PILLS.map(({ icon: Icon, label }) => (
+            <li key={label} className="wlc-pill">
+              <Icon size={13} strokeWidth={2.2} />
+              {label}
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
 
-      <div className="au-welcome__panel">
-        <div className="au-welcome__brand">
-          <img className="au-welcome__logo" src={logoImg} alt={T.brand} />
-          <span className="au-welcome__tagline">
-            {T.tagline}
-          </span>
+      {/* ── Content panel ── */}
+      <div className="wlc-panel">
+        {/* Brand — pinned top */}
+        <div className="wlc-brand">
+          <img src={logoImg} alt={T.brand} className="wlc-logo" />
+          <span className="wlc-tagline">{T.tagline}</span>
         </div>
 
-        <div className="au-welcome__copy">
-          <p className="au-welcome__kicker">{active.eyebrow}</p>
-          <h2>{active.title}</h2>
-          <p>{active.body}</p>
+        {/* Story copy — centred middle */}
+        <div className="wlc-copy" key={index}>
+          <p className="wlc-eyebrow">
+            <Leaf size={13} strokeWidth={2.5} aria-hidden />
+            {active.eyebrow}
+          </p>
+          <h2 className="wlc-title">{active.title}</h2>
+          <p className="wlc-body">{active.body}</p>
+
+          {/* Feature grid inside copy zone */}
+          <ul className="wlc-features">
+            {FEATURES.map(({ icon: Icon, title, sub }) => (
+              <li key={title} className="wlc-feature">
+                <span className="wlc-feature__icon">
+                  <Icon size={17} strokeWidth={1.8} />
+                </span>
+                <span className="wlc-feature__text">
+                  <strong>{title}</strong>
+                  <span>{sub}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
 
-        <div className="au-welcome__actions">
+        {/* Progress + CTA — pinned bottom */}
+        <div className="wlc-footer">
           <div
-            className="au-welcome__progress"
+            className="wlc-dots"
             role="tablist"
             aria-label={T.welcomeStoriesLabel}
           >
@@ -125,10 +165,11 @@ export default function Welcome() {
               <button
                 key={s.key}
                 type="button"
-                className={i === index ? "is-on" : ""}
-                onClick={() => goTo(i)}
-                aria-label={s.title}
+                role="tab"
                 aria-selected={i === index}
+                aria-label={s.title}
+                className={`wlc-dot ${i === index ? "is-on" : ""}`}
+                onClick={() => goTo(i)}
               />
             ))}
           </div>
@@ -136,8 +177,8 @@ export default function Welcome() {
           <Button
             variant="primary"
             block
-            className="au-welcome__cta"
-            trailingIcon={<ArrowRight size={18} aria-hidden />}
+            className="wlc-cta"
+            trailingIcon={<ArrowRight size={17} aria-hidden />}
             onClick={() => navigate("/login")}
           >
             {T.welcomeCta}

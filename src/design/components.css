@@ -145,15 +145,18 @@
 }
 
 .am-btn--ghost {
-  background: transparent;
-  color: var(--am-primary);
+  border-color: var(--am-line-strong);
+  background: var(--am-surface);
+  color: var(--am-primary-strong);
+  box-shadow: 0 1px 2px rgba(10, 40, 32, 0.06);
 }
 .am-btn--ghost.am-btn--with-arrow {
-  border-color: var(--am-primary-tint);
-  background: var(--am-primary-soft);
+  border-color: var(--am-line-strong);
+  background: var(--am-surface);
   box-shadow: 0 1px 2px rgba(10, 40, 32, 0.06);
 }
 .am-btn--ghost:hover:not(:disabled) {
+  border-color: var(--am-primary);
   background: var(--am-primary-soft);
 }
 .am-btn--ghost.am-btn--with-arrow:hover:not(:disabled) {
@@ -959,9 +962,9 @@
   border-radius: var(--am-radius-xs);
   background: linear-gradient(
     90deg,
-    var(--am-sand-200) 25%,
-    var(--am-sand-50) 37%,
-    var(--am-sand-200) 63%
+    var(--am-mist-200) 25%,
+    var(--am-mist-50) 37%,
+    var(--am-mist-200) 63%
   );
   background-size: 400% 100%;
   animation: am-shimmer 1.4s ease infinite;
@@ -1426,10 +1429,10 @@
   min-height: var(--am-tap-min);
   margin-left: calc(var(--am-space-2) * -1);
   padding: 0 var(--am-space-3);
-  border: 1px solid var(--am-primary-tint);
+  border: 1px solid var(--am-line-strong);
   border-radius: var(--am-radius-pill);
-  background: var(--am-primary-soft);
-  color: var(--am-text-soft);
+  background: var(--am-surface);
+  color: var(--am-primary-strong);
   font-size: var(--am-text-sm);
   font-weight: var(--am-weight-medium);
   transition:

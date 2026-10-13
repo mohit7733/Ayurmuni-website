@@ -88,7 +88,7 @@ export default function Splash() {
       <img className="sx-splash__leaf sx-splash__leaf--br" src={leaf2Img} alt="" />
 
       <div className="sx-splash__layout">
-        <div>
+        <div className="sx-splash__copy">
           <p className="sx-splash__kicker">{T.splashKicker}</p>
           <h1 className="sx-splash__brand">{T.splashBrand}</h1>
           <div className="sx-splash__rule" aria-hidden />

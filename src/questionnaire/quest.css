@@ -754,6 +754,7 @@
 .quest.medical .level-badge {
   display: inline-flex;
   align-items: center;
+  gap: 5px;
   min-height: 28px;
   border-radius: var(--am-radius-pill);
 }
@@ -805,6 +806,46 @@
 
 .quest.medical .quest-foot .exit:hover {
   border-color: var(--am-danger);
+}
+
+.quest-title-icon {
+  display: inline-block;
+  vertical-align: -2px;
+  margin-right: 5px;
+  opacity: 0.9;
+}
+
+.pill--medical {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--quest-accent) !important;
+  font-weight: var(--am-weight-bold);
+}
+
+.quest-section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0 0 var(--am-space-3);
+  padding: 4px 10px;
+  border-radius: var(--am-radius-pill);
+  background: color-mix(in srgb, var(--quest-accent) 10%, transparent);
+  color: var(--quest-accent);
+  font-size: var(--am-text-2xs);
+  font-weight: var(--am-weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.quest-foot__privacy {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 var(--am-space-2);
+  color: var(--am-text-muted);
+  font-size: var(--am-text-2xs);
+  opacity: 0.8;
 }
 
 .quest.medical .basic-info {

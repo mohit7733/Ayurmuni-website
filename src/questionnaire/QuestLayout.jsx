@@ -1,10 +1,18 @@
-import { ArrowLeft, CheckCircle2, Zap } from 'lucide-react';
-import yesHumanImg from '/images/Yes.png';
-import noHumanImg from '/images/No.png';
-import { DOSHA } from './configs';
-import { computeDoshaScores, dominantDosha } from './doshaScoreUtils';
-import { getStepKey } from './utils';
-import BasicInfoForm from './BasicInfoForm';
+import {
+  ArrowLeft,
+  CheckCircle2,
+  HeartPulse,
+  Lock,
+  ShieldCheck,
+  Zap,
+  Check,
+} from "lucide-react";
+import yesHumanImg from "/images/Yes.png";
+import noHumanImg from "/images/No.png";
+import { DOSHA } from "./configs";
+import { computeDoshaScores, dominantDosha } from "./doshaScoreUtils";
+import { getStepKey } from "./utils";
+import BasicInfoForm from "./BasicInfoForm";
 
 export default function QuestLayout({ flow, onExit }) {
   const {
@@ -34,30 +42,39 @@ export default function QuestLayout({ flow, onExit }) {
     handleTextChange,
   } = flow;
 
-  const isMedical = mode === 'medical';
+  const isMedical = mode === "medical";
   const scores = computeDoshaScores(answers, steps);
   const lead = dominantDosha(scores);
-  const accent = isMedical ? '#0D7A6F' : DOSHA[lead].color;
+  const accent = isMedical ? "#0D7A6F" : DOSHA[lead].color;
   const level = Math.min(step + 1, Math.max(steps.length, 1));
   const totalLevels = Math.max(steps.length, 1);
 
   const resolveImage = (item) => {
-    if (currentStep?.key === 'knowPrakriti' && item?.value === 'Yes') return yesHumanImg;
-    if (currentStep?.key === 'knowPrakriti' && item?.value === 'No') return noHumanImg;
-    return item?.image_path || '';
+    if (currentStep?.key === "knowPrakriti" && item?.value === "Yes")
+      return yesHumanImg;
+    if (currentStep?.key === "knowPrakriti" && item?.value === "No")
+      return noHumanImg;
+    return item?.image_path || "";
   };
 
   const onHeaderBack = () => {
-    if (step === 0) { onExit(); return; }
+    if (step === 0) {
+      onExit();
+      return;
+    }
     handleBack();
   };
 
   if (loading && !currentStep) {
     return (
-      <section className={`quest ${isMedical ? 'medical' : 'prakriti'}`}>
+      <section className={`quest ${isMedical ? "medical" : "prakriti"}`}>
         <div className="quest-loader" role="status" aria-live="polite">
           <div className="quest-loader__spinner" />
-          <p>{isMedical ? 'Preparing your health quest\u2026' : 'Opening the temple gates\u2026'}</p>
+          <p>
+            {isMedical
+              ? "Preparing your health quest\u2026"
+              : "Opening the temple gates\u2026"}
+          </p>
         </div>
       </section>
     );
@@ -65,10 +82,12 @@ export default function QuestLayout({ flow, onExit }) {
 
   if (loadError && !currentStep) {
     return (
-      <section className={`quest ${isMedical ? 'medical' : 'prakriti'}`}>
+      <section className={`quest ${isMedical ? "medical" : "prakriti"}`}>
         <div className="quest-loader" role="alert">
           <p>{loadError}</p>
-          <button className="cta" type="button" onClick={retryLoad}>Retry</button>
+          <button className="cta" type="button" onClick={retryLoad}>
+            Retry
+          </button>
         </div>
       </section>
     );
@@ -80,14 +99,29 @@ export default function QuestLayout({ flow, onExit }) {
   const stepKey = getStepKey(currentStep);
 
   return (
-    <section className={`quest ${isMedical ? 'medical' : 'prakriti'}`}>
+    <section className={`quest ${isMedical ? "medical" : "prakriti"}`}>
       <header className="quest-top">
         <button type="button" onClick={onHeaderBack} aria-label="Go back">
           <ArrowLeft size={19} aria-hidden />
         </button>
         <div>
-          <strong>{isMedical ? 'Health Quest' : 'Prakriti Quest'}</strong>
-          <small>{isMedical ? 'Your Wellness Path' : 'The Temple Journey'}</small>
+          <strong>
+            {isMedical ? (
+              <>
+                <HeartPulse
+                  size={15}
+                  className="quest-title-icon"
+                  aria-hidden
+                />{" "}
+                Health Quest
+              </>
+            ) : (
+              "Prakriti Quest"
+            )}
+          </strong>
+          <small>
+            {isMedical ? "Your Wellness Path" : "The Temple Journey"}
+          </small>
         </div>
         <span className="xp-badge">
           <Zap size={13} aria-hidden /> {xp} XP
@@ -97,15 +131,18 @@ export default function QuestLayout({ flow, onExit }) {
       <div className="quest-hud">
         {isMedical ? (
           <>
-            <span className="pill">Health</span>
-            <span className="pill">Private</span>
-            <span className="pill">Step {level}</span>
+            <span className="pill pill--medical">
+              <ShieldCheck size={11} aria-hidden /> Confidential
+            </span>
+            <span className="pill">
+              Step {level} of {totalLevels}
+            </span>
           </>
         ) : (
-          ['vata', 'pitta', 'kapha'].map((key) => (
+          ["vata", "pitta", "kapha"].map((key) => (
             <span
               key={key}
-              className={`pill ${lead === key ? 'lead' : ''}`}
+              className={`pill ${lead === key ? "lead" : ""}`}
               style={{ color: DOSHA[key].color, background: DOSHA[key].soft }}
             >
               {DOSHA[key].label} {scores[key]}
@@ -125,7 +162,9 @@ export default function QuestLayout({ flow, onExit }) {
         aria-valuetext={`Question ${level} of ${totalLevels}`}
       >
         <div className="track-label">
-          <span>Question {level} of {totalLevels}</span>
+          <span>
+            Question {level} of {totalLevels}
+          </span>
           <span className="track-pct">{Math.round(progress)}%</span>
         </div>
         <div className="track-bar">
@@ -135,15 +174,24 @@ export default function QuestLayout({ flow, onExit }) {
 
       <div className="quest-stage" key={step}>
         <div className="level-badge" style={{ background: accent }}>
-          Q{level}
+          {isMedical ? <HeartPulse size={12} aria-hidden /> : null} Q{level}
         </div>
+        {isMedical && currentStep.section ? (
+          <p className="quest-section-label">{currentStep.section}</p>
+        ) : null}
         <h2 id="quest-question" aria-live="polite">
-          {basicInfoStep ? 'Share your basic information' : currentStep.question}
+          {basicInfoStep
+            ? "Share your basic information"
+            : currentStep.question}
         </h2>
-        {currentStep.answer_type === 'multi_choice' ? (
+        {currentStep.answer_type === "multi_choice" ? (
           <p className="multi-hint">Select all that apply</p>
-        ) : currentStep.answer_type !== 'text' && !basicInfoStep ? (
-          <p className="multi-hint">Choose the answer that feels most like you</p>
+        ) : currentStep.answer_type !== "text" && !basicInfoStep ? (
+          <p className="multi-hint">
+            {isMedical
+              ? "Choose the best answer"
+              : "Choose the answer that feels most like you"}
+          </p>
         ) : null}
 
         {basicInfoStep && rawQuestions && handleBasicInfoChange ? (
@@ -159,14 +207,14 @@ export default function QuestLayout({ flow, onExit }) {
               disabled={isDisabled || submitting}
               onClick={handleNext}
             >
-              {submitting ? 'Please wait\u2026' : 'Continue'}
+              {submitting ? "Please wait\u2026" : "Continue"}
             </button>
           </>
-        ) : currentStep.answer_type === 'text' && handleTextChange ? (
+        ) : currentStep.answer_type === "text" && handleTextChange ? (
           <>
             <textarea
               placeholder="Write your answer..."
-              value={answers[stepKey] ?? ''}
+              value={answers[stepKey] ?? ""}
               onChange={(e) => handleTextChange(e.target.value)}
             />
             <button
@@ -175,15 +223,23 @@ export default function QuestLayout({ flow, onExit }) {
               disabled={isDisabled || submitting}
               onClick={handleNext}
             >
-              {submitting ? 'Please wait\u2026' : isLastStep ? 'Complete Quest' : 'Continue'}
+              {submitting
+                ? "Please wait\u2026"
+                : isLastStep
+                  ? "Complete Quest"
+                  : "Continue"}
             </button>
           </>
         ) : (
           <>
-            <div className="quest-options" role="group" aria-labelledby="quest-question">
+            <div
+              className="quest-options"
+              role="group"
+              aria-labelledby="quest-question"
+            >
               {choices.map((item, index) => {
-                const full = String(item?.value ?? '');
-                const [optTitle, ...rest] = full.split(' - ');
+                const full = String(item?.value ?? "");
+                const [optTitle, ...rest] = full.split(" - ");
                 const active = isSelected(item);
                 const color = isMedical
                   ? accent
@@ -197,32 +253,49 @@ export default function QuestLayout({ flow, onExit }) {
                   <button
                     type="button"
                     key={`${item?.index}-${index}`}
-                    className={`quest-opt ${active ? 'on' : ''}`}
+                    className={`quest-opt ${active ? "on" : ""}`}
                     style={{ borderColor: active ? color : undefined }}
                     aria-pressed={active}
                     onClick={() => handleSelect(item)}
                   >
-                    <span className="opt-num" style={{ background: active ? color : undefined }}>
-                      {active ? <CheckCircle2 size={14} aria-hidden /> : index + 1}
+                    <span
+                      className="opt-num"
+                      style={{ background: active ? color : undefined }}
+                    >
+                      {active ? (
+                        <CheckCircle2 size={14} aria-hidden />
+                      ) : (
+                        index + 1
+                      )}
                     </span>
                     {img ? <img src={img} alt="" /> : null}
                     <span className="opt-copy">
-                      <strong>{optTitle || full || `Option ${index + 1}`}</strong>
-                      {rest.length ? <small>{rest.join(' - ')}</small> : null}
+                      <strong>
+                        {optTitle || full || `Option ${index + 1}`}
+                      </strong>
+                      {rest.length ? <small>{rest.join(" - ")}</small> : null}
                     </span>
-                    {active ? <span className="opt-check" aria-hidden>\u2713</span> : null}
+                    {active ? (
+                      <span className="opt-check" aria-hidden="true">
+                        <Check size={14} strokeWidth={3} />
+                      </span>
+                    ) : null}
                   </button>
                 );
               })}
             </div>
-            {(currentStep.answer_type === 'multi_choice' || isLastStep) && (
+            {(currentStep.answer_type === "multi_choice" || isLastStep) && (
               <button
                 className="cta"
                 type="button"
                 disabled={isDisabled || submitting}
                 onClick={handleNext}
               >
-                {submitting ? 'Please wait\u2026' : isLastStep ? 'Complete Quest' : 'Continue'}
+                {submitting
+                  ? "Please wait\u2026"
+                  : isLastStep
+                    ? "Complete Quest"
+                    : "Continue"}
               </button>
             )}
           </>
@@ -231,11 +304,18 @@ export default function QuestLayout({ flow, onExit }) {
 
       <footer className="quest-foot">
         <button type="button" onClick={onHeaderBack}>
-          {step === 0 ? 'Back' : 'Previous'}
+          {step === 0 ? "Back" : "Previous"}
         </button>
         <div>
+          {isMedical ? (
+            <span className="quest-foot__privacy">
+              <Lock size={11} aria-hidden /> Encrypted &amp; private
+            </span>
+          ) : null}
           {showSkip ? (
-            <button type="button" onClick={handleSkip}>Skip</button>
+            <button type="button" onClick={handleSkip}>
+              Skip
+            </button>
           ) : null}
           <button type="button" className="exit" onClick={onExit}>
             Exit Quest

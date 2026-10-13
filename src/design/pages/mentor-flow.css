@@ -69,7 +69,7 @@
   border-radius: var(--am-radius-xl);
   background:
     radial-gradient(ellipse at 100% 0%, var(--am-green-100), transparent 45%),
-    linear-gradient(135deg, var(--am-sand-50), var(--am-surface) 72%);
+    linear-gradient(135deg, var(--am-mist-50), var(--am-surface) 72%);
   box-shadow: var(--am-shadow-sm);
 }
 

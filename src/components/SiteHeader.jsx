@@ -1,6 +1,18 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Bell, Menu, Search, ShoppingBag, UserRound, X } from "lucide-react";
+import {
+  Bell,
+  Flower2,
+  Home,
+  LayoutGrid,
+  Menu,
+  Pill,
+  Salad,
+  Search,
+  ShoppingBag,
+  Stethoscope,
+  X,
+} from "lucide-react";
 import logoImg from "/greenlogo.png";
 import { Utils } from "../common/utils";
 import { useCart } from "../hooks/useCart";
@@ -21,6 +33,15 @@ function ProgressRing({ progress, children }) {
     </span>
   );
 }
+
+const NAV_ICONS = {
+  Home,
+  Products: LayoutGrid,
+  Medicines: Pill,
+  Consult: Stethoscope,
+  Yoga: Flower2,
+  Diet: Salad,
+};
 
 export default function SiteHeader() {
   const navigate = useNavigate();
@@ -85,20 +106,20 @@ export default function SiteHeader() {
           className="site-brand"
           aria-label="Ayurmuni home"
         >
-          <img
-            src={logoImg}
-            alt="Ayurmuni"
-            style={{ height: "40px", width: "180px" }}
-          />
+          <img src={logoImg} alt="Ayurmuni" />
         </Link>
 
         {loggedIn ? (
           <nav className="site-nav" aria-label="Primary">
-            {PRIMARY_NAV.map((item) => (
-              <NavLink key={item.to} to={item.to} className={navClass}>
-                {item.label}
-              </NavLink>
-            ))}
+            {PRIMARY_NAV.map((item) => {
+              const Icon = NAV_ICONS[item.label];
+              return (
+                <NavLink key={item.to} to={item.to} className={navClass}>
+                  {Icon ? <Icon size={16} aria-hidden /> : null}
+                  {item.label}
+                </NavLink>
+              );
+            })}
           </nav>
         ) : null}
 
@@ -133,6 +154,7 @@ export default function SiteHeader() {
               <Bell size={20} aria-hidden />
             </IconButton>
             <button
+              type="button"
               onClick={openPrakriti}
               className="site-profile-link"
               aria-label="Prakriti Analysis"
@@ -184,13 +206,31 @@ export default function SiteHeader() {
           aria-label="Mobile"
           hidden={!menuOpen}
         >
-          {PRIMARY_NAV.map((item) => (
-            <NavLink key={item.to} to={item.to} className={navClass}>
-              {item.label}
-            </NavLink>
-          ))}
-          <NavLink to="/profile" className={navClass}>
+          {PRIMARY_NAV.map((item) => {
+            const Icon = NAV_ICONS[item.label];
+            return (
+              <NavLink key={item.to} to={item.to} className={navClass}>
+                <span className="site-nav-mobile__icon" aria-hidden>
+                  {Icon ? <Icon size={18} /> : null}
+                </span>
+                {item.label}
+                <span className="site-nav-mobile__arrow" aria-hidden>›</span>
+              </NavLink>
+            );
+          })}
+          <NavLink
+            to="/profile"
+            className={({ isActive }) =>
+              `${navClass({ isActive })} site-nav-mobile__profile`
+            }
+          >
+            <span className="site-nav-mobile__avatar" aria-hidden>
+              {firstLetter}
+            </span>
             Profile
+            <span className="site-nav-mobile__arrow" aria-hidden>
+              ›
+            </span>
           </NavLink>
         </nav>
       ) : null}

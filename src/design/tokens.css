@@ -6,8 +6,8 @@
 
 :root {
   /* ---------- Palette ---------- */
-  --am-green-50: #f0f6f2;
-  --am-green-100: #dcebe2;
+  --am-green-50: #edf6f2;
+  --am-green-100: #d9ebe3;
   --am-green-200: #b9d7c6;
   --am-green-300: #8bbba2;
   --am-green-400: #569a7b;
@@ -24,6 +24,13 @@
   --am-sand-300: #e7dcc6;
   --am-sand-400: #d6c6a6;
 
+  --am-mist-25: #fcfefd;
+  --am-mist-50: #f6faf8;
+  --am-mist-100: #edf4f1;
+  --am-mist-200: #e2ece8;
+  --am-mist-300: #d2e1db;
+  --am-mist-400: #b9cfc5;
+
   --am-gold-50: #fbf6e8;
   --am-gold-100: #f5e9c8;
   --am-gold-300: #e4c47a;
@@ -37,10 +44,14 @@
   --am-ink-300: #7b8a83;
 
   /* ---------- Semantic colour ---------- */
-  --am-bg: #f4f3eb;
+  --am-bg: #eef4f2;
+  --am-page-bg:
+    radial-gradient(ellipse at 8% 8%, rgba(73, 155, 129, 0.1), transparent 32rem),
+    radial-gradient(ellipse at 92% 22%, rgba(114, 148, 194, 0.09), transparent 38rem),
+    linear-gradient(145deg, #f7faf8 0%, var(--am-bg) 52%, #eff3f8 100%);
   --am-surface: #ffffff;
-  --am-surface-muted: #faf9f3;
-  --am-surface-sunken: var(--am-sand-200);
+  --am-surface-muted: #f7faf9;
+  --am-surface-sunken: var(--am-mist-200);
   --am-surface-inverse: var(--am-green-900);
 
   --am-text: var(--am-ink-900);
@@ -62,9 +73,9 @@
   --am-accent-strong: var(--am-gold-700);
   --am-accent-soft: var(--am-gold-50);
 
-  --am-line: #e8e1d2;
-  --am-line-strong: #d8ccb4;
-  --am-border-input: #9a917e;
+  --am-line: #dce7e2;
+  --am-line-strong: #c5d5ce;
+  --am-border-input: #879b93;
 
   --am-success: #1c7c4f;
   --am-success-soft: #e8f5ee;

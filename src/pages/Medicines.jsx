@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight, FileUp, Search, ShoppingBag } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import BannerCarousel from '../components/BannerCarousel';
+import AutoScrollRail from '../components/AutoScrollRail';
 import ProductCard from '../components/ProductCard';
 import { getBanners } from '../services/bannerService';
 import {
@@ -208,9 +209,13 @@ export default function Medicines() {
                 {ordersLoading && recent.length === 0 ? (
                   <RailSkeleton count={4} size="wide" />
                 ) : (
-                  <Rail label={T.recentOrders}>
+                  <AutoScrollRail
+                    label={T.recentOrders}
+                    className="st-buy-again-rail"
+                    trackClassName="st-buy-again-rail__track"
+                    itemClassName="st-buy-again-rail__item"
+                  >
                     {recent.map((item) => (
-                      <RailItem key={`${item.id}-${item.variantId}`} size="wide">
                         <MediaCard
                           image={item.image}
                           title={item.name}
@@ -221,9 +226,8 @@ export default function Medicines() {
                             item.variantId && navigate(`/products/${item.variantId}`)
                           }
                         />
-                      </RailItem>
                     ))}
-                  </Rail>
+                  </AutoScrollRail>
                 )}
               </Reveal>
             ) : null}
