@@ -6,6 +6,7 @@ import { showSuccessToast } from '../config/key';
 import { persistProfileAndSyncAccess } from '../services/guestAuth';
 import * as AuthServices from '../services/authService';
 import * as ProfileService from '../services/profileService';
+import '../design/pages/onboarding.css';
 
 const emptyErrors = {
   firstName: '',

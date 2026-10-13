@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import AppShell from '../components/AppShell';
 import dietCoverImg from '/images/login/14.jpg';
 import useDietPlans from '../diet/useDietPlans';
+import '../design/pages/weekly-meal.css';
 
 const DEMO_MEALS = [
   { id: 'demo-breakfast', type: 'Breakfast', name: 'Berry Acai Bowl', kcal: 420, tags: ['High Fiber', 'Plant-based'] },
@@ -106,12 +107,12 @@ export default function WeeklyMeal() {
             ← Back
           </button>
           <div>
-            <h1>Meal Details</h1>
+            <h1>Weekly Meal Planner</h1>
             <p>{plan?.title || plan?.name || 'Weekly planner'}</p>
           </div>
         </header>
 
-        <h2 className="weekly-title">Weekly Planner</h2>
+        <h2 className="weekly-title">Your nutrition today</h2>
 
         {loadingDetail && resolvedId && !plan ? (
           <p className="muted">Loading plan…</p>
@@ -143,7 +144,7 @@ export default function WeeklyMeal() {
               ))}
             </div>
 
-            <div className="weekly-days">
+            <div className="weekly-days" role="group" aria-label="Select a day">
               {hasPlan
                 ? planDays.map((day) => (
                     <button
@@ -172,7 +173,7 @@ export default function WeeklyMeal() {
                   ))}
             </div>
 
-            <h3 className="yoga-section">Today&apos;s Meals</h3>
+            <h3 className="yoga-section">Meals for the selected day</h3>
             {displayMeals.length === 0 ? (
               <p className="muted">
                 {isStarted

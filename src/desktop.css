@@ -49,7 +49,7 @@
   }
 
   .text-back {
-    padding-right: 0;
+    padding-right: var(--am-space-4);
   }
 
   .catalog-grid {

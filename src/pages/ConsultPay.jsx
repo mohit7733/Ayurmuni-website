@@ -1,17 +1,17 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
-import AppShell from '../components/AppShell';
-import CouponApplyCard from '../components/CouponApplyCard';
-import PageHeader from '../components/PageHeader';
-import { formatRupee } from '../home/catalog';
-import { useCheckoutCoupons } from '../hooks/useCheckoutCoupons';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { Loader2 } from "lucide-react";
+import AppShell from "../components/AppShell";
+import CouponApplyCard from "../components/CouponApplyCard";
+import PageHeader from "../components/PageHeader";
+import { formatRupee } from "../home/catalog";
+import { useCheckoutCoupons } from "../hooks/useCheckoutCoupons";
 import {
   calculateFeeBreakdown,
   feeRateLabel,
   parseFeeQuoteConfig,
   roundMoney,
-} from '../cart/feeQuote';
+} from "../cart/feeQuote";
 import {
   CONSULT_BOOKING_KEY,
   CONSULT_PAY_KEY,
@@ -23,29 +23,29 @@ import {
   formatSlotTime,
   resolveDoctorSpecializations,
   toRazorpayPaise,
-} from '../consult/doctors';
-import { formatDoctorDisplayName } from '../consult/appointmentUtils';
+} from "../consult/doctors";
+import { formatDoctorDisplayName } from "../consult/appointmentUtils";
 import {
   createConsultationPayment,
   getConsultationFeeQuote,
   retryConsultationPayment,
   verifyConsultationPayment,
-} from '../services/consultService';
+} from "../services/consultService";
 import {
   getPatientList,
   listPatients,
   switchPatient,
-} from '../services/patientService';
-import { requireAuth } from '../services/guestAuth';
-import { showSuccessToast } from '../config/key';
+} from "../services/patientService";
+import { requireAuth } from "../services/guestAuth";
+import { showSuccessToast } from "../config/key";
 import {
   Button,
   Disclaimer,
   EmptyState,
   StepIndicator,
-} from '../components/ui';
-import { BOOKING_COPY as T } from '../content/booking';
-import '../design/pages/booking.css';
+} from "../components/ui";
+import { BOOKING_COPY as T } from "../content/booking";
+import "../design/pages/booking.css";
 
 const loadRazorpay = () =>
   new Promise((resolve, reject) => {
@@ -53,30 +53,37 @@ const loadRazorpay = () =>
       resolve(window.Razorpay);
       return;
     }
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.onload = () => resolve(window.Razorpay);
-    script.onerror = () => reject(new Error('Unable to load Razorpay'));
+    script.onerror = () => reject(new Error("Unable to load Razorpay"));
     document.body.appendChild(script);
   });
 
 const isApiSuccess = (response) =>
-  response?.success === true || response?.success === 'true' || response?.success === 1;
+  response?.success === true ||
+  response?.success === "true" ||
+  response?.success === 1;
 
 const isPendingPayment = (data) => {
-  const status = String(data?.status ?? data?.payment_status ?? '').toLowerCase();
-  return status === 'pending' || status === 'created' || status === 'initiated';
+  const status = String(
+    data?.status ?? data?.payment_status ?? "",
+  ).toLowerCase();
+  return status === "pending" || status === "created" || status === "initiated";
 };
 
 const patientName = (patient) =>
-  `${patient?.first_name || ''} ${patient?.last_name || ''}`.trim() ||
+  `${patient?.first_name || ""} ${patient?.last_name || ""}`.trim() ||
   patient?.full_name ||
-  'Patient';
+  "Patient";
 
 const readPending = (slotId) => {
   try {
-    const stored = JSON.parse(sessionStorage.getItem(CONSULT_PENDING_PAYMENT_KEY) || 'null');
-    if (!stored?.appointment_id || String(stored.slot_id) !== String(slotId)) return null;
+    const stored = JSON.parse(
+      sessionStorage.getItem(CONSULT_PENDING_PAYMENT_KEY) || "null",
+    );
+    if (!stored?.appointment_id || String(stored.slot_id) !== String(slotId))
+      return null;
     return stored;
   } catch {
     return null;
@@ -101,14 +108,14 @@ const clearPending = (slotId) => {
 };
 
 const formatDisplayDate = (value) => {
-  if (!value) return '';
+  if (!value) return "";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return String(value);
-  return date.toLocaleDateString('en-IN', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
+  return date.toLocaleDateString("en-IN", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
   });
 };
 
@@ -121,7 +128,7 @@ export default function ConsultPay() {
   const booking = useMemo(() => {
     if (location.state?.slot) return location.state;
     try {
-      return JSON.parse(sessionStorage.getItem(CONSULT_PAY_KEY) || 'null');
+      return JSON.parse(sessionStorage.getItem(CONSULT_PAY_KEY) || "null");
     } catch {
       return null;
     }
@@ -132,7 +139,7 @@ export default function ConsultPay() {
   const [patients, setPatients] = useState([]);
   const [activePatient, setActivePatient] = useState(null);
   const [feeQuote, setFeeQuote] = useState(null);
-  const [quotedCouponCode, setQuotedCouponCode] = useState('');
+  const [quotedCouponCode, setQuotedCouponCode] = useState("");
   const [feeQuoteLoading, setFeeQuoteLoading] = useState(true);
   const [paying, setPaying] = useState(false);
   const [verifying, setVerifying] = useState(false);
@@ -149,8 +156,11 @@ export default function ConsultPay() {
       setFeeQuoteLoading(true);
       try {
         const response = await getConsultationFeeQuote(slot.id, couponCode);
-        const parsed = parseFeeQuoteConfig(response?.data ?? response, slotAmount);
-        setQuotedCouponCode(String(couponCode || '').trim());
+        const parsed = parseFeeQuoteConfig(
+          response?.data ?? response,
+          slotAmount,
+        );
+        setQuotedCouponCode(String(couponCode || "").trim());
         setFeeQuote(isApiSuccess(response) && parsed ? parsed : null);
       } catch {
         setFeeQuote(null);
@@ -172,7 +182,7 @@ export default function ConsultPay() {
     discount: couponDiscount,
     applyCode,
     remove: removeCoupon,
-  } = useCheckoutCoupons('consultation', consultationFee);
+  } = useCheckoutCoupons("consultation", consultationFee);
 
   useEffect(() => {
     loadFeeQuote(appliedCoupon?.code);
@@ -180,15 +190,19 @@ export default function ConsultPay() {
 
   useEffect(() => {
     (async () => {
-      if (!(await requireAuth('Please login to confirm this booking'))) return;
+      if (!(await requireAuth("Please login to confirm this booking"))) return;
       const list = listPatients(await getPatientList());
       setPatients(list);
-      setActivePatient(list.find((item) => item?.is_selected || item?.is_active) || list[0] || null);
+      setActivePatient(
+        list.find((item) => item?.is_selected || item?.is_active) ||
+          list[0] ||
+          null,
+      );
     })();
   }, []);
 
   const feeBreakdown = useMemo(() => {
-    const requested = String(appliedCoupon?.code || '').trim();
+    const requested = String(appliedCoupon?.code || "").trim();
     const quoteDiscount =
       requested === quotedCouponCode && feeQuote?.couponDiscount != null
         ? feeQuote.couponDiscount
@@ -206,12 +220,18 @@ export default function ConsultPay() {
       discount: quote.discount,
       afterDiscount: quote.taxable,
       gst: quote.gst,
-      gstLabel: feeRateLabel('GST', quote.gstRate),
+      gstLabel: feeRateLabel("GST", quote.gstRate),
       platformFee: quote.platformFee,
-      platformLabel: feeRateLabel('Platform fee', quote.platformRate),
+      platformLabel: feeRateLabel("Platform fee", quote.platformRate),
       total: quote.total,
     };
-  }, [feeQuote, consultationFee, couponDiscount, appliedCoupon, quotedCouponCode]);
+  }, [
+    feeQuote,
+    consultationFee,
+    couponDiscount,
+    appliedCoupon,
+    quotedCouponCode,
+  ]);
 
   const finish = (result) => {
     clearPending(slot.id);
@@ -234,15 +254,23 @@ export default function ConsultPay() {
           phone_number: activePatient?.phone_number || activePatient?.phone,
         },
         patient_name: paid.patient_name || patientName(activePatient),
-        amount: paid.amount || paid.consultation_fee || paid.total_amount || feeBreakdown.total,
-        consultation_mode: paid.consultation_mode || paid.mode || 'Video consultation',
-        hospital_name: paid.hospital_name || doctor?.hospital_name || doctor?.clinic_name,
-        doctor_specialization: paid.doctor_specialization || resolveDoctorSpecializations(doctor),
-        appointment_status: paid.appointment_status || paid.status || 'CONFIRMED',
+        amount:
+          paid.amount ||
+          paid.consultation_fee ||
+          paid.total_amount ||
+          feeBreakdown.total,
+        consultation_mode:
+          paid.consultation_mode || paid.mode || "Video consultation",
+        hospital_name:
+          paid.hospital_name || doctor?.hospital_name || doctor?.clinic_name,
+        doctor_specialization:
+          paid.doctor_specialization || resolveDoctorSpecializations(doctor),
+        appointment_status:
+          paid.appointment_status || paid.status || "CONFIRMED",
       }),
     );
-    showSuccessToast('Payment Successful', 'success');
-    navigate('/consult/booking-confirm', { replace: true });
+    showSuccessToast("Payment Successful", "success");
+    navigate("/consult/booking-confirm", { replace: true });
   };
 
   const pay = async () => {
@@ -253,7 +281,9 @@ export default function ConsultPay() {
       const pending = readPending(slot.id);
       let paymentResponse;
       if (pending?.appointment_id) {
-        paymentResponse = await retryConsultationPayment(pending.appointment_id);
+        paymentResponse = await retryConsultationPayment(
+          pending.appointment_id,
+        );
       } else {
         paymentResponse = await createConsultationPayment({
           slot_id: slot.id,
@@ -264,15 +294,27 @@ export default function ConsultPay() {
       }
       if (!isApiSuccess(paymentResponse)) {
         if (pending?.appointment_id) clearPending(slot.id);
-        showSuccessToast(paymentResponse?.message || 'Unable to start payment', 'error');
+        showSuccessToast(
+          paymentResponse?.message || "Unable to start payment",
+          "error",
+        );
         return;
       }
       let payment = paymentResponse?.data ?? {};
       const appointmentId = String(
-        payment.appointment_id || payment.appointmentId || payment.consultation_id || pending?.appointment_id || '',
+        payment.appointment_id ||
+          payment.appointmentId ||
+          payment.consultation_id ||
+          pending?.appointment_id ||
+          "",
       ).trim();
-      if (appointmentId) savePending(slot.id, appointmentId, payment.payment_id);
-      if (appointmentId && !pending?.appointment_id && isPendingPayment(payment)) {
+      if (appointmentId)
+        savePending(slot.id, appointmentId, payment.payment_id);
+      if (
+        appointmentId &&
+        !pending?.appointment_id &&
+        isPendingPayment(payment)
+      ) {
         try {
           const retry = await retryConsultationPayment(appointmentId);
           if (isApiSuccess(retry) && retry?.data) {
@@ -283,17 +325,25 @@ export default function ConsultPay() {
         }
       }
       const payable = consultPayableRupees(payment, feeBreakdown.total);
-      const key = String(payment.razorpay_key || payment.key || payment.key_id || '').trim();
-      const orderId = String(
-        payment.razorpay_order_id || payment.razorpayOrderId || payment.rzp_order_id || '',
+      const key = String(
+        payment.razorpay_key || payment.key || payment.key_id || "",
       ).trim();
-      const amount = toRazorpayPaise(payment.amount ?? payment?.summary?.total_payable_amount, payable);
+      const orderId = String(
+        payment.razorpay_order_id ||
+          payment.razorpayOrderId ||
+          payment.rzp_order_id ||
+          "",
+      ).trim();
+      const amount = toRazorpayPaise(
+        payment.amount ?? payment?.summary?.total_payable_amount,
+        payable,
+      );
       if (!key || !orderId) {
         if (payable <= 0 || isApiSuccess(paymentResponse)) {
           finish(paymentResponse);
           return;
         }
-        showSuccessToast('Payment details missing. Please try again.', 'error');
+        showSuccessToast("Payment details missing. Please try again.", "error");
         return;
       }
       const Razorpay = await loadRazorpay();
@@ -301,15 +351,17 @@ export default function ConsultPay() {
         const rzp = new Razorpay({
           key,
           amount,
-          currency: payment.currency || 'INR',
-          name: 'Ayurmuni',
+          currency: payment.currency || "INR",
+          name: "Ayurmuni",
           description: `Consult ${doctorDisplayName(doctor)}`,
           order_id: orderId,
           prefill: {
             name: patientName(activePatient),
-            contact: String(activePatient?.phone_number || activePatient?.phone || '').replace(/\D/g, ''),
+            contact: String(
+              activePatient?.phone_number || activePatient?.phone || "",
+            ).replace(/\D/g, ""),
           },
-          theme: { color: '#0D614E' },
+          theme: { color: "#0D614E" },
           handler: async (response) => {
             setVerifying(true);
             try {
@@ -320,7 +372,10 @@ export default function ConsultPay() {
                 razorpay_signature: response.razorpay_signature,
               });
               if (verify?.success === false) {
-                showSuccessToast(verify?.message || 'Payment verification failed', 'error');
+                showSuccessToast(
+                  verify?.message || "Payment verification failed",
+                  "error",
+                );
               } else {
                 finish(verify?.data ? verify : paymentResponse);
               }
@@ -331,7 +386,10 @@ export default function ConsultPay() {
           },
           modal: {
             ondismiss: () => {
-              showSuccessToast('Payment cancelled. You can try again anytime.', 'error');
+              showSuccessToast(
+                "Payment cancelled. You can try again anytime.",
+                "error",
+              );
               resolve();
             },
           },
@@ -339,7 +397,7 @@ export default function ConsultPay() {
         rzp.open();
       });
     } catch (error) {
-      showSuccessToast(error?.message || 'Unable to start payment', 'error');
+      showSuccessToast(error?.message || "Unable to start payment", "error");
     } finally {
       setPaying(false);
       startedRef.current = false;
@@ -347,26 +405,34 @@ export default function ConsultPay() {
   };
 
   const changePatient = async (patient) => {
-    if (!patient?.id || String(patient.id) === String(activePatient?.id)) return;
+    if (!patient?.id || String(patient.id) === String(activePatient?.id))
+      return;
     const res = await switchPatient(patient.id);
     if (res?.success === false) {
-      showSuccessToast(res?.message || 'Failed to switch patient', 'error');
+      showSuccessToast(res?.message || "Failed to switch patient", "error");
       return;
     }
     setActivePatient(patient);
-    showSuccessToast('Patient switched successfully', 'success');
+    showSuccessToast("Patient switched successfully", "success");
   };
 
   if (!booking?.slot?.id) {
     return (
       <AppShell tab="consult">
-        <div className="bk-page">
-          <PageHeader title={T.payTitle} backTo={`/consult/doctors/${doctorId}/slots`} />
+        <div className="bk-page bk-pay-page">
+          <PageHeader
+            title={T.payTitle}
+            backTo={`/consult/doctors/${doctorId}/slots`}
+          />
           <EmptyState
             title={T.noSlotTitle}
             description={T.noSlotText}
             action={
-              <Button onClick={() => navigate(`/consult/doctors/${doctorId}/slots`)}>{T.pickASlot}</Button>
+              <Button
+                onClick={() => navigate(`/consult/doctors/${doctorId}/slots`)}
+              >
+                {T.pickASlot}
+              </Button>
             }
           />
         </div>
@@ -378,26 +444,48 @@ export default function ConsultPay() {
   const name = formatDoctorDisplayName(doctorDisplayName(doctor));
   const records = booking.medical_records || [];
   const payDisabled = paying || feeQuoteLoading || !feeQuote;
-  const whenLabel = [formatDisplayDate(booking.date), formatSlotTime(slot.start_time) || slot.displayTime]
+  const whenLabel = [
+    formatDisplayDate(booking.date),
+    formatSlotTime(slot.start_time) || slot.displayTime,
+  ]
     .filter(Boolean)
-    .join(' · ');
+    .join(" · ");
+  const consultationMode =
+    booking.consultation_mode || booking.mode || "Video consultation";
 
   return (
     <AppShell tab="consult">
-      <div className="bk-page">
-        <PageHeader title={T.payTitle} backTo={`/consult/doctors/${doctorId}/slots`} />
+      <div className="bk-page bk-pay-page">
+        <PageHeader
+          title={T.payTitle}
+          backTo={`/consult/doctors/${doctorId}/slots`}
+        />
         <StepIndicator steps={T.steps} current={1} label={T.stepsLabel} />
 
         <div className="bk-layout">
           <div className="bk-main">
             <div className="bk-doctor">
               <span className="bk-doctor__photo" aria-hidden={!image}>
-                {image ? <img src={image} alt="" /> : <span>{name.charAt(0)}</span>}
+                {image ? (
+                  <img src={image} alt="" />
+                ) : (
+                  <span>{name.charAt(0)}</span>
+                )}
               </span>
               <div className="bk-doctor__copy">
                 <strong>{name}</strong>
-                {doctorQualification(doctor) ? <p>{doctorQualification(doctor)}</p> : null}
+                {doctorQualification(doctor) ? (
+                  <p>{doctorQualification(doctor)}</p>
+                ) : null}
                 <small>{whenLabel}</small>
+                <div
+                  className="bk-doctor__meta"
+                  aria-label="Consultation summary"
+                >
+                  <span className="bk-pill bk-pill--primary">
+                    {consultationMode}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -406,11 +494,25 @@ export default function ConsultPay() {
                 <div className="bk-card__head">
                   <h2 id="bk-patient-title">{T.patientTitle}</h2>
                 </div>
-                <div className="bk-record-list" role="radiogroup" aria-labelledby="bk-patient-title">
+                <div
+                  className="bk-record-list"
+                  role="radiogroup"
+                  aria-labelledby="bk-patient-title"
+                >
                   {patients.map((item) => {
                     const on = String(activePatient?.id) === String(item.id);
+                    const patientPhone = item.phone_number || item.phone || "";
+                    const patientMeta = [
+                      item.relation || item.relationship || "Self",
+                      patientPhone,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ");
                     return (
-                      <label key={item.id} className={`bk-record${on ? ' is-on' : ''}`}>
+                      <label
+                        key={item.id}
+                        className={`bk-record${on ? " is-on" : ""}`}
+                      >
                         <input
                           type="radio"
                           name="patient"
@@ -419,7 +521,7 @@ export default function ConsultPay() {
                         />
                         <span className="bk-record__copy">
                           <strong>{patientName(item)}</strong>
-                          <small>{item.relation || item.relationship || 'Self'}</small>
+                          <small>{patientMeta || "Self"}</small>
                         </span>
                       </label>
                     );
@@ -446,7 +548,9 @@ export default function ConsultPay() {
                   {records.map((item) => (
                     <li key={item.id} className="bk-record">
                       <span className="bk-record__copy">
-                        <strong>{item.description || item.title || 'Record'}</strong>
+                        <strong>
+                          {item.description || item.title || "Record"}
+                        </strong>
                       </span>
                     </li>
                   ))}
@@ -456,6 +560,14 @@ export default function ConsultPay() {
           </div>
 
           <aside className="bk-aside">
+            <div className="bk-card bk-payment-hero">
+              <div className="bk-payment-hero__head">
+                <span className="bk-payment-tag">Total payable</span>
+                <strong>{money(feeBreakdown.total)}</strong>
+              </div>
+              <p>Secure payment at checkout</p>
+            </div>
+
             <div className="bk-card">
               <CouponApplyCard
                 coupons={coupons}
@@ -476,7 +588,9 @@ export default function ConsultPay() {
               <div className="bk-card__head">
                 <h2 id="bk-bill-title">{T.billTitle}</h2>
               </div>
-              {feeQuoteLoading ? <p className="bk-card__hint">{T.calculating}</p> : null}
+              {feeQuoteLoading ? (
+                <p className="bk-card__hint">{T.calculating}</p>
+              ) : null}
               <dl className="bk-bill">
                 <div className="bk-bill__row">
                   <dt>{T.consultation}</dt>
@@ -514,7 +628,14 @@ export default function ConsultPay() {
             </section>
 
             <div className="bk-aside__cta">
-              <Button variant="accent" size="lg" block disabled={payDisabled} loading={paying} onClick={pay}>
+              <Button
+                variant="accent"
+                size="lg"
+                block
+                disabled={payDisabled}
+                loading={paying}
+                onClick={pay}
+              >
                 {paying ? T.starting : T.payNow}
               </Button>
             </div>
@@ -523,18 +644,32 @@ export default function ConsultPay() {
         </div>
       </div>
 
-      <div className="bk-sticky" role="region" aria-label={T.payNow}>
+      <div
+        className="bk-sticky bk-pay-sticky"
+        role="region"
+        aria-label={T.payNow}
+      >
         <div className="bk-sticky__meta">
           <strong>{money(feeBreakdown.total)}</strong>
           <small>{T.toPay}</small>
         </div>
-        <Button variant="accent" disabled={payDisabled} loading={paying} onClick={pay}>
+        <Button
+          variant="accent"
+          disabled={payDisabled}
+          loading={paying}
+          onClick={pay}
+        >
           {paying ? T.starting : T.payNow}
         </Button>
       </div>
 
       {verifying ? (
-        <div className="bk-verify" role="alertdialog" aria-modal="true" aria-labelledby="bk-verify-title">
+        <div
+          className="bk-verify"
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="bk-verify-title"
+        >
           <div className="bk-verify__panel">
             <Loader2 className="bk-verify__spinner" size={32} aria-hidden />
             <p>{T.verifyingTitle}</p>

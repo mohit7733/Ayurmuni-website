@@ -20,6 +20,7 @@ import {
   hydrateReviewedDietPlans,
   isDietPlanAssignmentReviewed,
 } from '../utils/reviewedDietPlans';
+import '../design/pages/diet-plan.css';
 
 const MACRO = [
   { key: 'carbsPct', label: 'Carbs', color: '#1FA77A' },
@@ -160,7 +161,7 @@ export default function DietPlan() {
               <img src={cover} alt="" />
             </div>
             {gallery.length > 1 ? (
-              <div className="gallery-thumbs">
+              <div className="gallery-thumbs" role="group" aria-label="Plan photos">
                 {gallery.map((item, index) => (
                   <button
                     key={`${item.image_url}-${index}`}
@@ -224,7 +225,7 @@ export default function DietPlan() {
                   onSetIntake={updateWaterIntake}
                 />
 
-                <div className="diet-days">
+                <div className="diet-days" role="group" aria-label="Select plan day">
                   {planDays.map((day) => (
                     <button
                       key={day.dayKey}
@@ -241,6 +242,10 @@ export default function DietPlan() {
                   ))}
                 </div>
 
+                <div className="diet-detail-section-heading">
+                  <h2>{dayLabel ? `${dayLabel} meals` : 'Today’s meals'}</h2>
+                  <span>{previewMeals.length} {previewMeals.length === 1 ? 'meal' : 'meals'}</span>
+                </div>
                 <div className="diet-meals">
                   {previewMeals.map((meal) => (
                     <button
@@ -262,28 +267,38 @@ export default function DietPlan() {
               </>
             ) : (
               <>
-                <p className="muted">Start this plan to unlock daily tracking and hydration.</p>
+                <p className="diet-start-hint">Start this plan to unlock daily tracking and hydration.</p>
                 {previewMeals.length ? (
-                  <div className="diet-meals">
-                    {previewMeals.map((meal) => (
-                      <button
-                        key={meal.id}
-                        type="button"
-                        className="diet-meal"
-                        onClick={() =>
-                          navigate(`/diet/${planId}/meals/${meal.id}`, { state: { meal, planId } })
-                        }
-                      >
-                        <img src={meal.image || dietCoverImg} alt="" />
-                        <div>
-                          <small>{meal.type}</small>
-                          <strong>{meal.title}</strong>
-                          <p>{meal.kcal ? `${meal.kcal} kcal` : meal.time}</p>
-                        </div>
-                        <span>View</span>
-                      </button>
-                    ))}
-                  </div>
+                  <>
+                    <div className="diet-detail-section-heading">
+                      <h2>Meal preview</h2>
+                      <span>
+                        {previewMeals.length} {previewMeals.length === 1 ? 'meal' : 'meals'}
+                      </span>
+                    </div>
+                    <div className="diet-meals">
+                      {previewMeals.map((meal) => (
+                        <button
+                          key={meal.id}
+                          type="button"
+                          className="diet-meal"
+                          onClick={() =>
+                            navigate(`/diet/${planId}/meals/${meal.id}`, {
+                              state: { meal, planId },
+                            })
+                          }
+                        >
+                          <img src={meal.image || dietCoverImg} alt="" />
+                          <div>
+                            <small>{meal.type}</small>
+                            <strong>{meal.title}</strong>
+                            <p>{meal.kcal ? `${meal.kcal} kcal` : meal.time}</p>
+                          </div>
+                          <span>View</span>
+                        </button>
+                      ))}
+                    </div>
+                  </>
                 ) : null}
               </>
             )}

@@ -1,0 +1,81 @@
+.appointments-page > .am-page-header .am-page-header__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--am-space-3);
+  width: 100%;
+}
+
+.appointments-page > .am-page-header .am-page-header__actions {
+  width: auto;
+  max-width: 100%;
+  margin-left: auto;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--am-space-2);
+}
+
+.appointments-page > .am-page-header .am-page-header__actions > button {
+  flex: 0 0 auto;
+  min-height: 42px;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.appointments-page .appoint-filters .filter-group + .filter-group {
+  padding-top: var(--am-space-3);
+  border-top: 1px solid color-mix(in srgb, var(--am-line) 72%, transparent);
+}
+
+.appointments-page .appoint-card {
+  transition:
+    border-color var(--am-dur-base) var(--am-ease-standard),
+    box-shadow var(--am-dur-base) var(--am-ease-standard),
+    transform var(--am-dur-base) var(--am-ease-out);
+}
+
+.appointments-page .appoint-card:hover {
+  border-color: var(--am-primary-tint);
+  box-shadow: var(--am-shadow-sm);
+  transform: translateY(-1px);
+}
+
+.appointments-page .appoint-card .history-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: var(--am-space-2);
+  margin-top: var(--am-space-4);
+}
+
+.appointments-page .appoint-card .history-actions > button {
+  display: inline-flex;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  height: auto;
+  align-items: center;
+  justify-content: center;
+  padding: var(--am-space-2) var(--am-space-3);
+  text-align: center;
+  line-height: 1.25;
+  white-space: normal;
+}
+
+.appointments-page .appoint-card .history-actions > button:only-child {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 768px) {
+  .appointments-page > .am-page-header .am-page-header__actions {
+    width: auto;
+    align-items: center;
+    gap: var(--am-space-3);
+  }
+
+  .appointments-page > .am-page-header .am-page-header__actions > button {
+    flex: 0 0 auto;
+  }
+}

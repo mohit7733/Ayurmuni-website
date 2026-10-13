@@ -1,0 +1,419 @@
+.diet-page.catalog-page {
+  display: flex;
+  width: min(var(--am-container), calc(100% - var(--am-gutter) - var(--am-gutter)));
+  max-width: var(--am-container);
+  flex-direction: column;
+  gap: var(--am-space-4);
+  margin-inline: auto;
+  padding: var(--am-space-6) var(--am-gutter) var(--am-space-12);
+}
+
+.diet-page .catalog-head {
+  position: relative;
+  overflow: hidden;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--am-space-4);
+  margin: 0;
+  padding: var(--am-space-6);
+  border: 1px solid color-mix(in srgb, var(--am-primary) 18%, var(--am-line));
+  border-radius: var(--am-radius-xl);
+  background:
+    radial-gradient(circle at 94% 0, color-mix(in srgb, var(--am-accent) 22%, transparent), transparent 34%),
+    linear-gradient(130deg, var(--am-primary-soft), var(--am-surface) 76%);
+  box-shadow: var(--am-shadow-sm);
+}
+
+.diet-page .catalog-head > div:first-child {
+  min-width: 0;
+}
+
+.diet-page .catalog-head .text-back {
+  min-height: 36px;
+  margin: 0 0 var(--am-space-3);
+  padding-inline: var(--am-space-3);
+  border: 1px solid var(--am-primary-tint);
+  border-radius: var(--am-radius-pill);
+  background: color-mix(in srgb, var(--am-surface) 84%, transparent);
+  color: var(--am-primary-strong);
+}
+
+.diet-page .catalog-head h1 {
+  color: var(--am-primary-strong);
+  font-family: var(--am-font-display);
+  font-size: var(--am-text-3xl);
+  letter-spacing: var(--am-tracking-display);
+}
+
+.diet-page .catalog-head p {
+  margin-top: var(--am-space-2);
+  color: var(--am-text-muted);
+  font-size: var(--am-text-sm);
+}
+
+.diet-page .catalog-head > .diet-chips {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+}
+
+.diet-page .catalog-head > .diet-chips .chip {
+  min-height: 42px;
+  padding-inline: var(--am-space-4);
+  border: 1px solid var(--am-primary-tint);
+  border-radius: var(--am-radius-pill);
+  background: var(--am-surface);
+  color: var(--am-primary-strong);
+  font-weight: var(--am-weight-semibold);
+}
+
+.diet-page .search-form {
+  display: flex;
+  max-width: none;
+  gap: var(--am-space-2);
+  margin: 0;
+  padding: var(--am-space-2);
+  border: 1px solid var(--am-line-strong);
+  border-radius: var(--am-radius-xl);
+  background: var(--am-surface);
+  box-shadow: var(--am-shadow-xs);
+}
+
+.diet-page .search-form:focus-within {
+  border-color: var(--am-primary);
+  box-shadow: var(--am-focus-ring);
+}
+
+.diet-page .search-form input {
+  min-width: 0;
+  min-height: 44px;
+  flex: 1;
+  padding: 0 var(--am-space-3);
+  border: 0;
+  border-radius: var(--am-radius-lg);
+  background: transparent;
+  color: var(--am-text);
+  font: inherit;
+}
+
+.diet-page .search-form input:focus {
+  outline: none;
+}
+
+.diet-page .search-form .cta {
+  min-height: 44px;
+  flex: 0 0 auto;
+  padding-inline: var(--am-space-5);
+  border-radius: var(--am-radius-lg);
+  font-weight: var(--am-weight-semibold);
+}
+
+.diet-page > .diet-chips {
+  gap: var(--am-space-2);
+  margin: 0;
+  padding: var(--am-space-2);
+  border: 1px solid var(--am-line);
+  border-radius: var(--am-radius-xl);
+  background: color-mix(in srgb, var(--am-surface) 86%, var(--am-primary-soft));
+  scrollbar-width: thin;
+}
+
+.diet-page .diet-prakriti-filters::before,
+.diet-page .diet-status-filters::before {
+  display: flex;
+  min-height: 34px;
+  flex: 0 0 auto;
+  align-items: center;
+  margin-right: var(--am-space-1);
+  padding-right: var(--am-space-3);
+  border-right: 1px solid var(--am-line);
+  color: var(--am-text-muted);
+  font-size: var(--am-text-2xs);
+  font-weight: var(--am-weight-bold);
+  letter-spacing: var(--am-tracking-caps);
+  text-transform: uppercase;
+}
+
+.diet-page .diet-prakriti-filters::before {
+  content: "Prakriti";
+}
+
+.diet-page .diet-status-filters::before {
+  content: "Status";
+}
+
+.diet-page > .diet-chips .chip {
+  min-height: 38px;
+  flex: 0 0 auto;
+  padding-inline: var(--am-space-4);
+  border: 1px solid transparent;
+  border-radius: var(--am-radius-pill);
+  background: transparent;
+  color: var(--am-text-muted);
+  font-size: var(--am-text-xs);
+  font-weight: var(--am-weight-semibold);
+  transition:
+    border-color var(--am-dur-fast) var(--am-ease-standard),
+    color var(--am-dur-fast) var(--am-ease-standard),
+    background var(--am-dur-fast) var(--am-ease-standard),
+    box-shadow var(--am-dur-fast) var(--am-ease-standard);
+}
+
+.diet-page > .diet-chips .chip:hover {
+  border-color: var(--am-primary-tint);
+  background: var(--am-primary-soft);
+  color: var(--am-primary-strong);
+}
+
+.diet-page > .diet-chips .chip.on {
+  border-color: var(--am-primary);
+  background: var(--am-primary);
+  color: var(--am-on-primary);
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--am-primary) 20%, transparent);
+}
+
+.diet-page .diet-results-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--am-space-3);
+  margin-top: var(--am-space-2);
+  padding-bottom: var(--am-space-3);
+  border-bottom: 1px solid var(--am-line);
+}
+
+.diet-page .diet-results-heading h2 {
+  margin: 0;
+  color: var(--am-text);
+  font-family: var(--am-font-display);
+  font-size: var(--am-text-xl);
+  line-height: var(--am-leading-tight);
+}
+
+.diet-page .diet-results-heading > span {
+  flex: 0 0 auto;
+  padding: var(--am-space-1) var(--am-space-3);
+  border: 1px solid var(--am-line);
+  border-radius: var(--am-radius-pill);
+  background: var(--am-surface);
+  color: var(--am-text-muted);
+  font-size: var(--am-text-xs);
+  font-weight: var(--am-weight-medium);
+}
+
+.diet-page .diet-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  align-items: stretch;
+  gap: var(--am-space-4);
+}
+
+.diet-page .diet-card {
+  min-width: 0;
+  min-height: 100%;
+  padding: 0 0 var(--am-space-4);
+  border: 1px solid var(--am-line);
+  border-radius: var(--am-radius-xl);
+  background: linear-gradient(160deg, var(--am-surface), var(--am-surface-muted));
+  box-shadow: var(--am-shadow-sm);
+  cursor: pointer;
+  transition:
+    border-color var(--am-dur-fast) var(--am-ease-standard),
+    box-shadow var(--am-dur-base) var(--am-ease-standard),
+    transform var(--am-dur-base) var(--am-ease-out);
+}
+
+.diet-page .diet-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--am-primary-tint);
+  box-shadow: var(--am-shadow-md);
+}
+
+.diet-page .diet-card:focus-visible,
+.diet-page .catalog-head button:focus-visible,
+.diet-page .diet-chips .chip:focus-visible,
+.diet-page .search-form .cta:focus-visible,
+.diet-page .diet-more:focus-visible {
+  outline: 2px solid var(--am-primary);
+  outline-offset: 3px;
+}
+
+.diet-page .diet-card-media {
+  height: clamp(150px, 17vw, 220px);
+  overflow: hidden;
+  background: var(--am-primary-soft);
+}
+
+.diet-page .diet-card-media img {
+  transition: transform var(--am-dur-slow) var(--am-ease-out);
+}
+
+.diet-page .diet-card:hover .diet-card-media img {
+  transform: scale(1.04);
+}
+
+.diet-page .diet-status {
+  top: var(--am-space-3);
+  left: var(--am-space-3);
+  padding: var(--am-space-1) var(--am-space-3);
+  border: 1px solid color-mix(in srgb, var(--am-surface) 52%, transparent);
+  background: var(--am-primary);
+  font-size: var(--am-text-2xs);
+  box-shadow: var(--am-shadow-xs);
+}
+
+.diet-page .diet-status.paused,
+.diet-page .diet-status.stopped {
+  background: var(--am-warning);
+}
+
+.diet-page .diet-status.completed {
+  background: var(--am-text-muted);
+}
+
+.diet-page .diet-card > strong,
+.diet-page .diet-card > small,
+.diet-page .diet-card > em,
+.diet-page .diet-card > p {
+  padding-inline: var(--am-space-4);
+}
+
+.diet-page .diet-card > strong {
+  display: -webkit-box;
+  min-height: 2.6em;
+  overflow: hidden;
+  margin-top: var(--am-space-3);
+  color: var(--am-text);
+  font-size: var(--am-text-md);
+  font-weight: var(--am-weight-semibold);
+  line-height: var(--am-leading-snug);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.diet-page .diet-card > small {
+  margin-top: var(--am-space-2);
+  color: var(--am-primary);
+  font-size: var(--am-text-xs);
+  font-weight: var(--am-weight-medium);
+}
+
+.diet-page .diet-card > em {
+  width: fit-content;
+  margin: var(--am-space-2) var(--am-space-4) 0;
+  padding: var(--am-space-1) var(--am-space-2);
+  border: 1px solid var(--am-gold-100);
+  border-radius: var(--am-radius-pill);
+  background: var(--am-accent-soft);
+  color: var(--am-accent-strong);
+  font-size: var(--am-text-xs);
+  font-style: normal;
+  font-weight: var(--am-weight-semibold);
+}
+
+.diet-page .diet-card > p {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: var(--am-space-2) 0 0;
+  color: var(--am-text-muted);
+  font-size: var(--am-text-xs);
+  line-height: var(--am-leading-normal);
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.diet-page .empty-copy {
+  margin: 0;
+  padding: var(--am-space-8) var(--am-space-5);
+  border: 1px dashed var(--am-line-strong);
+  border-radius: var(--am-radius-xl);
+  background: linear-gradient(145deg, var(--am-surface), var(--am-surface-muted));
+  text-align: center;
+}
+
+.diet-page .empty-copy strong {
+  color: var(--am-text);
+  font-family: var(--am-font-display);
+  font-size: var(--am-text-lg);
+}
+
+.diet-page .empty-copy p {
+  max-width: 54ch;
+  margin: var(--am-space-2) auto 0;
+  color: var(--am-text-muted);
+  font-size: var(--am-text-sm);
+  line-height: var(--am-leading-normal);
+}
+
+.diet-page .diet-more {
+  width: 100%;
+  min-height: 44px;
+  margin-top: var(--am-space-2);
+  border-color: var(--am-primary-tint);
+  border-radius: var(--am-radius-pill);
+  background: var(--am-primary-soft);
+  color: var(--am-primary-strong);
+  font-weight: var(--am-weight-semibold);
+}
+
+@media (max-width: 640px) {
+  .diet-page.catalog-page {
+    gap: var(--am-space-3);
+    padding: var(--am-space-4) var(--am-gutter) var(--am-space-10);
+  }
+
+  .diet-page .catalog-head {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: var(--am-space-4);
+  }
+
+  .diet-page .catalog-head h1 {
+    font-size: var(--am-text-2xl);
+  }
+
+  .diet-page .catalog-head > .diet-chips {
+    width: 100%;
+  }
+
+  .diet-page > .diet-chips {
+    flex-wrap: nowrap;
+    margin-inline: calc(var(--am-gutter) * -1);
+    padding-inline: var(--am-gutter);
+    scrollbar-width: none;
+  }
+
+  .diet-page > .diet-chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  .diet-page .diet-grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+    gap: var(--am-space-3);
+  }
+
+  .diet-page .diet-card-media {
+    height: 160px;
+  }
+}
+
+@media (max-width: 420px) {
+  .diet-page .diet-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .diet-page .search-form .cta,
+  .diet-page .diet-chips .chip,
+  .diet-page .diet-card,
+  .diet-page .diet-card-media img {
+    transition: none;
+  }
+
+  .diet-page .diet-card:hover,
+  .diet-page .diet-card:hover .diet-card-media img {
+    transform: none;
+  }
+}

@@ -178,7 +178,7 @@ export default function Profile() {
 
   return (
     <AppShell tab="profile">
-      <section className="pf-page">
+      <section className="pf-page pf-hub">
         <PageHeader
           title={T.title}
           subtitle={T.subtitle}

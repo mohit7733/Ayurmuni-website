@@ -9,7 +9,14 @@ import { Disclaimer, Skeleton, SkeletonText } from './ui';
 import { STATIC_COPY as T } from '../content/static';
 import '../design/pages/static.css';
 
-export default function PolicyHubPage({ title, intro }) {
+export default function PolicyHubPage({
+  title,
+  intro,
+  className = '',
+  eyebrow,
+  listHeading,
+  listDescription,
+}) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -50,8 +57,13 @@ export default function PolicyHubPage({ title, intro }) {
 
   return (
     <AppShell tab="profile">
-      <section className="sx-page sx-narrow">
-        <PageHeader title={title} subtitle={intro} onBack={() => navigate(-1)} />
+      <section className={`sx-page sx-narrow ${className}`.trim()}>
+        <PageHeader
+          title={title}
+          subtitle={intro}
+          eyebrow={eyebrow}
+          onBack={() => navigate(-1)}
+        />
         {loading ? (
           <div aria-busy="true" aria-label={T.hubLoading}>
             <SkeletonText lines={2} />
@@ -63,6 +75,8 @@ export default function PolicyHubPage({ title, intro }) {
             error={error}
             onRetry={load}
             onOpen={openPolicy}
+            heading={listHeading}
+            description={listDescription}
           />
         )}
         <Disclaimer />

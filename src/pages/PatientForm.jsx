@@ -12,6 +12,7 @@ import {
   isSelfRelation,
   updatePatientById,
 } from '../services/patientService';
+import '../design/pages/patient-form.css';
 
 const GENDER_OPTIONS = [
   { label: 'Male', value: 'Male' },

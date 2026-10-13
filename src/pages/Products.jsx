@@ -1,18 +1,22 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowRight, ShoppingBag, SlidersHorizontal, X } from 'lucide-react';
-import AppShell from '../components/AppShell';
-import BannerCarousel from '../components/BannerCarousel';
-import ProductCard from '../components/ProductCard';
-import { getBanners } from '../services/bannerService';
-import { formatRupee, getBannerImageUri, resolveImageUrl } from '../home/catalog';
-import { getServiceCategoryId } from '../home/serviceCategories';
-import useDashboardCategories from '../hooks/useDashboardCategories';
-import useCategoryProducts from '../hooks/useCategoryProducts';
-import useProductCategories from '../hooks/useProductCategories';
-import { useCart } from '../hooks/useCart';
-import { getOrders, normalizeOrdersList } from '../services/orderService';
-import { mapOrdersToRecentProducts } from '../profile/map';
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { ArrowRight, ShoppingBag, SlidersHorizontal, X } from "lucide-react";
+import AppShell from "../components/AppShell";
+import BannerCarousel from "../components/BannerCarousel";
+import ProductCard from "../components/ProductCard";
+import { getBanners } from "../services/bannerService";
+import {
+  formatRupee,
+  getBannerImageUri,
+  resolveImageUrl,
+} from "../home/catalog";
+import { getServiceCategoryId } from "../home/serviceCategories";
+import useDashboardCategories from "../hooks/useDashboardCategories";
+import useCategoryProducts from "../hooks/useCategoryProducts";
+import useProductCategories from "../hooks/useProductCategories";
+import { useCart } from "../hooks/useCart";
+import { getOrders, normalizeOrdersList } from "../services/orderService";
+import { mapOrdersToRecentProducts } from "../profile/map";
 import {
   Button,
   Disclaimer,
@@ -28,9 +32,9 @@ import {
   SkeletonGrid,
   Tile,
   TileGrid,
-} from '../components/ui';
-import { STORE_COPY as T } from '../content/store';
-import '../design/pages/store.css';
+} from "../components/ui";
+import { STORE_COPY as T } from "../content/store";
+import "../design/pages/store.css";
 
 export default function Products() {
   const navigate = useNavigate();
@@ -38,50 +42,45 @@ export default function Products() {
   const { categories: dashboardCategories, loading: homeLoading } =
     useDashboardCategories();
   const productsCategoryId = useMemo(
-    () => getServiceCategoryId(dashboardCategories, 'products'),
+    () => getServiceCategoryId(dashboardCategories, "products"),
     [dashboardCategories],
   );
   const productFilter = useMemo(
-    () => (productsCategoryId ? { service_category_id: productsCategoryId } : {}),
+    () =>
+      productsCategoryId ? { service_category_id: productsCategoryId } : {},
     [productsCategoryId],
   );
-  const {
-    products,
-    loading,
-    loadingMore,
-    refreshing,
-    hasMore,
-    loadMore,
-  } = useCategoryProducts(productFilter, [], {
-    enabled: Boolean(productsCategoryId) || !homeLoading,
-  });
+  const { products, loading, loadingMore, refreshing, hasMore, loadMore } =
+    useCategoryProducts(productFilter, [], {
+      enabled: Boolean(productsCategoryId) || !homeLoading,
+    });
   const { categories: productCategories, loading: categoriesLoading } =
     useProductCategories(null, productsCategoryId);
 
   const [banners, setBanners] = useState([]);
   const [recentProducts, setRecentProducts] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  
+  const [search, setSearch] = useState("");
+
   // Filter & Sort States
-  const [sortBy, setSortBy] = useState('relevance');
+  const [sortBy, setSortBy] = useState("relevance");
   const [priceRange, setPriceRange] = useState([0, 10000]);
   const [minRating, setMinRating] = useState(0);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
   const openCategoryBrowse = (extra = {}) => {
-    const query = new URLSearchParams({ mode: 'product' });
-    if (productsCategoryId) query.set('service', productsCategoryId);
-    if (extra.category) query.set('category', extra.category);
-    if (extra.name) query.set('name', extra.name);
+    const query = new URLSearchParams({ mode: "product" });
+    if (productsCategoryId) query.set("service", productsCategoryId);
+    if (extra.category) query.set("category", extra.category);
+    if (extra.name) query.set("name", extra.name);
     navigate(`/products/category?${query.toString()}`);
   };
 
   useEffect(() => {
     let alive = true;
     (async () => {
-      const res = await getBanners('product', productsCategoryId);
+      const res = await getBanners("product", productsCategoryId);
       if (!alive) return;
       setBanners(
         (res?.data || [])
@@ -101,7 +100,9 @@ export default function Products() {
       try {
         const res = await getOrders({ page: 1, page_size: 5 });
         if (!alive) return;
-        setRecentProducts(mapOrdersToRecentProducts(normalizeOrdersList(res), 8));
+        setRecentProducts(
+          mapOrdersToRecentProducts(normalizeOrdersList(res), 8),
+        );
       } catch {
         if (alive) setRecentProducts([]);
       } finally {
@@ -147,15 +148,15 @@ export default function Products() {
       const ratingB = Number(b.rating || b.average_rating || 0);
 
       switch (sortBy) {
-        case 'price_low':
+        case "price_low":
           return priceA - priceB;
-        case 'price_high':
+        case "price_high":
           return priceB - priceA;
-        case 'rating':
+        case "rating":
           return ratingB - ratingA;
-        case 'name':
-          return (a.name || '').localeCompare(b.name || '');
-        case 'relevance':
+        case "name":
+          return (a.name || "").localeCompare(b.name || "");
+        case "relevance":
         default:
           return 0;
       }
@@ -164,25 +165,27 @@ export default function Products() {
     return filtered;
   }, [products, priceRange, minRating, inStockOnly, sortBy]);
 
-  const hasActiveFilters = 
-    priceRange[0] !== 0 || 
-    priceRange[1] !== 10000 || 
-    minRating > 0 || 
+  const hasActiveFilters =
+    priceRange[0] !== 0 ||
+    priceRange[1] !== 10000 ||
+    minRating > 0 ||
     inStockOnly ||
-    sortBy !== 'relevance';
+    sortBy !== "relevance";
 
   const clearFilters = () => {
     setPriceRange([0, 10000]);
     setMinRating(0);
     setInStockOnly(false);
-    setSortBy('relevance');
+    setSortBy("relevance");
   };
 
   const showSkeleton = loading && products.length === 0;
 
   const goSearch = (value) => {
-    const query = String(value || search || '').trim();
-    navigate(`/search?mode=product${query ? `&q=${encodeURIComponent(query)}` : ''}`);
+    const query = String(value || search || "").trim();
+    navigate(
+      `/search?mode=product${query ? `&q=${encodeURIComponent(query)}` : ""}`,
+    );
   };
 
   return (
@@ -204,22 +207,30 @@ export default function Products() {
             />
             <Button
               variant="secondary"
-              onClick={() => navigate('/cart')}
+              onClick={() => navigate("/cart")}
               leadingIcon={<ShoppingBag size={18} aria-hidden />}
             >
               {T.cart}
-              {itemCount ? ` (${itemCount})` : ''}
+              {itemCount ? ` (${itemCount})` : ""}
             </Button>
           </div>
         </section>
 
         {showSkeleton ? (
-          <SkeletonGrid count={6} className="am-product-grid" label="Loading products" />
+          <SkeletonGrid
+            count={6}
+            className="am-product-grid"
+            label="Loading products"
+          />
         ) : (
           <>
             <BannerCarousel items={banners} interval={4000} />
 
-            <Reveal as="section" className="st-section" aria-labelledby="st-cats-title">
+            <Reveal
+              as="section"
+              className="st-section"
+              aria-labelledby="st-cats-title"
+            >
               <SectionHeader
                 id="st-cats-title"
                 title={T.shopByCategory}
@@ -228,7 +239,9 @@ export default function Products() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => openCategoryBrowse({ name: 'Shop by Category' })}
+                    onClick={() =>
+                      openCategoryBrowse({ name: "Shop by Category" })
+                    }
                     trailingIcon={<ArrowRight size={16} aria-hidden />}
                   >
                     {T.viewAll}
@@ -245,7 +258,10 @@ export default function Products() {
                       image={resolveImageUrl(item)}
                       label={item.name}
                       onClick={() =>
-                        openCategoryBrowse({ category: item.id, name: item.name })
+                        openCategoryBrowse({
+                          category: item.id,
+                          name: item.name,
+                        })
                       }
                     />
                   ))}
@@ -258,7 +274,9 @@ export default function Products() {
                   action={
                     <Button
                       variant="secondary"
-                      onClick={() => openCategoryBrowse({ name: 'Shop by Category' })}
+                      onClick={() =>
+                        openCategoryBrowse({ name: "Shop by Category" })
+                      }
                     >
                       {T.viewAll}
                     </Button>
@@ -268,7 +286,11 @@ export default function Products() {
             </Reveal>
 
             {ordersLoading || recentProducts.length > 0 ? (
-              <Reveal as="section" className="st-section" aria-labelledby="st-recent-title">
+              <Reveal
+                as="section"
+                className="st-section"
+                aria-labelledby="st-recent-title"
+              >
                 <SectionHeader
                   id="st-recent-title"
                   title={T.recentOrders}
@@ -277,7 +299,7 @@ export default function Products() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => navigate('/profile/orders')}
+                      onClick={() => navigate("/profile/orders")}
                       trailingIcon={<ArrowRight size={16} aria-hidden />}
                     >
                       {T.viewHistory}
@@ -289,20 +311,28 @@ export default function Products() {
                 ) : (
                   <Rail label={T.recentOrders}>
                     {recentProducts.map((item) => (
-                      <RailItem key={`${item.id}-${item.variantId}`} size="wide">
+                      <RailItem
+                        key={`${item.id}-${item.variantId}`}
+                        size="wide"
+                      >
                         <div className="st-recent">
                           <MediaCard
                             image={item.image}
                             title={item.name}
                             subtitle={
-                              item.lastOrdered ? `Ordered ${item.lastOrdered}` : 'Recent order'
+                              item.lastOrdered
+                                ? `Ordered ${item.lastOrdered}`
+                                : "Recent order"
                             }
                             onClick={() =>
-                              item.variantId && navigate(`/products/${item.variantId}`)
+                              item.variantId &&
+                              navigate(`/products/${item.variantId}`)
                             }
                           />
                           {item.price ? (
-                            <span className="st-recent__price">{formatRupee(item.price)}</span>
+                            <span className="st-recent__price">
+                              {formatRupee(item.price)}
+                            </span>
                           ) : null}
                         </div>
                       </RailItem>
@@ -316,9 +346,19 @@ export default function Products() {
               {/* Filter & Sort Controls */}
               <div className="st-controls">
                 <div className="st-controls__info">
-                  <span>{filteredAndSortedProducts.length} {filteredAndSortedProducts.length === 1 ? 'product' : 'products'}</span>
+                  <span>
+                    {filteredAndSortedProducts.length}{" "}
+                    {filteredAndSortedProducts.length === 1
+                      ? "product"
+                      : "products"}
+                  </span>
                   {hasActiveFilters && (
-                    <Button variant="ghost" size="sm" onClick={clearFilters} leadingIcon={<X size={14} />}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearFilters}
+                      leadingIcon={<X size={14} />}
+                    >
                       Clear filters
                     </Button>
                   )}
@@ -346,7 +386,7 @@ export default function Products() {
                   </Button>
                 </div>
               </div>
-              
+
               <SectionHeader
                 id="st-all-title"
                 title={T.allProducts}
@@ -354,7 +394,7 @@ export default function Products() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => openCategoryBrowse({ name: 'All Products' })}
+                    onClick={() => openCategoryBrowse({ name: "All Products" })}
                     trailingIcon={<ArrowRight size={16} aria-hidden />}
                   >
                     {T.viewAll}
@@ -362,14 +402,24 @@ export default function Products() {
                 }
               />
               {filteredAndSortedProducts.length === 0 ? (
-                <EmptyState 
-                  title={hasActiveFilters ? "No products match filters" : T.noProducts} 
-                  description={hasActiveFilters ? "Try adjusting your filters" : T.noProductsText}
-                  action={hasActiveFilters && (
-                    <Button variant="secondary" onClick={clearFilters}>
-                      Clear filters
-                    </Button>
-                  )}
+                <EmptyState
+                  title={
+                    hasActiveFilters
+                      ? "No products match filters"
+                      : T.noProducts
+                  }
+                  description={
+                    hasActiveFilters
+                      ? "Try adjusting your filters"
+                      : T.noProductsText
+                  }
+                  action={
+                    hasActiveFilters && (
+                      <Button variant="secondary" onClick={clearFilters}>
+                        Clear filters
+                      </Button>
+                    )
+                  }
                 />
               ) : (
                 <ul className="am-product-grid">
@@ -382,7 +432,11 @@ export default function Products() {
               )}
               {hasMore ? (
                 <div className="st-more">
-                  <Button variant="secondary" loading={loadingMore} onClick={loadMore}>
+                  <Button
+                    variant="secondary"
+                    loading={loadingMore}
+                    onClick={loadMore}
+                  >
                     {loadingMore ? T.loadingMore : T.loadMore}
                   </Button>
                 </div>
@@ -405,10 +459,13 @@ export default function Products() {
         size="md"
         footer={
           <>
-            <Button variant="secondary" onClick={() => {
-              clearFilters();
-              setShowFilters(false);
-            }}>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                clearFilters();
+                setShowFilters(false);
+              }}
+            >
               Clear All
             </Button>
             <Button variant="primary" onClick={() => setShowFilters(false)}>
@@ -417,44 +474,68 @@ export default function Products() {
           </>
         }
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
           {/* Price Range */}
           <div>
-            <h3 style={{ marginBottom: '12px', fontSize: '14px', fontWeight: '600' }}>
+            <h3
+              style={{
+                marginBottom: "12px",
+                fontSize: "14px",
+                fontWeight: "600",
+              }}
+            >
               Price Range
             </h3>
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '8px' }}>
+            <div
+              style={{
+                display: "flex",
+                gap: "12px",
+                alignItems: "center",
+                marginBottom: "8px",
+              }}
+            >
               <input
                 type="number"
                 value={priceRange[0]}
-                onChange={(e) => setPriceRange([Number(e.target.value), priceRange[1]])}
+                onChange={(e) =>
+                  setPriceRange([Number(e.target.value), priceRange[1]])
+                }
                 min="0"
                 placeholder="Min"
                 style={{
                   flex: 1,
-                  padding: '8px 12px',
-                  border: '1px solid var(--am-border-color)',
-                  borderRadius: 'var(--am-radius-md)',
-                  fontSize: '14px'
+                  padding: "8px 12px",
+                  border: "1px solid var(--am-border-color)",
+                  borderRadius: "var(--am-radius-md)",
+                  fontSize: "14px",
                 }}
               />
               <span>to</span>
               <input
                 type="number"
                 value={priceRange[1]}
-                onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
+                onChange={(e) =>
+                  setPriceRange([priceRange[0], Number(e.target.value)])
+                }
                 min="0"
                 placeholder="Max"
                 style={{
                   flex: 1,
-                  padding: '8px 12px',
-                  border: '1px solid var(--am-border-color)',
-                  borderRadius: 'var(--am-radius-md)',
-                  fontSize: '14px'
+                  padding: "8px 12px",
+                  border: "1px solid var(--am-border-color)",
+                  borderRadius: "var(--am-radius-md)",
+                  fontSize: "14px",
                 }}
               />
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--am-text-muted)' }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: "12px",
+                color: "var(--am-text-muted)",
+              }}
+            >
               <span>₹{priceRange[0]}</span>
               <span>₹{priceRange[1]}</span>
             </div>
@@ -462,26 +543,35 @@ export default function Products() {
 
           {/* Rating Filter */}
           <div>
-            <h3 style={{ marginBottom: '12px', fontSize: '14px', fontWeight: '600' }}>
+            <h3
+              style={{
+                marginBottom: "12px",
+                fontSize: "14px",
+                fontWeight: "600",
+              }}
+            >
               Minimum Rating
             </h3>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
               {[0, 3, 3.5, 4, 4.5].map((rating) => (
                 <button
                   key={rating}
                   type="button"
                   onClick={() => setMinRating(rating)}
                   style={{
-                    padding: '8px 16px',
-                    border: `1px solid ${minRating === rating ? 'var(--am-accent)' : 'var(--am-border-color)'}`,
-                    background: minRating === rating ? 'var(--am-accent-bg)' : 'transparent',
-                    borderRadius: 'var(--am-radius-md)',
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s'
+                    padding: "8px 16px",
+                    border: `1px solid ${minRating === rating ? "var(--am-accent)" : "var(--am-border-color)"}`,
+                    background:
+                      minRating === rating
+                        ? "var(--am-accent-bg)"
+                        : "transparent",
+                    borderRadius: "var(--am-radius-md)",
+                    fontSize: "14px",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
                   }}
                 >
-                  {rating === 0 ? 'All' : `${rating}★ & up`}
+                  {rating === 0 ? "All" : `${rating}★ & up`}
                 </button>
               ))}
             </div>
@@ -489,14 +579,21 @@ export default function Products() {
 
           {/* In Stock Filter */}
           <div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                cursor: "pointer",
+              }}
+            >
               <input
                 type="checkbox"
                 checked={inStockOnly}
                 onChange={(e) => setInStockOnly(e.target.checked)}
-                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                style={{ width: "18px", height: "18px", cursor: "pointer" }}
               />
-              <span style={{ fontSize: '14px', fontWeight: '500' }}>
+              <span style={{ fontSize: "14px", fontWeight: "500" }}>
                 Show in-stock products only
               </span>
             </label>
@@ -504,16 +601,22 @@ export default function Products() {
 
           {/* Active Filters Summary */}
           {hasActiveFilters && (
-            <div style={{ 
-              padding: '12px', 
-              background: 'var(--am-bg-subtle)', 
-              borderRadius: 'var(--am-radius-md)',
-              fontSize: '12px',
-              color: 'var(--am-text-muted)'
-            }}>
-              <strong style={{ display: 'block', marginBottom: '4px' }}>Active Filters:</strong>
+            <div
+              style={{
+                padding: "12px",
+                background: "var(--am-bg-subtle)",
+                borderRadius: "var(--am-radius-md)",
+                fontSize: "12px",
+                color: "var(--am-text-muted)",
+              }}
+            >
+              <strong style={{ display: "block", marginBottom: "4px" }}>
+                Active Filters:
+              </strong>
               {priceRange[0] !== 0 || priceRange[1] !== 10000 ? (
-                <div>Price: ₹{priceRange[0]} - ₹{priceRange[1]}</div>
+                <div>
+                  Price: ₹{priceRange[0]} - ₹{priceRange[1]}
+                </div>
               ) : null}
               {minRating > 0 && <div>Rating: {minRating}★ and above</div>}
               {inStockOnly && <div>In stock only</div>}

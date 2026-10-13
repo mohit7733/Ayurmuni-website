@@ -186,45 +186,49 @@ export default function Login() {
   };
 
   return (
-    <section className="au-page au-auth">
+    <section className="au-page au-auth au-auth--login">
       <MarqueeCollage columns={COLUMNS} logo={logoImg} hint={T.brandHint} />
       <div className="au-sheet">
         <div className="au-sheet__handle" aria-hidden />
-        <p className="au-kicker">{T.loginKicker}</p>
-        <div>
-          <h2 className="au-headline">{T.headlines[headlineIndex]}</h2>
-          <div className="au-dots" aria-hidden>
-            {T.headlines.map((_, i) => (
-              <i key={i} className={i === headlineIndex ? 'is-on' : ''} />
-            ))}
+        <div className="au-sheet__intro">
+          <p className="au-kicker">{T.loginKicker}</p>
+          <div>
+            <h2 className="au-headline">{T.headlines[headlineIndex]}</h2>
+            <div className="au-dots" aria-hidden>
+              {T.headlines.map((_, i) => (
+                <i key={i} className={i === headlineIndex ? 'is-on' : ''} />
+              ))}
+            </div>
           </div>
         </div>
 
-        <p className="au-label" id="login-phone-label">
-          {T.mobileLabel}
-        </p>
-        <div className={`au-phone${focused ? ' is-focus' : ''}`}>
-          <div className="au-phone__code">
-            <span aria-hidden>IN</span>
-            <span>{T.countryCode}</span>
+        <div className="au-field">
+          <label className="au-label" htmlFor="login-phone">
+            {T.mobileLabel}
+          </label>
+          <div className={`au-phone${focused ? ' is-focus' : ''}`}>
+            <div className="au-phone__code">
+              <span aria-hidden>IN</span>
+              <span>{T.countryCode}</span>
+            </div>
+            <input
+              id="login-phone"
+              type="tel"
+              inputMode="numeric"
+              maxLength={10}
+              placeholder={T.mobilePlaceholder}
+              value={phone}
+              onChange={(e) => onChangePhone(e.target.value)}
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
+              autoComplete="tel"
+            />
+            {phone.length === 10 ? (
+              <span className="au-phone__ok" aria-hidden>
+                <Check size={18} />
+              </span>
+            ) : null}
           </div>
-          <input
-            type="tel"
-            inputMode="numeric"
-            maxLength={10}
-            placeholder={T.mobilePlaceholder}
-            value={phone}
-            aria-labelledby="login-phone-label"
-            onChange={(e) => onChangePhone(e.target.value)}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
-            autoComplete="tel"
-          />
-          {phone.length === 10 ? (
-            <span className="au-phone__ok" aria-hidden>
-              <Check size={18} />
-            </span>
-          ) : null}
         </div>
 
         <label className="au-terms">

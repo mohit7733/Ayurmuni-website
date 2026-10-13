@@ -246,7 +246,7 @@ export default function Doctors() {
 
   return (
     <AppShell tab="consult">
-      <div className="cs-page">
+      <div className="cs-page cs-doctors-page">
         <PageHeader
           title={title}
           subtitle={T.listSubtitle}

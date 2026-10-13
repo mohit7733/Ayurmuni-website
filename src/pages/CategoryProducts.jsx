@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Leaf, RefreshCw, SlidersHorizontal, X } from 'lucide-react';
+import { Check, Leaf, RefreshCw, SlidersHorizontal, X } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import ProductCard from '../components/ProductCard';
 import PageHeader from '../components/PageHeader';
@@ -361,13 +361,18 @@ export default function CategoryProducts() {
         open={showFilters}
         onClose={() => setShowFilters(false)}
         title="Filter Products"
-        size="md"
+        description="Fine-tune your selection to find the right products."
+        size="lg"
+        className="st-filter-modal"
         footer={
           <>
-            <Button variant="secondary" onClick={() => {
-              clearFilters();
-              setShowFilters(false);
-            }}>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                clearFilters();
+                setShowFilters(false);
+              }}
+            >
               Clear All
             </Button>
             <Button variant="primary" onClick={() => setShowFilters(false)}>
@@ -376,84 +381,73 @@ export default function CategoryProducts() {
           </>
         }
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {/* Price Range */}
-          <div>
-            <h3 style={{ marginBottom: '12px', fontSize: '14px', fontWeight: '600' }}>
-              Price Range
-            </h3>
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '8px' }}>
-              <input
-                type="number"
-                value={priceRange[0]}
-                onChange={(e) => setPriceRange([Number(e.target.value), priceRange[1]])}
-                min="0"
-                placeholder="Min"
-                style={{
-                  flex: 1,
-                  padding: '8px 12px',
-                  border: '1px solid var(--am-border-color)',
-                  borderRadius: 'var(--am-radius-md)',
-                  fontSize: '14px'
-                }}
-              />
-              <span>to</span>
-              <input
-                type="number"
-                value={priceRange[1]}
-                onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
-                min="0"
-                placeholder="Max"
-                style={{
-                  flex: 1,
-                  padding: '8px 12px',
-                  border: '1px solid var(--am-border-color)',
-                  borderRadius: 'var(--am-radius-md)',
-                  fontSize: '14px'
-                }}
-              />
+        <div className="st-filter-content">
+          <section className="st-filter-section" aria-labelledby="st-filter-price-title">
+            <div className="st-filter-section__heading">
+              <h3 id="st-filter-price-title">Price range</h3>
+              <span>₹{priceRange[0]} – ₹{priceRange[1]}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--am-text-muted)' }}>
-              <span>₹{priceRange[0]}</span>
-              <span>₹{priceRange[1]}</span>
+            <div className="st-filter-price">
+              <label className="st-filter-field">
+                <span>Minimum price</span>
+                <input
+                  type="number"
+                  value={priceRange[0]}
+                  onChange={(e) => setPriceRange([Number(e.target.value), priceRange[1]])}
+                  min="0"
+                />
+              </label>
+              <span className="st-filter-price__separator" aria-hidden="true">
+                to
+              </span>
+              <label className="st-filter-field">
+                <span>Maximum price</span>
+                <input
+                  type="number"
+                  value={priceRange[1]}
+                  onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
+                  min="0"
+                />
+              </label>
             </div>
-          </div>
+          </section>
 
-          {/* Rating Filter */}
-          <div>
-            <h3 style={{ marginBottom: '12px', fontSize: '14px', fontWeight: '600' }}>
-              Minimum Rating
-            </h3>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <section className="st-filter-section" aria-labelledby="st-filter-rating-title">
+            <div className="st-filter-section__heading">
+              <h3 id="st-filter-rating-title">Customer rating</h3>
+              <span>Minimum rating</span>
+            </div>
+            <div className="st-filter-ratings" role="group" aria-label="Minimum rating">
               {[0, 3, 3.5, 4, 4.5].map((rating) => (
                 <button
                   key={rating}
                   type="button"
                   onClick={() => setMinRating(rating)}
-                  style={{
-                    padding: '8px 16px',
-                    border: `1px solid ${minRating === rating ? 'var(--am-accent)' : 'var(--am-border-color)'}`,
-                    background: minRating === rating ? 'var(--am-accent-bg)' : 'transparent',
-                    borderRadius: 'var(--am-radius-md)',
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s'
-                  }}
+                  className={`st-filter-rating${minRating === rating ? ' is-selected' : ''}`}
+                  aria-pressed={minRating === rating}
                 >
-                  {rating === 0 ? 'All' : `${rating}★ & up`}
+                  {rating === 0 ? 'Any rating' : `${rating}★ & up`}
                 </button>
               ))}
             </div>
-          </div>
+          </section>
 
           {!brandId ? (
-            <div>
-              <h3 style={{ marginBottom: '12px', fontSize: '14px', fontWeight: '600' }}>
-                Brand
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: 220, overflow: 'auto' }}>
+            <section
+              className="st-filter-section st-filter-section--brands"
+              aria-labelledby="st-filter-brand-title"
+            >
+              <div className="st-filter-section__heading">
+                <h3 id="st-filter-brand-title">Brand</h3>
+                {brandIds.length > 0 ? (
+                  <span>{brandIds.length} selected</span>
+                ) : (
+                  <span>Choose one or more</span>
+                )}
+              </div>
+              <div className="st-filter-brand-list">
                 {brandOptions.length === 0 ? (
-                  <p className="muted">No brands available</p>
+                  <p className="st-filter-empty">No brands available</p>
                 ) : (
                   brandOptions.map((brand) => {
                     const selected = brandIds.includes(brand.id);
@@ -471,65 +465,52 @@ export default function CategoryProducts() {
                           setBrandIds(nextIds);
                           setBrandNames(nextNames);
                         }}
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          padding: '8px 12px',
-                          border: `1px solid ${selected ? 'var(--am-accent)' : 'var(--am-border-color)'}`,
-                          background: selected ? 'var(--am-accent-bg)' : 'transparent',
-                          borderRadius: 'var(--am-radius-md)',
-                          fontSize: '14px',
-                          cursor: 'pointer',
-                          textAlign: 'left',
-                        }}
+                        className={`st-filter-brand${selected ? ' is-selected' : ''}`}
+                        aria-pressed={selected}
                       >
                         <span>{brand.name}</span>
-                        {selected ? <span>✓</span> : null}
+                        <span className="st-filter-brand__check" aria-hidden="true">
+                          {selected ? <Check size={15} /> : null}
+                        </span>
                       </button>
                     );
                   })
                 )}
               </div>
-            </div>
+            </section>
           ) : null}
 
-          {/* In Stock Filter */}
-          <div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
+          <section className="st-filter-stock">
+            <label className="st-filter-stock__label">
               <input
                 type="checkbox"
                 checked={inStockOnly}
                 onChange={(e) => setInStockOnly(e.target.checked)}
-                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
               />
-              <span style={{ fontSize: '14px', fontWeight: '500' }}>
-                Show in-stock products only
+              <span>
+                <strong>In-stock products only</strong>
+                <small>Hide items that are currently unavailable</small>
               </span>
             </label>
-          </div>
+          </section>
 
-          {/* Active Filters Summary */}
-          {hasActiveFilters && (
-            <div style={{ 
-              padding: '12px', 
-              background: 'var(--am-bg-subtle)', 
-              borderRadius: 'var(--am-radius-md)',
-              fontSize: '12px',
-              color: 'var(--am-text-muted)'
-            }}>
-              <strong style={{ display: 'block', marginBottom: '4px' }}>Active Filters:</strong>
-              {priceRange[0] !== 0 || priceRange[1] !== 10000 ? (
-                <div>Price: ₹{priceRange[0]} - ₹{priceRange[1]}</div>
-              ) : null}
-              {minRating > 0 && <div>Rating: {minRating}★ and above</div>}
-              {inStockOnly && <div>In stock only</div>}
-              {(brandIds.length > 0 || brandNames.length > 0) && (
-                <div>
-                  Brand: {brandNames.length ? brandNames.join(', ') : `${brandIds.length} selected`}
-                </div>
-              )}
+          {hasActiveFilters ? (
+            <div className="st-filter-summary" aria-live="polite">
+              <strong>Active filters</strong>
+              <div className="st-filter-summary__items">
+                {priceRange[0] !== 0 || priceRange[1] !== 10000 ? (
+                  <span>Price: ₹{priceRange[0]} – ₹{priceRange[1]}</span>
+                ) : null}
+                {minRating > 0 && <span>Rating: {minRating}★ and up</span>}
+                {inStockOnly && <span>In stock only</span>}
+                {(brandIds.length > 0 || brandNames.length > 0) && (
+                  <span>
+                    Brand: {brandNames.length ? brandNames.join(', ') : `${brandIds.length} selected`}
+                  </span>
+                )}
+              </div>
             </div>
-          )}
+          ) : null}
         </div>
       </Modal>
     </AppShell>

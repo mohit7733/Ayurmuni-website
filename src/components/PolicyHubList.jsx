@@ -11,9 +11,25 @@ const iconFor = (item) => {
   return FileText;
 };
 
-export default function PolicyHubList({ policies, error, onRetry, onOpen }) {
+export default function PolicyHubList({
+  policies,
+  error,
+  onRetry,
+  onOpen,
+  heading,
+  description,
+}) {
   return (
     <>
+      {heading ? (
+        <div className="sx-hub-list-heading">
+          <div>
+            <h2>{heading}</h2>
+            {description ? <p>{description}</p> : null}
+          </div>
+          <span>{policies.length} {policies.length === 1 ? 'document' : 'documents'}</span>
+        </div>
+      ) : null}
       {error ? (
         <div className="sx-error">
           <p>{error}</p>

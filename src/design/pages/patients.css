@@ -1,0 +1,367 @@
+.patients-page.catalog-page {
+  display: flex;
+  width: min(var(--am-container), calc(100% - var(--am-gutter) - var(--am-gutter)));
+  max-width: var(--am-container);
+  flex-direction: column;
+  gap: var(--am-space-4);
+  margin-inline: auto;
+  padding: var(--am-space-6) var(--am-gutter) var(--am-space-12);
+}
+
+.patients-page .catalog-head {
+  position: relative;
+  overflow: hidden;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--am-space-4);
+  margin: 0;
+  padding: var(--am-space-6);
+  border: 1px solid color-mix(in srgb, var(--am-primary) 18%, var(--am-line));
+  border-radius: var(--am-radius-xl);
+  background:
+    radial-gradient(circle at 94% 0, color-mix(in srgb, var(--am-accent) 18%, transparent), transparent 34%),
+    linear-gradient(130deg, var(--am-primary-soft), var(--am-surface) 76%);
+}
+
+.patients-page .catalog-head > div:first-child {
+  min-width: 0;
+}
+
+.patients-page .catalog-head .text-back {
+  min-height: 36px;
+  margin: 0 0 var(--am-space-3);
+  padding-inline: var(--am-space-3);
+  border: 1px solid var(--am-primary-tint);
+  border-radius: var(--am-radius-pill);
+  background: color-mix(in srgb, var(--am-surface) 84%, transparent);
+  color: var(--am-primary-strong);
+}
+
+.patients-page .catalog-head h1 {
+  color: var(--am-primary-strong);
+  font-family: var(--am-font-display);
+  font-size: var(--am-text-3xl);
+  letter-spacing: var(--am-tracking-display);
+}
+
+.patients-page .catalog-head p {
+  margin-top: var(--am-space-2);
+  color: var(--am-text-muted);
+  font-size: var(--am-text-sm);
+}
+
+.patients-page .catalog-head-actions button {
+  min-height: 44px;
+  padding-inline: var(--am-space-4);
+  border-radius: var(--am-radius-pill);
+  font-weight: var(--am-weight-semibold);
+}
+
+.patients-page .patient-hero {
+  margin: 0;
+  border-color: var(--am-line);
+  border-radius: var(--am-radius-xl);
+  background: linear-gradient(150deg, var(--am-surface), var(--am-surface-muted));
+  box-shadow: var(--am-shadow-sm);
+}
+
+.patients-page .patient-hero-top {
+  gap: var(--am-space-4);
+  padding: var(--am-space-5);
+}
+
+.patients-page .patient-hero-top img,
+.patients-page .patient-hero-top > .patient-avatar-fallback {
+  width: 60px;
+  height: 60px;
+  border: 2px solid var(--am-surface);
+  border-radius: var(--am-radius-xl);
+  box-shadow: 0 0 0 1px var(--am-primary-tint);
+}
+
+.patients-page .patient-hero-top small {
+  display: inline-flex;
+  margin-bottom: var(--am-space-1);
+  padding: var(--am-space-1) var(--am-space-2);
+  border-radius: var(--am-radius-pill);
+  background: var(--am-primary-soft);
+  color: var(--am-primary);
+  font-size: var(--am-text-2xs);
+  letter-spacing: var(--am-tracking-caps);
+}
+
+.patients-page .patient-hero-top strong {
+  display: block;
+  color: var(--am-text);
+  font-size: var(--am-text-md);
+}
+
+.patients-page .patient-hero-top p {
+  margin-top: var(--am-space-1);
+  color: var(--am-text-muted);
+  font-size: var(--am-text-sm);
+}
+
+.patients-page .patient-hero-top .ghost {
+  min-height: 38px;
+  padding-inline: var(--am-space-4);
+  border: 1px solid var(--am-line);
+  border-radius: var(--am-radius-pill);
+  background: var(--am-surface);
+  color: var(--am-primary);
+  font-weight: var(--am-weight-semibold);
+}
+
+.patients-page .patient-hero-foot {
+  min-height: 62px;
+  gap: var(--am-space-3);
+  padding: var(--am-space-3) var(--am-space-5);
+  border-top-color: var(--am-line);
+}
+
+.patients-page .patient-avatars > span {
+  color: var(--am-text-muted);
+  font-size: var(--am-text-xs);
+}
+
+.patients-page .patient-hero-foot .cta {
+  min-height: 40px;
+  padding-inline: var(--am-space-4);
+  border-radius: var(--am-radius-pill);
+  font-weight: var(--am-weight-semibold);
+}
+
+.patients-page .home-section-head {
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--am-space-3);
+  margin: var(--am-space-2) 0 0;
+  padding-bottom: var(--am-space-3);
+  border-bottom: 1px solid var(--am-line);
+}
+
+.patients-page .home-section-head h2 {
+  color: var(--am-text);
+  font-family: var(--am-font-display);
+  font-size: var(--am-text-xl);
+}
+
+.patients-page .home-section-head p {
+  margin: var(--am-space-1) 0 0;
+  color: var(--am-text-muted);
+  font-size: var(--am-text-xs);
+  line-height: var(--am-leading-normal);
+}
+
+.patients-page .patient-count {
+  flex: 0 0 auto;
+  padding: var(--am-space-1) var(--am-space-3);
+  border: 1px solid var(--am-line);
+  border-radius: var(--am-radius-pill);
+  background: var(--am-surface);
+  color: var(--am-text-muted);
+  font-size: var(--am-text-xs);
+  font-weight: var(--am-weight-medium);
+}
+
+.patients-page .patient-row {
+  min-height: 80px;
+  gap: var(--am-space-3);
+  margin: 0;
+  padding: var(--am-space-3) var(--am-space-4);
+  border-radius: var(--am-radius-xl);
+  background: var(--am-surface);
+  box-shadow: var(--am-shadow-xs);
+  cursor: pointer;
+  transition:
+    border-color var(--am-dur-fast) var(--am-ease-standard),
+    background var(--am-dur-base) var(--am-ease-standard),
+    box-shadow var(--am-dur-base) var(--am-ease-standard),
+    transform var(--am-dur-base) var(--am-ease-out);
+}
+
+.patients-page .patient-row + .patient-row {
+  margin-top: var(--am-space-2);
+}
+
+.patients-page .patient-row:hover {
+  transform: translateY(-1px);
+  border-color: var(--am-primary-tint);
+  background: linear-gradient(100deg, var(--am-primary-soft), var(--am-surface) 72%);
+  box-shadow: var(--am-shadow-sm);
+}
+
+.patients-page .patient-row.on {
+  border-color: var(--am-primary);
+  background: linear-gradient(100deg, var(--am-primary-soft), var(--am-surface) 80%);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--am-primary) 12%, transparent);
+}
+
+.patients-page .patient-row img,
+.patients-page .patient-row .patient-avatar-fallback {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  border-radius: var(--am-radius-lg);
+}
+
+.patients-page .patient-row > div {
+  min-width: 0;
+}
+
+.patients-page .patient-row > div strong {
+  display: block;
+  color: var(--am-text);
+  font-size: var(--am-text-sm);
+  font-weight: var(--am-weight-semibold);
+  line-height: var(--am-leading-snug);
+}
+
+.patients-page .patient-row small {
+  margin-top: var(--am-space-1);
+  color: var(--am-text-muted);
+  font-size: var(--am-text-xs);
+}
+
+.patients-page .patient-row-actions {
+  flex: 0 0 auto;
+  gap: var(--am-space-3);
+  font-size: var(--am-text-xs);
+}
+
+.patients-page .patient-row-actions > span[role='button'] {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.patients-page .patient-row-actions em {
+  padding: var(--am-space-1) var(--am-space-2);
+  border: 1px solid var(--am-line);
+  border-radius: var(--am-radius-pill);
+  background: var(--am-surface-muted);
+  font-size: var(--am-text-2xs);
+  font-weight: var(--am-weight-semibold);
+}
+
+.patients-page .patient-row.on .patient-row-actions em {
+  border-color: var(--am-primary-tint);
+  background: var(--am-primary);
+  color: var(--am-on-primary);
+}
+
+.patients-page .patient-row:focus-visible,
+.patients-page .patient-row-actions > span[role='button']:focus-visible,
+.patients-page .catalog-head button:focus-visible,
+.patients-page .patient-hero button:focus-visible {
+  outline: 2px solid var(--am-primary);
+  outline-offset: 3px;
+}
+
+.patients-page .empty-copy {
+  padding: var(--am-space-6);
+  border: 1px dashed var(--am-line-strong);
+  border-radius: var(--am-radius-xl);
+  background: var(--am-surface-muted);
+  text-align: center;
+}
+
+.patients-page .empty-copy strong {
+  color: var(--am-text);
+  font-size: var(--am-text-md);
+}
+
+.patients-page .empty-copy p {
+  margin-top: var(--am-space-2);
+  color: var(--am-text-muted);
+}
+
+.patients-page .patient-note {
+  margin-top: var(--am-space-2);
+  padding: var(--am-space-4);
+  border-color: var(--am-primary-tint);
+  border-radius: var(--am-radius-xl);
+  background: var(--am-primary-soft);
+}
+
+.patients-page .patient-note strong {
+  color: var(--am-primary-strong);
+}
+
+.patients-page .patient-note p {
+  color: var(--am-text-muted);
+  font-size: var(--am-text-sm);
+  line-height: var(--am-leading-normal);
+}
+
+@media (max-width: 640px) {
+  .patients-page.catalog-page {
+    gap: var(--am-space-3);
+    padding: var(--am-space-4) var(--am-gutter) var(--am-space-10);
+  }
+
+  .patients-page .catalog-head {
+    align-items: flex-start;
+    padding: var(--am-space-4);
+  }
+
+  .patients-page .catalog-head h1 {
+    font-size: var(--am-text-2xl);
+  }
+
+  .patients-page .catalog-head-actions button {
+    min-height: 40px;
+    padding-inline: var(--am-space-3);
+  }
+
+  .patients-page .patient-hero-top {
+    padding: var(--am-space-4);
+  }
+
+  .patients-page .patient-hero-foot {
+    padding-inline: var(--am-space-4);
+  }
+
+  .patients-page .home-section-head {
+    align-items: flex-start;
+  }
+
+  .patients-page .home-section-head h2 {
+    font-size: var(--am-text-lg);
+  }
+
+  .patients-page .patient-count {
+    margin-top: 2px;
+  }
+
+  .patients-page .patient-row {
+    min-height: 72px;
+    gap: var(--am-space-2);
+    padding: var(--am-space-3);
+  }
+
+  .patients-page .patient-row-actions {
+    gap: var(--am-space-2);
+  }
+}
+
+@media (max-width: 420px) {
+  .patients-page .patient-row-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .patients-page .patient-row-actions > span[role='button'] {
+    min-height: 32px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .patients-page .patient-row {
+    transition: none;
+  }
+
+  .patients-page .patient-row:hover {
+    transform: none;
+  }
+}

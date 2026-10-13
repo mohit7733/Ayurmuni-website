@@ -1,23 +1,23 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FileText, Heart, Leaf, Minus, Plus } from 'lucide-react';
-import { formatRupee, resolveImageUrl } from '../home/catalog';
-import { useCart } from '../hooks/useCart';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { FileText, Heart, Leaf, Minus, Plus } from "lucide-react";
+import { formatRupee, resolveImageUrl } from "../home/catalog";
+import { useCart } from "../hooks/useCart";
 import {
   getAddQtyBlockMessage,
   isPrescriptionRequired,
   isProductOutOfStock,
-} from '../product/stock';
-import { requireAuth } from '../services/guestAuth';
-import { showPrescriptionRequired } from '../services/prescriptionGate';
-import { showSuccessToast } from '../config/key';
-import { toggleWishlistProduct } from '../services/productService';
-import Badge from './ui/Badge';
+} from "../product/stock";
+import { requireAuth } from "../services/guestAuth";
+import { showPrescriptionRequired } from "../services/prescriptionGate";
+import { showSuccessToast } from "../config/key";
+import { toggleWishlistProduct } from "../services/productService";
+import Badge from "./ui/Badge";
 
 export default function ProductCard({ item, onWishlistChange }) {
   const navigate = useNavigate();
   const { variantQuantities, addingVariantId, syncCartQuantity } = useCart();
-  const variantId = String(item?.variant_id || '');
+  const variantId = String(item?.variant_id || "");
   const cartQty = variantQuantities[variantId] ?? 0;
   const adding = addingVariantId === variantId;
   const image = resolveImageUrl(item);
@@ -25,7 +25,7 @@ export default function ProductCard({ item, onWishlistChange }) {
   const mrp =
     item.mrp && Number(item.mrp) > Number(item.selling_price || 0)
       ? formatRupee(item.mrp)
-      : '';
+      : "";
   const discount =
     item?.mrp > item?.selling_price
       ? Math.round(((item.mrp - item.selling_price) / item.mrp) * 100)
@@ -35,10 +35,10 @@ export default function ProductCard({ item, onWishlistChange }) {
   const [wish, setWish] = useState(Boolean(item?.is_wishlist_item));
 
   const updateQty = async (nextQty) => {
-    if (!(await requireAuth('Please login to add items to cart'))) return;
+    if (!(await requireAuth("Please login to add items to cart"))) return;
     const block = getAddQtyBlockMessage(item, nextQty);
     if (block) {
-      showSuccessToast(block, 'error');
+      showSuccessToast(block, "error");
       return;
     }
     if (nextQty > cartQty && isPrescriptionRequired(item)) {
@@ -50,11 +50,11 @@ export default function ProductCard({ item, onWishlistChange }) {
 
   const toggleWish = async (e) => {
     e.stopPropagation();
-    if (!(await requireAuth('Please login to save wishlist items'))) return;
+    if (!(await requireAuth("Please login to save wishlist items"))) return;
     if (!variantId) return;
     const res = await toggleWishlistProduct(variantId);
     if (res?.success === false) {
-      showSuccessToast(res?.message || 'Unable to update wishlist', 'error');
+      showSuccessToast(res?.message || "Unable to update wishlist", "error");
       return;
     }
     setWish((prev) => !prev);
@@ -62,10 +62,15 @@ export default function ProductCard({ item, onWishlistChange }) {
   };
 
   return (
-    <article className={`am-product-card ${out ? 'is-out' : ''}`}>
+    <article className={`am-product-card ${out ? "is-out" : ""}`}>
       <div className="am-product-card__media">
         {image ? (
-          <img src={image} alt={item.name || ''} loading="lazy" decoding="async" />
+          <img
+            src={image}
+            alt={item.name || ""}
+            loading="lazy"
+            decoding="async"
+          />
         ) : (
           <span className="am-product-card__placeholder" aria-hidden>
             <Leaf size={32} />
@@ -80,15 +85,21 @@ export default function ProductCard({ item, onWishlistChange }) {
             </Badge>
           ) : null}
         </div>
-        {out ? <span className="am-product-card__oos">Out of stock</span> : null}
+        {out ? (
+          <span className="am-product-card__oos">Out of stock</span>
+        ) : null}
       </div>
 
       <button
         type="button"
-        className={`am-product-card__wish ${wish ? 'is-on' : ''}`}
+        className={`am-product-card__wish ${wish ? "is-on" : ""}`}
         onClick={toggleWish}
         aria-pressed={wish}
-        aria-label={wish ? `Remove ${item.name || 'item'} from wishlist` : `Add ${item.name || 'item'} to wishlist`}
+        aria-label={
+          wish
+            ? `Remove ${item.name || "item"} from wishlist`
+            : `Add ${item.name || "item"} to wishlist`
+        }
       >
         <Heart size={18} aria-hidden />
       </button>
@@ -120,7 +131,11 @@ export default function ProductCard({ item, onWishlistChange }) {
             Unavailable
           </button>
         ) : cartQty > 0 ? (
-          <div className="am-stepper" role="group" aria-label={`Quantity of ${item.name || 'item'}`}>
+          <div
+            className="am-stepper"
+            role="group"
+            aria-label={`Quantity of ${item.name || "item"}`}
+          >
             <button
               type="button"
               onClick={() => updateQty(Math.max(0, cartQty - 1))}
@@ -129,7 +144,7 @@ export default function ProductCard({ item, onWishlistChange }) {
             >
               <Minus size={16} aria-hidden />
             </button>
-            <span aria-live="polite">{adding ? '…' : cartQty}</span>
+            <span aria-live="polite">{adding ? "…" : cartQty}</span>
             <button
               type="button"
               onClick={() => updateQty(cartQty + 1)}
@@ -146,7 +161,7 @@ export default function ProductCard({ item, onWishlistChange }) {
             disabled={adding}
             onClick={() => updateQty(1)}
           >
-            {adding ? 'Adding…' : rx ? 'Add (Rx)' : 'Add to cart'}
+            {adding ? "Adding…" : rx ? "Add (Rx)" : "Add to cart"}
           </button>
         )}
       </div>

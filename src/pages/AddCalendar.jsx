@@ -190,7 +190,7 @@ export default function AddCalendar() {
 
   return (
     <AppShell tab="consult">
-      <div className="bk-page">
+      <div className="bk-page bk-calendar-page">
         <PageHeader title={T.calTitle} subtitle={T.calSubtitle} onBack={goBack} />
 
         <section className="bk-cal-hero" aria-labelledby="bk-cal-hero-title">
@@ -203,7 +203,7 @@ export default function AddCalendar() {
           </p>
         </section>
 
-        <div className="bk-layout">
+        <div className="bk-layout bk-calendar-layout">
           <div className="bk-main">
             <section className="bk-card">
               <div className="bk-doctor">
@@ -251,7 +251,7 @@ export default function AddCalendar() {
             </section>
           </div>
 
-          <aside className="bk-aside">
+          <aside className="bk-aside bk-calendar-aside">
             <section className="bk-card" aria-labelledby="bk-cal-choose">
               <div className="bk-card__head">
                 <h2 id="bk-cal-choose">{T.calChoose}</h2>
@@ -294,7 +294,7 @@ export default function AddCalendar() {
         </div>
       </div>
 
-      <div className="bk-sticky" role="region" aria-label={T.calDone}>
+      <div className="bk-sticky bk-calendar-sticky" role="region" aria-label={T.calDone}>
         <Button block onClick={goBack}>
           {T.calDone}
         </Button>

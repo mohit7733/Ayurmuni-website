@@ -6,7 +6,7 @@ import { Utils } from '../common/utils';
 import { showSuccessToast } from '../config/key';
 import { requireAuth } from '../services/guestAuth';
 import { Disclaimer, Skeleton, SkeletonText } from '../components/ui';
-// import '../design/pages/notification-settings.css';
+import '../design/pages/notification-settings.css';
 
 const NOTIFICATION_TYPES = [
   {
@@ -233,6 +233,9 @@ export default function NotificationSettings() {
                 >
                   <span className="ns-toggle-track">
                     <span className="ns-toggle-thumb" />
+                  </span>
+                  <span className="ns-toggle-label" aria-hidden="true">
+                    {isEnabled ? 'On' : 'Off'}
                   </span>
                 </button>
               </div>

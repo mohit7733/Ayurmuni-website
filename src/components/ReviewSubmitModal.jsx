@@ -1,38 +1,77 @@
-import { useState } from 'react';
-import { Star, X } from 'lucide-react';
-import { Button, Modal } from './ui';
-import { showSuccessToast } from '../config/key';
-import { submitReview } from '../services/reviewService';
+import { useEffect, useMemo, useState } from "react";
+import { Star, X, ImagePlus, ShieldCheck } from "lucide-react";
+import { Button, Modal } from "./ui";
+import { showSuccessToast } from "../config/key";
+import { submitReview } from "../services/reviewService";
+import "../design/components/review-modal.css";
 
-export default function ReviewSubmitModal({ open, onClose, product, onSuccess }) {
+const RATING_LABELS = {
+  1: "Poor",
+  2: "Fair",
+  3: "Good",
+  4: "Very Good!",
+  5: "Excellent!",
+};
+
+const MAX_TITLE = 100;
+const MAX_COMMENT = 1000;
+const MAX_IMAGES = 5;
+
+export default function ReviewSubmitModal({
+  open,
+  onClose,
+  product,
+  onSuccess,
+}) {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
-  const [title, setTitle] = useState('');
-  const [comment, setComment] = useState('');
+  const [title, setTitle] = useState("");
+  const [comment, setComment] = useState("");
   const [images, setImages] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
+  const activeRating = hoverRating || rating;
+
+  // Create preview URLs once per image (and release them) instead of on every render
+  const previews = useMemo(
+    () => images.map((image) => URL.createObjectURL(image)),
+    [images],
+  );
+  useEffect(
+    () => () => previews.forEach((url) => URL.revokeObjectURL(url)),
+    [previews],
+  );
+
+  const resetForm = () => {
+    setRating(0);
+    setHoverRating(0);
+    setTitle("");
+    setComment("");
+    setImages([]);
+  };
+
   const handleSubmit = async () => {
     if (rating === 0) {
-      showSuccessToast('Please select a rating', 'error');
+      showSuccessToast("Please select a rating", "error");
       return;
     }
 
     if (!comment.trim()) {
-      showSuccessToast('Please write a review', 'error');
+      showSuccessToast("Please write a review", "error");
       return;
     }
 
     setSubmitting(true);
+
     try {
       const formData = new FormData();
-      formData.append('product_id', product.product_id || product.id);
-      formData.append('variant_id', product.variant_id || product.id);
-      formData.append('rating', rating);
-      formData.append('title', title.trim());
-      formData.append('comment', comment.trim());
-      
-      // Add images if any
+
+      formData.append("product_id", product.product_id || product.id);
+      formData.append("variant_id", product.variant_id || product.id);
+      formData.append("rating", rating);
+      formData.append("title", title.trim());
+      formData.append("comment", comment.trim());
+
       images.forEach((image, index) => {
         formData.append(`image_${index}`, image);
       });
@@ -40,53 +79,54 @@ export default function ReviewSubmitModal({ open, onClose, product, onSuccess })
       const result = await submitReview(formData);
 
       if (result?.success !== false) {
-        showSuccessToast('Review submitted successfully!', 'success');
+        showSuccessToast("Review submitted successfully!", "success");
         resetForm();
         onSuccess?.();
         onClose();
       } else {
-        showSuccessToast(result?.message || 'Failed to submit review', 'error');
+        showSuccessToast(result?.message || "Failed to submit review", "error");
       }
     } catch (error) {
-      showSuccessToast('Failed to submit review. Please try again.', 'error');
+      showSuccessToast("Failed to submit review. Please try again.", "error");
     } finally {
       setSubmitting(false);
     }
   };
 
-  const resetForm = () => {
-    setRating(0);
-    setHoverRating(0);
-    setTitle('');
-    setComment('');
-    setImages([]);
-  };
-
   const handleImageSelect = (e) => {
     const files = Array.from(e.target.files);
-    if (images.length + files.length > 5) {
-      showSuccessToast('You can upload maximum 5 images', 'error');
+
+    if (images.length + files.length > MAX_IMAGES) {
+      showSuccessToast("You can upload maximum 5 images", "error");
       return;
     }
 
     const validFiles = files.filter((file) => {
-      if (!file.type.startsWith('image/')) {
-        showSuccessToast('Only image files are allowed', 'error');
+      if (!file.type.startsWith("image/")) {
+        showSuccessToast("Only image files are allowed", "error");
         return false;
       }
+
       if (file.size > 5 * 1024 * 1024) {
-        showSuccessToast('Image size should be less than 5MB', 'error');
+        showSuccessToast("Image size should be less than 5MB", "error");
         return false;
       }
+
       return true;
     });
 
     setImages([...images, ...validFiles]);
+
+    // Allows selecting the same image again after removing it
+    e.target.value = "";
   };
 
   const removeImage = (index) => {
     setImages(images.filter((_, i) => i !== index));
   };
+
+  const countClass = (len, max) =>
+    len >= max ? "is-max" : len >= max * 0.9 ? "is-near" : "";
 
   return (
     <Modal
@@ -100,230 +140,191 @@ export default function ReviewSubmitModal({ open, onClose, product, onSuccess })
           <Button variant="secondary" onClick={onClose} disabled={submitting}>
             Cancel
           </Button>
+
           <Button variant="primary" onClick={handleSubmit} loading={submitting}>
-            {submitting ? 'Submitting...' : 'Submit Review'}
+            {submitting ? "Submitting..." : "Submit Review"}
           </Button>
         </>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div className="rv-form">
         {/* Product Info */}
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', padding: '12px', background: 'var(--am-bg-subtle)', borderRadius: 'var(--am-radius-md)' }}>
-          {product?.image && (
+        <div className="rv-product">
+          {product?.image ? (
             <img
+              className="rv-product__img"
               src={product.image}
-              alt={product.name}
-              style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: 'var(--am-radius-sm)' }}
+              alt={product.name || "Product"}
             />
+          ) : (
+            <div className="rv-product__img rv-product__img--empty">
+              <ImagePlus size={18} />
+            </div>
           )}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <strong style={{ fontSize: '14px', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {product?.name || 'Product'}
+
+          <div className="rv-product__copy">
+            <span className="rv-eyebrow">Reviewing</span>
+            <strong className="rv-product__name">
+              {product?.name || "Product"}
             </strong>
             {product?.size && (
-              <span style={{ fontSize: '12px', color: 'var(--am-text-muted)' }}>
-                {product.size}
-              </span>
+              <span className="rv-product__size">{product.size}</span>
             )}
           </div>
         </div>
 
         {/* Rating */}
-        <div>
-          <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600' }}>
-            Your Rating *
-          </label>
-          <div style={{ display: 'flex', gap: '8px' }}>
+        <section className="rv-card rv-rating">
+          <div className="rv-card__head">
+            <span className="rv-label">
+              Your Rating <span className="rv-req">*</span>
+            </span>
+
+            {activeRating > 0 && (
+              <span key={activeRating} className="rv-rating__tag">
+                {activeRating}/5 · {RATING_LABELS[activeRating]}
+              </span>
+            )}
+          </div>
+
+          <div
+            className="rv-stars"
+            role="radiogroup"
+            aria-label="Your rating"
+            onMouseLeave={() => setHoverRating(0)}
+          >
             {[1, 2, 3, 4, 5].map((star) => (
               <button
                 key={star}
                 type="button"
+                role="radio"
+                aria-checked={rating === star}
+                aria-label={`Rate ${star} star${star > 1 ? "s" : ""}`}
+                className={`rv-star${star <= activeRating ? " is-on" : ""}${
+                  star === rating ? " is-picked" : ""
+                }`}
                 onClick={() => setRating(star)}
                 onMouseEnter={() => setHoverRating(star)}
-                onMouseLeave={() => setHoverRating(0)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  padding: '4px',
-                  transition: 'transform 0.2s'
-                }}
-                onMouseDown={(e) => {
-                  e.currentTarget.style.transform = 'scale(0.9)';
-                }}
-                onMouseUp={(e) => {
-                  e.currentTarget.style.transform = 'scale(1)';
-                }}
+                onFocus={() => setHoverRating(star)}
+                onBlur={() => setHoverRating(0)}
               >
-                <Star
-                  size={32}
-                  fill={star <= (hoverRating || rating) ? '#FFB800' : 'none'}
-                  stroke={star <= (hoverRating || rating) ? '#FFB800' : '#D1D5DB'}
-                  strokeWidth={2}
-                />
+                <Star size={32} strokeWidth={2} />
               </button>
             ))}
-            {rating > 0 && (
-              <span style={{ marginLeft: '12px', fontSize: '16px', fontWeight: '600', color: 'var(--am-text)' }}>
-                {rating}/5
-              </span>
-            )}
           </div>
-          {rating > 0 && (
-            <p style={{ marginTop: '8px', fontSize: '12px', color: 'var(--am-text-muted)' }}>
-              {rating === 5 ? 'Excellent!' : rating === 4 ? 'Very Good!' : rating === 3 ? 'Good' : rating === 2 ? 'Fair' : 'Poor'}
+        </section>
+
+        {/* Review Title + Review Comment */}
+        <div className="rv-fields">
+          <div className="rv-field">
+            <label htmlFor="review-title" className="rv-label">
+              Review Title <span className="rv-opt">(Optional)</span>
+            </label>
+
+            <input
+              id="review-title"
+              type="text"
+              className="rv-input"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Sum up your experience"
+              maxLength={MAX_TITLE}
+            />
+
+            <p className={`rv-count ${countClass(title.length, MAX_TITLE)}`}>
+              {title.length}/{MAX_TITLE}
             </p>
-          )}
-        </div>
+          </div>
 
-        {/* Review Title */}
-        <div>
-          <label htmlFor="review-title" style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600' }}>
-            Review Title (Optional)
-          </label>
-          <input
-            id="review-title"
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Sum up your experience"
-            maxLength={100}
-            style={{
-              width: '100%',
-              padding: '10px 12px',
-              border: '1px solid var(--am-border-color)',
-              borderRadius: 'var(--am-radius-md)',
-              fontSize: '14px',
-              fontFamily: 'inherit'
-            }}
-          />
-          <p style={{ marginTop: '4px', fontSize: '11px', color: 'var(--am-text-muted)', textAlign: 'right' }}>
-            {title.length}/100
-          </p>
-        </div>
+          <div className="rv-field">
+            <label htmlFor="review-comment" className="rv-label">
+              Your Review <span className="rv-req">*</span>
+            </label>
 
-        {/* Review Comment */}
-        <div>
-          <label htmlFor="review-comment" style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600' }}>
-            Your Review *
-          </label>
-          <textarea
-            id="review-comment"
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            placeholder="Tell us about your experience with this product..."
-            rows={5}
-            maxLength={1000}
-            style={{
-              width: '100%',
-              padding: '10px 12px',
-              border: '1px solid var(--am-border-color)',
-              borderRadius: 'var(--am-radius-md)',
-              fontSize: '14px',
-              fontFamily: 'inherit',
-              resize: 'vertical'
-            }}
-          />
-          <p style={{ marginTop: '4px', fontSize: '11px', color: 'var(--am-text-muted)', textAlign: 'right' }}>
-            {comment.length}/1000
-          </p>
+            <textarea
+              id="review-comment"
+              className="rv-input rv-textarea"
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="Tell us about your experience with this product..."
+              rows={4}
+              maxLength={MAX_COMMENT}
+            />
+
+            <p
+              className={`rv-count ${countClass(comment.length, MAX_COMMENT)}`}
+            >
+              {comment.length}/{MAX_COMMENT}
+            </p>
+          </div>
         </div>
 
         {/* Image Upload */}
-        <div>
-          <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600' }}>
-            Add Photos (Optional)
-          </label>
-          <p style={{ marginBottom: '12px', fontSize: '12px', color: 'var(--am-text-muted)' }}>
-            Share photos of your experience (max 5 images, up to 5MB each)
-          </p>
-          
+        <section className="rv-card">
+          <div className="rv-card__head">
+            <span className="rv-label">
+              Add Photos <span className="rv-opt">(Optional)</span>
+            </span>
+            <span className="rv-badge">
+              {images.length}/{MAX_IMAGES}
+            </span>
+          </div>
+
           {images.length > 0 && (
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' }}>
+            <div className="rv-thumbs">
               {images.map((image, index) => (
-                <div key={index} style={{ position: 'relative' }}>
+                <div className="rv-thumb" key={`${image.name}-${index}`}>
                   <img
-                    src={URL.createObjectURL(image)}
-                    alt={`Review ${index + 1}`}
-                    style={{
-                      width: '80px',
-                      height: '80px',
-                      objectFit: 'cover',
-                      borderRadius: 'var(--am-radius-md)',
-                      border: '1px solid var(--am-border-color)'
-                    }}
+                    src={previews[index]}
+                    alt={`Review image ${index + 1}`}
                   />
+
                   <button
                     type="button"
+                    className="rv-thumb__remove"
+                    aria-label={`Remove image ${index + 1}`}
                     onClick={() => removeImage(index)}
-                    style={{
-                      position: 'absolute',
-                      top: '-6px',
-                      right: '-6px',
-                      background: 'var(--am-danger)',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '50%',
-                      width: '24px',
-                      height: '24px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                    }}
                   >
-                    <X size={14} />
+                    <X size={13} />
                   </button>
                 </div>
               ))}
             </div>
           )}
-          
-          {images.length < 5 && (
-            <label
-              style={{
-                display: 'inline-block',
-                padding: '10px 16px',
-                border: '1px dashed var(--am-border-color)',
-                borderRadius: 'var(--am-radius-md)',
-                fontSize: '14px',
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = 'var(--am-accent)';
-                e.currentTarget.style.background = 'var(--am-accent-bg)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'var(--am-border-color)';
-                e.currentTarget.style.background = 'transparent';
-              }}
-            >
+
+          {images.length < MAX_IMAGES && (
+            <label className="rv-drop">
               <input
                 type="file"
                 accept="image/*"
                 multiple
                 onChange={handleImageSelect}
-                style={{ display: 'none' }}
+                className="rv-drop__input"
               />
-              📷 Upload Photos ({images.length}/5)
+              <span className="rv-drop__icon">
+                <ImagePlus size={18} />
+              </span>
+              <span className="rv-drop__text">
+                <strong>Upload Photos</strong>
+                <small>Up to 5 images · Max 5MB each</small>
+              </span>
             </label>
           )}
-        </div>
+        </section>
 
         {/* Guidelines */}
-        <div style={{ padding: '12px', background: 'var(--am-bg-subtle)', borderRadius: 'var(--am-radius-md)', fontSize: '12px' }}>
-          <strong style={{ display: 'block', marginBottom: '8px', color: 'var(--am-text)' }}>
-            Review Guidelines:
+        <aside className="rv-guide">
+          <strong className="rv-guide__title">
+            <ShieldCheck size={15} aria-hidden /> Review Guidelines
           </strong>
-          <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--am-text-muted)' }}>
+
+          <ul>
             <li>Be honest and specific about your experience</li>
             <li>Focus on product quality, effectiveness, and value</li>
             <li>Avoid promotional content or external links</li>
             <li>Respect others and avoid offensive language</li>
           </ul>
-        </div>
+        </aside>
       </div>
     </Modal>
   );
