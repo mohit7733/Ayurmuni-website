@@ -1749,6 +1749,7 @@
 
 /* ---------- Media card ---------- */
 .am-media-card {
+  height: 220px;
   position: relative;
   display: flex;
   flex-direction: column;
