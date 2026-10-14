@@ -12,8 +12,6 @@ export const STORE_COPY = {
   noProducts: 'No products available',
   noProductsText: 'Check back soon, or try searching for something specific.',
   viewAll: 'View all',
-  loadMore: 'Load more',
-  loadingMore: 'Loading…',
   cart: 'Cart',
   refreshing: 'Refreshing…',
 
