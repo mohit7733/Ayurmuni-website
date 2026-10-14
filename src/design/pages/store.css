@@ -310,12 +310,6 @@
   outline-offset: 2px;
 }
 
-.st-more {
-  display: flex;
-  justify-content: center;
-  margin-top: var(--am-space-5);
-}
-
 .st-recent {
   display: flex;
   flex-direction: column;
