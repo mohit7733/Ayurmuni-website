@@ -49,10 +49,13 @@ export default function Products() {
       productsCategoryId ? { service_category_id: productsCategoryId } : {},
     [productsCategoryId],
   );
-  const { products, loading, loadingMore, refreshing, hasMore, loadMore } =
-    useCategoryProducts(productFilter, [], {
+  const { products, loading, refreshing } = useCategoryProducts(
+    productFilter,
+    [],
+    {
       enabled: Boolean(productsCategoryId) || !homeLoading,
-    });
+    },
+  );
   const { categories: productCategories, loading: categoriesLoading } =
     useProductCategories(null, productsCategoryId);
 
@@ -437,17 +440,6 @@ export default function Products() {
                   ))}
                 </ul>
               )}
-              {hasMore ? (
-                <div className="st-more">
-                  <Button
-                    variant="secondary"
-                    loading={loadingMore}
-                    onClick={loadMore}
-                  >
-                    {loadingMore ? T.loadingMore : T.loadMore}
-                  </Button>
-                </div>
-              ) : null}
               {refreshing ? <p className="am-sr-only">{T.refreshing}</p> : null}
             </section>
 

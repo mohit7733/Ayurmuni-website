@@ -1,38 +1,38 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import logoImg from '/images/FinalLogo.png';
-import { PRAKRITI_IMAGES } from '../questionnaire/configs';
-import * as ProfileServices from '../services/profileService';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import logoImg from "/images/FinalLogo.png";
+import { PRAKRITI_IMAGES } from "../questionnaire/configs";
+import * as ProfileServices from "../services/profileService";
 
 const getDynamicTitle = (result) => {
   switch (result?.toLowerCase()) {
-    case 'vata':
-      return 'The Visionary';
-    case 'pitta':
-      return 'The Leader';
-    case 'kapha':
-      return 'The Nurturer';
-    case 'vata-pitta':
-    case 'pitta-vata':
-      return 'The Dynamic Creator';
-    case 'pitta-kapha':
-    case 'kapha-pitta':
-      return 'The Strategic Builder';
-    case 'vata-kapha':
-    case 'kapha-vata':
-      return 'The Calm Innovator';
+    case "vata":
+      return "The Visionary";
+    case "pitta":
+      return "The Leader";
+    case "kapha":
+      return "The Nurturer";
+    case "vata-pitta":
+    case "pitta-vata":
+      return "The Dynamic Creator";
+    case "pitta-kapha":
+    case "kapha-pitta":
+      return "The Strategic Builder";
+    case "vata-kapha":
+    case "kapha-vata":
+      return "The Calm Innovator";
     default:
-      return 'Balanced Soul';
+      return "Balanced Soul";
   }
 };
 
 const formatDominantLabel = (result) => {
-  if (!result) return 'Your Prakriti';
+  if (!result) return "Your Prakriti";
   return String(result)
     .split(/[-_\s]+/)
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-    .join('-');
+    .join("-");
 };
 
 const resolvePrakritiImage = (result) => {
@@ -43,7 +43,7 @@ const resolvePrakritiImage = (result) => {
     .split(/[-_\s]+/)
     .filter(Boolean)
     .map((p) => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase())
-    .join('-');
+    .join("-");
   const match = Object.entries(PRAKRITI_IMAGES).find(
     ([key]) =>
       key.toLowerCase() === raw.toLowerCase() ||
@@ -53,28 +53,28 @@ const resolvePrakritiImage = (result) => {
 };
 
 const formatPrakritiData = (apiData) => {
-  const dominantType = apiData?.result || '';
+  const dominantType = apiData?.result || "";
   const doshas = [
     {
       id: 1,
-      name: 'VATA',
-      label: 'Air & Space',
+      name: "VATA",
+      label: "Air & Space",
       percentage: Number(apiData?.vata) || 0,
-      color: '#2563EB',
+      color: "#2563EB",
     },
     {
       id: 2,
-      name: 'PITTA',
-      label: 'Fire & Water',
+      name: "PITTA",
+      label: "Fire & Water",
       percentage: Number(apiData?.pitta) || 0,
-      color: '#F59E0B',
+      color: "#F59E0B",
     },
     {
       id: 3,
-      name: 'KAPHA',
-      label: 'Earth & Water',
+      name: "KAPHA",
+      label: "Earth & Water",
       percentage: Number(apiData?.kapha) || 0,
-      color: '#0EA5E9',
+      color: "#0EA5E9",
     },
   ];
   return {
@@ -84,7 +84,7 @@ const formatPrakritiData = (apiData) => {
     doshas,
     coreEssence: {
       title: getDynamicTitle(dominantType),
-      description: apiData?.content?.core_essence || '',
+      description: apiData?.content?.core_essence || "",
     },
     lifestyleGuidelines: {
       doList: apiData?.content?.lifestyle?.["do's"] || [],
@@ -100,7 +100,7 @@ const hasValidPrakritiPayload = (response) => {
   const apiData = response?.data;
   const hasResult = Boolean(apiData?.result);
   const hasDoshas = [apiData?.vata, apiData?.pitta, apiData?.kapha].some(
-    (value) => value != null && value !== '',
+    (value) => value != null && value !== "",
   );
   return hasResult || hasDoshas;
 };
@@ -131,7 +131,7 @@ export default function PrakritiProfile() {
       setAnalysisData(formatPrakritiData(response.data));
       setHasPrakriti(true);
     } catch (error) {
-      console.log('prakriti-error', error);
+      console.log("prakriti-error", error);
       setHasPrakriti(false);
       setAnalysisData(null);
     } finally {
@@ -143,18 +143,21 @@ export default function PrakritiProfile() {
     getPrakritiInfo();
   }, [getPrakritiInfo]);
 
-  const handleGoHome = () => navigate('/home', { replace: true });
+  const handleGoHome = () => navigate("/home", { replace: true });
   const handleEditAssessment = () =>
-    navigate('/patient-faq', { state: { allowBack: true } });
-  const handleStartAssessment = () => navigate('/patient-faq');
+    navigate("/patient-faq", { state: { allowBack: true } });
+  const handleStartAssessment = () => navigate("/patient-faq");
 
-  const dominantHighlight = useMemo(() => {
-    if (!analysisData?.doshas?.length) return '#0D614E';
-    const top = [...analysisData.doshas].sort(
+  const topDosha = useMemo(() => {
+    if (!analysisData?.doshas?.length) return null;
+    return [...analysisData.doshas].sort(
       (a, b) => b.percentage - a.percentage,
     )[0];
-    return top?.color || '#0D614E';
   }, [analysisData]);
+
+  const dominantHighlight = useMemo(() => {
+    return topDosha?.color || "#0D614E";
+  }, [topDosha]);
 
   if (loading) {
     return (
@@ -171,8 +174,8 @@ export default function PrakritiProfile() {
           <img src={logoImg} alt="Ayurmuni" />
           <h1>Know your Prakriti</h1>
           <p>
-            A short Ayurvedic assessment reveals your body constitution and unlocks
-            personalized diet & lifestyle guidance.
+            A short Ayurvedic assessment reveals your body constitution and
+            unlocks personalized diet & lifestyle guidance.
           </p>
           <button className="cta" type="button" onClick={handleStartAssessment}>
             Start assessment →
@@ -184,13 +187,19 @@ export default function PrakritiProfile() {
 
   return (
     <section className="prakriti-page">
-      <header className="policy-head">
-        {fromAssessment ? <span /> : (
-          <button type="button" className="onboard-back" onClick={() => navigate(-1)}>
+      <header className="policy-head prakriti-head">
+        {fromAssessment ? (
+          <span className="prakriti-head-placeholder" aria-hidden="true" />
+        ) : (
+          <button
+            type="button"
+            className="onboard-back"
+            onClick={() => navigate(-1)}
+          >
             ←
           </button>
         )}
-        <h1>Prakriti Analysis</h1>
+        <h1>Your Prakriti</h1>
         <button type="button" onClick={handleEditAssessment}>
           Edit
         </button>
@@ -199,36 +208,66 @@ export default function PrakritiProfile() {
       <div className="prakriti-content">
         <div className="prakriti-hero">
           <span className="hero-badge">
-            {fromAssessment ? 'Assessment complete' : 'Prakriti analysis'}
+            {fromAssessment ? "Assessment complete" : "Prakriti analysis"}
           </span>
           <div className="hero-main">
-            <div>
+            <div className="hero-copy">
               <small>Your dominant type</small>
               <h2>{analysisData.dominantLabel}</h2>
               <p>
                 {analysisData.coreEssence.title} · personalized for your balance
               </p>
+              <div className="hero-meta">
+                <span>
+                  <i style={{ background: dominantHighlight }} />
+                  {topDosha ? `${topDosha.name} lead` : "Balanced profile"}
+                </span>
+                <span>
+                  {topDosha
+                    ? `${topDosha.percentage}% dominant`
+                    : "Wellness map"}
+                </span>
+              </div>
             </div>
             {analysisData.imageUrl ? (
               <img src={analysisData.imageUrl} alt="" />
             ) : (
-              <div className="hero-fallback" style={{ borderColor: dominantHighlight }} />
+              <div
+                className="hero-fallback"
+                style={{ borderColor: dominantHighlight }}
+              />
             )}
           </div>
         </div>
 
         <div className="prakriti-body">
           <div className="dosha-card">
-            <h3>Dosha composition</h3>
+            <div className="section-headline">
+              <h3>Dosha composition</h3>
+              <span>
+                {topDosha ? `${topDosha.name} lead` : "Balanced flow"}
+              </span>
+            </div>
             {analysisData.doshas.map((item) => (
               <div className="meter" key={item.id}>
                 <div>
-                  <strong>{item.name}</strong>
+                  <strong>
+                    <i
+                      className="dosha-dot"
+                      style={{ background: item.color }}
+                    />
+                    {item.name}
+                  </strong>
                   <small>{item.label}</small>
                 </div>
                 <b style={{ color: item.color }}>{item.percentage}%</b>
                 <div className="meter-track">
-                  <i style={{ width: `${item.percentage}%`, background: item.color }} />
+                  <i
+                    style={{
+                      width: `${item.percentage}%`,
+                      background: item.color,
+                    }}
+                  />
                 </div>
               </div>
             ))}
@@ -239,7 +278,7 @@ export default function PrakritiProfile() {
             <h3>{analysisData.coreEssence.title}</h3>
             <p>
               {analysisData.coreEssence.description ||
-                'Your constitution guides how you digest, think, and restore. Follow the rituals below to stay in balance.'}
+                "Your constitution guides how you digest, think, and restore. Follow the rituals below to stay in balance."}
             </p>
           </div>
 
@@ -266,7 +305,9 @@ export default function PrakritiProfile() {
             </button>
             <button
               type="button"
-              onClick={() => navigate('/assessment', { state: { form: 'medical' } })}
+              onClick={() =>
+                navigate("/assessment", { state: { form: "medical" } })
+              }
             >
               Vikriti assessment
             </button>
@@ -276,7 +317,7 @@ export default function PrakritiProfile() {
 
       <div className="policy-footer">
         <button className="cta" type="button" onClick={handleGoHome}>
-          {fromAssessment ? 'Continue to Home' : 'Go to Home'}
+          {fromAssessment ? "Continue to Home" : "Go to Home"}
         </button>
       </div>
     </section>
