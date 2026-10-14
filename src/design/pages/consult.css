@@ -364,12 +364,6 @@
 }
 
 /* ---------- Shared bits ---------- */
-.cs-more {
-  display: flex;
-  justify-content: center;
-  margin-top: var(--am-space-5);
-}
-
 .cs-foot {
   display: flex;
   flex-direction: column;
