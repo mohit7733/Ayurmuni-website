@@ -188,17 +188,13 @@ export default function PrakritiProfile() {
   return (
     <section className="prakriti-page">
       <header className="policy-head prakriti-head">
-        {fromAssessment ? (
-          <span className="prakriti-head-placeholder" aria-hidden="true" />
-        ) : (
-          <button
-            type="button"
-            className="onboard-back"
-            onClick={() => navigate(-1)}
-          >
-            ←
-          </button>
-        )}
+        <button
+          type="button"
+          className="onboard-back"
+          onClick={() => navigate(-1)}
+        >
+          ←
+        </button>
         <h1>Your Prakriti</h1>
         <button type="button" onClick={handleEditAssessment}>
           Edit
