@@ -10,7 +10,11 @@
   padding: clamp(var(--am-space-4), 4vw, var(--am-space-8)) var(--am-gutter)
     var(--am-space-8);
   background:
-    radial-gradient(ellipse at 16% 0%, rgba(228, 196, 122, 0.24), transparent 38%),
+    radial-gradient(
+      ellipse at 16% 0%,
+      rgba(228, 196, 122, 0.24),
+      transparent 38%
+    ),
     linear-gradient(145deg, #f8f5ed 0%, #f0eee5 100%);
 }
 
@@ -27,7 +31,11 @@
   --quest-accent: #0d7a6f;
   --quest-accent-soft: #e9f5f2;
   background:
-    radial-gradient(ellipse at 16% 0%, rgba(75, 169, 151, 0.24), transparent 38%),
+    radial-gradient(
+      ellipse at 16% 0%,
+      rgba(75, 169, 151, 0.24),
+      transparent 38%
+    ),
     linear-gradient(145deg, #f3f8f6 0%, #e8f1ee 100%);
 }
 
@@ -152,7 +160,11 @@
 
 .track-bar i {
   border-radius: inherit;
-  background-image: linear-gradient(90deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.28));
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04),
+    rgba(255, 255, 255, 0.28)
+  );
   box-shadow: 0 0 14px color-mix(in srgb, var(--quest-accent) 42%, transparent);
   transition: width 500ms var(--am-ease-out);
 }
@@ -265,7 +277,9 @@
   color: var(--am-text-muted);
   font-size: var(--am-text-xs);
   font-weight: var(--am-weight-semibold);
-  transition: background-color var(--am-dur-fast) var(--am-ease-standard), color var(--am-dur-fast) var(--am-ease-standard);
+  transition:
+    background-color var(--am-dur-fast) var(--am-ease-standard),
+    color var(--am-dur-fast) var(--am-ease-standard);
 }
 
 .quest-opt.on .opt-num {
@@ -274,8 +288,8 @@
 
 .quest-opt img {
   flex: 0 0 52px;
-  width: 52px;
-  height: 52px;
+  width: 70px;
+  height: 70px;
   border-radius: var(--am-radius-md);
 }
 
@@ -333,7 +347,8 @@
   margin-top: var(--am-space-5);
   border-radius: var(--am-radius-md);
   background: var(--quest-accent);
-  box-shadow: 0 6px 16px color-mix(in srgb, var(--quest-accent) 20%, transparent);
+  box-shadow: 0 6px 16px
+    color-mix(in srgb, var(--quest-accent) 20%, transparent);
   transition:
     background-color var(--am-dur-fast) var(--am-ease-standard),
     box-shadow var(--am-dur-base) var(--am-ease-standard),
@@ -342,7 +357,8 @@
 
 .quest-stage .cta:hover:not(:disabled) {
   background: color-mix(in srgb, var(--quest-accent) 88%, #000);
-  box-shadow: 0 9px 20px color-mix(in srgb, var(--quest-accent) 26%, transparent);
+  box-shadow: 0 9px 20px
+    color-mix(in srgb, var(--quest-accent) 26%, transparent);
 }
 
 .quest-foot {
@@ -450,7 +466,9 @@
 }
 
 @keyframes quest-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .quest > .quest-loader p {
