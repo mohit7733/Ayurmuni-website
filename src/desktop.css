@@ -396,9 +396,9 @@
     display: grid;
     grid-template-columns: auto 1fr;
     grid-template-areas:
-      'badge title'
-      'badge copy'
-      'badge meta';
+      "badge title"
+      "badge copy"
+      "badge meta";
     align-items: center;
     column-gap: 20px;
     text-align: left;
@@ -904,7 +904,7 @@
   }
 
   .quest-stage {
-    max-width: 760px;
+    width: 760px;
     margin: 0 auto;
   }
 
