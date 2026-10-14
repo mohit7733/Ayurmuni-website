@@ -46,8 +46,16 @@
   /* ---------- Semantic colour ---------- */
   --am-bg: #eef4f2;
   --am-page-bg:
-    radial-gradient(ellipse at 8% 8%, rgba(73, 155, 129, 0.1), transparent 32rem),
-    radial-gradient(ellipse at 92% 22%, rgba(114, 148, 194, 0.09), transparent 38rem),
+    radial-gradient(
+      ellipse at 8% 8%,
+      rgba(73, 155, 129, 0.1),
+      transparent 32rem
+    ),
+    radial-gradient(
+      ellipse at 92% 22%,
+      rgba(114, 148, 194, 0.09),
+      transparent 38rem
+    ),
     linear-gradient(145deg, #f7faf8 0%, var(--am-bg) 52%, #eff3f8 100%);
   --am-surface: #ffffff;
   --am-surface-muted: #f7faf9;
@@ -129,6 +137,7 @@
   --am-space-10: 40px;
   --am-space-12: 48px;
   --am-space-16: 64px;
+  --am-space-17: 68px;
   --am-space-20: 80px;
 
   /* ---------- Radius ---------- */
