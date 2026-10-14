@@ -55,9 +55,6 @@ export default function Medicines() {
   const {
     products,
     loading,
-    loadingMore,
-    hasMore,
-    loadMore,
   } = useCategoryProducts(productFilter, [], {
     enabled: Boolean(medicineCategoryId) || !homeLoading,
   });
@@ -330,13 +327,6 @@ export default function Medicines() {
                   ))}
                 </ul>
               )}
-              {hasMore ? (
-                <div className="st-more">
-                  <Button variant="secondary" loading={loadingMore} onClick={loadMore}>
-                    {loadingMore ? T.loadingMore : T.loadMore}
-                  </Button>
-                </div>
-              ) : null}
             </section>
 
             <footer className="st-foot">
