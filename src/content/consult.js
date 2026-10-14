@@ -23,8 +23,6 @@ export const CONSULT_COPY = {
   viewAll: 'View all',
   productsTitle: 'Suggested products',
   labTitle: 'Lab',
-  loadMore: 'Load more',
-  loadingMore: 'Loading…',
   noDoctors: 'No doctors available right now',
   noDoctorsText: 'Please check back soon or refresh the page.',
   noMatch: 'No doctors match your search',
