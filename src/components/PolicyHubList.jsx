@@ -1,13 +1,14 @@
-import { ChevronRight, FileText, RefreshCw, Shield } from 'lucide-react';
-import { getPolicyDoc, isPolicyAccepted } from '../utils/policyUtils';
-import { Button, EmptyState } from './ui';
-import { STATIC_COPY as T } from '../content/static';
-import '../design/pages/static.css';
+import { ChevronRight, FileText, RefreshCw, Shield } from "lucide-react";
+import { getPolicyDoc, isPolicyAccepted } from "../utils/policyUtils";
+import { Button, EmptyState } from "./ui";
+import { STATIC_COPY as T } from "../content/static";
+import "../design/pages/static.css";
 
 const iconFor = (item) => {
   const doc = getPolicyDoc(item);
-  const key = `${doc?.policy_type || ''} ${doc?.title || ''} ${doc?.name || ''}`.toLowerCase();
-  if (key.includes('privacy') || key.includes('consent')) return Shield;
+  const key =
+    `${doc?.policy_type || ""} ${doc?.title || ""} ${doc?.name || ""}`.toLowerCase();
+  if (key.includes("privacy") || key.includes("consent")) return Shield;
   return FileText;
 };
 
@@ -27,7 +28,9 @@ export default function PolicyHubList({
             <h2>{heading}</h2>
             {description ? <p>{description}</p> : null}
           </div>
-          <span>{policies.length} {policies.length === 1 ? 'document' : 'documents'}</span>
+          <span>
+            {policies.length} {policies.length === 1 ? "document" : "documents"}
+          </span>
         </div>
       ) : null}
       {error ? (
@@ -59,7 +62,7 @@ export default function PolicyHubList({
                 <Icon size={18} />
               </span>
               <span className="sx-row__copy">
-                <strong>{policy?.title || policy?.name || 'Policy'}</strong>
+                <strong>{policy?.title || policy?.name || "Policy"}</strong>
                 {policy?.subtitle ? <small>{policy.subtitle}</small> : null}
                 {updated ? <em>{T.hubUpdated}</em> : null}
               </span>
