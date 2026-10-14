@@ -1,27 +1,40 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowRight, History, RefreshCw, SearchX, Stethoscope } from 'lucide-react';
-import AppShell from '../components/AppShell';
-import BannerCarousel from '../components/BannerCarousel';
-import DoctorCard from '../components/DoctorCard';
-import DummyOfferCard from '../components/DummyOfferCard';
-import ProductCard from '../components/ProductCard';
-import ConsultationCard from '../components/consult/ConsultationCard';
-import { getBanners } from '../services/bannerService';
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  ArrowRight,
+  History,
+  RefreshCw,
+  SearchX,
+  Stethoscope,
+} from "lucide-react";
+import AppShell from "../components/AppShell";
+import BannerCarousel from "../components/BannerCarousel";
+import DoctorCard from "../components/DoctorCard";
+import DummyOfferCard from "../components/DummyOfferCard";
+import ProductCard from "../components/ProductCard";
+import ConsultationCard from "../components/consult/ConsultationCard";
+import { getBanners } from "../services/bannerService";
 import {
   getBannerImageUri,
   mapProductCategory,
   normalizeApiList,
-} from '../home/catalog';
-import { getServiceCategoryId, resolveBannerNavigation } from '../home/serviceCategories';
-import useDashboardCategories from '../hooks/useDashboardCategories';
-import useCategoryProducts from '../hooks/useCategoryProducts';
-import { getConsultHistory, getDoctors } from '../services/consultService';
-import { getHealthCategories } from '../services/productService';
-import { doctorDisplayName, getDoctorId, listDoctors } from '../consult/doctors';
-import { resolveAppointmentLookupId } from '../consult/appointmentUtils';
-import { mapAppointment } from '../profile/map';
-import { isAuthenticated } from '../services/guestAuth';
+} from "../home/catalog";
+import {
+  getServiceCategoryId,
+  resolveBannerNavigation,
+} from "../home/serviceCategories";
+import useDashboardCategories from "../hooks/useDashboardCategories";
+import useCategoryProducts from "../hooks/useCategoryProducts";
+import { getConsultHistory, getDoctors } from "../services/consultService";
+import { getHealthCategories } from "../services/productService";
+import {
+  doctorDisplayName,
+  getDoctorId,
+  listDoctors,
+} from "../consult/doctors";
+import { resolveAppointmentLookupId } from "../consult/appointmentUtils";
+import { mapAppointment } from "../profile/map";
+import { isAuthenticated } from "../services/guestAuth";
 import {
   Button,
   Disclaimer,
@@ -34,39 +47,48 @@ import {
   SkeletonGrid,
   Tile,
   TileGrid,
-} from '../components/ui';
-import { CONSULT_COPY as T } from '../content/consult';
-import { DUMMY_LAB_TESTS } from '../data/homeDummySections';
-import '../design/pages/consult.css';
-import '../design/pages/dummy-offers.css';
+} from "../components/ui";
+import { CONSULT_COPY as T } from "../content/consult";
+import { DUMMY_LAB_TESTS } from "../data/homeDummySections";
+import "../design/pages/consult.css";
+import "../design/pages/dummy-offers.css";
 
 const matchesSearch = (q, ...values) => {
-  const needle = String(q || '').trim().toLowerCase();
+  const needle = String(q || "")
+    .trim()
+    .toLowerCase();
   if (!needle) return true;
-  return values.some((value) => String(value || '').toLowerCase().includes(needle));
+  return values.some((value) =>
+    String(value || "")
+      .toLowerCase()
+      .includes(needle),
+  );
 };
 
 export default function Consult() {
   const navigate = useNavigate();
   const { categories: dashboardCategories } = useDashboardCategories();
   const consultCategoryId = useMemo(
-    () => getServiceCategoryId(dashboardCategories, 'consult'),
+    () => getServiceCategoryId(dashboardCategories, "consult"),
     [dashboardCategories],
   );
   const [banners, setBanners] = useState([]);
   const [concerns, setConcerns] = useState([]);
   const [doctors, setDoctors] = useState([]);
   const [history, setHistory] = useState([]);
-  const [search, setSearch] = useState('');
-  const [debounced, setDebounced] = useState('');
+  const [search, setSearch] = useState("");
+  const [debounced, setDebounced] = useState("");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const productFilter = useMemo(
     () => (debounced ? { search: debounced } : {}),
     [debounced],
   );
-  const { products, loading: productsLoading, loadingMore, hasMore, refresh: refreshProducts, loadMore } =
-    useCategoryProducts(productFilter, [], { pageSize: 6 });
+  const {
+    products,
+    loading: productsLoading,
+    refresh: refreshProducts,
+  } = useCategoryProducts(productFilter, [], { pageSize: 6 });
 
   useEffect(() => {
     const timer = setTimeout(() => setDebounced(search.trim()), 400);
@@ -77,7 +99,7 @@ export default function Consult() {
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
     const [bannerRes, catRes, docRes] = await Promise.all([
-      getBanners('consult', consultCategoryId),
+      getBanners("consult", consultCategoryId),
       getHealthCategories(),
       getDoctors(),
     ]);
@@ -96,7 +118,11 @@ export default function Consult() {
         .map((item) => ({ ...item, image: getBannerImageUri(item) }))
         .filter((item) => item.image),
     );
-    setConcerns(normalizeApiList(catRes).map(mapProductCategory).filter((item) => item.id));
+    setConcerns(
+      normalizeApiList(catRes)
+        .map(mapProductCategory)
+        .filter((item) => item.id),
+    );
     setDoctors(listDoctors(docRes));
     setHistory(hist);
     setLoading(false);
@@ -118,7 +144,13 @@ export default function Consult() {
   const filteredHistory = useMemo(
     () =>
       history.filter((item) =>
-        matchesSearch(debounced, item.doctorName, item.concern, item.status, item.specialty),
+        matchesSearch(
+          debounced,
+          item.doctorName,
+          item.concern,
+          item.status,
+          item.specialty,
+        ),
       ),
     [history, debounced],
   );
@@ -141,7 +173,7 @@ export default function Consult() {
     const target = resolveBannerNavigation(item);
     if (!target) return;
     if (target.external) {
-      window.open(target.href, '_blank', 'noopener,noreferrer');
+      window.open(target.href, "_blank", "noopener,noreferrer");
       return;
     }
     navigate(target.path);
@@ -183,14 +215,14 @@ export default function Consult() {
             <SearchField
               value={search}
               onChange={setSearch}
-              onSubmit={(value) => setDebounced(String(value || '').trim())}
+              onSubmit={(value) => setDebounced(String(value || "").trim())}
               placeholder={T.searchPlaceholder}
               label={T.searchLabel}
             />
             <div className="cs-hero__ctas">
               <Button
                 size="lg"
-                onClick={() => navigate('/consult/doctors')}
+                onClick={() => navigate("/consult/doctors")}
                 leadingIcon={<Stethoscope size={18} aria-hidden />}
               >
                 {T.browseAll}
@@ -198,7 +230,7 @@ export default function Consult() {
               <Button
                 variant="ghost"
                 size="lg"
-                onClick={() => navigate('/consult/history')}
+                onClick={() => navigate("/consult/history")}
                 leadingIcon={<History size={18} aria-hidden />}
               >
                 {T.history}
@@ -220,10 +252,19 @@ export default function Consult() {
           </ol>
         </section>
 
-        <BannerCarousel items={banners} onSelect={openBanner} loading={loading} interval={4000} />
+        <BannerCarousel
+          items={banners}
+          onSelect={openBanner}
+          loading={loading}
+          interval={4000}
+        />
 
         {filteredHistory.length > 0 ? (
-          <Reveal as="section" className="cs-section" aria-labelledby="cs-recent-title">
+          <Reveal
+            as="section"
+            className="cs-section"
+            aria-labelledby="cs-recent-title"
+          >
             <SectionHeader
               id="cs-recent-title"
               title={T.recentTitle}
@@ -231,7 +272,7 @@ export default function Consult() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => navigate('/consult/history')}
+                  onClick={() => navigate("/consult/history")}
                   trailingIcon={<ArrowRight size={16} aria-hidden />}
                 >
                   {T.viewHistory}
@@ -240,11 +281,16 @@ export default function Consult() {
             />
             <Rail label={T.recentTitle} className="cs-recent">
               {filteredHistory.map((item) => (
-                <RailItem key={item.consultationId || item.appointmentId || item.id} size="wide">
+                <RailItem
+                  key={item.consultationId || item.appointmentId || item.id}
+                  size="wide"
+                >
                   <ConsultationCard
                     item={item}
                     onOpen={openDetails}
-                    onReceipt={(entry) => navigate(`/profile/receipts/${entry.consultationId}`)}
+                    onReceipt={(entry) =>
+                      navigate(`/profile/receipts/${entry.consultationId}`)
+                    }
                     onBook={openSlots}
                   />
                 </RailItem>
@@ -254,7 +300,11 @@ export default function Consult() {
         ) : null}
 
         {concerns.length > 0 ? (
-          <Reveal as="section" className="cs-section" aria-labelledby="cs-concerns-title">
+          <Reveal
+            as="section"
+            className="cs-section"
+            aria-labelledby="cs-concerns-title"
+          >
             <SectionHeader
               id="cs-concerns-title"
               eyebrow={T.concernsEyebrow}
@@ -270,9 +320,16 @@ export default function Consult() {
                   onClick={() =>
                     navigate(
                       `/consult/concern/${item.id}?name=${encodeURIComponent(item.name)}${
-                        item.description ? `&desc=${encodeURIComponent(item.description)}` : ''
+                        item.description
+                          ? `&desc=${encodeURIComponent(item.description)}`
+                          : ""
                       }`,
-                      { state: { categoryName: item.name, categoryDesc: item.description } },
+                      {
+                        state: {
+                          categoryName: item.name,
+                          categoryDesc: item.description,
+                        },
+                      },
                     )
                   }
                 />
@@ -290,7 +347,7 @@ export default function Consult() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate('/consult/doctors')}
+                onClick={() => navigate("/consult/doctors")}
                 trailingIcon={<ArrowRight size={16} aria-hidden />}
               >
                 {T.viewAll}
@@ -298,7 +355,12 @@ export default function Consult() {
             }
           />
           {loading && !doctors.length ? (
-            <SkeletonGrid variant="doctor" count={3} label={T.loadingDoctors} className="am-doctor-grid" />
+            <SkeletonGrid
+              variant="doctor"
+              count={3}
+              label={T.loadingDoctors}
+              className="am-doctor-grid"
+            />
           ) : filteredDoctors.length === 0 ? (
             <EmptyState
               compact
@@ -310,8 +372,8 @@ export default function Consult() {
                   <Button
                     variant="secondary"
                     onClick={() => {
-                      setSearch('');
-                      setDebounced('');
+                      setSearch("");
+                      setDebounced("");
                     }}
                   >
                     {T.clearSearch}
@@ -331,7 +393,11 @@ export default function Consult() {
         </section>
 
         {products.length > 0 || productsLoading ? (
-          <Reveal as="section" className="cs-section" aria-labelledby="cs-products-title">
+          <Reveal
+            as="section"
+            className="cs-section"
+            aria-labelledby="cs-products-title"
+          >
             <SectionHeader
               id="cs-products-title"
               title={T.productsTitle}
@@ -340,7 +406,7 @@ export default function Consult() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => navigate('/products')}
+                    onClick={() => navigate("/products")}
                     trailingIcon={<ArrowRight size={16} aria-hidden />}
                   >
                     {T.viewAll}
@@ -351,27 +417,22 @@ export default function Consult() {
             {productsLoading && !products.length ? (
               <SkeletonGrid count={4} className="am-product-grid" />
             ) : (
-              <>
-                <ul className="am-product-grid">
-                  {products.map((item) => (
-                    <li key={item.variant_id || item.id}>
-                      <ProductCard item={item} />
-                    </li>
-                  ))}
-                </ul>
-                {hasMore ? (
-                  <div className="cs-more">
-                    <Button variant="secondary" loading={loadingMore} onClick={loadMore}>
-                      {loadingMore ? T.loadingMore : T.loadMore}
-                    </Button>
-                  </div>
-                ) : null}
-              </>
+              <ul className="am-product-grid">
+                {products.slice(0, 5).map((item) => (
+                  <li key={item.variant_id || item.id}>
+                    <ProductCard item={item} />
+                  </li>
+                ))}
+              </ul>
             )}
           </Reveal>
         ) : null}
 
-        <Reveal as="section" className="cs-section" aria-labelledby="cs-lab-title">
+        <Reveal
+          as="section"
+          className="cs-section"
+          aria-labelledby="cs-lab-title"
+        >
           <SectionHeader
             id="cs-lab-title"
             title={T.labTitle}
@@ -379,7 +440,7 @@ export default function Consult() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate('/labs')}
+                onClick={() => navigate("/labs")}
                 trailingIcon={<ArrowRight size={16} aria-hidden />}
               >
                 {T.viewAll}
@@ -389,7 +450,11 @@ export default function Consult() {
           <Rail label={T.labTitle}>
             {DUMMY_LAB_TESTS.map((item) => (
               <RailItem key={item.id} size="product">
-                <DummyOfferCard item={item} kind="lab" onClick={() => navigate('/labs')} />
+                <DummyOfferCard
+                  item={item}
+                  kind="lab"
+                  onClick={() => navigate("/labs")}
+                />
               </RailItem>
             ))}
           </Rail>
