@@ -1,32 +1,40 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { FileText, Heart, Leaf, Minus, Plus, ShoppingBag, Star } from 'lucide-react';
-import AppShell from '../components/AppShell';
-import AutoScrollRail from '../components/AutoScrollRail';
-import PageHeader from '../components/PageHeader';
-import ProductDiscoveryRails from '../components/ProductDiscoveryRails';
-import ReviewSubmitModal from '../components/ReviewSubmitModal';
-import ShareButton from '../components/ShareButton';
-import { formatRupee, resolveImageUrl } from '../home/catalog';
-import { useCart } from '../hooks/useCart';
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  FileText,
+  Heart,
+  Leaf,
+  Minus,
+  Plus,
+  ShoppingBag,
+  Star,
+} from "lucide-react";
+import AppShell from "../components/AppShell";
+import AutoScrollRail from "../components/AutoScrollRail";
+import PageHeader from "../components/PageHeader";
+import ProductDiscoveryRails from "../components/ProductDiscoveryRails";
+import ReviewSubmitModal from "../components/ReviewSubmitModal";
+import ShareButton from "../components/ShareButton";
+import { formatRupee, resolveImageUrl } from "../home/catalog";
+import { useCart } from "../hooks/useCart";
 import {
   getAddQtyBlockMessage,
   isPrescriptionRequired,
   isProductOutOfStock,
-} from '../product/stock';
+} from "../product/stock";
 import {
   getProductByVariant,
   getReviews,
   toggleWishlistProduct,
-} from '../services/productService';
-import { requireAuth } from '../services/guestAuth';
-import { showPrescriptionRequired } from '../services/prescriptionGate';
-import { showSuccessToast } from '../config/key';
+} from "../services/productService";
+import { requireAuth } from "../services/guestAuth";
+import { showPrescriptionRequired } from "../services/prescriptionGate";
+import { showSuccessToast } from "../config/key";
 import {
   extractReviewsList,
   isReviewVideoUrl,
   normalizeReviewsForDisplay,
-} from '../utils/reviewUtils';
+} from "../utils/reviewUtils";
 import {
   Badge,
   Button,
@@ -39,15 +47,19 @@ import {
   SectionHeader,
   Skeleton,
   SkeletonText,
-} from '../components/ui';
-import { PRODUCT_DETAIL_COPY as T } from '../content/productDetail';
-import '../design/pages/product-detail.css';
+} from "../components/ui";
+import { PRODUCT_DETAIL_COPY as T } from "../content/productDetail";
+import "../design/pages/product-detail.css";
 
 const galleryFromProduct = (product, variant) => {
   const urls = [];
   const push = (value) => {
-    const uri = typeof value === 'string' ? value.trim() : value?.media_url || value?.url || '';
-    if (uri && !/example\.com|placeholder/i.test(uri) && !urls.includes(uri)) urls.push(uri);
+    const uri =
+      typeof value === "string"
+        ? value.trim()
+        : value?.media_url || value?.url || "";
+    if (uri && !/example\.com|placeholder/i.test(uri) && !urls.includes(uri))
+      urls.push(uri);
   };
   push(variant?.cover_image);
   push(variant?.image_url);
@@ -63,7 +75,8 @@ const galleryFromProduct = (product, variant) => {
 export default function ProductDetails() {
   const { variantId } = useParams();
   const navigate = useNavigate();
-  const { variantQuantities, addingVariantId, syncCartQuantity, itemCount } = useCart();
+  const { variantQuantities, addingVariantId, syncCartQuantity, itemCount } =
+    useCart();
   const [loading, setLoading] = useState(true);
   const [product, setProduct] = useState(null);
   const [reviews, setReviews] = useState([]);
@@ -85,7 +98,7 @@ export default function ProductDetails() {
       try {
         const [productRes, reviewRes] = await Promise.all([
           getProductByVariant(variantId),
-          getReviews({ entity_type: 'product', variant_id: variantId }),
+          getReviews({ entity_type: "product", variant_id: variantId }),
         ]);
         if (!alive) return;
         const raw = productRes?.data ?? productRes;
@@ -111,7 +124,8 @@ export default function ProductDetails() {
     () => (Array.isArray(product?.variants) ? product.variants : []),
     [product],
   );
-  const defaultVariant = variants.find((v) => v?.is_default) || variants[0] || product;
+  const defaultVariant =
+    variants.find((v) => v?.is_default) || variants[0] || product;
 
   useEffect(() => {
     if (!variants.length && !product) {
@@ -119,29 +133,38 @@ export default function ProductDetails() {
       return;
     }
     const match = variants.find(
-      (v) => String(v?.id) === String(variantId) || String(v?.variant_id) === String(variantId),
+      (v) =>
+        String(v?.id) === String(variantId) ||
+        String(v?.variant_id) === String(variantId),
     );
     setSelected(match || defaultVariant || product);
   }, [product, variantId, variants, defaultVariant]);
 
   const active = selected || defaultVariant || product;
-  const cartVariantId = String(active?.id ?? active?.variant_id ?? variantId ?? '').trim();
+  const cartVariantId = String(
+    active?.id ?? active?.variant_id ?? variantId ?? "",
+  ).trim();
   const cartQty = variantQuantities[cartVariantId] ?? 0;
   const adding = addingVariantId === cartVariantId;
   const images = galleryFromProduct(product, active);
-  const needsRx = isPrescriptionRequired(active) || isPrescriptionRequired(product);
+  const needsRx =
+    isPrescriptionRequired(active) || isPrescriptionRequired(product);
   const out = isProductOutOfStock(active);
-  const displayName = product?.name || active?.name || 'Product';
-  const packLabel = active?.size || active?.title || active?.weightage || '';
-  const price = formatRupee(active?.selling_price ?? active?.price ?? product?.selling_price);
+  const displayName = product?.name || active?.name || "Product";
+  const packLabel = active?.size || active?.title || active?.weightage || "";
+  const price = formatRupee(
+    active?.selling_price ?? active?.price ?? product?.selling_price,
+  );
   const mrp =
-    Number(active?.mrp) > Number(active?.selling_price || 0) ? formatRupee(active?.mrp) : '';
+    Number(active?.mrp) > Number(active?.selling_price || 0)
+      ? formatRupee(active?.mrp)
+      : "";
   const discount =
     Number(active?.mrp) > Number(active?.selling_price || 0)
       ? Math.round(((active.mrp - active.selling_price) / active.mrp) * 100)
       : 0;
   const discoveryProductId = String(
-    product?.product_id ?? product?.id ?? active?.product_id ?? '',
+    product?.product_id ?? product?.id ?? active?.product_id ?? "",
   ).trim();
 
   useEffect(() => {
@@ -151,11 +174,11 @@ export default function ProductDetails() {
   }, [cartVariantId, product, cartQty, active?.is_wishlist_item]);
 
   const addToCart = async (goToCart = false) => {
-    if (!(await requireAuth('Please login to add items to cart'))) return;
+    if (!(await requireAuth("Please login to add items to cart"))) return;
     const addQty = Math.max(1, Number(qty) || 1);
     const block = getAddQtyBlockMessage(active, addQty);
     if (block) {
-      showSuccessToast(block, 'error');
+      showSuccessToast(block, "error");
       return;
     }
     if (isPrescriptionRequired(active) || isPrescriptionRequired(product)) {
@@ -165,20 +188,23 @@ export default function ProductDetails() {
       });
       return;
     }
-    const ok = await syncCartQuantity({ ...active, variant_id: cartVariantId }, addQty);
+    const ok = await syncCartQuantity(
+      { ...active, variant_id: cartVariantId },
+      addQty,
+    );
     if (!ok) {
-      showSuccessToast('Try again to add into cart', 'error');
+      showSuccessToast("Try again to add into cart", "error");
       return;
     }
-    if (goToCart) navigate('/cart');
+    if (goToCart) navigate("/cart");
   };
 
   const toggleWish = async () => {
-    if (!(await requireAuth('Please login to save wishlist items'))) return;
+    if (!(await requireAuth("Please login to save wishlist items"))) return;
     if (!cartVariantId) return;
     const res = await toggleWishlistProduct(cartVariantId);
     if (res?.success === false) {
-      showSuccessToast(res?.message || 'Unable to update wishlist', 'error');
+      showSuccessToast(res?.message || "Unable to update wishlist", "error");
       return;
     }
     setWish((prev) => !prev);
@@ -188,11 +214,12 @@ export default function ProductDetails() {
     <Button
       variant="soft"
       size="sm"
-      onClick={() => navigate('/cart')}
-      leadingIcon={<ShoppingBag size={18} aria-hidden />}
+      onClick={() => navigate("/cart")}
+      leadingIcon={<ShoppingBag size={17} aria-hidden />}
+      className="button-cart"
     >
       {T.cart}
-      {itemCount ? ` (${itemCount})` : ''}
+      {itemCount ? ` (${itemCount})` : ""}
     </Button>
   );
 
@@ -212,10 +239,20 @@ export default function ProductDetails() {
     }
     return (
       <>
-        <Button variant="secondary" block={block} disabled={out || adding} onClick={() => addToCart(false)}>
+        <Button
+          variant="secondary"
+          block={block}
+          disabled={out || adding}
+          onClick={() => addToCart(false)}
+        >
           {adding ? T.adding : T.addToCart}
         </Button>
-        <Button variant="primary" block={block} disabled={out || adding} onClick={() => addToCart(true)}>
+        <Button
+          variant="primary"
+          block={block}
+          disabled={out || adding}
+          onClick={() => addToCart(true)}
+        >
           {T.buyNow}
         </Button>
       </>
@@ -240,7 +277,11 @@ export default function ProductDetails() {
     return (
       <AppShell tab="products">
         <section className="pd-page">
-          <PageHeader title={T.notFoundTitle} backTo="/products" actions={cartAction} />
+          <PageHeader
+            title={T.notFoundTitle}
+            backTo="/products"
+            actions={cartAction}
+          />
           <EmptyState
             title={T.notFoundTitle}
             description={T.notFoundText}
@@ -258,7 +299,11 @@ export default function ProductDetails() {
   return (
     <AppShell tab="products">
       <section className="pd-page">
-        <PageHeader title={displayName} subtitle={packLabel || undefined} actions={cartAction} />
+        <PageHeader
+          title={displayName}
+          subtitle={packLabel || undefined}
+          actions={cartAction}
+        />
 
         <div className="pd-layout">
           <div className="pd-gallery">
@@ -270,7 +315,11 @@ export default function ProductDetails() {
                   onClick={() => setZoomOpen(true)}
                   aria-label="Zoom product image"
                 >
-                  <img src={images[imageIndex]} alt={displayName} decoding="async" />
+                  <img
+                    src={images[imageIndex]}
+                    alt={displayName}
+                    decoding="async"
+                  />
                 </button>
               ) : (
                 <span className="pd-gallery__placeholder" aria-hidden>
@@ -280,15 +329,24 @@ export default function ProductDetails() {
               <div className="pd-gallery__badges">
                 {out ? <Badge tone="neutral">{T.outOfStock}</Badge> : null}
                 {needsRx ? (
-                  <Badge tone="warning" icon={<FileText size={14} aria-hidden />}>
+                  <Badge
+                    tone="warning"
+                    icon={<FileText size={14} aria-hidden />}
+                  >
                     {T.prescriptionRequired}
                   </Badge>
                 ) : null}
-                {discount > 0 ? <Badge tone="success">{discount}% off</Badge> : null}
+                {discount > 0 ? (
+                  <Badge tone="success">{discount}% off</Badge>
+                ) : null}
               </div>
             </div>
             {images.length > 1 ? (
-              <div className="pd-thumbs" role="tablist" aria-label="Product images">
+              <div
+                className="pd-thumbs"
+                role="tablist"
+                aria-label="Product images"
+              >
                 {images.map((src, index) => (
                   <button
                     key={src}
@@ -296,7 +354,7 @@ export default function ProductDetails() {
                     role="tab"
                     aria-selected={index === imageIndex}
                     aria-label={`${T.showImage} ${index + 1}`}
-                    className={`pd-thumb${index === imageIndex ? ' is-on' : ''}`}
+                    className={`pd-thumb${index === imageIndex ? " is-on" : ""}`}
                     onClick={() => setImageIndex(index)}
                   >
                     <img src={src} alt="" loading="lazy" decoding="async" />
@@ -315,7 +373,11 @@ export default function ProductDetails() {
                   pressed={wish}
                   onClick={toggleWish}
                 >
-                  <Heart size={20} aria-hidden fill={wish ? 'currentColor' : 'none'} />
+                  <Heart
+                    size={20}
+                    aria-hidden
+                    fill={wish ? "currentColor" : "none"}
+                  />
                 </IconButton>
                 <ShareButton
                   title={`${displayName} - Ayurmuni`}
@@ -329,7 +391,9 @@ export default function ProductDetails() {
               <p className="pd-price">
                 <strong>{price}</strong>
                 {mrp ? <s>{mrp}</s> : null}
-                {discount > 0 ? <Badge tone="success">{discount}% off</Badge> : null}
+                {discount > 0 ? (
+                  <Badge tone="success">{discount}% off</Badge>
+                ) : null}
                 <span className="pd-price__note">{T.perUnit}</span>
               </p>
 
@@ -339,7 +403,11 @@ export default function ProductDetails() {
                     const id = String(item.id ?? item.variant_id);
                     const on = id === cartVariantId;
                     return (
-                      <Chip key={id} selected={on} onClick={() => setSelected(item)}>
+                      <Chip
+                        key={id}
+                        selected={on}
+                        onClick={() => setSelected(item)}
+                      >
                         {item.title || item.size || item.weightage || T.pack}
                       </Chip>
                     );
@@ -349,7 +417,11 @@ export default function ProductDetails() {
 
               <div className="pd-qty">
                 <span className="pd-qty__label">{T.quantity}</span>
-                <div className="am-stepper" role="group" aria-label={T.quantity}>
+                <div
+                  className="am-stepper"
+                  role="group"
+                  aria-label={T.quantity}
+                >
                   <button
                     type="button"
                     aria-label={T.decreaseQty}
@@ -359,7 +431,11 @@ export default function ProductDetails() {
                     <Minus size={18} aria-hidden />
                   </button>
                   <span aria-live="polite">{qty}</span>
-                  <button type="button" aria-label={T.increaseQty} onClick={() => setQty((q) => q + 1)}>
+                  <button
+                    type="button"
+                    aria-label={T.increaseQty}
+                    onClick={() => setQty((q) => q + 1)}
+                  >
                     <Plus size={18} aria-hidden />
                   </button>
                 </div>
@@ -394,12 +470,13 @@ export default function ProductDetails() {
             id="pd-reviews-title"
             title={T.reviews}
             action={
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <div style={{ display: "flex", gap: "8px" }}>
                 <Button
                   variant="secondary"
                   size="sm"
                   onClick={async () => {
-                    if (!(await requireAuth('Please login to write a review'))) return;
+                    if (!(await requireAuth("Please login to write a review")))
+                      return;
                     setShowReviewModal(true);
                   }}
                   leadingIcon={<Star size={16} />}
@@ -411,9 +488,9 @@ export default function ProductDetails() {
                     variant="ghost"
                     size="sm"
                     onClick={() =>
-                      navigate('/reviews', {
+                      navigate("/reviews", {
                         state: {
-                          entityType: 'product',
+                          entityType: "product",
                           variantId,
                           reviews,
                         },
@@ -436,18 +513,21 @@ export default function ProductDetails() {
               {reviews.slice(0, 5).map((item, index) => {
                 const media = (item.image_urls || []).map((url) => ({
                   url,
-                  type: isReviewVideoUrl(url) ? 'video' : 'image',
+                  type: isReviewVideoUrl(url) ? "video" : "image",
                 }));
                 return (
                   <ReviewCard
                     key={item.id || index}
-                    name={item.patient_name || 'Patient'}
+                    name={item.patient_name || "Patient"}
                     rating={item.rating}
-                    text={item.comment || item.review || item.message || ''}
+                    text={item.comment || item.review || item.message || ""}
                     media={media}
                     onMediaClick={(mediaIndex) =>
-                      navigate('/reviews/gallery', {
-                        state: { images: item.image_urls, selectedIndex: mediaIndex },
+                      navigate("/reviews/gallery", {
+                        state: {
+                          images: item.image_urls,
+                          selectedIndex: mediaIndex,
+                        },
                       })
                     }
                   />
@@ -455,22 +535,34 @@ export default function ProductDetails() {
               })}
             </AutoScrollRail>
           ) : (
-            <EmptyState compact title={T.noReviews} description={T.noReviewsText} />
+            <EmptyState
+              compact
+              title={T.noReviews}
+              description={T.noReviewsText}
+            />
           )}
         </section>
 
-        <ProductDiscoveryRails productId={discoveryProductId} excludeVariantId={cartVariantId} />
+        <ProductDiscoveryRails
+          productId={discoveryProductId}
+          excludeVariantId={cartVariantId}
+        />
 
-        {!out ? (
-          <div className="pd-sticky">
-            {renderBuyActions()}
-          </div>
-        ) : null}
+        {!out ? <div className="pd-sticky">{renderBuyActions()}</div> : null}
       </section>
 
-      <Modal open={zoomOpen} onClose={() => setZoomOpen(false)} title={displayName} size="lg">
+      <Modal
+        open={zoomOpen}
+        onClose={() => setZoomOpen(false)}
+        title={displayName}
+        size="lg"
+      >
         {images[imageIndex] ? (
-          <img className="pd-zoom-img" src={images[imageIndex]} alt={displayName} />
+          <img
+            className="pd-zoom-img"
+            src={images[imageIndex]}
+            alt={displayName}
+          />
         ) : null}
       </Modal>
 
@@ -482,16 +574,24 @@ export default function ProductDetails() {
           product_id: product?.product_id || product?.id,
           variant_id: variantId,
           name: product?.name,
-          image: selected?.cover_image || selected?.image_url || product?.cover_image,
+          image:
+            selected?.cover_image ||
+            selected?.image_url ||
+            product?.cover_image,
           size: selected?.size,
         }}
         onSuccess={async () => {
           // Refresh reviews after successful submission
           try {
-            const reviewRes = await getReviews({ entity_type: 'product', variant_id: variantId });
-            setReviews(normalizeReviewsForDisplay(extractReviewsList(reviewRes)));
+            const reviewRes = await getReviews({
+              entity_type: "product",
+              variant_id: variantId,
+            });
+            setReviews(
+              normalizeReviewsForDisplay(extractReviewsList(reviewRes)),
+            );
           } catch (error) {
-            console.error('Failed to refresh reviews:', error);
+            console.error("Failed to refresh reviews:", error);
           }
         }}
       />
