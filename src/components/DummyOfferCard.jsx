@@ -30,7 +30,7 @@ export default function DummyOfferCard({ item, kind = 'lab', onClick }) {
         </p>
       </button>
       <button type="button" className="do-card__book" onClick={onClick}>
-        Book
+        {kind === 'package' ? 'Buy plans' : 'Book'}
       </button>
     </article>
   );

@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect } from "react";
 import {
   BrowserRouter,
   Route,
@@ -12,91 +12,97 @@ import Splash from "./pages/Splash";
 import Welcome from "./pages/Welcome";
 import Login from "./pages/Login";
 import OtpVerify from "./pages/OtpVerify";
-import AccessMode from "./pages/AccessMode";
 import Home from "./pages/Home";
-import Onboarding from "./pages/Onboarding";
-// import PolicyAccept from './pages/PolicyAccept';
-import PolicyDetail from "./pages/PolicyDetail";
-import AssessmentType from "./pages/AssessmentType";
-import Questionnaire from "./pages/Questionnaire";
-import PatientFAQ from "./pages/PatientFAQ";
-import MedicalHistory from "./pages/MedicalHistory";
-import TermsCondition from "./pages/TermsCondition";
 import NetworkError from "./pages/NetworkError";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import PrakritiProfile from "./pages/PrakritiProfile";
-import CompleteDetails from "./pages/CompleteDetails";
-import Notifications from "./pages/Notifications";
-import Products from "./pages/Products";
-import CategoryProducts from "./pages/CategoryProducts";
-import TopCategories from "./pages/TopCategories";
-import ProductDetails from "./pages/ProductDetails";
-import ProductSearch from "./pages/ProductSearch";
-import ReviewPage from "./pages/ReviewPage";
-import ReviewGallery from "./pages/ReviewGallery";
-import Cart from "./pages/Cart";
-import Checkout from "./pages/Checkout";
-import OrderConfirmation from "./pages/OrderConfirmation";
-import Consult from "./pages/Consult";
-import ConsultHistory from "./pages/ConsultHistory";
-import CategoryDoctor from "./pages/CategoryDoctor";
-import Doctors from "./pages/Doctors";
-import DoctorProfile from "./pages/DoctorProfile";
-import DoctorSlot from "./pages/DoctorSlot";
-import ConsultPay from "./pages/ConsultPay";
-import DoctorSlip from "./pages/DoctorSlip";
-import DoctorConsultationHistory from "./pages/DoctorConsultationHistory";
-import BookingConfirm from "./pages/BookingConfirm";
-import AddCalendar from "./pages/AddCalendar";
-import Profile from "./pages/Profile";
-import EditProfile from "./pages/EditProfile";
-import Settings from "./pages/Settings";
-import NotificationSettings from "./pages/NotificationSettings";
-import OrangeLab from "./pages/OrangeLab";
-import Packages from "./pages/Packages";
-import Addresses from "./pages/Addresses";
-import AddressForm from "./pages/AddressForm";
-import Appointments from "./pages/Appointments";
-import AppointmentDetails from "./pages/AppointmentDetails";
-import Chat from "./pages/Chat";
-import PrescriptionDetail from "./pages/PrescriptionDetail";
-import ShareExperience from "./pages/ShareExperience";
-import MedicalReceipt from "./pages/MedicalReceipt";
-import PrivacyCenter from "./pages/PrivacyCenter";
-import FeedbackInformation from "./pages/FeedbackInformation";
-import LegalPoliciesHub from "./pages/LegalPoliciesHub";
-import OrderHistory from "./pages/OrderHistory";
-import OrderDetails from "./pages/OrderDetails";
-import Wishlist from "./pages/Wishlist";
-import FavDoctors from "./pages/FavDoctors";
-import HelpCenter from "./pages/HelpCenter";
-import FaqDetail from "./pages/FaqDetail";
-import Medicines from "./pages/Medicines";
-import PrescriptionUpload from "./pages/PrescriptionUpload";
-import PrescriptionVerify from "./pages/PrescriptionVerify";
-import OrderStatus from "./pages/OrderStatus";
-import MedicineCheckout from "./pages/MedicineCheckout";
-import Yoga from "./pages/Yoga";
-import YogaSession from "./pages/YogaSession";
-import Diet from "./pages/Diet";
-import DietPlan from "./pages/DietPlan";
-import MealDetails from "./pages/MealDetails";
-import WeeklyMeal from "./pages/WeeklyMeal";
-import Patients from "./pages/Patients";
-import PatientForm from "./pages/PatientForm";
-import MedicalRecords from "./pages/MedicalRecords";
-import Rewards from "./pages/Rewards";
-import Payments from "./pages/Payments";
-import TransactionDetails from "./pages/TransactionDetails";
-import VideoCall, { VideoCallRedirect } from "./pages/VideoCall";
-import LocationPicker from "./pages/LocationPicker";
-import MentorProfile from "./pages/MentorProfile";
-import ConsultMentor from "./pages/ConsultMentor";
-import MentorCheckout from "./pages/MentorCheckout";
-import MentorOrder from "./pages/MentorOrder";
-import MentorRefund from "./pages/MentorRefund";
-import MentorExchange from "./pages/MentorExchange";
+
+const loadPage = (loader) => lazy(loader);
+const loadVideoCall = () => import("./pages/VideoCall");
+
+const AccessMode = loadPage(() => import("./pages/AccessMode"));
+const Onboarding = loadPage(() => import("./pages/Onboarding"));
+const PolicyDetail = loadPage(() => import("./pages/PolicyDetail"));
+const AssessmentType = loadPage(() => import("./pages/AssessmentType"));
+const Questionnaire = loadPage(() => import("./pages/Questionnaire"));
+const PatientFAQ = loadPage(() => import("./pages/PatientFAQ"));
+const MedicalHistory = loadPage(() => import("./pages/MedicalHistory"));
+const TermsCondition = loadPage(() => import("./pages/TermsCondition"));
+const About = loadPage(() => import("./pages/About"));
+const Contact = loadPage(() => import("./pages/Contact"));
+const PrakritiProfile = loadPage(() => import("./pages/PrakritiProfile"));
+const CompleteDetails = loadPage(() => import("./pages/CompleteDetails"));
+const Notifications = loadPage(() => import("./pages/Notifications"));
+const Products = loadPage(() => import("./pages/Products"));
+const CategoryProducts = loadPage(() => import("./pages/CategoryProducts"));
+const TopCategories = loadPage(() => import("./pages/TopCategories"));
+const ProductDetails = loadPage(() => import("./pages/ProductDetails"));
+const ProductSearch = loadPage(() => import("./pages/ProductSearch"));
+const ReviewPage = loadPage(() => import("./pages/ReviewPage"));
+const ReviewGallery = loadPage(() => import("./pages/ReviewGallery"));
+const Cart = loadPage(() => import("./pages/Cart"));
+const Checkout = loadPage(() => import("./pages/Checkout"));
+const OrderConfirmation = loadPage(() => import("./pages/OrderConfirmation"));
+const Consult = loadPage(() => import("./pages/Consult"));
+const ConsultHistory = loadPage(() => import("./pages/ConsultHistory"));
+const CategoryDoctor = loadPage(() => import("./pages/CategoryDoctor"));
+const Doctors = loadPage(() => import("./pages/Doctors"));
+const DoctorProfile = loadPage(() => import("./pages/DoctorProfile"));
+const DoctorSlot = loadPage(() => import("./pages/DoctorSlot"));
+const ConsultPay = loadPage(() => import("./pages/ConsultPay"));
+const DoctorSlip = loadPage(() => import("./pages/DoctorSlip"));
+const DoctorConsultationHistory = loadPage(() => import("./pages/DoctorConsultationHistory"));
+const BookingConfirm = loadPage(() => import("./pages/BookingConfirm"));
+const AddCalendar = loadPage(() => import("./pages/AddCalendar"));
+const Profile = loadPage(() => import("./pages/Profile"));
+const EditProfile = loadPage(() => import("./pages/EditProfile"));
+const Settings = loadPage(() => import("./pages/Settings"));
+const NotificationSettings = loadPage(() => import("./pages/NotificationSettings"));
+const OrangeLab = loadPage(() => import("./pages/OrangeLab"));
+const Packages = loadPage(() => import("./pages/Packages"));
+const Addresses = loadPage(() => import("./pages/Addresses"));
+const AddressForm = loadPage(() => import("./pages/AddressForm"));
+const Appointments = loadPage(() => import("./pages/Appointments"));
+const AppointmentDetails = loadPage(() => import("./pages/AppointmentDetails"));
+const Chat = loadPage(() => import("./pages/Chat"));
+const PrescriptionDetail = loadPage(() => import("./pages/PrescriptionDetail"));
+const ShareExperience = loadPage(() => import("./pages/ShareExperience"));
+const MedicalReceipt = loadPage(() => import("./pages/MedicalReceipt"));
+const PrivacyCenter = loadPage(() => import("./pages/PrivacyCenter"));
+const FeedbackInformation = loadPage(() => import("./pages/FeedbackInformation"));
+const LegalPoliciesHub = loadPage(() => import("./pages/LegalPoliciesHub"));
+const OrderHistory = loadPage(() => import("./pages/OrderHistory"));
+const OrderDetails = loadPage(() => import("./pages/OrderDetails"));
+const Wishlist = loadPage(() => import("./pages/Wishlist"));
+const FavDoctors = loadPage(() => import("./pages/FavDoctors"));
+const HelpCenter = loadPage(() => import("./pages/HelpCenter"));
+const FaqDetail = loadPage(() => import("./pages/FaqDetail"));
+const Medicines = loadPage(() => import("./pages/Medicines"));
+const PrescriptionUpload = loadPage(() => import("./pages/PrescriptionUpload"));
+const PrescriptionVerify = loadPage(() => import("./pages/PrescriptionVerify"));
+const OrderStatus = loadPage(() => import("./pages/OrderStatus"));
+const MedicineCheckout = loadPage(() => import("./pages/MedicineCheckout"));
+const Yoga = loadPage(() => import("./pages/Yoga"));
+const YogaSession = loadPage(() => import("./pages/YogaSession"));
+const Diet = loadPage(() => import("./pages/Diet"));
+const DietPlan = loadPage(() => import("./pages/DietPlan"));
+const MealDetails = loadPage(() => import("./pages/MealDetails"));
+const WeeklyMeal = loadPage(() => import("./pages/WeeklyMeal"));
+const Patients = loadPage(() => import("./pages/Patients"));
+const PatientForm = loadPage(() => import("./pages/PatientForm"));
+const MedicalRecords = loadPage(() => import("./pages/MedicalRecords"));
+const Rewards = loadPage(() => import("./pages/Rewards"));
+const Payments = loadPage(() => import("./pages/Payments"));
+const TransactionDetails = loadPage(() => import("./pages/TransactionDetails"));
+const VideoCall = loadPage(() => loadVideoCall().then((mod) => ({ default: mod.default })));
+const VideoCallRedirect = loadPage(() =>
+  loadVideoCall().then((mod) => ({ default: mod.VideoCallRedirect })),
+);
+const LocationPicker = loadPage(() => import("./pages/LocationPicker"));
+const MentorProfile = loadPage(() => import("./pages/MentorProfile"));
+const ConsultMentor = loadPage(() => import("./pages/ConsultMentor"));
+const MentorCheckout = loadPage(() => import("./pages/MentorCheckout"));
+const MentorOrder = loadPage(() => import("./pages/MentorOrder"));
+const MentorRefund = loadPage(() => import("./pages/MentorRefund"));
+const MentorExchange = loadPage(() => import("./pages/MentorExchange"));
 import { CartProvider } from "./hooks/useCart";
 import { VideoCallProvider } from "./context/VideoCallContext";
 import { LocationProvider } from "./context/LocationContext";
@@ -189,6 +195,7 @@ export default function App() {
             <ToastHost />
             <FloatingVideoOverlay />
             <NetworkGuard>
+              <Suspense fallback={null}>
               <Routes>
                 <Route path="/" element={<Splash />} />
                 <Route path="/welcome" element={<WelcomePage />} />
@@ -409,6 +416,7 @@ export default function App() {
                   <Route path="/search" element={<ProductSearch />} />
                 </Route>
               </Routes>
+              </Suspense>
             </NetworkGuard>
           </CartProvider>
         </LocationProvider>

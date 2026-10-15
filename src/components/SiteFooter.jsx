@@ -63,8 +63,12 @@ export default function SiteFooter() {
         ))}
       </div>
 
+      <div className="site-footer-mark" aria-hidden="true">
+        <img alt="" src="https://ayurmuni.com/assets/logoround-CDmnakog.png" />
+        <span>AYURMUNI</span>
+      </div>
+
       <div className="site-footer-bar">
-        <p className="site-footer-disclaimer">{COPY.healthDisclaimerLong}</p>
         <div className="site-footer-legal">
           <span>© {new Date().getFullYear()} Ayurmuni. All rights reserved.</span>
           <nav aria-label="Legal">

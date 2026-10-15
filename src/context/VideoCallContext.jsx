@@ -7,8 +7,13 @@ import {
   useRef,
   useState,
 } from 'react';
-import AgoraRTC from 'agora-rtc-sdk-ng';
 import { replace } from '../navigation/nav';
+
+let agoraPromise;
+const loadAgora = () => {
+  agoraPromise ??= import('agora-rtc-sdk-ng').then((mod) => mod.default ?? mod);
+  return agoraPromise;
+};
 import {
   apiEndCall,
   apiGetCallStatus,
@@ -209,6 +214,7 @@ export function VideoCallProvider({ children }) {
 
   const joinAgoraChannel = useCallback(
     async (tokenInfo, appointmentId) => {
+      const AgoraRTC = await loadAgora();
       setLoadingLabel('Joining call...');
       if (!clientRef.current) {
         const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
@@ -405,6 +411,7 @@ export function VideoCallProvider({ children }) {
 
   const flipCamera = useCallback(async () => {
     try {
+      const AgoraRTC = await loadAgora();
       const devices = cameraDevicesRef.current.length
         ? cameraDevicesRef.current
         : await AgoraRTC.getCameras();

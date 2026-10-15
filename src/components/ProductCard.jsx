@@ -122,6 +122,7 @@ export default function ProductCard({ item, onWishlistChange }) {
               {mrp}
             </s>
           ) : null}
+          {discount > 0 ? <span className="am-product-card__off">{discount}% off</span> : null}
         </p>
       </div>
 

@@ -3,8 +3,8 @@ import { getConsultHistory } from '../services/consultService';
 import { isAuthenticated } from '../services/guestAuth';
 import { mapAppointment } from '../profile/map';
 
-export default function useUpcomingAppointments(pageSize = 50) {
-  const [loading, setLoading] = useState(true);
+export default function useUpcomingAppointments(pageSize = 50, enabled = true) {
+  const [loading, setLoading] = useState(enabled);
   const [appointments, setAppointments] = useState([]);
 
   const fetchPreview = useCallback(
@@ -36,8 +36,10 @@ export default function useUpcomingAppointments(pageSize = 50) {
   );
 
   useEffect(() => {
+    if (!enabled) return undefined;
     fetchPreview();
-  }, [fetchPreview]);
+    return undefined;
+  }, [enabled, fetchPreview]);
 
   return {
     loading,

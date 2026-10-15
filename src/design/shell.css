@@ -458,10 +458,8 @@
   height: 32px;
   padding: 2px;
   border-radius: 50%;
-  background: conic-gradient(
-    var(--am-accent) var(--am-progress, 0deg),
-    var(--am-line) 0deg
-  );
+  background: conic-gradient(var(--am-accent) var(--am-progress, 0deg),
+      var(--am-line) 0deg);
 }
 
 .progress-ring-inner {
@@ -902,15 +900,11 @@
 
 @media (max-width: 767px) {
   .app-shell:not(.auth-shell):not(.is-logged-out) .app-shell-body {
-    padding-bottom: calc(
-      var(--am-tabbar-h) + var(--am-space-8) + env(safe-area-inset-bottom)
-    );
+    padding-bottom: calc(var(--am-tabbar-h) + var(--am-space-8) + env(safe-area-inset-bottom));
   }
 
   .app-shell:not(.auth-shell):not(.is-logged-out) .site-footer {
-    padding-bottom: calc(
-      var(--am-tabbar-h) + var(--am-space-5) + env(safe-area-inset-bottom)
-    );
+    padding-bottom: calc(var(--am-tabbar-h) + var(--am-space-5) + env(safe-area-inset-bottom));
   }
 }
 
@@ -922,9 +916,13 @@
 
 /* ---------- Footer ---------- */
 .site-footer {
+  /* Same green as ayurmuni.com footer (bg-[#0D614E]). */
+  --footer-logo: #0d614e;
   margin-top: auto;
-  background: var(--am-surface-inverse);
+  background: var(--footer-logo);
   color: var(--am-text-on-dark);
+  position: relative;
+  overflow: hidden;
 }
 
 .site-footer-trust {
@@ -934,7 +932,7 @@
   max-width: var(--am-container);
   margin: 0 auto;
   padding: var(--am-space-4) var(--am-gutter);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid color-mix(in srgb, #fff 14%, transparent);
   list-style: none;
 }
 
@@ -968,6 +966,8 @@
 }
 
 .site-footer-inner {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--am-space-8) var(--am-space-5);
@@ -982,11 +982,13 @@
 }
 
 .site-footer-brand img {
-  height: 36px;
+  --logo-h: 36px;
+  height: var(--logo-h);
   width: auto;
   margin-left: 0;
-  filter: brightness(0) invert(1);
   margin-bottom: var(--am-space-2);
+  /* Artwork sits 56/256 down the file; shift it up to the column titles. */
+  transform: translateY(calc(var(--logo-h) * -56 / 256));
   filter: brightness(0) invert(1);
 }
 
@@ -1012,7 +1014,7 @@
   font-weight: var(--am-weight-semibold);
   letter-spacing: var(--am-tracking-caps);
   text-transform: uppercase;
-  color: var(--am-gold-300);
+  color: #fff;
 }
 
 .site-footer-col ul {
@@ -1034,6 +1036,10 @@
   transition: color var(--am-dur-fast) var(--am-ease-standard);
 }
 
+.site-footer-col a {
+  color: #fff;
+}
+
 .site-footer-col a:hover,
 .site-footer-legal a:hover {
   color: #fff;
@@ -1046,33 +1052,100 @@
 }
 
 .site-footer-bar {
+  position: relative;
+  z-index: 1;
   max-width: var(--am-container);
   margin: 0 auto;
-  padding: var(--am-space-3) var(--am-gutter) var(--am-space-4);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: var(--am-space-4) var(--am-gutter) var(--am-space-5);
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
-.site-footer-disclaimer {
-  margin: 0 0 var(--am-space-4);
-  max-width: 90ch;
-  color: var(--am-text-on-dark-muted);
-  font-size: var(--am-text-xs);
-  line-height: var(--am-leading-relaxed);
+.site-footer-bar::-webkit-scrollbar {
+  display: none;
 }
 
 .site-footer-legal {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--am-space-2) var(--am-space-4);
+  justify-content: flex-start;
+  gap: var(--am-space-4);
+  width: max-content;
+  min-width: 100%;
   color: var(--am-text-on-dark-muted);
   font-size: var(--am-text-xs);
 }
 
+.site-footer-legal > span {
+  white-space: nowrap;
+}
+
+.site-footer-mark {
+  --mark-logo: 112px;
+  --mark-gap: 1.5rem;
+  position: relative;
+  z-index: 0;
+  /* Lift the logo and the word together; the gap between them stays put. */
+  margin: calc((var(--mark-logo) + var(--mark-gap)) * -0.42) 0 0;
+  padding: calc(var(--mark-logo) + var(--mark-gap)) 0 0;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+  text-align: center;
+}
+
+.site-footer-mark img {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  z-index: 1;
+  display: block;
+  width: var(--mark-logo);
+  height: auto;
+  margin: 0;
+  /* Match the AYURMUNI letters on the footer green. */
+  opacity: 0.66;
+  filter: brightness(0) invert(1);
+  transform: translateX(-50%);
+}
+
+.site-footer-mark span {
+  position: relative;
+  display: block;
+  margin: 0;
+  padding: 0 0 0.12em;
+  font-family: "Satoshi", sans-serif;
+  font-weight: 700;
+  font-size: clamp(4.5rem, 18.6vw, 11rem);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.site-footer-mark span::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    rgb(13 97 78 / 28%) 0%,
+    rgb(13 97 78 / 55%) 42%,
+    rgb(13 97 78 / 88%) 78%,
+    #0d614e 100%
+  );
+}
+
 .site-footer-legal nav {
   display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
   gap: var(--am-space-4);
+}
+
+.site-footer-legal a {
+  white-space: nowrap;
 }
 
 @media (min-width: 901px) {
@@ -1089,5 +1162,10 @@
 
   .site-footer-brand {
     grid-column: auto;
+  }
+
+  .site-footer-mark {
+    --mark-logo: 132px;
+    --mark-gap: 2rem;
   }
 }

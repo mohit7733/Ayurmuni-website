@@ -1,100 +1,67 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, BadgeCheck, BriefcaseMedical, Languages, MapPin, Star } from 'lucide-react';
+import { ArrowRight, BadgeCheck, Briefcase, Heart, MapPin, Star } from 'lucide-react';
+import { formatDoctorDisplayName } from '../consult/appointmentUtils';
 import {
-  doctorConsultFee,
   doctorDisplayName,
   doctorExperience,
-  doctorFeeLabel,
+  doctorFavorite,
   doctorImage,
   doctorLocation,
+  doctorQualification,
   doctorRating,
   doctorSpeciality,
+  favoriteFromToggle,
   getDoctorId,
-  resolveLanguages,
 } from '../consult/doctors';
+import { showSuccessToast } from '../config/key';
+import { requireAuth } from '../services/guestAuth';
+import { toggleFavDoctor } from '../services/consultService';
 
 export default function SuggestedDoctorCard({ item, fallbackSpeciality = 'Ayurveda' }) {
   const navigate = useNavigate();
   const id = getDoctorId(item);
-  const name = doctorDisplayName(item);
+  const name = formatDoctorDisplayName(doctorDisplayName(item));
   const image = doctorImage(item);
-  const fee = doctorConsultFee(item) > 0 ? doctorFeeLabel(item) : '';
   const rating = doctorRating(item);
-  const speciality = doctorSpeciality(item) || fallbackSpeciality;
+  const credential = doctorQualification(item) || doctorSpeciality(item) || fallbackSpeciality;
   const experience = doctorExperience(item);
   const location = doctorLocation(item);
-  const languages = resolveLanguages(item).slice(0, 2);
   const reviewCount = Number(item?.total_reviews || item?.review_count || 0);
   const verified = Boolean(item?.is_verified);
+  const [fav, setFav] = useState(() => doctorFavorite(item));
 
   const openProfile = () => {
     if (id) navigate(`/consult/doctors/${id}`);
   };
 
+  const toggleFav = async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!(await requireAuth('Please login to save favourite doctors'))) return;
+    if (!id) return;
+    const prev = fav;
+    setFav(!prev);
+    try {
+      const res = await toggleFavDoctor(id);
+      if (res?.success === false) {
+        setFav(prev);
+        showSuccessToast(res?.message || 'Failed to update favourite', 'error');
+        return;
+      }
+      const next = favoriteFromToggle(res);
+      if (next !== undefined) setFav(next);
+    } catch {
+      setFav(prev);
+      showSuccessToast('Failed to update favourite status', 'error');
+    }
+  };
+
+  const reviewLabel = reviewCount === 1 ? '1 review' : `${reviewCount} reviews`;
+
   return (
     <article className="am-flip-doc">
-      <div className="am-flip-doc__body">
-        <div className="am-flip-doc__chips">
-          {rating ? (
-            <span className="am-flip-doc__chip">
-              <Star size={12} aria-hidden />
-              {rating}
-              {reviewCount ? <span>({reviewCount})</span> : null}
-            </span>
-          ) : null}
-          {verified ? (
-            <span className="am-flip-doc__chip am-flip-doc__chip--gold">
-              <BadgeCheck size={13} aria-hidden />
-              Verified
-            </span>
-          ) : null}
-        </div>
-
-        <h3 className="am-flip-doc__name">
-          <button type="button" className="am-stretched" onClick={openProfile}>
-            {name}
-          </button>
-        </h3>
-        <p className="am-flip-doc__spec">{speciality}</p>
-
-        {experience || languages.length || location ? (
-          <ul className="am-flip-doc__facts">
-            {experience ? (
-              <li>
-                <BriefcaseMedical size={13} aria-hidden />
-                {experience}
-              </li>
-            ) : null}
-            {languages.length ? (
-              <li>
-                <Languages size={13} aria-hidden />
-                {languages.join(', ')}
-              </li>
-            ) : null}
-            {location ? (
-              <li>
-                <MapPin size={13} aria-hidden />
-                {location}
-              </li>
-            ) : null}
-          </ul>
-        ) : null}
-
-        <div className="am-flip-doc__foot">
-          {fee ? (
-            <p className="am-flip-doc__fee">
-              <strong>{fee}</strong>
-              <span>per consult</span>
-            </p>
-          ) : null}
-          <span className="am-flip-doc__cta">
-            View profile
-            <ArrowRight size={14} aria-hidden />
-          </span>
-        </div>
-      </div>
-
-      <div className="am-flip-doc__photo">
+      <div className="am-flip-doc__media">
         {image ? (
           <img src={image} alt="" loading="lazy" decoding="async" />
         ) : (
@@ -102,7 +69,70 @@ export default function SuggestedDoctorCard({ item, fallbackSpeciality = 'Ayurve
             {name.charAt(0) || 'A'}
           </span>
         )}
+        <div className="am-flip-doc__shade" aria-hidden />
+
+        <div className="am-flip-doc__chips">
+          {rating ? (
+            <span className="am-flip-doc__chip">
+              <Star size={12} aria-hidden fill="currentColor" />
+              {rating}
+              {reviewCount ? <span>({reviewCount})</span> : null}
+            </span>
+          ) : null}
+          {verified ? (
+            <span className="am-flip-doc__chip am-flip-doc__chip--verified">
+              <BadgeCheck size={13} aria-hidden />
+              Verified
+            </span>
+          ) : null}
+        </div>
+
+        <button
+          type="button"
+          className={fav ? 'am-flip-doc__fav is-on' : 'am-flip-doc__fav'}
+          aria-pressed={fav}
+          aria-label={fav ? `Remove ${name} from favourites` : `Save ${name}`}
+          onClick={toggleFav}
+        >
+          <Heart size={16} aria-hidden fill={fav ? 'currentColor' : 'none'} />
+        </button>
+
+        <div className="am-flip-doc__copy">
+          <h3 className="am-flip-doc__name">
+            <button type="button" className="am-stretched" onClick={openProfile}>
+              {name}
+            </button>
+          </h3>
+          {credential ? <p className="am-flip-doc__spec">{credential}</p> : null}
+          {experience || location || rating ? (
+            <ul className="am-flip-doc__facts">
+              {experience ? (
+                <li>
+                  <Briefcase size={13} aria-hidden />
+                  {experience}
+                </li>
+              ) : null}
+              {location ? (
+                <li>
+                  <MapPin size={13} aria-hidden />
+                  {location}
+                </li>
+              ) : null}
+              {rating ? (
+                <li>
+                  <Star size={13} aria-hidden fill="currentColor" />
+                  {rating} rating{reviewCount ? ` · ${reviewLabel}` : ''}
+                </li>
+              ) : null}
+            </ul>
+          ) : null}
+        </div>
       </div>
+
+      <span className="am-flip-doc__cta">
+        View profile
+        <ArrowRight size={14} aria-hidden />
+      </span>
     </article>
   );
 }

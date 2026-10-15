@@ -20,7 +20,7 @@ const isMealDone = (status) => {
   return ['completed', 'complete', 'done', 'logged', 'true', '1'].includes(value);
 };
 
-export default function useActiveDietHome() {
+export default function useActiveDietHome(enabled = true) {
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -87,8 +87,10 @@ export default function useActiveDietHome() {
   }, []);
 
   useEffect(() => {
+    if (!enabled) return undefined;
     refresh();
-  }, [refresh]);
+    return undefined;
+  }, [enabled, refresh]);
 
   return { preview, loading, refresh };
 }

@@ -15,7 +15,7 @@ export function mapRecentDoctor(item) {
   };
 }
 
-export default function useRecentVisitedDoctors() {
+export default function useRecentVisitedDoctors(enabled = true) {
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -43,8 +43,10 @@ export default function useRecentVisitedDoctors() {
   }, []);
 
   useEffect(() => {
+    if (!enabled) return undefined;
     refresh();
-  }, [refresh]);
+    return undefined;
+  }, [enabled, refresh]);
 
   return { doctors, loading, refresh };
 }

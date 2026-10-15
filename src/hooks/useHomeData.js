@@ -24,6 +24,19 @@ const SECTION_LABELS = {
   recently_viewed: 'Recently Viewed',
 };
 
+const flights = new Map();
+const once = (key, fn) => {
+  if (!flights.has(key)) {
+    flights.set(
+      key,
+      Promise.resolve()
+        .then(fn)
+        .finally(() => flights.delete(key)),
+    );
+  }
+  return flights.get(key);
+};
+
 const safe = async (fn, fallback) => {
   try {
     return await fn();
@@ -106,95 +119,134 @@ export default function useHomeData() {
     }
   }, []);
 
-  const loadAll = useCallback(async (isRefresh = false) => {
+  const loadAll = useCallback(async (isRefresh = false, isCancelled = () => false) => {
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
 
-    const cats = await safe(async () => {
+    const load = (key, fn) => (isRefresh ? fn() : once(key, fn));
+    const asBanners = (bannerRes) =>
+      Array.isArray(bannerRes?.data)
+        ? bannerRes.data
+        : Array.isArray(bannerRes)
+          ? bannerRes
+          : [];
+
+    const catsPromise = load('cats', async () => {
       const res = await HomeServices.getHomeCategory();
       const list = normalizeServiceCategories(res?.data ?? res)
         .map(mapServiceCategory)
         .filter((item) => item.id)
         .sort((a, b) => a.sequence - b.sequence);
       return list.length ? list : FALLBACK_SERVICE_CATEGORIES;
-    }, FALLBACK_SERVICE_CATEGORIES);
-    setCategories(cats);
-    const medicineId = getServiceCategoryId(cats, 'medicine');
-
-    const [
-      doctorList,
-      medicines,
-      products,
-      yoga,
-      diet,
-      bannerRes,
-      featured,
-      trending,
-      recentlyViewed,
-      concernsRes,
-    ] = await Promise.all([
-      safe(async () => {
-        const res = await HomeServices.getSuggestedDoctor();
-        return normalizeApiList(res).filter(
-          (item) =>
-            item &&
-            (item.id || item.doctor_id) &&
-            String(item.full_name || item.name || item.doctor_name || '').trim(),
-        );
-      }, []),
-      safe(() => loadSuggestedCatalog('medicines'), []),
-      safe(() => loadSuggestedCatalog('products'), []),
-      safe(async () => {
-        const res = await HomeServices.getYogaSession();
-        return normalizeYogaSessionList(res);
-      }, []),
-      safe(async () => {
-        const res = await HomeServices.getSuggestedDietPlans();
-        if (res?.success === false) return [];
-        return normalizeApiList(res)
-          .map(mapDietPlanForHome)
-          .filter((item) => item.id);
-      }, []),
-      safe(() => getBanners('home'), { data: [] }),
-      safe(() => loadSectionProducts('featured'), []),
-      safe(() => loadSectionProducts('trending'), []),
-      safe(() => loadSectionProducts('recently_viewed'), []),
-      safe(async () => {
-        const res = await ProductServices.getHealthCategories(
-          medicineId ? { service_category_id: medicineId } : undefined,
-        );
-        if (res?.success === false) return [];
-        return normalizeApiList(res)
-          .map(mapProductCategory)
-          .filter((item) => item.id);
-      }, []),
-    ]);
-
-    setDoctors(doctorList);
-    setMedicineProducts(medicines);
-    setStoreProducts(products);
-    setYogaSessions(yoga);
-    setDietProducts(diet);
-    setBanners(
-      Array.isArray(bannerRes?.data)
-        ? bannerRes.data
-        : Array.isArray(bannerRes)
-          ? bannerRes
-          : [],
-    );
-    setSections({
-      featured,
-      trending,
-      recently_viewed: recentlyViewed,
     });
-    setHealthConcerns(concernsRes);
-    await fetchCustomerData();
-    setLoading(false);
-    setRefreshing(false);
+    const doctorsPromise = load('doctors', async () => {
+      const res = await HomeServices.getSuggestedDoctor();
+      return normalizeApiList(res).filter(
+        (item) =>
+          item &&
+          (item.id || item.doctor_id) &&
+          String(item.full_name || item.name || item.doctor_name || '').trim(),
+      );
+    });
+    const medicinesPromise = load('medicines', () => loadSuggestedCatalog('medicines'));
+    const productsPromise = load('products', () => loadSuggestedCatalog('products'));
+    const bannersPromise = load('banners', () => getBanners('home'));
+
+    const apply = (promise, setter) =>
+      promise.then((value) => {
+        if (!isCancelled()) setter(value);
+      });
+
+    catsPromise.then((next) => {
+      if (!isCancelled() && next) setCategories(next);
+    });
+
+    let cats = FALLBACK_SERVICE_CATEGORIES;
+    try {
+      const [nextCategories] = await Promise.all([
+        safe(() => catsPromise, FALLBACK_SERVICE_CATEGORIES),
+        apply(safe(() => doctorsPromise, []), setDoctors),
+        apply(safe(() => medicinesPromise, []), setMedicineProducts),
+        apply(safe(() => productsPromise, []), setStoreProducts),
+        apply(safe(() => bannersPromise, { data: [] }), (bannerRes) =>
+          setBanners(asBanners(bannerRes)),
+        ),
+      ]);
+      cats = nextCategories || FALLBACK_SERVICE_CATEGORIES;
+    } finally {
+      if (!isCancelled()) {
+        if (cats) setCategories(cats);
+        setLoading(false);
+      }
+    }
+
+    if (isCancelled()) return;
+
+    const medicineId = getServiceCategoryId(cats, 'medicine');
+    await Promise.all([
+      apply(
+        safe(
+          () =>
+            load('yoga', async () => {
+              const res = await HomeServices.getYogaSession();
+              return normalizeYogaSessionList(res);
+            }),
+          [],
+        ),
+        setYogaSessions,
+      ),
+      apply(
+        safe(
+          () =>
+            load('diet', async () => {
+              const res = await HomeServices.getSuggestedDietPlans();
+              if (res?.success === false) return [];
+              return normalizeApiList(res)
+                .map(mapDietPlanForHome)
+                .filter((item) => item.id);
+            }),
+          [],
+        ),
+        setDietProducts,
+      ),
+      apply(safe(() => load('featured', () => loadSectionProducts('featured')), []), (featured) =>
+        setSections((prev) => ({ ...prev, featured })),
+      ),
+      apply(safe(() => load('trending', () => loadSectionProducts('trending')), []), (trending) =>
+        setSections((prev) => ({ ...prev, trending })),
+      ),
+      apply(
+        safe(() => load('recent', () => loadSectionProducts('recently_viewed')), []),
+        (recentlyViewed) =>
+          setSections((prev) => ({ ...prev, recently_viewed: recentlyViewed })),
+      ),
+      apply(
+        safe(
+          () =>
+            load('concerns', async () => {
+              const res = await ProductServices.getHealthCategories(
+                medicineId ? { service_category_id: medicineId } : undefined,
+              );
+              if (res?.success === false) return [];
+              return normalizeApiList(res)
+                .map(mapProductCategory)
+                .filter((item) => item.id);
+            }),
+          [],
+        ),
+        setHealthConcerns,
+      ),
+      fetchCustomerData(),
+    ]);
+    if (!isCancelled()) setRefreshing(false);
   }, [fetchCustomerData]);
 
   useEffect(() => {
-    loadAll(false);
+    let cancelled = false;
+    loadAll(false, () => cancelled);
+    return () => {
+      cancelled = true;
+    };
   }, [loadAll]);
 
   return {
