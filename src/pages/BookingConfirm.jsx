@@ -1,6 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CalendarPlus, Check, Copy, Mail, MessageCircle, Share2 } from 'lucide-react';
+import {
+  CalendarDays,
+  CalendarPlus,
+  Check,
+  Clock3,
+  Copy,
+  Mail,
+  MessageCircle,
+  Share2,
+} from 'lucide-react';
 import AppShell from '../components/AppShell';
 import {
   CONSULT_BOOKING_KEY,
@@ -42,10 +51,10 @@ const pick = (...values) => {
 };
 
 const SHARE_OPTIONS = [
-  { id: 'whatsapp', title: 'WhatsApp', icon: MessageCircle },
-  { id: 'message', title: 'Messages', icon: Share2 },
-  { id: 'email', title: 'Email', icon: Mail },
-  { id: 'copy', title: 'Copy', icon: Copy },
+  { id: 'whatsapp', title: 'WhatsApp', icon: MessageCircle, color: '#25D366' },
+  { id: 'message', title: 'Messages', icon: Share2, color: '#0D614E' },
+  { id: 'email', title: 'Email', icon: Mail, color: '#D94841' },
+  { id: 'copy', title: 'Copy details', icon: Copy, color: '#8A6A1F' },
 ];
 
 const bookingCode = (detail) =>
@@ -357,7 +366,7 @@ export default function BookingConfirm() {
 
       <Modal open={shareOpen} onClose={() => setShareOpen(false)} title={T.shareTitle} description={T.shareLede} size="sm">
         <div className="bk-share-preview">
-          <div className="bk-doctor">
+          <div className="bk-share-preview__doctor">
             <span className="bk-doctor__photo" aria-hidden={!booking.doctorImage}>
               {booking.doctorImage ? (
                 <img src={booking.doctorImage} alt="" />
@@ -365,22 +374,51 @@ export default function BookingConfirm() {
                 <span>{booking.doctorName.charAt(0)}</span>
               )}
             </span>
-            <div className="bk-doctor__copy">
+            <div className="bk-share-preview__copy">
               <strong>{booking.doctorName}</strong>
               {booking.specialization ? <p>{booking.specialization}</p> : null}
-              <small>{[dateDisplay, booking.timeRange].filter(Boolean).join(' · ')}</small>
+              {booking.hospitalName ? <small>{booking.hospitalName}</small> : null}
             </div>
           </div>
+          <div className="bk-share-preview__schedule">
+            {dateDisplay ? (
+              <span>
+                <CalendarDays size={16} aria-hidden />
+                {dateDisplay}
+              </span>
+            ) : null}
+            {booking.timeRange ? (
+              <span>
+                <Clock3 size={16} aria-hidden />
+                {booking.timeRange}
+              </span>
+            ) : null}
+          </div>
+          <div className="bk-share-preview__meta">
+            <Badge tone={statusTone}>{statusLabel}</Badge>
+            {booking.bookingId ? (
+              <span>
+                {T.bookingId} {formatAppointmentId(booking.bookingId)}
+              </span>
+            ) : null}
+          </div>
         </div>
+        <p className="bk-share-options__label">Share using</p>
         <div className="bk-share-options">
           {SHARE_OPTIONS.map((item) => {
             const Icon = item.icon;
             return (
-              <button key={item.id} type="button" className="bk-share-option" onClick={() => onShare(item.id)}>
+              <button
+                key={item.id}
+                type="button"
+                className="bk-share-option"
+                style={{ '--bk-share-color': item.color }}
+                onClick={() => onShare(item.id)}
+              >
                 <span className="bk-share-option__icon" aria-hidden>
                   <Icon size={18} />
                 </span>
-                {item.title}
+                <span className="bk-share-option__label">{item.title}</span>
               </button>
             );
           })}
