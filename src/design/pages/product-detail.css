@@ -135,6 +135,15 @@ html:has(.pd-page) {
   display: grid;
   gap: var(--am-space-5);
   align-items: start;
+  padding: var(--am-space-4);
+  border: 1px solid var(--am-line);
+  border-radius: var(--am-radius-xl);
+  background: linear-gradient(
+    180deg,
+    var(--am-surface) 0%,
+    var(--am-surface-muted) 100%
+  );
+  box-shadow: var(--am-shadow-xs);
 }
 
 .pd-main {
@@ -233,24 +242,10 @@ html:has(.pd-page) {
 
 .pd-buy {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: var(--am-space-3);
-  padding: var(--am-space-5);
-  border: 1px solid var(--am-line);
-  border-radius: var(--am-radius-xl);
-  background: linear-gradient(
-    180deg,
-    var(--am-surface) 0%,
-    var(--am-surface-muted) 100%
-  );
-  box-shadow: 0 16px 30px rgba(10, 40, 32, 0.08);
-}
-
-.pd-buy__price {
-  margin: 0;
-  font-size: var(--am-text-2xl);
-  font-weight: var(--am-weight-bold);
-  letter-spacing: -0.02em;
+  padding-top: var(--am-space-4);
+  border-top: 1px solid var(--am-line);
 }
 
 .pd-discovery {
@@ -450,38 +445,16 @@ html:has(.pd-page) {
   gap: var(--am-space-4);
 }
 
-/* Buy box */
+/* Purchase actions share the product details panel. */
 .pd-buy {
-  position: relative;
-  overflow: hidden;
-  gap: var(--am-space-3);
-  padding: var(--am-space-6) var(--am-space-5);
-  background:
-    radial-gradient(
-      80% 60% at 100% 0%,
-      rgba(201, 151, 47, 0.14),
-      transparent 60%
-    ),
-    linear-gradient(180deg, var(--am-surface), var(--am-surface-muted));
-  box-shadow:
-    0 2px 4px rgba(10, 40, 32, 0.05),
-    0 22px 46px rgba(10, 40, 32, 0.14);
-}
-.pd-buy::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--am-primary), var(--am-accent));
-}
-.pd-buy__price {
-  font-size: var(--am-text-2xl);
-  letter-spacing: -0.02em;
+  align-items: stretch;
 }
 .pd-buy .am-btn {
   min-height: 50px;
+  flex: 1 1 160px;
+}
+.pd-buy .am-btn:only-child {
+  flex-basis: 100%;
 }
 
 /* Discovery */
@@ -595,7 +568,7 @@ html:has(.pd-page) {
 }
 
 .pd-buy {
-  padding: var(--am-space-4);
+  padding-top: var(--am-space-4);
 }
 
 .pd-buy .am-btn {
@@ -650,7 +623,7 @@ html:has(.pd-page) {
 
 @media (min-width: 1024px) {
   .pd-layout {
-    grid-template-columns: minmax(0, 1.05fr) minmax(280px, 0.95fr);
+    grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.7fr);
   }
 
   .pd-gallery__main,
@@ -835,7 +808,7 @@ html:has(.pd-page) {
   }
 
   .pd-layout {
-    grid-template-columns: minmax(320px, 0.82fr) minmax(0, 1.18fr);
+    grid-template-columns: minmax(320px, 1fr) minmax(0, 0.8fr);
     gap: var(--am-space-5);
   }
 
@@ -849,7 +822,7 @@ html:has(.pd-page) {
   }
 
   .pd-aside {
-    grid-template-columns: minmax(0, 1fr) minmax(205px, 245px);
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--am-space-4);
   }
 
@@ -874,12 +847,8 @@ html:has(.pd-page) {
   }
 
   .pd-buy {
-    position: sticky;
-    top: calc(var(--am-header-h) + var(--am-space-4));
-    grid-column: 2;
-    grid-row: 1;
-    align-self: start;
-    padding: var(--am-space-3);
+    grid-column: 1 / -1;
+    padding-top: var(--am-space-3);
   }
 
   .pd-buy .am-btn {

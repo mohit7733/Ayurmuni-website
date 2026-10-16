@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
-import { Star, X, ImagePlus, ShieldCheck } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ImagePlus, ShieldCheck, Star, X } from "lucide-react";
+
 import { Button, Modal } from "./ui";
 import { showSuccessToast } from "../config/key";
 import { submitReview } from "../services/reviewService";
+
 import "../design/components/review-modal.css";
 
 const RATING_LABELS = {
@@ -16,6 +18,7 @@ const RATING_LABELS = {
 const MAX_TITLE = 100;
 const MAX_COMMENT = 1000;
 const MAX_IMAGES = 5;
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
 export default function ReviewSubmitModal({
   open,
@@ -24,35 +27,54 @@ export default function ReviewSubmitModal({
   onSuccess,
 }) {
   const [rating, setRating] = useState(0);
-  const [hoverRating, setHoverRating] = useState(0);
   const [title, setTitle] = useState("");
   const [comment, setComment] = useState("");
   const [images, setImages] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
-  const activeRating = hoverRating || rating;
+  const starRefs = useRef([]);
+  const fileInputRef = useRef(null);
 
-  // Create preview URLs once per image (and release them) instead of on every render
+  // Generate preview URLs only when the selected files change.
   const previews = useMemo(
     () => images.map((image) => URL.createObjectURL(image)),
     [images],
   );
-  useEffect(
-    () => () => previews.forEach((url) => URL.revokeObjectURL(url)),
-    [previews],
-  );
+
+  // Release old preview URLs to avoid memory leaks.
+  useEffect(() => {
+    return () => {
+      previews.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [previews]);
 
   const resetForm = () => {
     setRating(0);
-    setHoverRating(0);
     setTitle("");
     setComment("");
     setImages([]);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleClose = () => {
+    if (submitting) return;
+    onClose?.();
   };
 
   const handleSubmit = async () => {
+    if (submitting) return;
+
+    if (!product || !(product.product_id || product.id)) {
+      showSuccessToast("Product information is missing", "error");
+      return;
+    }
+
     if (rating === 0) {
       showSuccessToast("Please select a rating", "error");
+      starRefs.current[0]?.focus();
       return;
     }
 
@@ -68,7 +90,7 @@ export default function ReviewSubmitModal({
 
       formData.append("product_id", product.product_id || product.id);
       formData.append("variant_id", product.variant_id || product.id);
-      formData.append("rating", rating);
+      formData.append("rating", String(rating));
       formData.append("title", title.trim());
       formData.append("comment", comment.trim());
 
@@ -80,75 +102,132 @@ export default function ReviewSubmitModal({
 
       if (result?.success !== false) {
         showSuccessToast("Review submitted successfully!", "success");
+
         resetForm();
         onSuccess?.();
-        onClose();
+        onClose?.();
       } else {
         showSuccessToast(result?.message || "Failed to submit review", "error");
       }
-    } catch (error) {
+    } catch {
       showSuccessToast("Failed to submit review. Please try again.", "error");
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleImageSelect = (e) => {
-    const files = Array.from(e.target.files);
+  const handleImageSelect = (event) => {
+    const input = event.target;
+    const files = Array.from(input.files || []);
 
-    if (images.length + files.length > MAX_IMAGES) {
-      showSuccessToast("You can upload maximum 5 images", "error");
+    // Allow selecting the same file again later.
+    input.value = "";
+
+    if (!files.length) return;
+
+    const validFiles = [];
+
+    files.forEach((file) => {
+      if (!file.type.startsWith("image/")) {
+        showSuccessToast("Only image files are allowed", "error");
+        return;
+      }
+
+      if (file.size > MAX_IMAGE_SIZE) {
+        showSuccessToast("Each image must be smaller than 5MB", "error");
+        return;
+      }
+
+      validFiles.push(file);
+    });
+
+    if (!validFiles.length) return;
+
+    const availableSlots = MAX_IMAGES - images.length;
+
+    if (validFiles.length > availableSlots) {
+      showSuccessToast(
+        `You can upload a maximum of ${MAX_IMAGES} images`,
+        "error",
+      );
+    }
+
+    setImages((current) => [
+      ...current,
+      ...validFiles.slice(0, Math.max(0, MAX_IMAGES - current.length)),
+    ]);
+  };
+
+  const removeImage = (indexToRemove) => {
+    setImages((current) =>
+      current.filter((_, index) => index !== indexToRemove),
+    );
+  };
+
+  const handleStarKeyDown = (event, star) => {
+    let nextRating = star;
+
+    if (event.key === "ArrowRight" || event.key === "ArrowUp") {
+      event.preventDefault();
+      nextRating = Math.min(5, star + 1);
+    } else if (event.key === "ArrowLeft" || event.key === "ArrowDown") {
+      event.preventDefault();
+      nextRating = Math.max(1, star - 1);
+    } else if (event.key === "Home") {
+      event.preventDefault();
+      nextRating = 1;
+    } else if (event.key === "End") {
+      event.preventDefault();
+      nextRating = 5;
+    } else {
       return;
     }
 
-    const validFiles = files.filter((file) => {
-      if (!file.type.startsWith("image/")) {
-        showSuccessToast("Only image files are allowed", "error");
-        return false;
-      }
-
-      if (file.size > 5 * 1024 * 1024) {
-        showSuccessToast("Image size should be less than 5MB", "error");
-        return false;
-      }
-
-      return true;
-    });
-
-    setImages([...images, ...validFiles]);
-
-    // Allows selecting the same image again after removing it
-    e.target.value = "";
+    setRating(nextRating);
+    starRefs.current[nextRating - 1]?.focus();
   };
 
-  const removeImage = (index) => {
-    setImages(images.filter((_, i) => i !== index));
-  };
+  const countClass = (length, max) =>
+    length >= max ? "is-max" : length >= max * 0.9 ? "is-near" : "";
 
-  const countClass = (len, max) =>
-    len >= max ? "is-max" : len >= max * 0.9 ? "is-near" : "";
+  const ratingHint = {
+    1: "Sorry to hear that. What could be better?",
+    2: "Thanks for your feedback. What was missing?",
+    3: "Share what you liked or what could improve.",
+    4: "Great! What did you like most?",
+    5: "Wonderful! What made this product excellent?",
+  };
 
   return (
     <Modal
       open={open}
-      onClose={submitting ? undefined : onClose}
+      onClose={submitting ? undefined : handleClose}
       title="Write a Review"
       size="md"
       dismissible={!submitting}
       footer={
         <>
-          <Button variant="secondary" onClick={onClose} disabled={submitting}>
+          <Button
+            variant="secondary"
+            onClick={handleClose}
+            disabled={submitting}
+          >
             Cancel
           </Button>
 
-          <Button variant="primary" onClick={handleSubmit} loading={submitting}>
+          <Button
+            variant="primary"
+            onClick={handleSubmit}
+            loading={submitting}
+            disabled={submitting}
+          >
             {submitting ? "Submitting..." : "Submit Review"}
           </Button>
         </>
       }
     >
       <div className="rv-form">
-        {/* Product Info */}
+        {/* Product header */}
         <div className="rv-product">
           {product?.image ? (
             <img
@@ -157,16 +236,21 @@ export default function ReviewSubmitModal({
               alt={product.name || "Product"}
             />
           ) : (
-            <div className="rv-product__img rv-product__img--empty">
-              <ImagePlus size={18} />
+            <div
+              className="rv-product__img rv-product__img--empty"
+              aria-hidden="true"
+            >
+              <ImagePlus size={21} />
             </div>
           )}
 
           <div className="rv-product__copy">
-            <span className="rv-eyebrow">Reviewing</span>
+            <span className="rv-eyebrow">REVIEWING</span>
+
             <strong className="rv-product__name">
               {product?.name || "Product"}
             </strong>
+
             {product?.size && (
               <span className="rv-product__size">{product.size}</span>
             )}
@@ -180,45 +264,54 @@ export default function ReviewSubmitModal({
               Your Rating <span className="rv-req">*</span>
             </span>
 
-            {activeRating > 0 && (
-              <span key={activeRating} className="rv-rating__tag">
-                {activeRating}/5 · {RATING_LABELS[activeRating]}
+            {rating > 0 && (
+              <span className="rv-rating__tag" aria-live="polite">
+                {rating}/5 · {RATING_LABELS[rating]}
               </span>
             )}
           </div>
 
-          <div
-            className="rv-stars"
-            role="radiogroup"
-            aria-label="Your rating"
-            onMouseLeave={() => setHoverRating(0)}
-          >
+          <div className="rv-stars" role="radiogroup" aria-label="Your rating">
             {[1, 2, 3, 4, 5].map((star) => (
               <button
                 key={star}
+                ref={(element) => {
+                  starRefs.current[star - 1] = element;
+                }}
                 type="button"
                 role="radio"
                 aria-checked={rating === star}
-                aria-label={`Rate ${star} star${star > 1 ? "s" : ""}`}
-                className={`rv-star${star <= activeRating ? " is-on" : ""}${
-                  star === rating ? " is-picked" : ""
-                }`}
+                aria-label={`${star} star${star > 1 ? "s" : ""}`}
+                tabIndex={
+                  rating === star || (rating === 0 && star === 1) ? 0 : -1
+                }
+                className={[
+                  "rv-star",
+                  star <= rating ? "is-on" : "",
+                  star === rating ? "is-picked" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
                 onClick={() => setRating(star)}
-                onMouseEnter={() => setHoverRating(star)}
-                onFocus={() => setHoverRating(star)}
-                onBlur={() => setHoverRating(0)}
+                onKeyDown={(event) => handleStarKeyDown(event, star)}
               >
-                <Star size={32} strokeWidth={2} />
+                <Star size={23} strokeWidth={1.8} />
               </button>
             ))}
           </div>
+
+          {rating > 0 && (
+            <p className="rv-rating__hint" aria-live="polite">
+              {ratingHint[rating]}
+            </p>
+          )}
         </section>
 
-        {/* Review Title + Review Comment */}
+        {/* Review fields */}
         <div className="rv-fields">
           <div className="rv-field">
             <label htmlFor="review-title" className="rv-label">
-              Review Title <span className="rv-opt">(Optional)</span>
+              Review Title <span className="rv-opt">Optional</span>
             </label>
 
             <input
@@ -226,9 +319,10 @@ export default function ReviewSubmitModal({
               type="text"
               className="rv-input"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(event) => setTitle(event.target.value)}
               placeholder="Sum up your experience"
               maxLength={MAX_TITLE}
+              autoComplete="off"
             />
 
             <p className={`rv-count ${countClass(title.length, MAX_TITLE)}`}>
@@ -245,10 +339,11 @@ export default function ReviewSubmitModal({
               id="review-comment"
               className="rv-input rv-textarea"
               value={comment}
-              onChange={(e) => setComment(e.target.value)}
+              onChange={(event) => setComment(event.target.value)}
               placeholder="Tell us about your experience with this product..."
               rows={4}
               maxLength={MAX_COMMENT}
+              required
             />
 
             <p
@@ -259,12 +354,14 @@ export default function ReviewSubmitModal({
           </div>
         </div>
 
-        {/* Image Upload */}
-        <section className="rv-card">
+        {/* Photo upload */}
+        <section className="rv-card rv-photos">
           <div className="rv-card__head">
-            <span className="rv-label">
-              Add Photos <span className="rv-opt">(Optional)</span>
-            </span>
+            <div className="rv-photos__heading">
+              <span className="rv-label">Add Photos</span>
+              <span className="rv-opt">Optional</span>
+            </div>
+
             <span className="rv-badge">
               {images.length}/{MAX_IMAGES}
             </span>
@@ -273,10 +370,13 @@ export default function ReviewSubmitModal({
           {images.length > 0 && (
             <div className="rv-thumbs">
               {images.map((image, index) => (
-                <div className="rv-thumb" key={`${image.name}-${index}`}>
+                <div
+                  className="rv-thumb"
+                  key={`${image.name}-${image.lastModified}-${index}`}
+                >
                   <img
                     src={previews[index]}
-                    alt={`Review image ${index + 1}`}
+                    alt={`Review attachment ${index + 1}`}
                   />
 
                   <button
@@ -293,20 +393,29 @@ export default function ReviewSubmitModal({
           )}
 
           {images.length < MAX_IMAGES && (
-            <label className="rv-drop">
+            <label className="rv-drop" htmlFor="review-photo-upload">
               <input
+                ref={fileInputRef}
+                id="review-photo-upload"
                 type="file"
                 accept="image/*"
                 multiple
+                aria-label="Upload review photos"
                 onChange={handleImageSelect}
                 className="rv-drop__input"
               />
-              <span className="rv-drop__icon">
-                <ImagePlus size={18} />
+
+              <span className="rv-drop__icon" aria-hidden="true">
+                <ImagePlus size={20} />
               </span>
+
               <span className="rv-drop__text">
-                <strong>Upload Photos</strong>
-                <small>Up to 5 images · Max 5MB each</small>
+                <strong>Upload photos</strong>
+                <small>PNG, JPG or other images · Up to 5MB each</small>
+                <small>
+                  {MAX_IMAGES - images.length} upload
+                  {MAX_IMAGES - images.length === 1 ? "" : "s"} remaining
+                </small>
               </span>
             </label>
           )}
@@ -315,14 +424,15 @@ export default function ReviewSubmitModal({
         {/* Guidelines */}
         <aside className="rv-guide">
           <strong className="rv-guide__title">
-            <ShieldCheck size={15} aria-hidden /> Review Guidelines
+            <ShieldCheck size={17} aria-hidden="true" />
+            Review guidelines
           </strong>
 
           <ul>
-            <li>Be honest and specific about your experience</li>
-            <li>Focus on product quality, effectiveness, and value</li>
-            <li>Avoid promotional content or external links</li>
-            <li>Respect others and avoid offensive language</li>
+            <li>Be honest and specific about your experience.</li>
+            <li>Focus on product quality, effectiveness, and value.</li>
+            <li>Avoid promotional content or external links.</li>
+            <li>Respect others and avoid offensive language.</li>
           </ul>
         </aside>
       </div>

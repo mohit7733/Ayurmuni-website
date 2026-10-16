@@ -1,48 +1,75 @@
 import { useMemo, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
-import PageHeader from '../components/PageHeader';
+import Modal from '../components/ui/Modal';
 import { isReviewVideoUrl } from '../utils/reviewUtils';
 
 export default function ReviewGallery() {
   const location = useLocation();
+  const navigate = useNavigate();
   const images = useMemo(
     () => (Array.isArray(location.state?.images) ? location.state.images.filter(Boolean) : []),
     [location.state],
   );
-  const [index, setIndex] = useState(Number(location.state?.selectedIndex) || 0);
-  const current = images[index] || images[0];
+  const initialIndex = Number(location.state?.selectedIndex);
+  const [index, setIndex] = useState(
+    Number.isInteger(initialIndex) && initialIndex >= 0 && initialIndex < images.length
+      ? initialIndex
+      : 0,
+  );
+  const current = images[index];
+
+  const closeGallery = () => {
+    if (images.length) {
+      navigate(-1);
+      return;
+    }
+    navigate('/reviews', { replace: true });
+  };
 
   return (
-    <AppShell tab="products">
-      <section className="catalog-page review-gallery-page">
-        <PageHeader title="Review media" subtitle={`${images.length} photos & videos`} />
-        {images.length === 0 ? (
-          <p className="empty-copy">No media to show</p>
+    <AppShell tab="products" hideFooter>
+      <Modal
+        open
+        onClose={closeGallery}
+        title="Review media"
+        description={images.length ? `${index + 1} of ${images.length}` : undefined}
+        size="lg"
+        className="review-gallery-modal"
+      >
+        {current ? (
+          <div className="review-gallery-viewer">
+            {images.length > 1 ? (
+              <button
+                type="button"
+                className="review-gallery-viewer__nav"
+                onClick={() => setIndex((index - 1 + images.length) % images.length)}
+                aria-label="Previous review media"
+              >
+                <ChevronLeft aria-hidden />
+              </button>
+            ) : null}
+            {isReviewVideoUrl(current) ? (
+              <video src={current} controls />
+            ) : (
+              <img src={current} alt="Review photo" />
+            )}
+            {images.length > 1 ? (
+              <button
+                type="button"
+                className="review-gallery-viewer__nav"
+                onClick={() => setIndex((index + 1) % images.length)}
+                aria-label="Next review media"
+              >
+                <ChevronRight aria-hidden />
+              </button>
+            ) : null}
+          </div>
         ) : (
-          <>
-            <div className="review-gallery-hero">
-              {isReviewVideoUrl(current) ? (
-                <video src={current} controls />
-              ) : (
-                <img src={current} alt="" />
-              )}
-            </div>
-            <div className="catalog-grid">
-              {images.map((url, mediaIndex) => (
-                <button
-                  key={`${url}-${mediaIndex}`}
-                  type="button"
-                  className={`review-media-tile ${mediaIndex === index ? 'on' : ''}`}
-                  onClick={() => setIndex(mediaIndex)}
-                >
-                  {isReviewVideoUrl(url) ? <video src={url} muted /> : <img src={url} alt="" />}
-                </button>
-              ))}
-            </div>
-          </>
+          <p className="empty-copy">No media to show</p>
         )}
-      </section>
+      </Modal>
     </AppShell>
   );
 }

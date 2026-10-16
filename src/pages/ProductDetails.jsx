@@ -459,8 +459,7 @@ export default function ProductDetails() {
             </div>
 
             <aside className="pd-buy" aria-label="Purchase options">
-              <p className="pd-buy__price">{price}</p>
-              {renderBuyActions(true)}
+              {renderBuyActions()}
             </aside>
           </div>
         </div>
@@ -510,7 +509,7 @@ export default function ProductDetails() {
               trackClassName="pd-review-list"
               itemClassName="pd-review-item"
             >
-              {reviews.slice(0, 5).map((item, index) => {
+              {reviews.slice(0, 4).map((item, index) => {
                 const media = (item.image_urls || []).map((url) => ({
                   url,
                   type: isReviewVideoUrl(url) ? "video" : "image",
