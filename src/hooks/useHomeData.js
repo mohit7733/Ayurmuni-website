@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import * as HomeServices from '../services/homeService';
 import * as ProductServices from '../services/productService';
 import * as ProfileServices from '../services/profileService';
+import { DIET_PLAN_PAGE_SIZE, getDietPlans } from '../services/dietService';
 import { getBanners } from '../services/bannerService';
 import { isAuthenticated, isGuestUser } from '../services/guestAuth';
 import {
@@ -11,6 +12,7 @@ import {
   normalizeApiList,
   normalizeYogaSessionList,
 } from '../home/catalog';
+import { normalizeDietPlanList } from '../diet/utils';
 import { getServiceCategoryId, normalizeServiceCategories } from '../home/serviceCategories';
 
 const SECTION_LABELS = {
@@ -147,9 +149,13 @@ export default function useHomeData() {
         return normalizeYogaSessionList(res);
       }, []),
       safe(async () => {
-        const res = await HomeServices.getSuggestedDietPlans();
+        const res = await getDietPlans({
+          type: 'all',
+          page: 1,
+          page_size: DIET_PLAN_PAGE_SIZE,
+        });
         if (res?.success === false) return [];
-        return normalizeApiList(res)
+        return normalizeDietPlanList(res)
           .map(mapDietPlanForHome)
           .filter((item) => item.id);
       }, []),
