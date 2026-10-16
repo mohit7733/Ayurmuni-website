@@ -58,7 +58,6 @@ export const HOME_COPY = {
   productsTitle: "Suggested products",
   yogaEyebrow: "Move",
   yogaTitle: "Yoga sessions",
-  dietEyebrow: "Nourish",
   dietTitle: "Diet plans",
   packagesTitle: "Consultation Packages",
   labTitle: "Lab",
