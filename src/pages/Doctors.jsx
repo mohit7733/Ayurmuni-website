@@ -43,10 +43,18 @@ const AVAILABILITY = [
 const pad = (value) => String(value).padStart(2, '0');
 const ymd = (date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 
+const doctorExperienceYears = (doctor) => {
+  for (const raw of [doctor?.experience_years, doctor?.experience_display, doctor?.experience]) {
+    const match = String(raw ?? '').match(/\d+(?:\.\d+)?/);
+    if (match) return Number(match[0]);
+  }
+  return null;
+};
+
 const startOfWeek = (date) => {
   const next = new Date(date);
   next.setHours(0, 0, 0, 0);
-  next.setDate(next.getDate() - next.getDay());
+  next.setDate(next.getDate() - ((next.getDay() + 6) % 7));
   return next;
 };
 
@@ -174,7 +182,6 @@ export default function Doctors() {
   const filters = useMemo(
     () => ({
       search: submitted || undefined,
-      experience: experience || undefined,
       specialization: specialization || undefined,
       health_category_id: categoryId || undefined,
       health_disease_id: diseaseId || undefined,
@@ -183,14 +190,14 @@ export default function Doctors() {
       page: 1,
       page_size: 40,
     }),
-    [submitted, experience, specialization, categoryId, diseaseId, dates.from, dates.to],
+    [submitted, specialization, categoryId, diseaseId, dates.from, dates.to],
   );
 
   const loadDoctors = async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
     const res = await getDoctors(filters);
-    setFailed(res?.success === false);
+    setFailed(res?.success === false && res?.status !== 404);
     setDoctors(listDoctors(res));
     setLoading(false);
     setRefreshing(false);
@@ -225,6 +232,15 @@ export default function Doctors() {
       clear: () => setExperience(''),
     },
   ].filter(Boolean);
+
+  const filteredDoctors = useMemo(() => {
+    const minimumYears = Number(experience);
+    if (!minimumYears) return doctors;
+    return doctors.filter((doctor) => {
+      const years = doctorExperienceYears(doctor);
+      return years !== null && years >= minimumYears;
+    });
+  }, [doctors, experience]);
 
   const clearAll = () => {
     setSpecialization('');
@@ -289,7 +305,7 @@ export default function Doctors() {
           <div className="cs-results">
             <div className="cs-toolbar">
               <p className="cs-count" role="status">
-                {loading ? T.loadingDoctors : failed ? '' : T.resultCount(doctors.length)}
+                {loading ? T.loadingDoctors : failed ? '' : T.resultCount(filteredDoctors.length)}
               </p>
               <Button
                 variant="secondary"
@@ -327,7 +343,7 @@ export default function Doctors() {
               <SkeletonGrid variant="doctor" count={6} label={T.loadingDoctors} className="am-doctor-grid" />
             ) : failed ? (
               <ErrorState title={T.errorTitle} description={T.errorText} onRetry={() => loadDoctors(false)} />
-            ) : doctors.length === 0 ? (
+            ) : filteredDoctors.length === 0 ? (
               <EmptyState
                 icon={<SearchX size={28} />}
                 title={hasQuery ? T.emptyFiltered : T.noDoctors}
@@ -349,7 +365,7 @@ export default function Doctors() {
               />
             ) : (
               <ul className="am-doctor-grid">
-                {doctors.map((item) => (
+                {filteredDoctors.map((item) => (
                   <li key={getDoctorId(item) || item.full_name}>
                     <DoctorCard item={item} />
                   </li>
@@ -372,7 +388,7 @@ export default function Doctors() {
               {T.clearAll}
             </Button>
             <Button onClick={() => setFiltersOpen(false)}>
-              {loading ? T.loadingDoctors : T.showResults(doctors.length)}
+              {loading ? T.loadingDoctors : T.showResults(filteredDoctors.length)}
             </Button>
           </>
         }
