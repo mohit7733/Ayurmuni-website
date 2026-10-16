@@ -4,6 +4,42 @@
  * variables; never hard-code raw values in component or page CSS.
  */
 
+/* ---------- Satoshi: headings and CTA buttons ---------- */
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("/fonts/satoshi/Satoshi-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("/fonts/satoshi/Satoshi-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ---------- Gilroy: general application text ---------- */
+
+@font-face {
+  font-family: "Gilroy";
+  src: url("/fonts/gilroy/Gilroy-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Gilroy";
+  src: url("/fonts/gilroy/Gilroy-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   /* ---------- Palette ---------- */
   --am-green-50: #edf6f2;
@@ -95,11 +131,8 @@
   --am-info-soft: #e8f1f8;
 
   /* ---------- Typography ---------- */
-  --am-font-display:
-    "Fraunces", "Iowan Old Style", Georgia, "Times New Roman", serif;
-  --am-font-body:
-    "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans",
-    "Noto Sans Devanagari", sans-serif;
+  --am-font-display: "Satoshi", sans-serif;
+  --am-font-body: "Gilroy", sans-serif;
 
   --am-text-2xs: 0.6875rem;
   --am-text-xs: 0.75rem;
@@ -210,6 +243,46 @@
   --type-title: var(--am-text-2xl);
   --type-body: var(--am-text-body);
   --btn-h: var(--am-control-h);
+}
+
+/* Default font across the application */
+html,
+body {
+  font-family: var(--am-font-body);
+}
+
+body,
+input,
+select,
+textarea {
+  font-family: var(--am-font-body);
+}
+
+/* Headings */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+[class*="heading"],
+[class*="title"] {
+  font-family: var(--am-font-display);
+}
+
+/* All buttons and button-like links */
+button,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+[role="button"],
+a.cta,
+.cta {
+  font-family: var(--am-font-display) !important;
+}
+
+.site-nav {
+  font-family: var(--am-font-display);
 }
 
 @media (min-width: 640px) {
