@@ -214,7 +214,9 @@ export default function SiteHeader() {
                   {Icon ? <Icon size={18} /> : null}
                 </span>
                 {item.label}
-                <span className="site-nav-mobile__arrow" aria-hidden>›</span>
+                <span className="site-nav-mobile__arrow" aria-hidden>
+                  ›
+                </span>
               </NavLink>
             );
           })}
