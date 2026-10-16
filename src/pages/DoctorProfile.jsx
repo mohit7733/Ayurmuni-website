@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   BadgeCheck,
   BriefcaseMedical,
@@ -11,16 +11,16 @@ import {
   RefreshCw,
   Stethoscope,
   Video,
-} from 'lucide-react';
-import AppShell from '../components/AppShell';
-import PageHeader from '../components/PageHeader';
-import ShareButton from '../components/ShareButton';
-import { formatRupee } from '../home/catalog';
-import { getDoctorById, toggleFavDoctor } from '../services/consultService';
-import { getReviews } from '../services/productService';
-import { requireAuth } from '../services/guestAuth';
-import { showSuccessToast } from '../config/key';
-import { formatDoctorDisplayName } from '../consult/appointmentUtils';
+} from "lucide-react";
+import AppShell from "../components/AppShell";
+import PageHeader from "../components/PageHeader";
+import ShareButton from "../components/ShareButton";
+import { formatRupee } from "../home/catalog";
+import { getDoctorById, toggleFavDoctor } from "../services/consultService";
+import { getReviews } from "../services/productService";
+import { requireAuth } from "../services/guestAuth";
+import { showSuccessToast } from "../config/key";
+import { formatDoctorDisplayName } from "../consult/appointmentUtils";
 import {
   doctorConsultFee,
   doctorExperience,
@@ -39,12 +39,12 @@ import {
   resolveConsultationModes,
   resolveLanguages,
   resolveSocialAccounts,
-} from '../consult/doctors';
+} from "../consult/doctors";
 import {
   extractReviewsList,
   isReviewVideoUrl,
   normalizeReviewsForDisplay,
-} from '../utils/reviewUtils';
+} from "../utils/reviewUtils";
 import {
   Badge,
   Button,
@@ -56,16 +56,16 @@ import {
   ReviewCard,
   Skeleton,
   SkeletonText,
-} from '../components/ui';
-import { DOCTOR_PROFILE_COPY as T } from '../content/doctorProfile';
-import '../design/pages/doctor-profile.css';
+} from "../components/ui";
+import { DOCTOR_PROFILE_COPY as T } from "../content/doctorProfile";
+import "../design/pages/doctor-profile.css";
 
 const ChipRow = ({ items, tone }) => {
   if (!items?.length) return null;
   return (
     <ul className="dp-chip-row">
       {items.map((item) => (
-        <li key={item} className={`dp-chip${tone ? ` dp-chip--${tone}` : ''}`}>
+        <li key={item} className={`dp-chip${tone ? ` dp-chip--${tone}` : ""}`}>
           {item}
         </li>
       ))}
@@ -75,7 +75,7 @@ const ChipRow = ({ items, tone }) => {
 
 const openSocial = (url) => {
   const href = /^https?:\/\//i.test(url) ? url : `https://${url}`;
-  window.open(href, '_blank', 'noopener,noreferrer');
+  window.open(href, "_blank", "noopener,noreferrer");
 };
 
 function doctorDisplaySafe(doctor) {
@@ -83,8 +83,8 @@ function doctorDisplaySafe(doctor) {
     doctor?.doctor_name ||
     doctor?.full_name ||
     doctor?.name ||
-    [doctor?.first_name, doctor?.last_name].filter(Boolean).join(' ') ||
-    'Doctor'
+    [doctor?.first_name, doctor?.last_name].filter(Boolean).join(" ") ||
+    "Doctor"
   );
 }
 
@@ -110,7 +110,8 @@ export default function DoctorProfile() {
   const { doctorId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const seeded = location.state?.doctor || location.state?.doctorDetails || null;
+  const seeded =
+    location.state?.doctor || location.state?.doctorDetails || null;
   const [doctor, setDoctor] = useState(seeded);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(!seeded);
@@ -128,12 +129,12 @@ export default function DoctorProfile() {
       try {
         const [docRes, reviewRes] = await Promise.all([
           getDoctorById(doctorId),
-          getReviews({ entity_type: 'doctor', doctor_id: doctorId }),
+          getReviews({ entity_type: "doctor", doctor_id: doctorId }),
         ]);
         const profile = parseDoctor(docRes);
         if (!profile && docRes?.success === false) {
           setFailed(true);
-          showSuccessToast(docRes?.message || 'Doctor not found', 'error');
+          showSuccessToast(docRes?.message || "Doctor not found", "error");
         } else {
           setFailed(false);
         }
@@ -159,18 +160,32 @@ export default function DoctorProfile() {
   const id = getDoctorId(doctor) || doctorId;
   const image = doctorImage(doctor);
   const fee = doctorConsultFee(doctor);
-  const feeLabel = fee ? formatRupee(fee) : '';
-  const about = String(doctor?.bio || doctor?.about || doctor?.description || '')
-    .replace(/\r\n/g, '\n')
+  const feeLabel = fee ? formatRupee(fee) : "";
+  const about = String(
+    doctor?.bio || doctor?.about || doctor?.description || "",
+  )
+    .replace(/\r\n/g, "\n")
     .trim();
   const shouldTruncate = about.length > 160;
-  const aboutText = shouldTruncate && !showFullAbout ? `${about.slice(0, 150)}` : about;
+  const aboutText =
+    shouldTruncate && !showFullAbout ? `${about.slice(0, 150)}` : about;
   const languages = useMemo(() => resolveLanguages(doctor), [doctor]);
-  const specializations = useMemo(() => resolveDoctorSpecializations(doctor), [doctor]);
-  const healthDiseases = useMemo(() => resolveDoctorHealthDiseases(doctor), [doctor]);
-  const consultationModes = useMemo(() => resolveConsultationModes(doctor), [doctor]);
+  const specializations = useMemo(
+    () => resolveDoctorSpecializations(doctor),
+    [doctor],
+  );
+  const healthDiseases = useMemo(
+    () => resolveDoctorHealthDiseases(doctor),
+    [doctor],
+  );
+  const consultationModes = useMemo(
+    () => resolveConsultationModes(doctor),
+    [doctor],
+  );
   const socialAccounts = useMemo(() => resolveSocialAccounts(doctor), [doctor]);
-  const visibleConditions = showAllConditions ? healthDiseases : healthDiseases.slice(0, 6);
+  const visibleConditions = showAllConditions
+    ? healthDiseases
+    : healthDiseases.slice(0, 6);
   const hiddenConditions = Math.max(0, healthDiseases.length - 6);
   const qualification = doctorQualification(doctor);
   const locationLabel = doctorLocation(doctor);
@@ -181,14 +196,15 @@ export default function DoctorProfile() {
   const hasAvailability = Boolean(doctor?.has_availability);
   const slotsCount = Number(doctor?.available_slots_count || 0);
   const earliestDate = formatEarliestDate(doctor?.earliest_available_date);
-  const showAvailability = hasAvailability || slotsCount > 0 || Boolean(earliestDate);
+  const showAvailability =
+    hasAvailability || slotsCount > 0 || Boolean(earliestDate);
   const displayName = formatDoctorDisplayName(doctorDisplaySafe(doctor));
-  const speciality = doctorSpeciality(doctor) || 'Ayurveda';
+  const speciality = doctorSpeciality(doctor) || "Ayurveda";
 
   const toggleFav = async () => {
-    if (!(await requireAuth('Please login to save favourite doctors'))) return;
+    if (!(await requireAuth("Please login to save favourite doctors"))) return;
     if (!id) {
-      showSuccessToast('Doctor unavailable', 'error');
+      showSuccessToast("Doctor unavailable", "error");
       return;
     }
     const prev = fav;
@@ -197,33 +213,37 @@ export default function DoctorProfile() {
       const res = await toggleFavDoctor(id);
       if (res?.success === false) {
         setFav(prev);
-        showSuccessToast(res?.message || 'Failed to update favourite', 'error');
+        showSuccessToast(res?.message || "Failed to update favourite", "error");
         return;
       }
       const next = favoriteFromToggle(res);
       if (next !== undefined) setFav(next);
-      else showSuccessToast(res?.message || 'Favourite updated', 'success');
+      else showSuccessToast(res?.message || "Favourite updated", "success");
     } catch {
       setFav(prev);
-      showSuccessToast('Failed to update favourite status', 'error');
+      showSuccessToast("Failed to update favourite status", "error");
     }
   };
 
   const book = async () => {
-    if (!(await requireAuth('Please login to book an appointment'))) return;
+    if (!(await requireAuth("Please login to book an appointment"))) return;
     if (!id) return;
     navigate(`/consult/doctors/${id}/slots`, { state: { doctor } });
   };
 
   const openSlip = async () => {
-    if (!(await requireAuth('Please login to view the doctor slip'))) return;
+    if (!(await requireAuth("Please login to view the doctor slip"))) return;
     navigate(`/consult/doctors/${id}/slip`);
   };
 
   const headerActions = (
     <>
-      <IconButton label={fav ? T.saved : T.save} pressed={fav} onClick={toggleFav}>
-        <Heart size={18} fill={fav ? 'currentColor' : 'none'} aria-hidden />
+      <IconButton
+        label={fav ? T.saved : T.save}
+        pressed={fav}
+        onClick={toggleFav}
+      >
+        <Heart size={18} fill={fav ? "currentColor" : "none"} aria-hidden />
       </IconButton>
       <ShareButton
         title={`Dr. ${displayName} - Ayurmuni`}
@@ -248,7 +268,11 @@ export default function DoctorProfile() {
     return (
       <AppShell tab="consult">
         <div className="dp-page">
-          <PageHeader title={T.title} backTo="/consult/doctors" actions={headerActions} />
+          <PageHeader
+            title={T.title}
+            backTo="/consult/doctors"
+            actions={headerActions}
+          />
           <ProfileSkeleton />
         </div>
       </AppShell>
@@ -261,14 +285,20 @@ export default function DoctorProfile() {
         <div className="dp-page">
           <PageHeader title={T.title} backTo="/consult/doctors" />
           {failed ? (
-            <ErrorState title={T.notFoundTitle} description={T.notFoundText} onRetry={() => load(false)} />
+            <ErrorState
+              title={T.notFoundTitle}
+              description={T.notFoundText}
+              onRetry={() => load(false)}
+            />
           ) : (
             <EmptyState
               icon={<Stethoscope size={28} />}
               title={T.notFoundTitle}
               description={T.notFoundText}
               action={
-                <Button onClick={() => navigate('/consult/doctors')}>{T.browseAll}</Button>
+                <Button onClick={() => navigate("/consult/doctors")}>
+                  {T.browseAll}
+                </Button>
               }
             />
           )}
@@ -277,12 +307,13 @@ export default function DoctorProfile() {
     );
   }
 
-  const availabilityLine = [
-    slotsCount > 0 ? T.slotsOpen(slotsCount) : null,
-    earliestDate ? T.nextSlot(earliestDate) : null,
-  ]
-    .filter(Boolean)
-    .join(' · ') || T.checkSlots;
+  const availabilityLine =
+    [
+      slotsCount > 0 ? T.slotsOpen(slotsCount) : null,
+      earliestDate ? T.nextSlot(earliestDate) : null,
+    ]
+      .filter(Boolean)
+      .join(" · ") || T.checkSlots;
 
   const bookActions = (
     <>
@@ -317,7 +348,12 @@ export default function DoctorProfile() {
                 <div className="dp-photo">
                   <div className="dp-photo__img" aria-hidden={!image}>
                     {image ? (
-                      <img src={image} alt={displayName} width={112} height={112} />
+                      <img
+                        src={image}
+                        alt={displayName}
+                        width={112}
+                        height={112}
+                      />
                     ) : (
                       <span>{displayName.charAt(0)}</span>
                     )}
@@ -331,12 +367,22 @@ export default function DoctorProfile() {
                 </div>
 
                 <div className="dp-hero__id">
-                  {isVerified ? <Badge tone="success">{T.verified}</Badge> : null}
+                  {isVerified ? (
+                    <Badge tone="success">{T.verified}</Badge>
+                  ) : null}
                   <h1 id="dp-name">{displayName}</h1>
-                  <p className="dp-hero__spec">{speciality}</p>
-                  {qualification ? <p className="dp-hero__qual">{qualification}</p> : null}
+                  {/*<p className="dp-hero__spec">{speciality}</p>*/}
+                  {qualification ? (
+                    <p className="dp-hero__qual">{qualification}</p>
+                  ) : null}
                   <div className="dp-hero__rating">
-                    {ratingValue ? <Rating value={ratingValue} count={reviewCount} size="md" /> : null}
+                    {ratingValue ? (
+                      <Rating
+                        value={ratingValue}
+                        count={reviewCount}
+                        size="md"
+                      />
+                    ) : null}
                   </div>
                   {(experienceLabel || locationLabel) && (
                     <ul className="dp-hero__meta">
@@ -359,11 +405,11 @@ export default function DoctorProfile() {
 
               <ul className="dp-stats" aria-label="Doctor highlights">
                 <li>
-                  <strong>{experienceLabel || '—'}</strong>
+                  <strong>{experienceLabel || "—"}</strong>
                   <span>{T.yearsExp}</span>
                 </li>
                 <li>
-                  <strong>{ratingValue || '—'}</strong>
+                  <strong>{ratingValue || "—"}</strong>
                   <span>{T.rating}</span>
                 </li>
                 <li>
@@ -407,7 +453,9 @@ export default function DoctorProfile() {
               <section className="dp-card" aria-labelledby="dp-treats">
                 <div className="dp-card__head">
                   <h2 id="dp-treats">{T.treats}</h2>
-                  <span className="dp-card__count">{healthDiseases.length}</span>
+                  <span className="dp-card__count">
+                    {healthDiseases.length}
+                  </span>
                 </div>
                 <ChipRow items={visibleConditions} />
                 {hiddenConditions > 0 ? (
@@ -417,7 +465,9 @@ export default function DoctorProfile() {
                       size="sm"
                       onClick={() => setShowAllConditions((open) => !open)}
                     >
-                      {showAllConditions ? T.showLess : T.moreConditions(hiddenConditions)}
+                      {showAllConditions
+                        ? T.showLess
+                        : T.moreConditions(hiddenConditions)}
                     </Button>
                   </div>
                 ) : null}
@@ -453,9 +503,9 @@ export default function DoctorProfile() {
                     variant="ghost"
                     size="sm"
                     onClick={() =>
-                      navigate('/reviews', {
+                      navigate("/reviews", {
                         state: {
-                          entityType: 'doctor',
+                          entityType: "doctor",
                           doctorId: id,
                           reviews,
                         },
@@ -471,18 +521,21 @@ export default function DoctorProfile() {
                   {reviews.slice(0, 3).map((item, index) => {
                     const media = (item.image_urls || []).map((url) => ({
                       url,
-                      type: isReviewVideoUrl(url) ? 'video' : 'image',
+                      type: isReviewVideoUrl(url) ? "video" : "image",
                     }));
                     return (
                       <ReviewCard
                         key={item.id || index}
-                        name={item.patient_name || 'Patient'}
+                        name={item.patient_name || "Patient"}
                         rating={item.rating}
-                        text={item.comment || item.review || item.message || ''}
+                        text={item.comment || item.review || item.message || ""}
                         media={media}
                         onMediaClick={(mediaIndex) =>
-                          navigate('/reviews/gallery', {
-                            state: { images: item.image_urls, selectedIndex: mediaIndex },
+                          navigate("/reviews/gallery", {
+                            state: {
+                              images: item.image_urls,
+                              selectedIndex: mediaIndex,
+                            },
                           })
                         }
                       />
@@ -490,7 +543,11 @@ export default function DoctorProfile() {
                   })}
                 </div>
               ) : (
-                <EmptyState compact title={T.noReviews} description={T.noReviewsText} />
+                <EmptyState
+                  compact
+                  title={T.noReviews}
+                  description={T.noReviewsText}
+                />
               )}
             </section>
 
@@ -501,7 +558,7 @@ export default function DoctorProfile() {
             <div className="dp-fee">
               <div>
                 <p className="dp-fee__label">{T.consultation}</p>
-                <p className="dp-fee__value">{feeLabel || '—'}</p>
+                <p className="dp-fee__value">{feeLabel || "—"}</p>
               </div>
               {consultationModes.length > 0 ? (
                 <div className="dp-fee__mode">
@@ -514,7 +571,7 @@ export default function DoctorProfile() {
             </div>
 
             {showAvailability ? (
-              <div className={`dp-avail${hasAvailability ? ' is-open' : ''}`}>
+              <div className={`dp-avail${hasAvailability ? " is-open" : ""}`}>
                 <span className="dp-avail__icon" aria-hidden>
                   <CalendarClock size={18} />
                 </span>
@@ -546,7 +603,9 @@ export default function DoctorProfile() {
         <div className="dp-sticky__fee">
           <strong>{feeLabel || T.feeFallback}</strong>
           <small>
-            {hasAvailability && slotsCount > 0 ? T.slotsOpen(slotsCount) : T.feeFallback}
+            {hasAvailability && slotsCount > 0
+              ? T.slotsOpen(slotsCount)
+              : T.feeFallback}
           </small>
         </div>
         <Button
