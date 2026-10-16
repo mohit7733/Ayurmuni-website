@@ -771,11 +771,7 @@
   border: 1px solid color-mix(in srgb, var(--am-primary) 24%, transparent);
   border-radius: 20px;
   background:
-    radial-gradient(
-      120% 100% at 100% 0%,
-      var(--am-gold-100),
-      transparent 58%
-    ),
+    radial-gradient(120% 100% at 100% 0%, var(--am-gold-100), transparent 58%),
     linear-gradient(
       145deg,
       var(--am-green-100) 0%,
@@ -1154,6 +1150,26 @@
     transform 240ms var(--am-ease-out),
     box-shadow 240ms var(--am-ease-standard),
     border-color 240ms var(--am-ease-standard);
+}
+.hm-body .hm-diet-card {
+  height: 280px;
+}
+.hm-body .hm-diet-card .am-media-card__img {
+  flex: 0 0 200px;
+  height: 200px;
+  aspect-ratio: auto;
+}
+.hm-body .hm-diet-card .am-media-card__body {
+  box-sizing: border-box;
+  flex: 0 0 180px;
+  min-height: 180px;
+  overflow: hidden;
+}
+.hm-body .hm-diet-card .am-media-card__body h3 button {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 .hm-body .am-media-card:hover,
 .hm-body .am-tile:hover,

@@ -445,6 +445,149 @@ html:has(.pd-page) {
   gap: var(--am-space-4);
 }
 
+.pd-information {
+  display: flex;
+  flex-direction: column;
+  gap: var(--am-space-6);
+  padding: clamp(var(--am-space-5), 4vw, var(--am-space-8));
+  border: 1px solid var(--am-line);
+  border-radius: 24px;
+  background: var(--am-surface);
+  box-shadow: var(--am-shadow-sm);
+}
+
+.pd-information__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--am-space-4);
+  padding-bottom: var(--am-space-5);
+  border-bottom: 1px solid var(--am-line);
+}
+
+.pd-information__heading > div {
+  display: grid;
+  gap: var(--am-space-2);
+}
+
+.pd-information__heading span {
+  color: var(--am-primary);
+  font-size: var(--am-text-xs);
+  font-weight: var(--am-weight-bold);
+  letter-spacing: var(--am-tracking-caps);
+  text-transform: uppercase;
+}
+
+.pd-information__heading h2 {
+  margin: 0;
+  color: var(--am-text);
+  font-size: var(--am-text-2xl, 1.5rem);
+  letter-spacing: var(--am-tracking-display);
+}
+
+.pd-information__heading > svg {
+  box-sizing: content-box;
+  flex: 0 0 auto;
+  padding: var(--am-space-3);
+  border-radius: 50%;
+  color: var(--am-primary);
+  background: var(--am-primary-soft);
+}
+
+.pd-information__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--am-space-4);
+}
+
+.pd-information__card {
+  min-width: 0;
+  padding: var(--am-space-5);
+  border: 1px solid var(--am-line);
+  border-radius: 16px;
+  background: var(--am-surface-muted);
+  transition:
+    border-color var(--am-dur-fast) var(--am-ease-standard),
+    transform var(--am-dur-fast) var(--am-ease-standard);
+}
+
+.pd-information__card:hover {
+  transform: translateY(-2px);
+  border-color: var(--am-line-strong);
+}
+
+.pd-information__card--wide {
+  padding: var(--am-space-6);
+  border-color: var(--am-primary-tint);
+  background:
+    linear-gradient(
+      110deg,
+      var(--am-primary-soft),
+      var(--am-surface) 80%
+    );
+}
+
+.pd-information__card h3 {
+  display: flex;
+  align-items: center;
+  gap: var(--am-space-2);
+  margin: 0 0 var(--am-space-3);
+  color: var(--am-text);
+  font-size: var(--am-text-xs);
+  font-weight: var(--am-weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pd-information__card h3 span {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--am-primary);
+}
+
+.pd-information__card--benefit {
+  border-color: var(--am-gold-100);
+  background: var(--am-accent-soft);
+}
+
+.pd-information__card--benefit h3 span {
+  background: var(--am-accent);
+}
+
+.pd-information__card--caution {
+  border-color: color-mix(in srgb, var(--am-warning) 20%, var(--am-line));
+  background: var(--am-warning-soft);
+}
+
+.pd-information__card--caution h3 span {
+  background: var(--am-warning);
+}
+
+.pd-information__card p {
+  margin: 0;
+  color: var(--am-text-soft);
+  line-height: 1.7;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.pd-information__card ul {
+  display: grid;
+  gap: var(--am-space-2);
+  margin: 0;
+  padding-left: 1.25rem;
+  color: var(--am-text-soft);
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.pd-information__card--wide p,
+.pd-information__card--wide ul {
+  max-width: 78ch;
+}
+
 /* Purchase actions share the product details panel. */
 .pd-buy {
   align-items: stretch;
@@ -857,6 +1000,35 @@ html:has(.pd-page) {
 
   .pd-sticky {
     display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .pd-information__grid {
+    gap: var(--am-space-3);
+  }
+}
+
+@media (max-width: 520px) {
+  .pd-information {
+    gap: var(--am-space-4);
+    padding: var(--am-space-4);
+    border-radius: var(--am-radius-xl);
+  }
+
+  .pd-information__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pd-information__card,
+  .pd-information__card--wide {
+    padding: var(--am-space-4);
+  }
+
+  .pd-information__heading > svg {
+    width: 20px;
+    height: 20px;
+    padding: var(--am-space-2);
   }
 }
 
