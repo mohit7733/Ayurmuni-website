@@ -72,6 +72,30 @@ const galleryFromProduct = (product, variant) => {
   return urls;
 };
 
+const formatProductDetail = (value) => {
+  if (value === null || value === undefined) return "";
+  if (Array.isArray(value)) {
+    return value.map(formatProductDetail).filter(Boolean).join(", ");
+  }
+  if (typeof value === "object") {
+    const displayValue =
+      value.name ??
+      value.title ??
+      value.label ??
+      value.ingredient ??
+      value.composition ??
+      value.value ??
+      value.description;
+    return displayValue !== undefined
+      ? formatProductDetail(displayValue)
+      : Object.values(value)
+          .map(formatProductDetail)
+          .filter(Boolean)
+          .join(", ");
+  }
+  return String(value).trim();
+};
+
 export default function ProductDetails() {
   const { variantId } = useParams();
   const navigate = useNavigate();
@@ -141,6 +165,69 @@ export default function ProductDetails() {
   }, [product, variantId, variants, defaultVariant]);
 
   const active = selected || defaultVariant || product;
+  const productInformation = [
+    {
+      key: "full_description",
+      label: T.fullDescription,
+      value:
+        product?.full_description ||
+        active?.full_description ||
+        product?.description ||
+        active?.description,
+      wide: true,
+    },
+    {
+      key: "benifits",
+      label: T.benefits,
+      value:
+        product?.benifits ||
+        active?.benifits ||
+        product?.benefits ||
+        active?.benefits,
+    },
+    {
+      key: "brand_name",
+      label: T.brandName,
+      value: product?.brand_name || active?.brand_name,
+    },
+    {
+      key: "compositions",
+      label: T.compositions,
+      value: product?.compositions || active?.compositions,
+    },
+    {
+      key: "dosages",
+      label: T.dosages,
+      value: product?.dosages || active?.dosages,
+    },
+    {
+      key: "how_to_use",
+      label: T.howToUse,
+      value: product?.how_to_use || active?.how_to_use,
+    },
+    {
+      key: "manufacturer",
+      label: T.manufacturer,
+      value: product?.manufacturer || active?.manufacturer,
+    },
+    {
+      key: "safety_information",
+      label: T.safetyInformation,
+      value: product?.safety_information || active?.safety_information,
+    },
+    {
+      key: "side_effects",
+      label: T.sideEffects,
+      value: product?.side_effects || active?.side_effects,
+    },
+    {
+      key: "delivery_expection",
+      label: T.deliveryExpection,
+      value: product?.delivery_expection || active?.delivery_expection,
+    },
+  ]
+    .map((item) => ({ ...item, value: formatProductDetail(item.value) }))
+    .filter((item) => item.value);
   const cartVariantId = String(
     active?.id ?? active?.variant_id ?? variantId ?? "",
   ).trim();
@@ -441,20 +528,6 @@ export default function ProductDetails() {
                 </div>
               </div>
 
-              {product?.description ? (
-                <div className="pd-card">
-                  <h2>{T.description}</h2>
-                  <p>{product.description}</p>
-                </div>
-              ) : null}
-
-              {product?.benefits ? (
-                <div className="pd-card">
-                  <h2>{T.benefits}</h2>
-                  <p>{product.benefits}</p>
-                </div>
-              ) : null}
-
               <Disclaimer />
             </div>
 
@@ -463,6 +536,59 @@ export default function ProductDetails() {
             </aside>
           </div>
         </div>
+
+        {productInformation.length > 0 ? (
+          <section
+            className="pd-information"
+            aria-labelledby="pd-information-title"
+          >
+            <div className="pd-information__heading">
+              <div>
+                <span>{T.productInformationEyebrow}</span>
+                <h2 id="pd-information-title">{T.productInformation}</h2>
+              </div>
+              <Leaf size={28} aria-hidden="true" />
+            </div>
+            <div className="pd-information__grid">
+              {productInformation.map((item) => {
+                const lines = item.value
+                  .split(/\r?\n/)
+                  .map((line) => line.trim().replace(/^(?:[-*•]\s*)+/, ""))
+                  .filter(Boolean);
+
+                return (
+                  <article
+                    key={item.key}
+                    className={[
+                      "pd-information__card",
+                      item.wide && "pd-information__card--wide",
+                      item.key === "benifits" && "pd-information__card--benefit",
+                      (item.key === "safety_information" ||
+                        item.key === "side_effects") &&
+                        "pd-information__card--caution",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                  >
+                    <h3>
+                      <span aria-hidden="true" />
+                      {item.label}
+                    </h3>
+                    {lines.length > 1 ? (
+                      <ul>
+                        {lines.map((line, index) => (
+                          <li key={`${item.key}-${index}`}>{line}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>{item.value}</p>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        ) : null}
 
         <section className="pd-reviews" aria-labelledby="pd-reviews-title">
           <SectionHeader
