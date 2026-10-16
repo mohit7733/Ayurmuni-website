@@ -981,7 +981,6 @@ export default function Home() {
             >
               <SectionHeader
                 id="hm-diet-title"
-                eyebrow={T.dietEyebrow}
                 title={T.dietTitle}
                 action={
                   <ViewAll
@@ -990,10 +989,11 @@ export default function Home() {
                   />
                 }
               />
-              <Rail label={T.dietTitle}>
+              <AutoScrollRail label={T.dietTitle}>
                 {dietProducts.map((item) => (
                   <RailItem key={item.id} size="wide">
                     <MediaCard
+                      className="hm-diet-card"
                       image={item.thumbnail_url}
                       title={item.title}
                       subtitle={item.short_description}
@@ -1004,7 +1004,7 @@ export default function Home() {
                     />
                   </RailItem>
                 ))}
-              </Rail>
+              </AutoScrollRail>
             </Reveal>
           ) : null}
 
