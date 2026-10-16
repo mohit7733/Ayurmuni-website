@@ -2296,18 +2296,34 @@
   background: var(--am-surface-muted);
   color: var(--am-text);
   padding-bottom: 24px;
+  --prakriti-w: min(1200px, calc(100% - 32px));
 }
 
+/* Footer button matches too */
+.prakriti-page .policy-footer {
+  width: var(--prakriti-w);
+  max-width: none;
+  margin: 20px auto 0;
+}
+
+/* Prakriti heading — blend seamlessly into the page */
 .prakriti-head {
+  background: transparent;
+  border-bottom: none;
+  box-shadow: none;
+
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+
+  position: relative;
   top: 0;
-  min-height: 68px;
-  grid-template-columns: 44px minmax(0, 1fr) auto;
-  padding: 12px max(24px, calc((100% - 1200px) / 2));
-  border-bottom-color: #e1ece7;
+
+  width: 100%;
+  margin: 0;
 }
 
+/* Keep the heading clean and aligned */
 .prakriti-head h1 {
-  margin: 0;
   color: var(--am-text);
   text-align: center;
   font-size: 18px;
@@ -2320,6 +2336,21 @@
   display: block;
   width: 42px;
   height: 42px;
+}
+
+.prakriti-head,
+.prakriti-head.policy-head {
+  position: relative;
+  top: 0;
+  width: var(--prakriti-w);
+  max-width: none;
+  margin: 0 auto;
+  padding: 16px 0 12px;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .empty-prakriti {
@@ -2874,24 +2905,22 @@
 
 @media (min-width: 1024px) {
   .prakriti-content {
-    width: min(1200px, calc(100% - 32px));
-    margin: 20px auto 0;
-
-    display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    width: var(--prakriti-w);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
     gap: 16px;
   }
 
   .prakriti-hero {
-    grid-column: span 3;
     max-width: none;
     margin: 0;
   }
 
   .prakriti-body {
-    display: contents;
+    width: 100%;
+    margin: 0;
   }
-
   .dosha-card {
     grid-column: span 3;
   }
@@ -5285,101 +5314,119 @@ button.checkout-item {
   display: block;
 }
 
+/* Yoga sessions grid */
 .yoga-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+  align-items: stretch;
 }
 
+/* Yoga session card */
 .yoga-row {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  padding: 12px;
   text-align: left;
+  color: inherit;
   background: #fff;
   border: 1px solid var(--am-line);
   border-radius: 16px;
-  padding: 10px;
-  color: inherit;
+  overflow: hidden;
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
 }
 
+.yoga-row:hover {
+  transform: translateY(-3px);
+  border-color: var(--am-primary);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 7%);
+}
+
+.yoga-row:focus-visible {
+  outline: 2px solid var(--am-primary);
+  outline-offset: 3px;
+}
+
+/* Thumbnail */
 .yoga-thumb {
   position: relative;
-  width: 92px;
-  height: 92px;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
   flex-shrink: 0;
-  border-radius: 12px;
   overflow: hidden;
+  border-radius: 11px;
   background: var(--am-bg);
 }
 
 .yoga-thumb img,
 .yoga-thumb video {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
+/* Poster stays over the video */
 .yoga-thumb-poster {
   position: absolute;
   inset: 0;
   z-index: 0;
 }
 
-.yoga-play,
-.yoga-row-icon {
+/* Centered play indicator */
+.yoga-play {
   position: absolute;
-  right: 6px;
-  bottom: 6px;
-  width: 22px;
-  height: 22px;
-  border-radius: 999px;
-  background: rgba(13, 97, 78, 0.92);
-  color: #fff;
-  font-size: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  inset: 0;
   z-index: 1;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 20px;
+  text-shadow: 0 2px 8px rgb(0 0 0 / 55%);
+  pointer-events: none;
 }
 
-.yoga-row-icon {
-  position: static;
-  width: 34px;
-  height: 34px;
-  flex-shrink: 0;
-  background: var(--am-primary-soft);
-  color: var(--am-primary);
-  font-size: 12px;
-}
-
+/* Card text */
 .yoga-row-copy {
+  display: flex;
+  flex-direction: column;
   flex: 1;
   min-width: 0;
+  padding: 14px 2px 4px;
 }
 
+/* Session title: reserve space for two lines */
 .yoga-row-copy strong {
   display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  min-height: 2em;
   overflow: hidden;
   color: var(--am-primary-strong);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
+/* Difficulty and duration */
 .yoga-row-copy small {
   display: block;
-  margin-top: 2px;
+  min-height: 10px;
   color: var(--am-primary);
+  font-size: 12px;
   font-weight: 600;
-}
-
-.yoga-row-copy p {
-  margin: 4px 0 0;
-  color: var(--am-text-subtle);
-  font-size: 13px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 18px;
 }
 
 .yoga-player {
@@ -9079,4 +9126,173 @@ button.rx-file-preview {
 .slip-footer small {
   display: block;
   color: var(--am-text-subtle);
+}
+
+/* ===== Prakriti: enhanced header ===== */
+.prakriti-head,
+.prakriti-head.policy-head {
+  position: relative;
+  top: 0;
+  width: var(--prakriti-w);
+  margin: 16px auto 16px;
+  padding: 14px 16px;
+  min-height: 72px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(13, 97, 78, 0.12), transparent 45%),
+    linear-gradient(135deg, #ffffff 0%, #f1f8f5 100%);
+  border: 1px solid #d7e9e2;
+  border-radius: 20px;
+  box-shadow: 0 6px 20px rgba(13, 97, 78, 0.08);
+}
+
+/* gold accent line along the bottom, ties in with the hero */
+.prakriti-head::after {
+  content: "";
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 0;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(
+    90deg,
+    var(--am-primary),
+    #d4af37 60%,
+    transparent
+  );
+}
+
+.prakriti-head h1 {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.prakriti-head h1::after {
+  content: "Your Ayurvedic body constitution";
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--am-primary);
+  opacity: 0.8;
+}
+
+.prakriti-head .onboard-back {
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--am-primary), #14876a);
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(13, 97, 78, 0.25);
+}
+
+.prakriti-head .onboard-back:hover {
+  background: linear-gradient(135deg, #0b715b, #1a9a7a);
+  transform: translateX(-2px);
+}
+
+.prakriti-head > button:last-child {
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 18px;
+  background: var(--am-primary-soft);
+  color: var(--am-primary);
+  box-shadow: inset 0 0 0 1px var(--am-primary-tint);
+}
+
+.prakriti-head > button:last-child:hover {
+  background: var(--am-primary);
+  color: #fff;
+}
+
+/* ===== Prakriti: 2 cards per row ===== */
+.prakriti-content,
+.prakriti-page .prakriti-content {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  width: var(--prakriti-w);
+  margin: 0 auto;
+}
+
+/* children of .prakriti-body join the same grid */
+.prakriti-body {
+  display: contents;
+}
+
+.prakriti-hero {
+  grid-column: 1 / -1;
+}
+
+.dosha-card,
+.essence-card,
+.guide-card {
+  grid-column: span 1;
+  min-width: 0;
+}
+
+.secondary-row {
+  grid-column: 1 / -1;
+}
+
+/* ===== Prakriti: hero + essence share row 1 ===== */
+.prakriti-hero {
+  order: 1;
+  grid-column: span 1;
+}
+.essence-card {
+  order: 2;
+  grid-column: span 1;
+}
+.dosha-card {
+  order: 3;
+  grid-column: 1 / -1;
+}
+.guide-card.good {
+  order: 4;
+}
+.guide-card.caution {
+  order: 5;
+}
+.secondary-row {
+  order: 6;
+  grid-column: 1 / -1;
+}
+
+/* hero fills its half: copy left, image right, vertically centred */
+.prakriti-hero {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  margin: 0;
+  padding: 26px;
+}
+
+.hero-main {
+  flex: 1;
+  margin-top: 20px;
+  align-items: center;
+}
+
+.hero-main img,
+.hero-fallback {
+  width: 132px;
+  height: 132px;
+}
+
+/* essence card matches hero height and keeps text readable */
+.essence-card {
+  min-height: 0;
+  padding: 26px;
+  justify-content: center;
+}
+
+.essence-card h3 {
+  font-size: 24px;
 }
