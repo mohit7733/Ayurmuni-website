@@ -1,17 +1,19 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, FileUp, Search, ShoppingBag } from 'lucide-react';
+import { BadgeCheck, Leaf, LockKeyhole, Pill, Search, ShoppingBag } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import BannerCarousel from '../components/BannerCarousel';
 import ProductCard from '../components/ProductCard';
+import { DietPlanCard, SectionHead, ServiceHero, ViewAll } from '../components/ServiceHome';
 import { getBanners } from '../services/bannerService';
 import {
+  formatRupee,
   getBannerImageUri,
   mapProductCategory,
   normalizeApiList,
   resolveImageUrl,
 } from '../home/catalog';
-import { getServiceCategoryId } from '../home/serviceCategories';
+import { getServiceCategoryId, resolveBannerNavigation } from '../home/serviceCategories';
 import useDashboardCategories from '../hooks/useDashboardCategories';
 import useCategoryProducts from '../hooks/useCategoryProducts';
 import { useCart } from '../hooks/useCart';
@@ -19,31 +21,29 @@ import { getHealthCategories } from '../services/productService';
 import { getBrands, listBrands, mapBrandItem } from '../services/medicineService';
 import { getOrders, normalizeOrdersList } from '../services/orderService';
 import { mapOrdersToRecentProducts } from '../profile/map';
-import { requireAuth } from '../services/guestAuth';
 import {
   Button,
-  Disclaimer,
+  ConcernCarousel,
   EmptyState,
-  MediaCard,
   Rail,
   RailItem,
   RailSkeleton,
   Reveal,
-  SearchField,
-  SectionHeader,
   SkeletonGrid,
   Tile,
-  TileGrid,
-  ConcernCarousel,
 } from '../components/ui';
-import { STORE_COPY as T } from '../content/store';
-import '../design/pages/store.css';
+import { HOME_COPY as H } from '../content/home';
+
+const TRUST = [
+  { icon: Leaf, label: H.trustAuthentic },
+  { icon: LockKeyhole, label: H.trustPayments },
+  { icon: BadgeCheck, label: 'Doctor-reviewed formulas' },
+];
 
 export default function Medicines() {
   const navigate = useNavigate();
   const { itemCount } = useCart();
-  const { categories: dashboardCategories, loading: homeLoading } =
-    useDashboardCategories();
+  const { categories: dashboardCategories, loading: homeLoading } = useDashboardCategories();
   const medicineCategoryId = useMemo(
     () => getServiceCategoryId(dashboardCategories, 'medicine'),
     [dashboardCategories],
@@ -52,22 +52,18 @@ export default function Medicines() {
     () => (medicineCategoryId ? { service_category_id: medicineCategoryId } : {}),
     [medicineCategoryId],
   );
-  const {
-    products,
-    loading,
-    loadingMore,
-    hasMore,
-    loadMore,
-  } = useCategoryProducts(productFilter, [], {
-    enabled: Boolean(medicineCategoryId) || !homeLoading,
-  });
+  const { products, loading, loadingMore, hasMore, loadMore } = useCategoryProducts(
+    productFilter,
+    [],
+    { enabled: Boolean(medicineCategoryId) || !homeLoading },
+  );
 
   const [banners, setBanners] = useState([]);
   const [concerns, setConcerns] = useState([]);
   const [brands, setBrands] = useState([]);
   const [recent, setRecent] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const moreRef = useRef(null);
 
   useEffect(() => {
     let alive = true;
@@ -116,232 +112,211 @@ export default function Medicines() {
     };
   }, []);
 
+  useEffect(() => {
+    const node = moreRef.current;
+    if (!node || !hasMore) return undefined;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) loadMore();
+      },
+      { rootMargin: '240px' },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasMore, loadMore, products.length]);
+
   const showSkeleton = loading && products.length === 0;
   const concernQuery = medicineCategoryId ? `&service=${medicineCategoryId}` : '';
+  const concernBrowse = `/products/category?mode=health&name=${encodeURIComponent(
+    'Shop by Concern',
+  )}${concernQuery}`;
 
-  const goSearch = (value) => {
-    const query = String(value || search || '').trim();
-    navigate(`/search?mode=health${query ? `&q=${encodeURIComponent(query)}` : ''}`);
+  const openBanner = (item) => {
+    const target = resolveBannerNavigation(item);
+    if (!target) return;
+    if (target.external) {
+      window.open(target.href, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    navigate(target.path);
   };
 
   return (
     <AppShell tab="medicines">
-      <div className="st-page">
-        <section className="st-hero" aria-labelledby="st-med-title">
-          <div className="st-hero__copy">
-            <p className="am-eyebrow">Pharmacy</p>
-            <h1 id="st-med-title">{T.medicinesTitle}</h1>
-            <p className="st-hero__lede">{T.medicinesLede}</p>
-          </div>
-          <div className="st-hero__row">
-            <SearchField
-              value={search}
-              onChange={setSearch}
-              onSubmit={goSearch}
-              placeholder={T.medicinesSearch}
-              label={T.medicinesSearch}
-            />
+      <div className="hm-page svc-page">
+        <ServiceHero
+          id="med-hero"
+          eyebrow={H.trustAuthentic}
+          title="Shop"
+          accent="medicines."
+          lede="Authentic Ayurvedic medicines, chosen for everyday care and delivered to your door."
+          trust={TRUST}
+        >
+          <div className="hm-hero__ctas">
+            <button type="button" className="hm-search" onClick={() => navigate('/search')}>
+              <Search size={18} aria-hidden />
+              <span>{H.searchPlaceholder}</span>
+            </button>
             <Button
               variant="secondary"
+              size="lg"
+              className="hm-hero__ghost"
               onClick={() => navigate('/cart')}
-              leadingIcon={<ShoppingBag size={18} aria-hidden />}
+              leadingIcon={<ShoppingBag size={16} aria-hidden />}
             >
-              {T.cart}
-              {itemCount ? ` (${itemCount})` : ''}
+              Cart{itemCount ? ` (${itemCount > 99 ? '99+' : itemCount})` : ''}
             </Button>
           </div>
-        </section>
+        </ServiceHero>
 
-        <div className="st-actions">
-          <button
-            type="button"
-            className="st-action st-action--accent"
-            onClick={async () => {
-              if (!(await requireAuth('Please login to upload a prescription'))) return;
-              navigate('/medicines/prescription');
-            }}
-          >
-            <span className="st-action__icon" aria-hidden>
-              <FileUp size={20} />
-            </span>
-            <span className="st-action__copy">
-              <strong>{T.rxTitle}</strong>
-              <small>{T.rxText}</small>
-            </span>
-          </button>
-          <button
-            type="button"
-            className="st-action"
-            onClick={() => navigate('/search?mode=health')}
-          >
-            <span className="st-action__icon" aria-hidden>
-              <Search size={20} />
-            </span>
-            <span className="st-action__copy">
-              <strong>{T.browseTitle}</strong>
-              <small>{T.browseText}</small>
-            </span>
-          </button>
-        </div>
-
-        {showSkeleton ? (
-          <SkeletonGrid count={6} className="am-product-grid" label="Loading medicines" />
-        ) : (
-          <>
-            <BannerCarousel items={banners} interval={4000} />
-
-            {ordersLoading || recent.length > 0 ? (
-              <Reveal as="section" className="st-section" aria-labelledby="st-med-recent">
-                <SectionHeader
-                  id="st-med-recent"
-                  title={T.recentOrders}
-                  action={
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => navigate('/profile/orders')}
-                      trailingIcon={<ArrowRight size={16} aria-hidden />}
-                    >
-                      {T.viewHistory}
-                    </Button>
-                  }
+        <div className="hm-body">
+          {showSkeleton ? (
+            <SkeletonGrid count={8} className="svc-catalog" label="Loading medicines" />
+          ) : (
+            <>
+              {banners.length ? (
+                <BannerCarousel
+                  items={banners}
+                  interval={6000}
+                  onSelect={openBanner}
+                  copy={{
+                    label: H.offersLabel,
+                    open: H.openOffer,
+                    of: H.of,
+                    show: H.showOffer,
+                    pause: H.pauseOffers,
+                    play: H.playOffers,
+                  }}
                 />
-                {ordersLoading && recent.length === 0 ? (
-                  <RailSkeleton count={4} size="wide" />
-                ) : (
-                  <Rail label={T.recentOrders}>
-                    {recent.map((item) => (
-                      <RailItem key={`${item.id}-${item.variantId}`} size="wide">
-                        <MediaCard
-                          image={item.image}
-                          title={item.name}
-                          subtitle={
-                            item.lastOrdered ? `Ordered ${item.lastOrdered}` : 'Recent order'
-                          }
-                          onClick={() =>
-                            item.variantId && navigate(`/products/${item.variantId}`)
-                          }
-                        />
-                      </RailItem>
-                    ))}
-                  </Rail>
-                )}
-              </Reveal>
-            ) : null}
+              ) : null}
 
-            {concerns.length > 0 ? (
-              <Reveal as="section" className="st-section" aria-labelledby="st-concerns">
-                <SectionHeader
-                  id="st-concerns"
-                  title={T.shopByConcern}
-                  description={T.shopByConcernText}
-                  action={
-                    concerns.length > 1 ? (
-                      <Button
-                        variant="ghost"
-                        size="sm"
+              {ordersLoading || recent.length > 0 ? (
+                <div className="hm-doctor-row">
+                  <Reveal as="section" className="hm-section" aria-labelledby="med-recent">
+                    <SectionHead
+                      id="med-recent"
+                      title="Recent orders"
+                      description="Medicines you ordered recently."
+                      action={<ViewAll label="Recent orders" onClick={() => navigate('/profile/orders')} />}
+                    />
+                    {ordersLoading && recent.length === 0 ? (
+                      <RailSkeleton count={4} />
+                    ) : (
+                      <Rail label="Recent orders">
+                        {recent.map((item) => (
+                          <RailItem key={`${item.id}-${item.variantId}`}>
+                            <DietPlanCard
+                              item={{
+                                title: item.name,
+                                thumbnail_url: item.image,
+                                season: item.lastOrdered ? `Ordered ${item.lastOrdered}` : 'Recent order',
+                                prakriti: formatRupee(item.price, { decimals: 0 }),
+                              }}
+                              onClick={() => item.variantId && navigate(`/products/${item.variantId}`)}
+                            />
+                          </RailItem>
+                        ))}
+                      </Rail>
+                    )}
+                  </Reveal>
+                </div>
+              ) : null}
+
+              {concerns.length > 0 ? (
+                <Reveal as="section" className="hm-section hm-panel hm-concerns-panel" aria-labelledby="med-concerns">
+                  <SectionHead
+                    id="med-concerns"
+                    title={H.concernsTitle}
+                    description="Shop remedies for the concern you want to improve."
+                    action={
+                      concerns.length > 1 ? (
+                        <ViewAll label={H.concernsTitle} onClick={() => navigate(concernBrowse)} />
+                      ) : null
+                    }
+                  />
+                  <ConcernCarousel label={H.concernsTitle}>
+                    {concerns.map((item) => (
+                      <Tile
+                        cutout
+                        key={item.id}
+                        image={item.image_url}
+                        icon={Pill}
+                        label={item.name}
                         onClick={() =>
                           navigate(
-                            `/products/category?mode=health&name=${encodeURIComponent(
-                              'Shop by Concern',
+                            `/products/category?mode=health&category=${item.id}&name=${encodeURIComponent(
+                              item.name,
                             )}${concernQuery}`,
                           )
                         }
-                        trailingIcon={<ArrowRight size={16} aria-hidden />}
-                      >
-                        {T.viewAll}
-                      </Button>
-                    ) : null
-                  }
-                />
-                <ConcernCarousel label={T.shopByConcern}>
-                  {concerns.map((item) => (
-                    <Tile
-                      cutout
-                      key={item.id}
-                      image={item.image_url}
-                      label={item.name}
-                      onClick={() =>
-                        navigate(
-                          `/products/category?mode=health&category=${item.id}&name=${encodeURIComponent(
-                            item.name,
-                          )}${concernQuery}`,
-                        )
-                      }
-                    />
-                  ))}
-                </ConcernCarousel>
-              </Reveal>
-            ) : null}
-
-            {brands.length > 0 ? (
-              <Reveal as="section" className="st-section" aria-labelledby="st-brands">
-                <SectionHeader id="st-brands" title={T.trustedBrands} />
-                <TileGrid label={T.trustedBrands}>
-                  {brands.map((item) => (
-                    <Tile
-                      key={item.id}
-                      image={item.image_url || resolveImageUrl(item)}
-                      label={item.name}
-                      onClick={() =>
-                        navigate(
-                          `/products/category?mode=product&brand=${item.id}&name=${encodeURIComponent(
-                            item.name,
-                          )}${concernQuery}`,
-                        )
-                      }
-                    />
-                  ))}
-                </TileGrid>
-              </Reveal>
-            ) : null}
-
-            <section className="st-section" aria-labelledby="st-all-med">
-              <SectionHeader
-                id="st-all-med"
-                title={T.allMedicines}
-                action={
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      navigate(
-                        `/products/category?mode=health&name=${encodeURIComponent(
-                          'Shop by Concern',
-                        )}${concernQuery}`,
-                      )
-                    }
-                    trailingIcon={<ArrowRight size={16} aria-hidden />}
-                  >
-                    {T.viewAll}
-                  </Button>
-                }
-              />
-              {products.length === 0 ? (
-                <EmptyState title={T.noMedicines} description={T.noMedicinesText} />
-              ) : (
-                <ul className="am-product-grid">
-                  {products.map((item) => (
-                    <li key={item.variant_id || item.id}>
-                      <ProductCard item={item} />
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {hasMore ? (
-                <div className="st-more">
-                  <Button variant="secondary" loading={loadingMore} onClick={loadMore}>
-                    {loadingMore ? T.loadingMore : T.loadMore}
-                  </Button>
-                </div>
+                      />
+                    ))}
+                  </ConcernCarousel>
+                </Reveal>
               ) : null}
-            </section>
 
-            <footer className="st-foot">
-              <Disclaimer variant="banner" />
-            </footer>
-          </>
-        )}
+              {brands.length > 0 ? (
+                <Reveal as="section" className="hm-section hm-panel hm-brands-panel" aria-labelledby="med-brands">
+                  <SectionHead
+                    id="med-brands"
+                    eyebrow="Trusted"
+                    title="Brands"
+                    description="Formulas from houses we stock."
+                  />
+                  <ConcernCarousel label="Trusted brands">
+                    {brands.map((item) => (
+                      <Tile
+                        key={item.id}
+                        className="hm-brand-tile"
+                        image={item.image_url || resolveImageUrl(item)}
+                        icon={Pill}
+                        label={item.name}
+                        onClick={() =>
+                          navigate(
+                            `/products/category?mode=product&brand=${item.id}&name=${encodeURIComponent(
+                              item.name,
+                            )}${concernQuery}`,
+                          )
+                        }
+                      />
+                    ))}
+                  </ConcernCarousel>
+                </Reveal>
+              ) : null}
+
+              <div className="hm-doctor-row">
+                <section className="hm-section" aria-labelledby="med-all">
+                  <SectionHead
+                    id="med-all"
+                    title={H.medicinesTitle}
+                    description={H.featuredText}
+                    action={<ViewAll label={H.medicinesTitle} onClick={() => navigate(concernBrowse)} />}
+                  />
+                  {products.length === 0 ? (
+                    <EmptyState
+                      icon={<Leaf size={28} />}
+                      title="No medicines available"
+                      description="Try another concern, or search by medicine name."
+                    />
+                  ) : (
+                    <ul className="svc-catalog">
+                      {products.map((item) => (
+                        <li key={item.variant_id || item.id}>
+                          <ProductCard item={item} />
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {hasMore ? (
+                    <div ref={moreRef} className="svc-more" aria-live="polite">
+                      {loadingMore ? 'Loading…' : ''}
+                    </div>
+                  ) : null}
+                </section>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </AppShell>
   );

@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, BadgeCheck, Briefcase, Heart, MapPin, Star } from 'lucide-react';
+import { ArrowRight, BadgeCheck, Briefcase, MapPin, Star } from 'lucide-react';
 import { formatDoctorDisplayName } from '../consult/appointmentUtils';
 import {
   doctorDisplayName,
   doctorExperience,
   doctorFavorite,
+  doctorFeeLabel,
   doctorImage,
   doctorLocation,
+  doctorOffersVideo,
   doctorQualification,
   doctorRating,
   doctorSpeciality,
@@ -17,6 +19,8 @@ import {
 import { showSuccessToast } from '../config/key';
 import { requireAuth } from '../services/guestAuth';
 import { toggleFavDoctor } from '../services/consultService';
+import FavButton from './ui/FavButton';
+import VideoCallButton from './ui/VideoCallButton';
 
 export default function SuggestedDoctorCard({ item, fallbackSpeciality = 'Ayurveda' }) {
   const navigate = useNavigate();
@@ -24,6 +28,7 @@ export default function SuggestedDoctorCard({ item, fallbackSpeciality = 'Ayurve
   const name = formatDoctorDisplayName(doctorDisplayName(item));
   const image = doctorImage(item);
   const rating = doctorRating(item);
+  const fee = doctorFeeLabel(item);
   const credential = doctorQualification(item) || doctorSpeciality(item) || fallbackSpeciality;
   const experience = doctorExperience(item);
   const location = doctorLocation(item);
@@ -31,8 +36,17 @@ export default function SuggestedDoctorCard({ item, fallbackSpeciality = 'Ayurve
   const verified = Boolean(item?.is_verified);
   const [fav, setFav] = useState(() => doctorFavorite(item));
 
+  const video = doctorOffersVideo(item);
+
   const openProfile = () => {
     if (id) navigate(`/consult/doctors/${id}`);
+  };
+
+  const bookVideo = async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!(await requireAuth('Please login to book a video consultation'))) return;
+    if (id) navigate(`/consult/doctors/${id}/slots`, { state: { doctor: item } });
   };
 
   const toggleFav = async (event) => {
@@ -87,15 +101,16 @@ export default function SuggestedDoctorCard({ item, fallbackSpeciality = 'Ayurve
           ) : null}
         </div>
 
-        <button
-          type="button"
-          className={fav ? 'am-flip-doc__fav is-on' : 'am-flip-doc__fav'}
-          aria-pressed={fav}
-          aria-label={fav ? `Remove ${name} from favourites` : `Save ${name}`}
-          onClick={toggleFav}
-        >
-          <Heart size={16} aria-hidden fill={fav ? 'currentColor' : 'none'} />
-        </button>
+        <div className="am-card-corner">
+          <FavButton
+            on={fav}
+            label={fav ? `Remove ${name} from favourites` : `Save ${name}`}
+            onClick={toggleFav}
+          />
+          {video ? (
+            <VideoCallButton label={`Book a video call with ${name}`} onClick={bookVideo} />
+          ) : null}
+        </div>
 
         <div className="am-flip-doc__copy">
           <h3 className="am-flip-doc__name">
@@ -129,10 +144,13 @@ export default function SuggestedDoctorCard({ item, fallbackSpeciality = 'Ayurve
         </div>
       </div>
 
-      <span className="am-flip-doc__cta">
-        View profile
-        <ArrowRight size={14} aria-hidden />
-      </span>
+      <div className="am-flip-doc__cta">
+        {fee ? <span className="am-flip-doc__fee">{fee}</span> : null}
+        <span className="am-flip-doc__cta-link">
+          View profile
+          <ArrowRight size={14} aria-hidden />
+        </span>
+      </div>
     </article>
   );
 }

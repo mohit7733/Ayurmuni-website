@@ -1,0 +1,621 @@
+/* Consult, yoga, and diet — Ayurmuni app screen chrome */
+
+.care-page {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 8px 20px 32px;
+  background: #fdfdfb;
+}
+
+.care-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 56px;
+  margin: 0 0 6px;
+}
+
+.care-bar h1 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.care-bar p {
+  margin: 1px 0 0;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.care-bar__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.care-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: #0d614e;
+  cursor: pointer;
+}
+
+.care-icon:hover {
+  background: rgba(13, 97, 78, 0.08);
+}
+
+.care-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  padding: 0 12px;
+  height: 44px;
+  border: 1px solid #e8eef2;
+  border-radius: 12px;
+  background: #fff;
+  color: #94a3b8;
+}
+
+.care-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: #0f172a;
+  font-size: 14px;
+  outline: none;
+}
+
+.care-banner {
+  position: relative;
+  margin: 0 -20px 10px;
+  overflow: hidden;
+  background: #e8f3f0;
+}
+
+.care-banner img {
+  display: block;
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.care-banner__dots {
+  position: absolute;
+  right: 0;
+  bottom: 8px;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.care-banner__dots button {
+  width: 6px;
+  height: 6px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+}
+
+.care-banner__dots button.is-on {
+  width: 16px;
+  background: #fff;
+}
+
+.care-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 28px;
+  margin: 16px 0 8px;
+  padding: 0 4px;
+}
+
+.care-head h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.care-head button {
+  flex-shrink: 0;
+  border: 0;
+  background: transparent;
+  color: #0d614e;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.care-rail,
+.care-concerns {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+  padding: 2px 0 4px;
+  overflow-x: auto;
+  list-style: none;
+  scrollbar-width: none;
+}
+
+.care-rail::-webkit-scrollbar,
+.care-concerns::-webkit-scrollbar {
+  display: none;
+}
+
+.care-rail > li,
+.care-concerns > li {
+  flex: 0 0 auto;
+}
+
+.care-concerns {
+  gap: 4px;
+}
+
+.care-concern {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 96px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.care-concern__img {
+  display: grid;
+  place-items: center;
+  width: 75px;
+  height: 75px;
+  margin-bottom: 6px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #f1f4f2;
+  color: #0d614e;
+}
+
+.care-concern__img img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.care-concern > span:last-child {
+  width: 100%;
+  color: #0d614e;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 14px;
+  text-align: center;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.care-page .am-product-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 720px) {
+  .care-page .am-product-grid {
+    grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  }
+}
+
+.care-page .am-doctor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 900px) {
+  .care-page .am-doctor-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.care-lab-strip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(90deg, #fff7ed, #ffedd5);
+  color: #c2410c;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+}
+
+.care-lab-strip strong {
+  display: block;
+  color: #9a3412;
+  font-size: 14px;
+}
+
+.care-lab-strip small {
+  color: #c2410c;
+  font-size: 12px;
+}
+
+.care-lab {
+  width: 158px;
+  padding: 8px;
+  border: 1px solid #e8eef2;
+  border-radius: 14px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.care-lab img {
+  width: 100%;
+  height: 92px;
+  object-fit: cover;
+  border-radius: 10px;
+  background: #f8fafb;
+}
+
+.care-lab strong {
+  display: -webkit-box;
+  margin-top: 6px;
+  color: #1e293b;
+  font-size: 13px;
+  line-height: 1.25;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.care-lab small {
+  display: block;
+  margin-top: 2px;
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.care-lab em {
+  display: block;
+  margin-top: 4px;
+  color: #111827;
+  font-style: normal;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.care-lab b {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #0d614e;
+  color: #fff;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+.care-recent {
+  width: min(210px, 58vw);
+}
+
+/* Yoga list */
+.yoga-app-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.yoga-app-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #eef2f6;
+  border-radius: 14px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.yoga-app-card .yoga-thumb,
+.yoga-app-card .yoga-thumb img,
+.yoga-app-card .yoga-thumb video {
+  width: 88px;
+  height: 88px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.yoga-app-card .yoga-thumb {
+  position: relative;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: #f1f5f9;
+}
+
+.yoga-app-card .yoga-play {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(13, 97, 78, 0.9);
+  color: #fff;
+  font-size: 11px;
+}
+
+.yoga-app-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.yoga-app-copy strong {
+  display: -webkit-box;
+  color: #1e293b;
+  font-size: 15px;
+  line-height: 1.3;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.yoga-app-copy small {
+  display: block;
+  margin-top: 2px;
+  color: #0d614e;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.yoga-app-copy p {
+  margin: 2px 0 0;
+  color: #64748b;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.yoga-app-go {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(13, 97, 78, 0.08);
+  color: #0d614e;
+}
+
+.care-empty {
+  padding: 32px 12px;
+  color: #64748b;
+  text-align: center;
+}
+
+.care-empty strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #1e293b;
+  font-size: 16px;
+}
+
+/* Diet plan cards matching the app DietPlanCard */
+.care-page .dt-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 720px) {
+  .care-page .dt-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.dt-plan {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid #e8eef2;
+  border-radius: 16px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.07);
+}
+
+.dt-plan__cover {
+  position: relative;
+  height: 96px;
+}
+
+.dt-plan__cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dt-plan__status {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fff;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.dt-plan__status.is-active {
+  color: #047857;
+}
+
+.dt-plan__pro {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  padding: 2px 6px;
+  border-radius: 7px;
+  background: linear-gradient(135deg, #c9a227, #e8c77b);
+  color: #5e4200;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.dt-plan__body {
+  padding: 8px 10px;
+}
+
+.dt-plan__body strong {
+  display: -webkit-box;
+  color: #0f172a;
+  font-size: 13px;
+  line-height: 18px;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.dt-plan__body em {
+  display: block;
+  margin-top: 2px;
+  color: #64748b;
+  font-size: 11px;
+  font-style: normal;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dt-plan__prakriti {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: #ecfdf5;
+  color: #047857;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.dt-plan__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid #eef2f6;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.dt-plan__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dt-plan__meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.care-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+
+.care-tabs button {
+  padding: 6px 12px;
+  border: 1px solid #e8eef2;
+  border-radius: 999px;
+  background: #fff;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.care-tabs button.is-on {
+  border-color: #0d614e;
+  background: #0d614e;
+  color: #fff;
+}
+
+.care-chips {
+  display: flex;
+  gap: 6px;
+  margin: 0 0 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.care-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.care-chips button {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: #f1f5f4;
+  color: #0d614e;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.care-chips button.is-on {
+  background: #0d614e;
+  color: #fff;
+}

@@ -45,6 +45,26 @@ export const getCartInventoryQty = (item) => {
   return null;
 };
 
+export const LOW_STOCK_THRESHOLD = 10;
+
+/** quantity > 0 and at or below the low-stock threshold */
+export const isProductLowStock = (item) => {
+  const stockQty = getProductStockQty(item);
+  if (stockQty === null || stockQty <= 0) return false;
+  return stockQty <= LOW_STOCK_THRESHOLD;
+};
+
+export const getProductStockDisplay = (item) => {
+  const qty = getProductStockQty(item);
+  if (qty === null || qty <= 0) {
+    return { qty, tone: 'out_of_stock', label: 'Out of stock' };
+  }
+  if (qty <= LOW_STOCK_THRESHOLD) {
+    return { qty, tone: 'low_stock', label: `Low stock — only ${qty} left` };
+  }
+  return { qty, tone: 'in_stock', label: 'In stock' };
+};
+
 export const isProductOutOfStock = (item) => {
   if (!item || typeof item !== 'object') return true;
   if (

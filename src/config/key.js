@@ -1,5 +1,5 @@
 export const BaseUrl = {
-  base_url: "https://ranged-reimburse-pentagram.ngrok-free.dev/"
+  base_url: "https://ayurmuni.aimantra.info/"
 };
 
 export const Method = {

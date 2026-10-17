@@ -73,6 +73,7 @@ export const resolveServiceCategoryKey = (item) => {
   if (name.includes('diet')) return 'diet';
   if (name.includes('prakriti')) return 'prakriti';
   if (name.includes('care') || name.includes('package')) return 'packages';
+  if (name.includes('panchakarma') || name.includes('panchkarma')) return 'panchakarma';
   return null;
 };
 
@@ -155,6 +156,10 @@ const WEB_ROUTES = {
   products: '/products',
   yoga: '/yoga',
   diet: '/diet',
+  lab: '/labs',
+  labs: '/labs',
+  packages: '/packages',
+  panchakarma: '/panchakarma',
   DoctorProfile: '/consult',
   AllDoctors: '/consult',
   ProductDetails: '/products',
@@ -182,6 +187,8 @@ const WEB_ROUTES = {
   Home: '/home',
   OrangeLabScreen: '/labs',
   PackagesScreen: '/packages',
+  Panchakarma: '/panchakarma',
+  PanchakarmaScreen: '/panchakarma',
   PrakritiProfile: '/prakriti-profile',
   ConsultScreen: '/consult',
 };
@@ -206,6 +213,14 @@ const ROUTE_ALIASES = {
   yoga: 'YogaScreen',
   home: 'Home',
   homescreen: 'Home',
+  lab: 'OrangeLabScreen',
+  labs: 'OrangeLabScreen',
+  labscreen: 'OrangeLabScreen',
+  orangelab: 'OrangeLabScreen',
+  orangelabscreen: 'OrangeLabScreen',
+  panchakarma: 'Panchakarma',
+  panchkarma: 'Panchakarma',
+  panchakarmascreen: 'Panchakarma',
   consultscreen: 'consult',
   packagesscreen: 'PackagesScreen',
   prakritiprofile: 'PrakritiProfile',

@@ -1,44 +1,48 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, History, RefreshCw, SearchX, Stethoscope } from 'lucide-react';
+import { BadgeCheck, LockKeyhole, SearchX, Stethoscope } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import BannerCarousel from '../components/BannerCarousel';
-import DoctorCard from '../components/DoctorCard';
+import SuggestedDoctorCard from '../components/SuggestedDoctorCard';
 import DummyOfferCard from '../components/DummyOfferCard';
+import LabHomeBanner from '../components/LabHomeBanner';
 import ProductCard from '../components/ProductCard';
 import ConsultationCard from '../components/consult/ConsultationCard';
-import { getBanners } from '../services/bannerService';
-import {
-  getBannerImageUri,
-  mapProductCategory,
-  normalizeApiList,
-} from '../home/catalog';
+import { SectionHead, ServiceHero, ViewAll } from '../components/ServiceHome';
+import { loadBannerCarouselForScreen } from '../services/bannerService';
+import { mapProductCategory, normalizeApiList } from '../home/catalog';
 import { getServiceCategoryId, resolveBannerNavigation } from '../home/serviceCategories';
 import useDashboardCategories from '../hooks/useDashboardCategories';
+import useLoggedIn from '../hooks/useLoggedIn';
 import useCategoryProducts from '../hooks/useCategoryProducts';
-import { getConsultHistory, getDoctors } from '../services/consultService';
+import { getAllApprovedDoctors, getConsultHistory, getSuggestedDoctors } from '../services/consultService';
 import { getHealthCategories } from '../services/productService';
-import { doctorDisplayName, getDoctorId, listDoctors } from '../consult/doctors';
+import { doctorDisplayName, getDoctorId, normalizeDoctorList } from '../consult/doctors';
 import { resolveAppointmentLookupId } from '../consult/appointmentUtils';
 import { mapAppointment } from '../profile/map';
 import { isAuthenticated } from '../services/guestAuth';
 import {
   Button,
-  Disclaimer,
+  ConcernCarousel,
   EmptyState,
   Rail,
   RailItem,
   Reveal,
   SearchField,
-  SectionHeader,
   SkeletonGrid,
   Tile,
-  ConcernCarousel,
 } from '../components/ui';
 import { CONSULT_COPY as T } from '../content/consult';
+import { HOME_COPY as H } from '../content/home';
 import { DUMMY_LAB_TESTS } from '../data/homeDummySections';
-import '../design/pages/consult.css';
 import '../design/pages/dummy-offers.css';
+import '../design/pages/orange-lab.css';
+
+const TRUST = [
+  { icon: BadgeCheck, label: H.trustDoctors },
+  { icon: LockKeyhole, label: H.trustPayments },
+  { icon: Stethoscope, label: 'Video consults' },
+];
 
 const matchesSearch = (q, ...values) => {
   const needle = String(q || '').trim().toLowerCase();
@@ -46,40 +50,51 @@ const matchesSearch = (q, ...values) => {
   return values.some((value) => String(value || '').toLowerCase().includes(needle));
 };
 
+const doctorMatchesSearch = (doctor, needle) =>
+  matchesSearch(
+    needle,
+    doctorDisplayName(doctor),
+    doctor?.qualification,
+    doctor?.specialization_name,
+    doctor?.full_name,
+  );
+
 export default function Consult() {
   const navigate = useNavigate();
-  const { categories: dashboardCategories } = useDashboardCategories();
+  const { categories: dashboardCategories, loading: categoriesLoading } = useDashboardCategories();
+  const loggedIn = useLoggedIn();
   const consultCategoryId = useMemo(
     () => getServiceCategoryId(dashboardCategories, 'consult'),
     [dashboardCategories],
   );
   const [banners, setBanners] = useState([]);
+  const [bannersLoading, setBannersLoading] = useState(true);
   const [concerns, setConcerns] = useState([]);
   const [doctors, setDoctors] = useState([]);
+  const [suggestedDoctors, setSuggestedDoctors] = useState([]);
   const [history, setHistory] = useState([]);
   const [search, setSearch] = useState('');
   const [debounced, setDebounced] = useState('');
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const productFilter = useMemo(
-    () => (debounced ? { search: debounced } : {}),
-    [debounced],
+  const productFilter = useMemo(() => (debounced ? { search: debounced } : {}), [debounced]);
+  const { products, loading: productsLoading, loadingMore, hasMore, loadMore } = useCategoryProducts(
+    productFilter,
+    [],
+    { pageSize: 8 },
   );
-  const { products, loading: productsLoading, loadingMore, hasMore, refresh: refreshProducts, loadMore } =
-    useCategoryProducts(productFilter, [], { pageSize: 6 });
+  const moreRef = useRef(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebounced(search.trim()), 400);
     return () => clearTimeout(timer);
   }, [search]);
 
-  const loadHome = async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
-    else setLoading(true);
-    const [bannerRes, catRes, docRes] = await Promise.all([
-      getBanners('consult', consultCategoryId),
+  const loadHome = async () => {
+    setLoading(true);
+    const [catRes, allDoctors, suggestedRes] = await Promise.all([
       getHealthCategories(),
-      getDoctors(),
+      getAllApprovedDoctors(),
+      getSuggestedDoctors(),
     ]);
     let hist = [];
     try {
@@ -91,22 +106,17 @@ export default function Consult() {
     } catch {
       hist = [];
     }
-    setBanners(
-      (bannerRes?.data || [])
-        .map((item) => ({ ...item, image: getBannerImageUri(item) }))
-        .filter((item) => item.image),
-    );
     setConcerns(normalizeApiList(catRes).map(mapProductCategory).filter((item) => item.id));
-    setDoctors(listDoctors(docRes));
+    setDoctors(Array.isArray(allDoctors) ? allDoctors : []);
+    setSuggestedDoctors(normalizeDoctorList(suggestedRes, { approvedOnly: true }));
     setHistory(hist);
     setLoading(false);
-    setRefreshing(false);
   };
 
   useEffect(() => {
     let alive = true;
     (async () => {
-      await loadHome(false);
+      await loadHome();
       if (!alive) return;
     })();
     return () => {
@@ -114,6 +124,21 @@ export default function Consult() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [consultCategoryId]);
+
+  useEffect(() => {
+    let alive = true;
+    setBannersLoading(true);
+    (async () => {
+      if (categoriesLoading) return;
+      const items = await loadBannerCarouselForScreen('consult', consultCategoryId);
+      if (!alive) return;
+      setBanners(items);
+      setBannersLoading(false);
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [consultCategoryId, categoriesLoading, loggedIn]);
 
   const filteredHistory = useMemo(
     () =>
@@ -124,28 +149,19 @@ export default function Consult() {
   );
 
   const filteredDoctors = useMemo(
-    () =>
-      doctors.filter((doctor) =>
-        matchesSearch(
-          debounced,
-          doctorDisplayName(doctor),
-          doctor?.qualification,
-          doctor?.specialization_name,
-          doctor?.full_name,
-        ),
-      ),
+    () => doctors.filter((doctor) => doctorMatchesSearch(doctor, debounced)),
     [doctors, debounced],
   );
 
-  const openBanner = (item) => {
-    const target = resolveBannerNavigation(item);
-    if (!target) return;
-    if (target.external) {
-      window.open(target.href, '_blank', 'noopener,noreferrer');
-      return;
-    }
-    navigate(target.path);
-  };
+  const filteredSuggestedDoctors = useMemo(
+    () => suggestedDoctors.filter((doctor) => doctorMatchesSearch(doctor, debounced)),
+    [suggestedDoctors, debounced],
+  );
+
+  const suggestedDoctorLimit = 6;
+  const showSuggestedDoctors =
+    (loading && suggestedDoctors.length === 0 && doctors.length > 0) ||
+    filteredSuggestedDoctors.length > 0;
 
   const openSlots = (item) => {
     if (!item.doctorId) return;
@@ -167,19 +183,41 @@ export default function Consult() {
     else if (item.doctorId) openSlots(item);
   };
 
-  const onRefresh = () => {
-    loadHome(true);
-    refreshProducts();
+  useEffect(() => {
+    const node = moreRef.current;
+    if (!node || !hasMore) return undefined;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) loadMore();
+      },
+      { rootMargin: '240px' },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasMore, loadMore, products.length]);
+
+  const openBanner = (item) => {
+    const target = resolveBannerNavigation(item);
+    if (!target) return;
+    if (target.external) {
+      window.open(target.href, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    navigate(target.path);
   };
 
   return (
     <AppShell tab="consult">
-      <div className="cs-page">
-        <section className="cs-hero" aria-labelledby="cs-hero-title">
-          <div className="cs-hero__copy">
-            <p className="am-eyebrow">{T.eyebrow}</p>
-            <h1 id="cs-hero-title">{T.heroTitle}</h1>
-            <p className="cs-hero__lede">{T.heroLede}</p>
+      <div className="hm-page svc-page">
+        <ServiceHero
+          id="cs-hero"
+          eyebrow={T.eyebrow}
+          title="Consult a"
+          accent="doctor."
+          lede={T.heroLede}
+          trust={TRUST}
+        >
+          <div className="svc-search">
             <SearchField
               value={search}
               onChange={setSearch}
@@ -187,228 +225,248 @@ export default function Consult() {
               placeholder={T.searchPlaceholder}
               label={T.searchLabel}
             />
-            <div className="cs-hero__ctas">
-              <Button
-                size="lg"
-                onClick={() => navigate('/consult/doctors')}
-                leadingIcon={<Stethoscope size={18} aria-hidden />}
-              >
-                {T.browseAll}
-              </Button>
-              <Button
-                variant="ghost"
-                size="lg"
-                onClick={() => navigate('/consult/history')}
-                leadingIcon={<History size={18} aria-hidden />}
-              >
-                {T.history}
-              </Button>
-            </div>
           </div>
-          <ol className="cs-steps" aria-label={T.stepsLabel}>
-            {T.steps.map((step, index) => (
-              <li key={step.title}>
-                <span className="cs-steps__num" aria-hidden>
-                  {index + 1}
-                </span>
-                <div>
-                  <strong>{step.title}</strong>
-                  <p>{step.text}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </section>
+          <div className="hm-hero__ctas">
+            <Button
+              variant="accent"
+              size="lg"
+              className="hm-hero__primary"
+              onClick={() => navigate('/consult/doctors')}
+              leadingIcon={<Stethoscope size={16} aria-hidden />}
+            >
+              {T.browseAll}
+            </Button>
+            <Button
+              variant="secondary"
+              size="lg"
+              className="hm-hero__ghost"
+              onClick={() => navigate('/consult/history')}
+            >
+              {T.history}
+            </Button>
+          </div>
+        </ServiceHero>
 
-        <BannerCarousel items={banners} onSelect={openBanner} loading={loading} interval={4000} />
-
-        {filteredHistory.length > 0 ? (
-          <Reveal as="section" className="cs-section" aria-labelledby="cs-recent-title">
-            <SectionHeader
-              id="cs-recent-title"
-              title={T.recentTitle}
-              action={
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate('/consult/history')}
-                  trailingIcon={<ArrowRight size={16} aria-hidden />}
-                >
-                  {T.viewHistory}
-                </Button>
-              }
-            />
-            <Rail label={T.recentTitle} className="cs-recent">
-              {filteredHistory.map((item) => (
-                <RailItem key={item.consultationId || item.appointmentId || item.id} size="wide">
-                  <ConsultationCard
-                    item={item}
-                    onOpen={openDetails}
-                    onReceipt={(entry) => navigate(`/profile/receipts/${entry.consultationId}`)}
-                    onBook={openSlots}
-                  />
-                </RailItem>
-              ))}
-            </Rail>
-          </Reveal>
-        ) : null}
-
-        {concerns.length > 0 ? (
-          <Reveal as="section" className="cs-section" aria-labelledby="cs-concerns-title">
-            <SectionHeader
-              id="cs-concerns-title"
-              eyebrow={T.concernsEyebrow}
-              title={T.concernsTitle}
-              description={T.concernsText}
-            />
-            <ConcernCarousel label={T.concernsTitle}>
-              {concerns.map((item) => (
-                <Tile
-                  cutout
-                  key={item.id}
-                  image={item.image_url}
-                  label={item.name}
-                  onClick={() =>
-                    navigate(
-                      `/consult/concern/${item.id}?name=${encodeURIComponent(item.name)}${
-                        item.description ? `&desc=${encodeURIComponent(item.description)}` : ''
-                      }`,
-                      { state: { categoryName: item.name, categoryDesc: item.description } },
-                    )
-                  }
+        <div className="hm-body">
+          {bannersLoading || categoriesLoading || banners.length > 0 ? (
+            <div className="hm-dash">
+              <div className="hm-dash__main">
+                <BannerCarousel
+                  items={banners}
+                  loading={bannersLoading || categoriesLoading}
+                  interval={6000}
+                  onSelect={openBanner}
+                  copy={{
+                    label: H.offersLabel,
+                    open: H.openOffer,
+                    of: H.of,
+                    show: H.showOffer,
+                    pause: H.pauseOffers,
+                    play: H.playOffers,
+                  }}
                 />
-              ))}
-            </ConcernCarousel>
-          </Reveal>
-        ) : null}
+              </div>
+            </div>
+          ) : null}
 
-        <section className="cs-section" aria-labelledby="cs-doctors-title">
-          <SectionHeader
-            id="cs-doctors-title"
-            eyebrow={T.topDoctorsEyebrow}
-            title={T.topDoctorsTitle}
-            action={
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/consult/doctors')}
-                trailingIcon={<ArrowRight size={16} aria-hidden />}
-              >
-                {T.viewAll}
-              </Button>
-            }
-          />
-          {loading && !doctors.length ? (
-            <SkeletonGrid variant="doctor" count={3} label={T.loadingDoctors} className="am-doctor-grid" />
-          ) : filteredDoctors.length === 0 ? (
-            <EmptyState
-              compact
-              icon={<SearchX size={24} />}
-              title={debounced ? T.noMatch : T.noDoctors}
-              description={debounced ? T.noMatchText : T.noDoctorsText}
-              action={
-                debounced ? (
-                  <Button
-                    variant="secondary"
-                    onClick={() => {
-                      setSearch('');
-                      setDebounced('');
-                    }}
-                  >
-                    {T.clearSearch}
-                  </Button>
-                ) : null
-              }
-            />
-          ) : (
-            <ul className="am-doctor-grid">
-              {filteredDoctors.slice(0, 6).map((item) => (
-                <li key={getDoctorId(item) || item.full_name}>
-                  <DoctorCard item={item} />
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        {products.length > 0 || productsLoading ? (
-          <Reveal as="section" className="cs-section" aria-labelledby="cs-products-title">
-            <SectionHeader
-              id="cs-products-title"
-              title={T.productsTitle}
-              action={
-                products.length > 0 ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => navigate('/products')}
-                    trailingIcon={<ArrowRight size={16} aria-hidden />}
-                  >
-                    {T.viewAll}
-                  </Button>
-                ) : null
-              }
-            />
-            {productsLoading && !products.length ? (
-              <SkeletonGrid count={4} className="am-product-grid" />
-            ) : (
-              <>
-                <ul className="am-product-grid">
-                  {products.map((item) => (
-                    <li key={item.variant_id || item.id}>
-                      <ProductCard item={item} />
-                    </li>
+          {filteredHistory.length > 0 ? (
+            <div className="hm-product-row">
+              <section className="hm-section hm-panel svc-rail-section" aria-labelledby="cs-recent-title">
+                <SectionHead
+                  id="cs-recent-title"
+                  title={H.visitedTitle}
+                  description="Consultations you booked recently."
+                  action={<ViewAll label={T.recentTitle} onClick={() => navigate('/consult/history')} />}
+                />
+                <Rail label={H.visitedTitle} className="svc-consult-rail">
+                  {filteredHistory.map((item) => (
+                    <RailItem key={item.consultationId || item.appointmentId || item.id} size="wide">
+                      <ConsultationCard
+                        item={item}
+                        onOpen={openDetails}
+                        onReceipt={(entry) => navigate(`/profile/receipts/${entry.consultationId}`)}
+                        onBook={openSlots}
+                      />
+                    </RailItem>
                   ))}
-                </ul>
-                {hasMore ? (
-                  <div className="cs-more">
-                    <Button variant="secondary" loading={loadingMore} onClick={loadMore}>
-                      {loadingMore ? T.loadingMore : T.loadMore}
-                    </Button>
-                  </div>
-                ) : null}
-              </>
-            )}
-          </Reveal>
-        ) : null}
+                </Rail>
+              </section>
+            </div>
+          ) : null}
 
-        <Reveal as="section" className="cs-section" aria-labelledby="cs-lab-title">
-          <SectionHeader
-            id="cs-lab-title"
-            title={T.labTitle}
-            action={
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/labs')}
-                trailingIcon={<ArrowRight size={16} aria-hidden />}
-              >
-                {T.viewAll}
-              </Button>
-            }
-          />
-          <Rail label={T.labTitle}>
-            {DUMMY_LAB_TESTS.map((item) => (
-              <RailItem key={item.id} size="product">
-                <DummyOfferCard item={item} kind="lab" onClick={() => navigate('/labs')} />
-              </RailItem>
-            ))}
-          </Rail>
-        </Reveal>
+          {loading && !concerns.length && !doctors.length ? (
+            <SkeletonGrid variant="doctor" count={4} label={T.loadingDoctors} />
+          ) : (
+            <>
+              <Reveal as="section" className="hm-section hm-panel" aria-labelledby="cs-doctors-title">
+                <SectionHead
+                  id="cs-doctors-title"
+                  eyebrow={T.doctorsEyebrow}
+                  title={T.doctorsTitle}
+                  description={T.doctorsText}
+                  action={<ViewAll label={T.doctorsTitle} onClick={() => navigate('/consult/doctors')} />}
+                />
+                {loading && !doctors.length ? (
+                  <SkeletonGrid
+                    variant="doctor"
+                    count={6}
+                    label={T.loadingDoctors}
+                    className="am-doctor-grid am-doctor-grid--premium"
+                  />
+                ) : filteredDoctors.length === 0 ? (
+                  <EmptyState
+                    compact
+                    icon={<SearchX size={24} />}
+                    title={debounced ? T.noMatch : T.noDoctors}
+                    description={debounced ? T.noMatchText : T.noDoctorsText}
+                    action={
+                      debounced ? (
+                        <Button
+                          variant="secondary"
+                          onClick={() => {
+                            setSearch('');
+                            setDebounced('');
+                          }}
+                        >
+                          {T.clearSearch}
+                        </Button>
+                      ) : null
+                    }
+                  />
+                ) : (
+                  <ul className="am-doctor-grid am-doctor-grid--premium" aria-label={T.doctorsTitle}>
+                    {filteredDoctors.map((item) => (
+                      <li key={getDoctorId(item) || item.full_name}>
+                        <SuggestedDoctorCard item={item} fallbackSpeciality={H.ayurvedicDoctor} />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </Reveal>
 
-        <footer className="cs-foot">
-          <Disclaimer variant="banner" />
-          <Button
-            variant="ghost"
-            size="sm"
-            loading={refreshing}
-            disabled={loading}
-            onClick={onRefresh}
-            leadingIcon={<RefreshCw size={14} aria-hidden />}
-          >
-            {refreshing ? T.refreshing : T.refresh}
-          </Button>
-        </footer>
+              {showSuggestedDoctors ? (
+                <Reveal
+                  as="section"
+                  className="hm-section hm-panel"
+                  delay={120}
+                  aria-labelledby="cs-suggested-doctors-title"
+                >
+                  <SectionHead
+                    id="cs-suggested-doctors-title"
+                    eyebrow={H.doctorsEyebrow}
+                    title={T.suggestedDoctorsTitle}
+                    description={T.suggestedDoctorsText}
+                    action={
+                      <ViewAll label={T.suggestedDoctorsTitle} onClick={() => navigate('/consult/doctors')} />
+                    }
+                  />
+                  {loading && !suggestedDoctors.length ? (
+                    <SkeletonGrid
+                      variant="doctor"
+                      count={3}
+                      label={T.loadingDoctors}
+                      className="am-doctor-grid am-doctor-grid--premium am-doctor-grid--portrait"
+                    />
+                  ) : (
+                    <ul
+                      className="am-doctor-grid am-doctor-grid--premium am-doctor-grid--portrait"
+                      aria-label={T.suggestedDoctorsTitle}
+                    >
+                      {filteredSuggestedDoctors.slice(0, suggestedDoctorLimit).map((item) => (
+                        <li key={getDoctorId(item) || item.full_name}>
+                          <SuggestedDoctorCard item={item} fallbackSpeciality={H.ayurvedicDoctor} />
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </Reveal>
+              ) : null}
+
+              {concerns.length > 0 ? (
+                <Reveal as="section" className="hm-section hm-panel hm-concerns-panel" aria-labelledby="cs-concerns-title">
+                  <SectionHead
+                    id="cs-concerns-title"
+                    title={H.concernsTitle}
+                    description={H.concernsText}
+                  />
+                  <ConcernCarousel label={H.concernsTitle}>
+                    {concerns.map((item) => (
+                      <Tile
+                        cutout
+                        key={item.id}
+                        image={item.image_url}
+                        icon={Stethoscope}
+                        label={item.name}
+                        onClick={() =>
+                          navigate(
+                            `/consult/concern/${item.id}?name=${encodeURIComponent(item.name)}${
+                              item.description ? `&desc=${encodeURIComponent(item.description)}` : ''
+                            }`,
+                            { state: { categoryName: item.name, categoryDesc: item.description } },
+                          )
+                        }
+                      />
+                    ))}
+                  </ConcernCarousel>
+                </Reveal>
+              ) : null}
+
+              {products.length > 0 || productsLoading ? (
+                <div className="hm-product-row">
+                  <section className="hm-section hm-products svc-rail-section" aria-labelledby="cs-products-title">
+                    <SectionHead
+                      id="cs-products-title"
+                      title={H.productsTitle}
+                      description={H.featuredText}
+                      action={
+                        products.length > 0 ? (
+                          <ViewAll label={H.productsTitle} onClick={() => navigate('/products')} />
+                        ) : null
+                      }
+                    />
+                    {productsLoading && !products.length ? (
+                      <SkeletonGrid count={4} className="svc-catalog" />
+                    ) : (
+                      <Rail label={H.productsTitle} auto>
+                        {products.map((item) => (
+                          <RailItem key={item.variant_id || item.id} size="product">
+                            <ProductCard item={item} />
+                          </RailItem>
+                        ))}
+                      </Rail>
+                    )}
+                    {hasMore ? (
+                      <div ref={moreRef} className="svc-more" aria-live="polite">
+                        {loadingMore ? T.loadingMore : ''}
+                      </div>
+                    ) : null}
+                  </section>
+                </div>
+              ) : null}
+
+              <Reveal as="section" className="hm-section hm-panel hm-lab" aria-labelledby="cs-lab-title">
+                <SectionHead
+                  id="cs-lab-title"
+                  title={H.labTitle}
+                  description={T.labText}
+                  action={<ViewAll label={H.labTitle} onClick={() => navigate('/labs')} />}
+                />
+                <LabHomeBanner
+                  title={H.labBannerTitle}
+                  subtitle={H.labBannerSub}
+                  onClick={() => navigate('/labs')}
+                />
+                <Rail label={H.labTitle}>
+                  {DUMMY_LAB_TESTS.map((item) => (
+                    <RailItem key={item.id} size="product">
+                      <DummyOfferCard item={item} kind="lab" onClick={() => navigate('/labs')} />
+                    </RailItem>
+                  ))}
+                </Rail>
+              </Reveal>
+            </>
+          )}
+        </div>
       </div>
     </AppShell>
   );

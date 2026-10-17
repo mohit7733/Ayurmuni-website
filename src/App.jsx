@@ -58,11 +58,13 @@ const Settings = loadPage(() => import("./pages/Settings"));
 const NotificationSettings = loadPage(() => import("./pages/NotificationSettings"));
 const OrangeLab = loadPage(() => import("./pages/OrangeLab"));
 const Packages = loadPage(() => import("./pages/Packages"));
+const Panchakarma = loadPage(() => import("./pages/Panchakarma"));
 const Addresses = loadPage(() => import("./pages/Addresses"));
 const AddressForm = loadPage(() => import("./pages/AddressForm"));
 const Appointments = loadPage(() => import("./pages/Appointments"));
 const AppointmentDetails = loadPage(() => import("./pages/AppointmentDetails"));
 const Chat = loadPage(() => import("./pages/Chat"));
+const ChatInbox = loadPage(() => import("./pages/ChatInbox"));
 const PrescriptionDetail = loadPage(() => import("./pages/PrescriptionDetail"));
 const ShareExperience = loadPage(() => import("./pages/ShareExperience"));
 const MedicalReceipt = loadPage(() => import("./pages/MedicalReceipt"));
@@ -107,6 +109,7 @@ import { CartProvider } from "./hooks/useCart";
 import { VideoCallProvider } from "./context/VideoCallContext";
 import { LocationProvider } from "./context/LocationContext";
 import FloatingVideoOverlay from "./components/FloatingVideoOverlay";
+import ChatLauncher from "./components/chat/ChatLauncher";
 import AuthShell from "./components/AuthShell";
 import NetworkGuard from "./components/NetworkGuard";
 import RequireAuth from "./components/RequireAuth";
@@ -323,6 +326,7 @@ export default function App() {
                     path="/profile/appointments/:appointmentId"
                     element={<AppointmentDetails />}
                   />
+                  <Route path="/profile/chats" element={<ChatInbox />} />
                   <Route
                     path="/profile/chat/:appointmentId"
                     element={<Chat />}
@@ -387,6 +391,7 @@ export default function App() {
                   <Route path="/medicines" element={<Medicines />} />
                   <Route path="/labs" element={<OrangeLab />} />
                   <Route path="/packages" element={<Packages />} />
+                  <Route path="/panchakarma" element={<Panchakarma />} />
                   <Route
                     path="/medicines/prescription"
                     element={<PrescriptionUpload />}
@@ -418,6 +423,7 @@ export default function App() {
               </Routes>
               </Suspense>
             </NetworkGuard>
+            <ChatLauncher />
           </CartProvider>
         </LocationProvider>
       </VideoCallProvider>

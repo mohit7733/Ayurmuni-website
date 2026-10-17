@@ -108,10 +108,35 @@ export default function BannerCarousel({
   const go = (step) => setIndex((prev) => (Math.min(prev, count - 1) + step + count) % count);
 
   const offsetOf = (i) => {
+    if (count === 2) {
+      if (i === active) return 0;
+      const prevIndex = (active - 1 + count) % count;
+      return i === prevIndex ? -1 : 1;
+    }
     let d = (i - active + count) % count;
     if (d > count / 2) d -= count;
     return d;
   };
+
+  /** Two banners: mirror the inactive slide on both sides so the ring never looks empty. */
+  const slideDeck =
+    count === 2
+      ? [
+          {
+            item: items[(active + 1) % 2],
+            i: (active + 1) % 2,
+            d: -1,
+            key: `peek-l-${active}`,
+          },
+          { item: items[active], i: active, d: 0, key: `on-${active}` },
+          {
+            item: items[(active + 1) % 2],
+            i: (active + 1) % 2,
+            d: 1,
+            key: `peek-r-${active}`,
+          },
+        ]
+      : items.map((item, i) => ({ item, i, d: offsetOf(i), key: item.id || item.image || i }));
 
   // One card ratio for every slide: the median of all loaded banner ratios (images then cover it),
   // so mixed-ratio banners never letterbox and the carousel height never jumps between slides.
@@ -192,15 +217,14 @@ export default function BannerCarousel({
       onTouchEnd={onTouchEnd}
     >
       <div className="am-banner__stage" aria-live={auto && !paused ? 'off' : 'polite'}>
-        {items.map((item, i) => {
-          const d = offsetOf(i);
+        {slideDeck.map(({ item, i, d, key }) => {
           const on = d === 0;
           const pos = on ? 'is-on' : d === -1 ? 'is-prev' : d === 1 ? 'is-next' : 'is-off';
           const label = `${T.open} ${i + 1} ${T.of} ${count}${item.title ? `: ${item.title}` : ''}`;
           const coded = typeof item.render === 'function';
           return (
             <div
-              key={item.id || item.image || i}
+              key={key}
               className={cx('am-banner__slide', coded && 'am-banner__slide--coded', pos)}
               style={{ '--am-banner-offset': Math.max(-2, Math.min(2, d)) }}
               role="group"

@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, ShoppingBag, SlidersHorizontal, Sparkles, X } from "lucide-react";
+import { ArrowRight, ShoppingBag, SlidersHorizontal, X } from "lucide-react";
 import AppShell from "../components/AppShell";
 import BannerCarousel from "../components/BannerCarousel";
 import ProductCard from "../components/ProductCard";
 import CartAddButton from "../components/CartAddButton";
-import CategoryCarousel from "../components/CategoryCarousel";
 import { getBanners } from "../services/bannerService";
 import { getProductByVariant } from "../services/productService";
 import { hasStockInfo } from "../product/stock";
@@ -50,11 +49,14 @@ export default function Products() {
     () => getServiceCategoryId(dashboardCategories, "products"),
     [dashboardCategories],
   );
-  const productFilter = useMemo(
-    () =>
-      productsCategoryId ? { service_category_id: productsCategoryId } : {},
-    [productsCategoryId],
-  );
+  const [selectedCategoryId, setSelectedCategoryId] = useState("");
+  const productFilter = useMemo(() => {
+    if (!selectedCategoryId) return {};
+    return {
+      id: selectedCategoryId,
+      ...(productsCategoryId ? { service_category_id: productsCategoryId } : {}),
+    };
+  }, [productsCategoryId, selectedCategoryId]);
   const { products, loading, loadingMore, refreshing, hasMore, loadMore } =
     useCategoryProducts(productFilter, [], {
       enabled: Boolean(productsCategoryId) || !homeLoading,
@@ -62,7 +64,10 @@ export default function Products() {
   // The service-category filter can legitimately return nothing (the homepage
   // never uses it); fall back to the unfiltered real catalogue in that case.
   const serviceEmpty =
-    Boolean(productsCategoryId) && !loading && products.length === 0;
+    Boolean(productsCategoryId) &&
+    !selectedCategoryId &&
+    !loading &&
+    products.length === 0;
   const catalogFallback = useCategoryProducts({}, [], { enabled: serviceEmpty });
   const listProducts = serviceEmpty ? catalogFallback.products : products;
   const listLoading = serviceEmpty ? catalogFallback.loading : loading;
@@ -223,28 +228,18 @@ export default function Products() {
     priceRange[1] !== 10000 ||
     minRating > 0 ||
     inStockOnly ||
-    sortBy !== "relevance";
+    sortBy !== "relevance" ||
+    Boolean(selectedCategoryId);
 
   const clearFilters = () => {
     setPriceRange([0, 10000]);
     setMinRating(0);
     setInStockOnly(false);
     setSortBy("relevance");
+    setSelectedCategoryId("");
   };
 
   const showSkeleton = listLoading && listProducts.length === 0;
-
-  // Hero: up to 3 real products with images, best rated first.
-  const heroProducts = useMemo(() => {
-    const withImage = listProducts.filter((p) => p?.image_url);
-    return [...withImage]
-      .sort(
-        (a, b) =>
-          Number(b.rating || b.average_rating || 0) -
-          Number(a.rating || a.average_rating || 0),
-      )
-      .slice(0, 3);
-  }, [listProducts]);
   const heroRef = useRef(null);
 
   // "/" focuses the store search, like modern storefronts.
@@ -293,10 +288,7 @@ export default function Products() {
           </div>
 
           <div className="st-hero__main">
-            <p className="st-hero__chip">
-              <Sparkles size={12} aria-hidden />
-              Store
-            </p>
+            <p className="st-hero__chip">The store</p>
             <h1 id="st-products-title">{T.productsTitle}</h1>
             <p className="st-hero__lede">{T.productsLede}</p>
             <div className="st-hero__row">
@@ -320,63 +312,20 @@ export default function Products() {
                 {itemCount ? <span className="st-hero__count">{itemCount}</span> : null}
               </Button>
             </div>
-            {productCategories.length > 0 ? (
-              <nav className="st-hero__chips" aria-label={T.shopByCategory}>
-                <ul>
-                  {productCategories.slice(0, 10).map((item) => (
-                    <li key={item.id}>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          openCategoryBrowse({ category: item.id, name: item.name })
-                        }
-                      >
-                        {item.name}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-            ) : null}
           </div>
 
-          {!heroProducts.length ? (
-            <div className="st-hero__ornament" aria-hidden="true">
+          <div className="st-hero__ornament" aria-hidden="true">
               <svg viewBox="0 0 220 180">
                 <g fill="none" strokeLinecap="round">
-                  <circle cx="110" cy="90" r="78" stroke="rgba(226,194,124,0.35)" />
-                  <circle cx="110" cy="90" r="56" stroke="rgba(226,194,124,0.22)" strokeDasharray="2 6" />
-                  <path d="M110 150 C 110 110, 118 76, 140 44" stroke="rgba(236,209,143,0.75)" strokeWidth="1.4" />
-                  <path d="M114 118 C 92 112, 80 96, 78 74 C 100 80, 112 96, 114 118 Z" fill="rgba(255,255,255,0.08)" stroke="rgba(236,209,143,0.65)" />
-                  <path d="M122 92 C 140 76, 160 72, 182 76 C 168 94, 146 102, 122 92 Z" fill="rgba(255,255,255,0.06)" stroke="rgba(236,209,143,0.55)" />
-                  <path d="M134 60 C 124 44, 124 26, 132 10 C 146 26, 146 46, 134 60 Z" fill="rgba(255,255,255,0.05)" stroke="rgba(236,209,143,0.5)" />
+                  <circle cx="110" cy="90" r="78" stroke="rgba(214,184,122,0.28)" />
+                  <circle cx="110" cy="90" r="56" stroke="rgba(214,184,122,0.18)" strokeDasharray="1.5 7" />
+                  <path d="M110 150 C 110 110, 118 76, 140 44" stroke="rgba(247,241,228,0.72)" strokeWidth="1.2" />
+                  <path d="M114 118 C 92 112, 80 96, 78 74 C 100 80, 112 96, 114 118 Z" fill="rgba(214,184,122,0.08)" stroke="rgba(214,184,122,0.7)" />
+                  <path d="M122 92 C 140 76, 160 72, 182 76 C 168 94, 146 102, 122 92 Z" fill="rgba(247,241,228,0.04)" stroke="rgba(214,184,122,0.55)" />
+                  <path d="M134 60 C 124 44, 124 26, 132 10 C 146 26, 146 46, 134 60 Z" fill="rgba(214,184,122,0.06)" stroke="rgba(247,241,228,0.45)" />
                 </g>
               </svg>
             </div>
-          ) : null}
-          {heroProducts.length ? (
-            <ul className="st-hero__visual" aria-label="Featured products">
-              {heroProducts.map((item, index) => (
-                <li key={item.variant_id || item.id} style={{ "--i": index }}>
-                  <button
-                    type="button"
-                    className="st-hero__float"
-                    onClick={() => navigate(`/products/${item.variant_id || item.id}`)}
-                  >
-                    <span className="st-hero__float-img">
-                      <img src={item.image_url} alt="" loading="lazy" decoding="async" />
-                    </span>
-                    <span className="st-hero__float-name">{item.name}</span>
-                    {item.selling_price != null && item.selling_price !== "" ? (
-                      <span className="st-hero__float-price">
-                        {formatRupee(item.selling_price)}
-                      </span>
-                    ) : null}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : null}
         </section>
 
         {showSkeleton ? (
@@ -388,130 +337,6 @@ export default function Products() {
         ) : (
           <>
             <BannerCarousel items={banners} interval={4000} />
-
-            <Reveal
-              as="section"
-              className="st-section st-panel"
-              aria-labelledby="st-cats-title"
-            >
-              <SectionHeader
-                id="st-cats-title"
-                title={T.shopByCategory}
-                description={T.shopByCategoryText}
-                action={
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      openCategoryBrowse({ name: "Shop by Category" })
-                    }
-                    trailingIcon={<ArrowRight size={16} aria-hidden />}
-                  >
-                    {T.viewAll}
-                  </Button>
-                }
-              />
-              {categoriesLoading && productCategories.length === 0 ? (
-                <RailSkeleton count={6} variant="product" />
-              ) : productCategories.length > 0 ? (
-                <CategoryCarousel
-                  label={T.shopByCategory}
-                  items={productCategories.map((item) => ({
-                    id: item.id,
-                    name: item.name,
-                    image: resolveImageUrl(item),
-                  }))}
-                  onSelect={(item) =>
-                    openCategoryBrowse({ category: item.id, name: item.name })
-                  }
-                />
-              ) : (
-                <EmptyState
-                  compact
-                  title={T.shopByCategory}
-                  description="Tap View all to browse categories"
-                  action={
-                    <Button
-                      variant="secondary"
-                      onClick={() =>
-                        openCategoryBrowse({ name: "Shop by Category" })
-                      }
-                    >
-                      {T.viewAll}
-                    </Button>
-                  }
-                />
-              )}
-            </Reveal>
-
-            {ordersLoading || recentProducts.length > 0 ? (
-              <Reveal
-                as="section"
-                className="st-section st-panel"
-                aria-labelledby="st-recent-title"
-              >
-                <SectionHeader
-                  id="st-recent-title"
-                  title={T.recentOrders}
-                  description={T.recentOrdersText}
-                  action={
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => navigate("/profile/orders")}
-                      trailingIcon={<ArrowRight size={16} aria-hidden />}
-                    >
-                      {T.viewHistory}
-                    </Button>
-                  }
-                />
-                {ordersLoading && recentProducts.length === 0 ? (
-                  <RailSkeleton count={4} size="wide" />
-                ) : (
-                  <Rail label={T.recentOrders}>
-                    {recentProducts.map((item) => (
-                      <RailItem
-                        key={`${item.id}-${item.variantId}`}
-                        size="wide"
-                      >
-                        <div className="st-recent">
-                          <MediaCard
-                            image={item.image}
-                            title={item.name}
-                            subtitle={
-                              item.lastOrdered
-                                ? `Ordered ${item.lastOrdered}`
-                                : "Recent order"
-                            }
-                            onClick={() =>
-                              item.variantId &&
-                              navigate(`/products/${item.variantId}`)
-                            }
-                          />
-                          <div className="st-recent__foot">
-                            {item.price ? (
-                              <span className="st-recent__price">
-                                {formatRupee(item.price)}
-                              </span>
-                            ) : null}
-                            {hasStockInfo(recentStock[item.variantId]) ? (
-                              <CartAddButton
-                                className="am-cart-btn--sm"
-                                item={{
-                                  ...recentStock[item.variantId],
-                                  variant_id: item.variantId,
-                                  name: item.name,
-                                }}
-                              />
-                            ) : null}
-                          </div>
-                        </div>
-                      </RailItem>
-                    ))}
-                  </Rail>
-                )}
-              </Reveal>
-            ) : null}
 
             <section className="st-section st-panel" aria-labelledby="st-all-title">
               <SectionHeader
@@ -530,6 +355,55 @@ export default function Products() {
                 }
               />
 
+              <div className="st-catalog">
+                <nav className="st-cat-col" aria-labelledby="st-cats-title">
+                  <p className="st-cat-col__eyebrow">Filter</p>
+                  <h3 id="st-cats-title">{T.shopByCategory}</h3>
+                  <ul className="st-cat-filter">
+                    <li>
+                      <button
+                        type="button"
+                        className={!selectedCategoryId ? "is-on" : ""}
+                        aria-pressed={!selectedCategoryId}
+                        onClick={() => setSelectedCategoryId("")}
+                      >
+                        <span className="st-cat-filter__mark" aria-hidden>
+                          All
+                        </span>
+                        <span className="st-cat-filter__copy">
+                          <strong>All products</strong>
+                          <em>Full catalogue</em>
+                        </span>
+                      </button>
+                    </li>
+                    {productCategories.map((item) => {
+                      const image = resolveImageUrl(item);
+                      const on = selectedCategoryId === item.id;
+                      const initial = String(item.name || "?").trim().charAt(0).toUpperCase();
+                      return (
+                        <li key={item.id}>
+                          <button
+                            type="button"
+                            className={on ? "is-on" : ""}
+                            aria-pressed={on}
+                            onClick={() => setSelectedCategoryId(item.id)}
+                          >
+                            <span className="st-cat-filter__mark" aria-hidden>
+                              {image ? <img src={image} alt="" /> : initial}
+                            </span>
+                            <span className="st-cat-filter__copy">
+                              <strong>{item.name}</strong>
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  {categoriesLoading && productCategories.length === 0 ? (
+                    <p className="st-cat-col__status">Loading categories…</p>
+                  ) : null}
+                </nav>
+                <div className="st-catalog__main">
               {/* Filter & Sort Controls */}
               <div className="st-controls">
                 <div className="st-controls__info">
@@ -615,7 +489,78 @@ export default function Products() {
                 </div>
               ) : null}
               {refreshing ? <p className="am-sr-only">{T.refreshing}</p> : null}
+                </div>
+              </div>
             </section>
+
+            {ordersLoading || recentProducts.length > 0 ? (
+              <Reveal
+                as="section"
+                className="st-section st-panel"
+                aria-labelledby="st-recent-title"
+              >
+                <SectionHeader
+                  id="st-recent-title"
+                  title={T.recentOrders}
+                  description={T.recentOrdersText}
+                  action={
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate("/profile/orders")}
+                      trailingIcon={<ArrowRight size={16} aria-hidden />}
+                    >
+                      {T.viewHistory}
+                    </Button>
+                  }
+                />
+                {ordersLoading && recentProducts.length === 0 ? (
+                  <RailSkeleton count={4} size="product" />
+                ) : (
+                  <Rail label={T.recentOrders} className="st-recent-rail">
+                    {recentProducts.map((item) => (
+                      <RailItem
+                        key={`${item.id}-${item.variantId}`}
+                        size="product"
+                      >
+                        <div className="st-recent">
+                          <MediaCard
+                            image={item.image}
+                            title={item.name}
+                            subtitle={
+                              item.lastOrdered
+                                ? `Ordered ${item.lastOrdered}`
+                                : "Recent order"
+                            }
+                            onClick={() =>
+                              item.variantId &&
+                              navigate(`/products/${item.variantId}`)
+                            }
+                          />
+                          <div className="st-recent__foot">
+                            {item.price ? (
+                              <span className="st-recent__price">
+                                {formatRupee(item.price)}
+                              </span>
+                            ) : null}
+                            {hasStockInfo(recentStock[item.variantId]) ? (
+                              <CartAddButton
+                                className="am-cart-btn--sm"
+                                item={{
+                                  ...recentStock[item.variantId],
+                                  variant_id: item.variantId,
+                                  name: item.name,
+                                }}
+                              />
+                            ) : null}
+                          </div>
+                        </div>
+                      </RailItem>
+                    ))}
+                  </Rail>
+                )}
+              </Reveal>
+            ) : null}
 
             <footer className="st-foot">
               <Disclaimer variant="banner" />

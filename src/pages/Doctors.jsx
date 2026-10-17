@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { RefreshCw, SearchX, SlidersHorizontal, X } from 'lucide-react';
 import AppShell from '../components/AppShell';
-import DoctorCard from '../components/DoctorCard';
+import SuggestedDoctorCard from '../components/SuggestedDoctorCard';
 import PageHeader from '../components/PageHeader';
 import { getDoctors } from '../services/consultService';
 import { getHealthCategories } from '../services/productService';
@@ -324,7 +324,12 @@ export default function Doctors() {
             ) : null}
 
             {loading ? (
-              <SkeletonGrid variant="doctor" count={6} label={T.loadingDoctors} className="am-doctor-grid" />
+              <SkeletonGrid
+                variant="doctor"
+                count={6}
+                label={T.loadingDoctors}
+                className="am-doctor-grid am-doctor-grid--premium"
+              />
             ) : failed ? (
               <ErrorState title={T.errorTitle} description={T.errorText} onRetry={() => loadDoctors(false)} />
             ) : doctors.length === 0 ? (
@@ -348,10 +353,10 @@ export default function Doctors() {
                 }
               />
             ) : (
-              <ul className="am-doctor-grid">
+              <ul className="am-doctor-grid am-doctor-grid--premium">
                 {doctors.map((item) => (
                   <li key={getDoctorId(item) || item.full_name}>
-                    <DoctorCard item={item} />
+                    <SuggestedDoctorCard item={item} />
                   </li>
                 ))}
               </ul>

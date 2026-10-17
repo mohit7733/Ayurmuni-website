@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, CalendarDays, Check, Leaf, Lock, Star } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import { SectionHeader, Skeleton } from '../components/ui';
 import dietCoverImg from '/images/login/14.jpg';
 import { formatRupee } from '../home/catalog';
 import { showSuccessToast } from '../config/key';
@@ -21,6 +23,8 @@ import {
   isDietPlanAssignmentReviewed,
 } from '../utils/reviewedDietPlans';
 import '../design/pages/diet-plan.css';
+import '../design/brand.css';
+import '../design/pages/diet-brand.css';
 
 const MACRO = [
   { key: 'carbsPct', label: 'Carbs', color: '#1FA77A' },
@@ -142,227 +146,285 @@ export default function DietPlan() {
 
   return (
     <AppShell tab="home">
-      <section className="catalog-page diet-detail">
-        <header className="catalog-head">
-          <div>
-            <button type="button" className="text-back" onClick={() => navigate('/diet')}>
-              ← Back
-            </button>
-            <h1>{plan?.title || plan?.name || 'Diet Plan'}</h1>
-            <p>{[plan?.prakriti, plan?.season, price].filter(Boolean).join(' • ') || 'Personalized meals'}</p>
-          </div>
-        </header>
+      <section className="dt-page dt-page--detail">
+        <div className="dt-topbar">
+          <button type="button" className="dt-back" onClick={() => navigate('/diet')}>
+            <ArrowLeft size={16} aria-hidden />
+            Back
+          </button>
+        </div>
 
         {loadingDetail && !plan ? (
-          <p className="muted">Loading plan…</p>
+          <div className="dt-detail-skel" aria-busy="true" aria-label="Loading plan">
+            <Skeleton className="dt-detail-skel__media" />
+            <div className="dt-detail-skel__info">
+              <Skeleton className="dt-detail-skel__line is-lg" />
+              <Skeleton className="dt-detail-skel__line" />
+              <Skeleton className="dt-detail-skel__line is-sm" />
+            </div>
+          </div>
         ) : (
           <>
-            <div className="diet-hero">
-              <img src={cover} alt="" />
-            </div>
-            {gallery.length > 1 ? (
-              <div className="gallery-thumbs" role="group" aria-label="Plan photos">
-                {gallery.map((item, index) => (
-                  <button
-                    key={`${item.image_url}-${index}`}
-                    type="button"
-                    className={index === galleryIndex ? 'on' : ''}
-                    onClick={() => setGalleryIndex(index)}
-                  >
-                    <img src={item.image_url} alt="" />
-                  </button>
-                ))}
+            <div className="dt-overview">
+              <div className="dt-gallery">
+                <div className="dt-gallery__main">
+                  <img src={cover} alt="" />
+                  <span className="dt-gallery__shade" aria-hidden="true" />
+                </div>
+                {gallery.length > 1 ? (
+                  <div className="dt-gallery__thumbs" role="group" aria-label="Plan photos">
+                    {gallery.map((item, index) => (
+                      <button
+                        key={`${item.image_url}-${index}`}
+                        type="button"
+                        aria-pressed={index === galleryIndex}
+                        aria-label={`Show photo ${index + 1}`}
+                        className={index === galleryIndex ? 'is-on' : ''}
+                        onClick={() => setGalleryIndex(index)}
+                      >
+                        <img src={item.image_url} alt="" />
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
               </div>
-            ) : null}
 
-            <div className="yoga-badges">
-              {status !== 'not_started' ? (
-                <span className={`yoga-badge ${status === 'active' ? 'level' : ''}`}>
-                  {status.toUpperCase()}
-                </span>
-              ) : null}
-              {rating ? <span className="yoga-badge">★ {rating}</span> : null}
-              {plan?.duration || plan?.duration_days ? (
-                <span className="yoga-badge">{plan.duration || `${plan.duration_days} days`}</span>
-              ) : null}
+              <div className="dt-info">
+                <div className="dt-info__top">
+                  <p className="dt-eyebrow">Diet plan</p>
+                  {status !== 'not_started' ? (
+                    <span className={`dt-status is-${status}`}>{status}</span>
+                  ) : null}
+                </div>
+                <h1 className="dt-info__title">{plan?.title || plan?.name || 'Diet Plan'}</h1>
+                <div className="dt-info__chips">
+                  {plan?.duration || plan?.duration_days ? (
+                    <span>
+                      <CalendarDays size={14} aria-hidden />
+                      {plan.duration || `${plan.duration_days} days`}
+                    </span>
+                  ) : null}
+                  {plan?.season ? <span>{plan.season}</span> : null}
+                  {plan?.prakriti ? <span>{plan.prakriti}</span> : null}
+                  {rating ? (
+                    <span className="is-rating">
+                      <Star size={13} aria-hidden fill="currentColor" />
+                      {rating}
+                    </span>
+                  ) : null}
+                </div>
+                {price ? <p className="dt-info__price">{price}</p> : null}
+                {plan?.short_description ? (
+                  <p className="dt-info__desc">{plan.short_description}</p>
+                ) : null}
+
+                <div className="dt-actions">
+                  {isStarted ? null : (
+                    <button
+                      type="button"
+                      className="dt-btn dt-btn--primary"
+                      disabled={starting || updatingStatus}
+                      onClick={onStart}
+                    >
+                      {starting
+                        ? 'Starting…'
+                        : status === 'paused'
+                          ? 'Resume plan'
+                          : status === 'completed'
+                            ? 'Repeat plan'
+                            : 'Start plan'}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="dt-btn dt-btn--secondary"
+                    onClick={() =>
+                      navigate(`/diet/${planId}/weekly`, { state: { item: plan, planId } })
+                    }
+                  >
+                    <CalendarDays size={16} aria-hidden />
+                    Weekly planner
+                  </button>
+                  {isStarted ? (
+                    <>
+                      <button
+                        type="button"
+                        className="dt-btn dt-btn--ghost"
+                        disabled={updatingStatus}
+                        onClick={() =>
+                          setConfirm({
+                            title: 'Pause this active plan?',
+                            subtitle: 'Progress is saved. You can resume anytime.',
+                            confirmText: 'Pause plan',
+                            action: 'pause',
+                          })
+                        }
+                      >
+                        Pause
+                      </button>
+                      <button
+                        type="button"
+                        className="dt-btn dt-btn--ghost"
+                        disabled={updatingStatus}
+                        onClick={() =>
+                          setConfirm({
+                            title: 'Stop this run?',
+                            subtitle: 'Stopped plans use Start again instead of Repeat.',
+                            confirmText: 'Stop plan',
+                            action: 'stop',
+                          })
+                        }
+                      >
+                        Stop
+                      </button>
+                    </>
+                  ) : null}
+                  {canRateDiet ? (
+                    <button type="button" className="dt-btn dt-btn--ghost" onClick={openDietReview}>
+                      <Star size={15} aria-hidden />
+                      Rate this diet plan
+                    </button>
+                  ) : null}
+                </div>
+                {!isStarted ? (
+                  <p className="dt-info__hint">Start this plan to unlock daily tracking and hydration.</p>
+                ) : null}
+              </div>
             </div>
-
-            {plan?.short_description ? <p className="yoga-subtitle">{plan.short_description}</p> : null}
 
             {isStarted ? (
-              <>
-                <div className="diet-nutrition">
-                  <div>
-                    <strong>{Math.round(nutrition.eatenKcal)}</strong>
-                    <small>eaten</small>
-                  </div>
-                  <div>
-                    <strong>{Math.round(nutrition.leftKcal)}</strong>
-                    <small>left</small>
-                  </div>
-                  <div>
+              <section className="dt-panel dt-progress" aria-label="Today’s progress">
+                <div className="dt-progress__ring" style={{ '--p': nutrition.mealsTotal ? nutrition.mealsDone / nutrition.mealsTotal : 0 }}>
+                  <svg viewBox="0 0 44 44" aria-hidden="true">
+                    <circle cx="22" cy="22" r="19" className="track" />
+                    <circle cx="22" cy="22" r="19" className="bar" pathLength="1" />
+                  </svg>
+                  <span>
                     <strong>
                       {nutrition.mealsDone}/{nutrition.mealsTotal}
                     </strong>
                     <small>meals</small>
+                  </span>
+                </div>
+                <div className="dt-progress__stats">
+                  <div>
+                    <strong>{Math.round(nutrition.eatenKcal)}</strong>
+                    <small>kcal eaten</small>
+                  </div>
+                  <div>
+                    <strong>{Math.round(nutrition.leftKcal)}</strong>
+                    <small>kcal left</small>
                   </div>
                 </div>
-                <div className="diet-macros">
+                <div className="dt-progress__macros">
                   {MACRO.map((item) => (
-                    <div key={item.key}>
-                      <span>{item.label}</span>
-                      <b style={{ color: item.color }}>{nutrition[item.key]}%</b>
-                      <i style={{ width: `${nutrition[item.key]}%`, background: item.color }} />
+                    <div key={item.key} className="dt-macro">
+                      <span className="dt-macro__label">{item.label}</span>
+                      <b>{nutrition[item.key]}%</b>
+                      <i aria-hidden="true">
+                        <em style={{ width: `${nutrition[item.key]}%`, background: item.color }} />
+                      </i>
                     </div>
                   ))}
                 </div>
-
-                <WaterLog
-                  waterMl={waterMl}
-                  waterGoalMl={waterGoalMl}
-                  dayLabel={dayLabel}
-                  updating={updatingWater}
-                  onSetIntake={updateWaterIntake}
-                />
-
-                <div className="diet-days" role="group" aria-label="Select plan day">
-                  {planDays.map((day) => (
-                    <button
-                      key={day.dayKey}
-                      type="button"
-                      className={`${day.dayKey === currentDayKey ? 'on' : ''} ${day.isLocked ? 'locked' : ''}`}
-                      disabled={day.isLocked}
-                      onClick={() => selectDay(day.dayKey)}
-                    >
-                      {day.label}
-                      <small>
-                        {day.mealsDone}/{day.mealsTotal}
-                      </small>
-                    </button>
-                  ))}
+                <div className="dt-progress__water">
+                  <WaterLog
+                    waterMl={waterMl}
+                    waterGoalMl={waterGoalMl}
+                    dayLabel={dayLabel}
+                    updating={updatingWater}
+                    onSetIntake={updateWaterIntake}
+                  />
                 </div>
+              </section>
+            ) : null}
 
-                <div className="diet-detail-section-heading">
-                  <h2>{dayLabel ? `${dayLabel} meals` : 'Today’s meals'}</h2>
-                  <span>{previewMeals.length} {previewMeals.length === 1 ? 'meal' : 'meals'}</span>
+            <section className="dt-panel" aria-labelledby="dt-meals-title">
+              {isStarted && planDays.length ? (
+                <div className="dt-days" role="group" aria-label="Select plan day">
+                  {planDays.map((day) => {
+                    const pct = day.mealsTotal ? day.mealsDone / day.mealsTotal : 0;
+                    return (
+                      <button
+                        key={day.dayKey}
+                        type="button"
+                        aria-pressed={day.dayKey === currentDayKey}
+                        className={[
+                          'dt-day',
+                          day.dayKey === currentDayKey && 'is-on',
+                          day.isLocked && 'is-locked',
+                          pct === 1 && 'is-done',
+                        ]
+                          .filter(Boolean)
+                          .join(' ')}
+                        disabled={day.isLocked}
+                        onClick={() => selectDay(day.dayKey)}
+                      >
+                        <span className="dt-day__label">{day.label}</span>
+                        <span className="dt-day__bar" aria-hidden="true">
+                          <i style={{ width: `${Math.round(pct * 100)}%` }} />
+                        </span>
+                        <small>
+                          {day.isLocked ? <Lock size={11} aria-hidden /> : null}
+                          {day.mealsDone}/{day.mealsTotal}
+                        </small>
+                      </button>
+                    );
+                  })}
                 </div>
-                <div className="diet-meals">
-                  {previewMeals.map((meal) => (
-                    <button
-                      key={meal.id}
-                      type="button"
-                      className={`diet-meal ${meal.status === 'done' ? 'done' : ''}`}
-                      onClick={() => navigate(`/diet/${planId}/meals/${meal.id}`, { state: { meal, planId } })}
-                    >
-                      <img src={meal.image || dietCoverImg} alt="" />
-                      <div>
-                        <small>{meal.type}</small>
-                        <strong>{meal.title}</strong>
-                        <p>{meal.kcal ? `${meal.kcal} kcal` : meal.time}</p>
-                      </div>
-                      <span>{meal.status === 'done' ? 'Done' : 'Open'}</span>
-                    </button>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <>
-                <p className="diet-start-hint">Start this plan to unlock daily tracking and hydration.</p>
-                {previewMeals.length ? (
-                  <>
-                    <div className="diet-detail-section-heading">
-                      <h2>Meal preview</h2>
-                      <span>
-                        {previewMeals.length} {previewMeals.length === 1 ? 'meal' : 'meals'}
-                      </span>
-                    </div>
-                    <div className="diet-meals">
-                      {previewMeals.map((meal) => (
+              ) : null}
+
+              <SectionHeader
+                id="dt-meals-title"
+                title={
+                  isStarted ? (dayLabel ? `${dayLabel} meals` : 'Today’s meals') : 'Meal preview'
+                }
+                description={`${previewMeals.length} ${previewMeals.length === 1 ? 'meal' : 'meals'}`}
+              />
+
+              {previewMeals.length ? (
+                <ul className="dt-meals">
+                  {previewMeals.map((meal, index) => {
+                    const done = isStarted && meal.status === 'done';
+                    return (
+                      <li key={meal.id} style={{ '--i': index }}>
                         <button
-                          key={meal.id}
                           type="button"
-                          className="diet-meal"
+                          className={`dt-meal${done ? ' is-done' : ''}`}
                           onClick={() =>
-                            navigate(`/diet/${planId}/meals/${meal.id}`, {
-                              state: { meal, planId },
-                            })
+                            navigate(`/diet/${planId}/meals/${meal.id}`, { state: { meal, planId } })
                           }
                         >
-                          <img src={meal.image || dietCoverImg} alt="" />
-                          <div>
-                            <small>{meal.type}</small>
+                          <span className="dt-meal__img">
+                            <img src={meal.image || dietCoverImg} alt="" loading="lazy" />
+                          </span>
+                          <span className="dt-meal__body">
+                            <small className="dt-meal__type">
+                              {meal.type}
+                              {meal.time ? <em> · {meal.time}</em> : null}
+                            </small>
                             <strong>{meal.title}</strong>
-                            <p>{meal.kcal ? `${meal.kcal} kcal` : meal.time}</p>
-                          </div>
-                          <span>View</span>
+                            {meal.kcal ? <span className="dt-meal__kcal">{meal.kcal} kcal</span> : null}
+                          </span>
+                          <span className={`dt-meal__state${done ? ' is-done' : ''}`}>
+                            {done ? <Check size={14} aria-hidden strokeWidth={2.6} /> : null}
+                            {isStarted ? (done ? 'Done' : 'Open') : 'View'}
+                          </span>
                         </button>
-                      ))}
-                    </div>
-                  </>
-                ) : null}
-              </>
-            )}
-
-            <div className="detail-cta diet-cta">
-              <button
-                type="button"
-                className="ghost"
-                onClick={() =>
-                  navigate(`/diet/${planId}/weekly`, { state: { item: plan, planId } })
-                }
-              >
-                Weekly planner
-              </button>
-              {isStarted ? (
-                <>
-                  <button
-                    type="button"
-                    className="ghost"
-                    disabled={updatingStatus}
-                    onClick={() =>
-                      setConfirm({
-                        title: 'Pause this active plan?',
-                        subtitle: 'Progress is saved. You can resume anytime.',
-                        confirmText: 'Pause plan',
-                        action: 'pause',
-                      })
-                    }
-                  >
-                    Pause
-                  </button>
-                  <button
-                    type="button"
-                    className="ghost"
-                    disabled={updatingStatus}
-                    onClick={() =>
-                      setConfirm({
-                        title: 'Stop this run?',
-                        subtitle: 'Stopped plans use Start again instead of Repeat.',
-                        confirmText: 'Stop plan',
-                        action: 'stop',
-                      })
-                    }
-                  >
-                    Stop
-                  </button>
-                </>
+                      </li>
+                    );
+                  })}
+                </ul>
               ) : (
-                <button type="button" className="cta" disabled={starting || updatingStatus} onClick={onStart}>
-                  {starting
-                    ? 'Starting…'
-                    : status === 'paused'
-                      ? 'Resume plan'
-                      : status === 'completed'
-                        ? 'Repeat plan'
-                        : 'Start plan'}
-                </button>
+                <div className="dt-empty">
+                  <span className="dt-empty__icon" aria-hidden="true">
+                    <Leaf size={22} />
+                  </span>
+                  <strong>No meals yet</strong>
+                  <p>Meals for this plan will appear here when available.</p>
+                </div>
               )}
-              {canRateDiet ? (
-                <button type="button" className="ghost" onClick={openDietReview}>
-                  Rate this diet plan
-                </button>
-              ) : null}
-            </div>
+            </section>
           </>
         )}
       </section>
@@ -383,7 +445,7 @@ export default function DietPlan() {
       ) : null}
 
       {confirm ? (
-        <div className="web-modal" role="dialog">
+        <div className="web-modal dt-modal" role="dialog" aria-modal="true">
           <div className="web-modal-card">
             <h3>{confirm.title}</h3>
             <p>{confirm.subtitle}</p>
@@ -411,7 +473,7 @@ export default function DietPlan() {
       ) : null}
 
       {conflict ? (
-        <div className="web-modal" role="dialog">
+        <div className="web-modal dt-modal" role="dialog" aria-modal="true">
           <div className="web-modal-card">
             <h3>Another plan is active</h3>
             <p>

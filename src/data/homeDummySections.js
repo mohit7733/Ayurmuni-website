@@ -1,4 +1,4 @@
-/** Dummy marketing data — Tata 1mg–style lab & packages (not wired to APIs). */
+/** Dummy marketing data — Tata 1mg–style lab, packages & panchakarma (not wired to APIs). */
 
 export const DUMMY_CONSULT_PACKAGES = [
   {
@@ -118,6 +118,45 @@ export const DUMMY_CONSULT_PACKAGES = [
       'Condition-specific recommendations',
       'Ongoing progress monitoring',
     ],
+  },
+];
+
+export const DUMMY_PANCHAKARMA = [
+  {
+    id: 'pk-shirodhara',
+    name: 'Shirodhara',
+    description: 'Warm herbal oil on the forehead',
+    duration: '60–75 min',
+    price: 1399,
+    image:
+      'https://i.pinimg.com/1200x/5d/b9/bb/5db9bb336f64106f79babe97c418fb5c.jpg',
+  },
+  {
+    id: 'pk-abhyanga',
+    name: 'Abhyanga',
+    description: 'Full-body therapeutic oil massage',
+    duration: '45–60 min',
+    price: 1299,
+    image:
+      'https://i.pinimg.com/1200x/77/c6/99/77c69994a75bdadd27ce213154bffbd5.jpg',
+  },
+  {
+    id: 'pk-pinda',
+    name: 'Pinda Sweda',
+    description: 'Herbal bolus for joint comfort',
+    duration: '50–70 min',
+    price: 1599,
+    image:
+      'https://i.pinimg.com/1200x/99/80/ba/9980ba65b9add99feae07b708e23ffa4.jpg',
+  },
+  {
+    id: 'pk-nasya',
+    name: 'Nasya',
+    description: 'Nasal therapy for sinus clarity',
+    duration: '30–40 min',
+    price: 999,
+    image:
+      'https://i.pinimg.com/736x/2e/19/2c/2e192ca18c526af9fd31954bd1c90d71.jpg',
   },
 ];
 

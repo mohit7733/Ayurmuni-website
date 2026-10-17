@@ -18,9 +18,12 @@ import {
   Heart,
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import AyurmuniBrandShade from '../components/AyurmuniBrandShade';
 import DiseaseSelectionModal from '../components/DiseaseSelectionModal';
+import LabHomeBanner from '../components/LabHomeBanner';
 import { Utils } from '../common/utils';
-import { getBannerImageUri } from '../home/catalog';
+import { getBannerImageUri, resolveImageUrl } from '../home/catalog';
+import useBrands from '../hooks/useBrands';
 import {
   mapAppScreenToPath,
   resolveBannerNavigation,
@@ -50,9 +53,10 @@ import {
   ConcernCarousel,
 } from '../components/ui';
 import { HOME_COPY as T } from '../content/home';
-import { DUMMY_CONSULT_PACKAGES, DUMMY_LAB_TESTS } from '../data/homeDummySections';
+import { DUMMY_CONSULT_PACKAGES, DUMMY_LAB_TESTS, DUMMY_PANCHAKARMA } from '../data/homeDummySections';
 import '../design/pages/home.css';
 import '../design/pages/dummy-offers.css';
+import '../design/pages/orange-lab.css';
 
 let prakritiModalShownThisSession = false;
 let diseaseModalShownThisSession = false;
@@ -322,16 +326,19 @@ export default function Home() {
   const { appointments: upcomingAppointments, loading: loadingAppointments } =
     useUpcomingAppointments(8, secondaryReady);
   const { preview: activeDiet } = useActiveDietHome(secondaryReady);
+  const { brands } = useBrands();
 
   const [name, setName] = useState('');
   const [activeHomeModal, setActiveHomeModal] = useState('none');
   const [showDiseaseModal, setShowDiseaseModal] = useState(false);
   const [showPrakritiModal, setShowPrakritiModal] = useState(false);
 
-  const serviceList = useMemo(
-    () => (Array.isArray(categories) ? categories.filter(Boolean) : []),
-    [categories],
-  );
+  const serviceList = useMemo(() => {
+    const list = Array.isArray(categories) ? categories.filter(Boolean) : [];
+    const isLab = (item) =>
+      /lab/i.test(`${item?.name || ''} ${item?.redirect_url || item?.app_screen || ''}`);
+    return [...list.filter((item) => !isLab(item)), ...list.filter(isLab)];
+  }, [categories]);
 
   const bannerItems = useMemo(
     () =>
@@ -398,6 +405,15 @@ export default function Home() {
   };
 
   const handleCategoryPress = (item) => {
+    const nameKey = item?.name?.trim().toLowerCase() ?? '';
+    if (/lab/i.test(`${nameKey} ${item?.redirect_url || item?.app_screen || item?.screen || ''}`)) {
+      navigate('/labs');
+      return;
+    }
+    if (/panchakarma|panchkarma/i.test(`${nameKey} ${item?.redirect_url || item?.app_screen || item?.screen || ''}`)) {
+      navigate('/panchakarma');
+      return;
+    }
     const fromRedirect = resolveBannerNavigation({
       redirect_url: item?.redirect_url || item?.app_screen || item?.screen,
     });
@@ -405,7 +421,6 @@ export default function Home() {
       navigate(fromRedirect.path);
       return;
     }
-    const nameKey = item?.name?.trim().toLowerCase() ?? '';
     const serviceKey = resolveServiceCategoryKey(item) ?? nameKey;
     const path = mapAppScreenToPath(serviceKey);
     navigate(path && path !== '/home' ? path : '/products');
@@ -671,6 +686,35 @@ export default function Home() {
             </Reveal>
           ) : null}
 
+          {brands.length > 0 ? (
+            <Reveal as="section" className="hm-section hm-panel hm-brands-panel" aria-labelledby="hm-brands-title">
+              <SectionHeader
+                id="hm-brands-title"
+                eyebrow={T.brandsEyebrow}
+                title={T.brandsTitle}
+                description={T.brandsText}
+              />
+              <ConcernCarousel label={T.brandsTitle}>
+                {brands.map((item) => (
+                  <Tile
+                    key={item.id}
+                    className="hm-brand-tile"
+                    image={item.image_url || resolveImageUrl(item)}
+                    icon={Pill}
+                    label={item.name}
+                    onClick={() =>
+                      navigate(
+                        `/products/category?mode=product&brand=${item.id}&name=${encodeURIComponent(
+                          item.name,
+                        )}${medicineCategoryId ? `&service=${medicineCategoryId}` : ''}`,
+                      )
+                    }
+                  />
+                ))}
+              </ConcernCarousel>
+            </Reveal>
+          ) : null}
+
           {showVisitedDoctors || showSuggestedDoctors ? (
             <div className={splitDoctorRow ? 'hm-doctor-row hm-doctor-row--split' : 'hm-doctor-row'}>
               {loadingVisitedDoctors && visitedDoctors.length === 0 ? (
@@ -837,11 +881,18 @@ export default function Home() {
             </Rail>
           </Reveal>
 
-          <Reveal as="section" className="hm-section hm-panel" aria-labelledby="hm-lab-title">
+          <Reveal as="section" className="hm-section hm-panel hm-lab" aria-labelledby="hm-lab-title">
             <SectionHeader
               id="hm-lab-title"
+              eyebrow={T.labEyebrow}
               title={T.labTitle}
+              description={T.labText}
               action={<ViewAll label={T.labTitle} onClick={() => navigate('/labs')} />}
+            />
+            <LabHomeBanner
+              title={T.labBannerTitle}
+              subtitle={T.labBannerSub}
+              onClick={() => navigate('/labs')}
             />
             <Rail label={T.labTitle}>
               {DUMMY_LAB_TESTS.map((item) => (
@@ -850,6 +901,30 @@ export default function Home() {
                 </RailItem>
               ))}
             </Rail>
+          </Reveal>
+
+          <Reveal as="section" className="hm-section hm-panel" aria-labelledby="hm-panchakarma-title">
+            <SectionHeader
+              id="hm-panchakarma-title"
+              eyebrow={T.panchakarmaEyebrow}
+              title={T.panchakarmaTitle}
+              description={T.panchakarmaText}
+              action={<ViewAll label={T.panchakarmaTitle} onClick={() => navigate('/panchakarma')} />}
+            />
+            <Rail label={T.panchakarmaTitle}>
+              {DUMMY_PANCHAKARMA.map((item) => (
+                <RailItem key={item.id} size="product">
+                  <DummyOfferCard item={item} kind="therapy" onClick={() => navigate('/panchakarma')} />
+                </RailItem>
+              ))}
+            </Rail>
+          </Reveal>
+
+          <Reveal as="div">
+            <AyurmuniBrandShade
+              onConsult={() => navigate('/consult')}
+              onShop={() => navigate('/medicines')}
+            />
           </Reveal>
 
           {!loading && !hasAnyContent ? (

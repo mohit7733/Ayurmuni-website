@@ -1,26 +1,41 @@
-import { ArrowRight, Check, Clock, FileText, FlaskConical, Heart, Shield, Zap } from 'lucide-react';
+import {
+  ArrowRight,
+  Check,
+  Clock3,
+  FileText,
+  FlaskConical,
+  Heart,
+  ShieldCheck,
+  Sparkles,
+  Zap,
+} from 'lucide-react';
 import AppShell from '../components/AppShell';
 import DummyOfferCard from '../components/DummyOfferCard';
 import PageHeader from '../components/PageHeader';
 import { showSuccessToast } from '../config/key';
-import { DUMMY_LAB_TESTS, DUMMY_ORANGE_LAB_FEATURES } from '../data/homeDummySections';
+import { HOME_COPY as T } from '../content/home';
+import {
+  DUMMY_LAB_TESTS,
+  DUMMY_ORANGE_LAB_FEATURES,
+} from '../data/homeDummySections';
 import '../design/pages/dummy-offers.css';
+import '../design/pages/packages.css';
 import '../design/pages/orange-lab.css';
 
 const HERO_IMG =
-  'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=900&q=80';
+  'https://i.pinimg.com/736x/ee/8e/f4/ee8ef4209318f635bbf36fe592fdf4c7.jpg';
 
-const FEATURE_ICON = {
+const FEATURE_ICONS = {
   flask: FlaskConical,
   report: FileText,
   bolt: Zap,
-  shield: Shield,
-  clock: Clock,
+  shield: ShieldCheck,
+  clock: Clock3,
   heart: Heart,
 };
 
 const comingSoon = () => {
-  showSuccessToast('Lab booking will be available soon.', 'info');
+  showSuccessToast(T.labComingSoonToast, 'info');
 };
 
 export default function OrangeLab() {
@@ -28,64 +43,87 @@ export default function OrangeLab() {
 
   return (
     <AppShell tab="home">
-      <section className="ol-page">
-        <PageHeader
-          title="Health Lab"
-          subtitle="Reliable testing, with the convenience of home collection."
-          backTo="/home"
-        />
+      <section className="pk-page">
+        <PageHeader title={T.labPageTitle} subtitle={T.labPageSubtitle} backTo="/home" />
 
-        <section className="ol-hero" aria-labelledby="ol-hero-title">
-          <img className="ol-hero__image" src={HERO_IMG} alt="" />
-          <div className="ol-hero__content">
-            <span className="ol-hero__eyebrow"><FlaskConical size={15} aria-hidden /> CARE STARTS WITH CLARITY</span>
-            <h2 id="ol-hero-title">Your health, in focus.</h2>
-            <p>Get the insights you need with convenient at-home sample collection and reports you can share with your doctor.</p>
-            <div className="ol-hero__trust">
-              <span><Check size={15} aria-hidden /> At-home sample collection</span>
-              <span><Check size={15} aria-hidden /> Clear, doctor-ready reports</span>
+        <section className="pk-hero" aria-labelledby="ol-hero-title">
+          <img className="pk-hero__image" src={HERO_IMG} alt="" />
+          <div className="pk-hero__content">
+            <span className="pk-hero__eyebrow">
+              <Sparkles size={15} aria-hidden /> {T.labHeroEyebrow.toUpperCase()}
+            </span>
+            <h2 id="ol-hero-title">{T.labHeroTitle}</h2>
+            <p>{T.labHeroSub}</p>
+            <div className="pk-hero__trust">
+              <span>
+                <Check size={15} aria-hidden /> {T.labTrustSafe}
+              </span>
+              <span>
+                <Check size={15} aria-hidden /> {T.labTrustNabl}
+              </span>
+              <span>
+                <Check size={15} aria-hidden /> {T.labTrustReports}
+              </span>
             </div>
           </div>
-          <span className="ol-hero__note"><Shield size={17} aria-hidden /> Trusted testing partners</span>
+          <div className="pk-hero__seal" aria-label={T.labTrustNabl}>
+            <ShieldCheck size={19} aria-hidden />
+            <span>
+              NABL
+              <br />
+              partner labs
+            </span>
+          </div>
         </section>
 
-        <section className="ol-benefits" aria-label="What to expect">
+        <ul className="ol-features" aria-label={T.labFeaturesLabel}>
           {features.map((item) => {
-            const Icon = FEATURE_ICON[item.icon] || FlaskConical;
+            const Icon = FEATURE_ICONS[item.icon] || FlaskConical;
             return (
-              <article key={item.id} className="ol-benefit">
-                <span className="ol-benefit__icon"><Icon size={19} aria-hidden /></span>
-                <div>
-                  <h3>{item.title}</h3>
-                  <p>{item.subtitle}</p>
-                </div>
-              </article>
+              <li key={item.id} className="ol-feature">
+                <span className="ol-feature__icon" aria-hidden>
+                  <Icon size={18} />
+                </span>
+                <span className="ol-feature__copy">
+                  <strong>{item.title}</strong>
+                  <small>{item.subtitle}</small>
+                </span>
+              </li>
             );
           })}
-        </section>
+        </ul>
 
-        <section className="ol-catalog" aria-labelledby="ol-catalog-title">
-          <header className="ol-catalog__header">
-            <div>
-              <p className="ol-catalog__eyebrow">TESTS &amp; PANELS</p>
-              <h2 id="ol-catalog-title">Popular health checks</h2>
+        <section className="pk-group" aria-labelledby="ol-tests-title">
+          <header className="pk-group__header">
+            <span className="pk-group__icon">
+              <FlaskConical size={20} aria-hidden />
+            </span>
+            <div className="pk-group__copy">
+              <h3 id="ol-tests-title">{T.labPopularTitle}</h3>
+              <p>{T.labPopularText}</p>
             </div>
-            <p>Choose a panel to see what it checks.</p>
+            <span className="pk-group__count">
+              {DUMMY_LAB_TESTS.length} tests
+            </span>
           </header>
-          <div className="ol-grid">
+          <div className="pk-grid">
             {DUMMY_LAB_TESTS.map((item) => (
               <DummyOfferCard key={item.id} item={item} kind="lab" onClick={comingSoon} />
             ))}
           </div>
         </section>
 
-        <button type="button" className="ol-cta" onClick={comingSoon}>
-          <span className="ol-cta__icon"><Heart size={22} aria-hidden /></span>
-          <span className="ol-cta__copy">
-            <strong>Looking for a complete health check?</strong>
-            <span>Explore curated panels with convenient home collection.</span>
+        <button type="button" className="pk-cta" onClick={comingSoon}>
+          <span className="pk-cta__icon">
+            <FlaskConical size={22} aria-hidden />
           </span>
-          <span className="ol-cta__action">Explore panels <ArrowRight size={17} aria-hidden /></span>
+          <span className="pk-cta__copy">
+            <strong>{T.labCtaTitle}</strong>
+            <span>{T.labCtaText}</span>
+          </span>
+          <span className="pk-cta__action">
+            {T.labCtaAction} <ArrowRight size={17} aria-hidden />
+          </span>
         </button>
       </section>
     </AppShell>

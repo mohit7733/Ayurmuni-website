@@ -1,0 +1,483 @@
+/* Medicine store — matches the Ayurmuni app Medicine screen */
+
+.st-page--medicines {
+  gap: 0;
+  max-width: 1120px;
+  padding: 8px 20px 32px;
+  background: #fdfdfb;
+}
+
+.med-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 56px;
+  margin: 0 -4px 6px;
+}
+
+.med-bar__copy {
+  min-width: 0;
+}
+
+.med-bar h1 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.med-bar p {
+  margin: 1px 0 0;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.med-bar__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.med-icon {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: #0d614e;
+  cursor: pointer;
+}
+
+.med-icon:hover {
+  background: rgba(13, 97, 78, 0.08);
+}
+
+.med-icon__badge {
+  position: absolute;
+  top: 4px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #a52238;
+  color: #fff;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+}
+
+.med-banner {
+  position: relative;
+  margin: 0 -20px 10px;
+  overflow: hidden;
+  background: #e8f3f0;
+}
+
+.med-banner img {
+  display: block;
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.med-banner__dots {
+  position: absolute;
+  right: 0;
+  bottom: 8px;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.med-banner__dots button {
+  width: 6px;
+  height: 6px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+}
+
+.med-banner__dots button.is-on {
+  width: 16px;
+  background: #fff;
+}
+
+.med-block {
+  min-width: 0;
+  margin-bottom: 4px;
+}
+
+.med-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 28px;
+  margin: 16px 0 8px;
+  padding: 0 4px;
+}
+
+.med-head h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.med-head button {
+  flex-shrink: 0;
+  border: 0;
+  background: transparent;
+  color: #0d614e;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.med-rail,
+.med-concerns,
+.med-brands {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+  padding: 2px 0 4px;
+  overflow-x: auto;
+  list-style: none;
+  scrollbar-width: none;
+}
+
+.med-rail::-webkit-scrollbar,
+.med-concerns::-webkit-scrollbar,
+.med-brands::-webkit-scrollbar {
+  display: none;
+}
+
+.med-rail > li,
+.med-concerns > li,
+.med-brands > li {
+  flex: 0 0 auto;
+}
+
+.med-recent {
+  display: flex;
+  flex-direction: column;
+  width: min(168px, 42vw);
+  padding: 8px;
+  border: 1px solid #e8eef2;
+  border-radius: 12px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.med-recent__img {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  margin-bottom: 6px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #f3f7f5;
+  color: #94a3b8;
+}
+
+.med-recent__img img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.med-recent strong {
+  min-height: 32px;
+  color: #1e293b;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.med-recent small {
+  margin-top: 2px;
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.med-recent em {
+  margin-top: 4px;
+  color: #0d614e;
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 600;
+}
+
+.med-concerns {
+  gap: 4px;
+}
+
+.med-concern {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 96px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.med-concern__img {
+  display: grid;
+  place-items: center;
+  width: 75px;
+  height: 75px;
+  margin-bottom: 6px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #f1f4f2;
+  color: #0d614e;
+}
+
+.med-concern__img img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.med-concern > span:last-child {
+  width: 100%;
+  color: #0d614e;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 14px;
+  text-align: center;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.med-brands {
+  gap: 5px;
+}
+
+.med-brand {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 16px;
+  background: #e8f3f0;
+  cursor: pointer;
+}
+
+.med-brand img,
+.med-brand__fallback {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.med-brand__fallback {
+  display: grid;
+  place-items: center;
+  color: #0d614e;
+  background: rgba(13, 97, 78, 0.08);
+}
+
+.med-brand > span:last-child {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 2px 5px;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.st-page--medicines .med-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 720px) {
+  .st-page--medicines .med-grid {
+    grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  }
+}
+
+.med-more {
+  min-height: 36px;
+  margin-top: 8px;
+  color: #94a3b8;
+  font-size: 13px;
+  text-align: center;
+}
+
+/* App product card */
+.am-product-card--app {
+  border: 1px solid #e8eef2;
+  border-radius: 14px;
+  box-shadow: none;
+  transform: none;
+}
+
+.am-product-card--app:hover {
+  border-color: #e8eef2;
+  box-shadow: none;
+  transform: none;
+}
+
+.am-product-card--app .am-product-card__media {
+  height: 136px;
+  aspect-ratio: auto;
+  background: #f8fafb;
+}
+
+.am-product-card--app .am-product-card__media img {
+  padding: 0;
+  object-fit: cover;
+  transform: none;
+}
+
+.am-product-card--app:hover .am-product-card__media img {
+  transform: none;
+}
+
+.am-product-card--app .am-product-card__corner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 5;
+  padding: 3px 7px;
+  border-bottom-right-radius: 10px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.am-product-card--app .am-product-card__corner.is-oos {
+  background: #dc2626;
+}
+
+.am-product-card--app .am-product-card__body {
+  gap: 0;
+  height: 78px;
+  padding: 8px 10px 10px;
+}
+
+.am-product-card--app .am-product-card__name {
+  height: 18px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+  color: #1e293b;
+  -webkit-line-clamp: 1;
+}
+
+.am-product-card--app .am-product-card__sub {
+  height: 14px;
+  margin: 4px 0 0;
+  overflow: hidden;
+  color: #94a3b8;
+  font-size: 11px;
+  line-height: 14px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.am-product-card--app .am-product-card__sub.is-low {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.am-product-card--app .am-product-card__price {
+  height: 20px;
+  margin-top: 4px;
+  flex-wrap: nowrap;
+}
+
+.am-product-card--app .am-product-card__price strong {
+  color: #111827;
+  font-size: 14px;
+}
+
+.am-product-card--app .am-product-card__price s {
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.am-product-card--app .am-product-card__rate {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: auto;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.am-product-card--app .am-product-card__rate svg {
+  fill: #fbbf24;
+  color: #fbbf24;
+}
+
+.am-product-card--app .am-product-card__action.is-overlay {
+  position: absolute;
+  top: 96px;
+  right: 8px;
+  z-index: 3;
+  padding: 0;
+}
+
+.am-product-card--app .am-product-card__action .am-cart-btn {
+  width: auto;
+  min-width: 64px;
+  height: 32px;
+  border-color: #0d614e;
+  background: #fff;
+  color: #0d614e;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.am-product-card--app .am-product-card__action .am-cart-btn.is-qty,
+.am-product-card--app .am-product-card__action .am-cart-btn.is-added {
+  background: #fff;
+  color: #0d614e;
+}

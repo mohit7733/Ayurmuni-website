@@ -194,6 +194,41 @@
   transform: scale(0.97);
 }
 
+.do-card--lab .do-card__book,
+.do-card--therapy .do-card__book {
+  border: 1px solid var(--am-primary);
+  background: var(--am-surface);
+  color: var(--am-primary);
+}
+
+.do-card--lab .do-card__book:hover,
+.do-card--therapy .do-card__book:hover {
+  background: var(--am-primary);
+  color: var(--am-on-primary);
+  box-shadow: 0 8px 18px rgba(13, 97, 78, 0.22);
+}
+
+.do-card--therapy .do-card__group {
+  display: inline-flex;
+  align-self: flex-start;
+  margin-left: var(--am-space-4);
+  padding: 3px 10px;
+  border: 1px solid var(--am-gold-100);
+  border-radius: var(--am-radius-pill);
+  background: var(--am-accent-soft);
+  color: var(--am-accent-strong);
+  font-weight: var(--am-weight-semibold);
+}
+
+.do-card--therapy h3 {
+  font-family: var(--am-font-display);
+  font-size: var(--am-text-md);
+}
+
+.do-card--therapy .do-card__price strong {
+  color: var(--am-primary);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .do-card,
   .do-card__img img,

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, BadgeCheck, Briefcase, Heart, MapPin, Star } from 'lucide-react';
+import { ArrowRight, BadgeCheck, Briefcase, MapPin, Star } from 'lucide-react';
 import { formatDoctorDisplayName } from '../consult/appointmentUtils';
 import {
   doctorDisplayName,
@@ -8,6 +8,7 @@ import {
   doctorFavorite,
   doctorImage,
   doctorLocation,
+  doctorOffersVideo,
   doctorQualification,
   doctorRating,
   doctorSpeciality,
@@ -17,6 +18,8 @@ import {
 import { showSuccessToast } from '../config/key';
 import { requireAuth } from '../services/guestAuth';
 import { toggleFavDoctor } from '../services/consultService';
+import FavButton from './ui/FavButton';
+import VideoCallButton from './ui/VideoCallButton';
 
 function DoctorTableRow({ item, fallbackSpeciality }) {
   const navigate = useNavigate();
@@ -32,8 +35,17 @@ function DoctorTableRow({ item, fallbackSpeciality }) {
   const [fav, setFav] = useState(() => doctorFavorite(item));
   const reviewLabel = reviewCount === 1 ? '1 review' : `${reviewCount} reviews`;
 
+  const video = doctorOffersVideo(item);
+
   const openProfile = () => {
     if (id) navigate(`/consult/doctors/${id}`);
+  };
+
+  const bookVideo = async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!(await requireAuth('Please login to book a video consultation'))) return;
+    if (id) navigate(`/consult/doctors/${id}/slots`, { state: { doctor: item } });
   };
 
   const toggleFav = async (event) => {
@@ -115,15 +127,14 @@ function DoctorTableRow({ item, fallbackSpeciality }) {
       </td>
       <td className="hm-doc-table__actions-cell">
         <div className="hm-doc-table__actions">
-          <button
-            type="button"
-            className={fav ? 'hm-doc-table__fav is-on' : 'hm-doc-table__fav'}
-            aria-pressed={fav}
-            aria-label={fav ? `Remove ${name} from favourites` : `Save ${name}`}
+          <FavButton
+            on={fav}
+            label={fav ? `Remove ${name} from favourites` : `Save ${name}`}
             onClick={toggleFav}
-          >
-            <Heart size={16} aria-hidden fill={fav ? 'currentColor' : 'none'} />
-          </button>
+          />
+          {video ? (
+            <VideoCallButton label={`Book a video call with ${name}`} onClick={bookVideo} />
+          ) : null}
           <button type="button" className="hm-doc-table__profile" aria-label={`View ${name} profile`} onClick={openProfile}>
             <span>View profile</span>
             <ArrowRight size={14} aria-hidden />

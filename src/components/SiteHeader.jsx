@@ -7,6 +7,7 @@ import {
   LogOut,
   MapPin,
   Menu,
+  MessageCircle,
   Search,
   Settings,
   ShoppingBag,
@@ -448,6 +449,10 @@ export default function SiteHeader({ minimal = false }) {
                     <Link className="site-menu-row" to="/profile/appointments" onClick={() => setUserOpen(false)}>
                       <Stethoscope size={16} aria-hidden />
                       My Consultations
+                    </Link>
+                    <Link className="site-menu-row" to="/profile/chats" onClick={() => setUserOpen(false)}>
+                      <MessageCircle size={16} aria-hidden />
+                      Ayurchat
                     </Link>
                     <Link
                       className="site-menu-row"

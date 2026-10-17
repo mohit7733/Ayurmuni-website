@@ -83,20 +83,24 @@ export default function CategoryProducts() {
     if (brandId) {
       return {
         brand_name_id: brandId,
-        service_category_id: serviceCategoryId,
+        ...(serviceCategoryId ? { service_category_id: serviceCategoryId } : {}),
       };
     }
     if (mode === 'health') {
       return {
-        health_category_id: activeCategoryId,
-        health_disease_id: selectedSubcategoryId,
-        service_category_id: serviceCategoryId,
+        ...(activeCategoryId ? { health_category_id: activeCategoryId } : {}),
+        ...(selectedSubcategoryId ? { health_disease_id: selectedSubcategoryId } : {}),
+        ...(serviceCategoryId && (activeCategoryId || selectedSubcategoryId)
+          ? { service_category_id: serviceCategoryId }
+          : {}),
       };
     }
     return {
-      id: activeCategoryId,
-      product_subcategory_id: selectedSubcategoryId,
-      service_category_id: serviceCategoryId,
+      ...(activeCategoryId ? { id: activeCategoryId } : {}),
+      ...(selectedSubcategoryId ? { product_subcategory_id: selectedSubcategoryId } : {}),
+      ...(serviceCategoryId && (activeCategoryId || selectedSubcategoryId)
+        ? { service_category_id: serviceCategoryId }
+        : {}),
     };
   }, [brandId, mode, activeCategoryId, selectedSubcategoryId, serviceCategoryId]);
 

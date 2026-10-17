@@ -5,7 +5,6 @@ import {
   BriefcaseMedical,
   CalendarClock,
   ExternalLink,
-  Heart,
   Languages,
   MapPin,
   RefreshCw,
@@ -27,6 +26,7 @@ import {
   doctorFavorite,
   doctorImage,
   doctorLocation,
+  doctorOffersVideo,
   doctorQualification,
   doctorRating,
   doctorSpeciality,
@@ -51,11 +51,12 @@ import {
   Disclaimer,
   EmptyState,
   ErrorState,
-  IconButton,
+  FavButton,
   Rating,
   ReviewCard,
   Skeleton,
   SkeletonText,
+  VideoCallButton,
 } from '../components/ui';
 import { DOCTOR_PROFILE_COPY as T } from '../content/doctorProfile';
 import '../design/pages/doctor-profile.css';
@@ -222,9 +223,10 @@ export default function DoctorProfile() {
 
   const headerActions = (
     <>
-      <IconButton label={fav ? T.saved : T.save} pressed={fav} onClick={toggleFav}>
-        <Heart size={18} fill={fav ? 'currentColor' : 'none'} aria-hidden />
-      </IconButton>
+      <FavButton on={fav} label={fav ? T.saved : T.save} onClick={toggleFav} />
+      {doctorOffersVideo(doctor) ? (
+        <VideoCallButton label={`Book a video call with Dr. ${displayName}`} onClick={book} />
+      ) : null}
       <ShareButton
         title={`Dr. ${displayName} - Ayurmuni`}
         text={`Consult with Dr. ${displayName}, ${speciality} on Ayurmuni`}

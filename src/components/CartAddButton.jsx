@@ -16,7 +16,7 @@ import "../design/cart-button.css";
  * Uses the same cart context + stock/Rx rules as the product detail page.
  * Every click stops propagation so the parent card never navigates.
  */
-export default function CartAddButton({ item, className = "" }) {
+export default function CartAddButton({ item, className = "", compact = false }) {
   const { variantQuantities, addingVariantId, syncCartQuantity } = useCart();
   const variantId = String(item?.variant_id ?? item?.variantId ?? "");
   const cartQty = variantQuantities[variantId] ?? 0;
@@ -138,10 +138,10 @@ export default function CartAddButton({ item, className = "" }) {
     >
       {adding ? (
         <Loader2 size={16} className="am-cart-btn__spin" aria-hidden />
-      ) : (
+      ) : compact ? null : (
         <ShoppingBag size={15} aria-hidden />
       )}
-      {adding ? "Adding…" : rx ? "Add (Rx)" : "Add to cart"}
+      {adding ? (compact ? "…" : "Adding…") : compact ? "ADD" : rx ? "Add (Rx)" : "Add to cart"}
     </button>
   );
 }
