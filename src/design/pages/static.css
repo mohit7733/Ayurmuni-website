@@ -428,41 +428,251 @@
   }
 }
 
-/* ---------- Network ---------- */
+/* ── Network error page ── */
 .sx-network {
-  background: radial-gradient(
-    60% 50% at 50% 0%,
-    var(--am-warning-soft),
-    transparent 70%
-  );
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 100%;
+  padding: 48px 32px;
+  background:
+    radial-gradient(
+      ellipse at 15% 20%,
+      var(--am-warning-soft),
+      transparent 38%
+    ),
+    radial-gradient(ellipse at 90% 85%, rgba(13, 97, 78, 0.07), transparent 42%);
 }
+
+/* ── Desktop panel ── */
+/* Remove the decorative line above the card */
+.sx-network__card::before {
+  content: none;
+}
+
+/* Keep the card clean and desktop-friendly */
+/* Give the card's contents room away from its rounded corners */
 .sx-network__card {
   position: relative;
-  overflow: hidden;
-  box-shadow:
-    0 2px 4px rgba(10, 40, 32, 0.05),
-    0 28px 60px rgba(10, 40, 32, 0.14);
-  animation: sx-in 600ms var(--am-ease-out) both;
+  overflow: visible;
+  padding: 36px;
+  border-top: none;
 }
-.sx-network__card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--am-warning), var(--am-accent));
+
+/* Keep the back button inside the card with clear space */
+.sx-network__back {
+  position: relative;
+  z-index: 2;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  min-height: 44px;
+  padding: 0 16px;
+  margin: 0;
+
+  border: 1px solid var(--am-border, #dce7e1);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--am-text, #263b34);
+
+  font-family: var(--am-font-display);
+  font-size: var(--am-text-sm, 14px);
+  font-weight: var(--am-weight-semibold, 600);
+  line-height: 1;
+
+  cursor: pointer;
+  appearance: none;
+  box-sizing: border-box;
+
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
 }
-.sx-network__mark {
-  background: linear-gradient(
-    135deg,
+
+/* Avoid hover movement that can make the button look clipped */
+.sx-network__back:hover {
+  transform: none;
+  background: #f4f8f5;
+  border-color: #b9d1c5;
+}
+
+.sx-network__back:active {
+  transform: none;
+}
+
+.sx-network__back:focus-visible {
+  outline: 3px solid var(--am-focus-ring, rgb(13 97 78 / 22%));
+  outline-offset: 3px;
+}
+
+.sx-network__back svg {
+  display: block;
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+}
+
+.sx-network__back:hover {
+  transform: none;
+  border-color: var(--am-green-300, #b9d1c5);
+  background: var(--am-green-50, #f4f8f5);
+  color: var(--am-primary, #0d614e);
+}
+
+.sx-network__back:focus-visible {
+  outline: 3px solid var(--am-focus-ring);
+  outline-offset: 3px;
+}
+
+/* ── Main two-column content ── */
+.sx-network__content {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.9fr) minmax(0, 1.1fr);
+  align-items: center;
+  gap: clamp(36px, 6vw, 76px);
+  padding: 44px 24px 8px;
+}
+
+/* ── Illustration side ── */
+.sx-network__visual {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 280px;
+  border-radius: 22px;
+  background: radial-gradient(
+    circle at 50% 40%,
     var(--am-warning-soft),
-    color-mix(in srgb, var(--am-warning-soft) 60%, var(--am-warning))
+    transparent 65%
   );
-  animation: sx-breathe 2.2s ease-in-out infinite;
 }
-.sx-network__card h1 {
-  letter-spacing: -0.025em;
+
+.sx-network__visual-ring {
+  display: grid;
+  place-items: center;
+  width: 164px;
+  height: 164px;
+  border: 1px solid color-mix(in srgb, var(--am-warning) 28%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--am-warning-soft) 45%, white);
+  color: var(--am-warning);
+  box-shadow:
+    0 0 0 18px color-mix(in srgb, var(--am-warning-soft) 35%, transparent),
+    0 18px 40px rgba(10, 40, 32, 0.07);
+}
+
+.sx-network__visual-caption {
+  margin-top: 28px;
+  color: var(--am-text-muted);
+  font-family: var(--am-font-body);
+  font-size: 10px;
+  font-weight: var(--am-weight-semibold);
+  letter-spacing: 0.16em;
+}
+
+/* ── Message side ── */
+.sx-network__message {
+  max-width: 440px;
+}
+
+.sx-network__mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+  padding: 7px 12px;
+  border: 1px solid color-mix(in srgb, var(--am-warning) 28%, transparent);
+  border-radius: var(--am-radius-pill);
+  background: var(--am-warning-soft);
+  color: var(--am-text-soft);
+  font-family: var(--am-font-body);
+  font-size: var(--am-text-xs);
+  font-weight: var(--am-weight-semibold);
+}
+
+.sx-network__status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--am-warning);
+}
+
+.sx-network__message h1 {
+  margin: 0;
+  color: var(--am-text);
+  font-family: var(--am-font-display);
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  font-weight: var(--am-weight-bold);
+  letter-spacing: -0.04em;
+  line-height: 1.12;
+}
+
+.sx-network__description {
+  margin: 18px 0 0;
+  color: var(--am-text-muted);
+  font-family: var(--am-font-body);
+  font-size: var(--am-text-base);
+  line-height: 1.8;
+}
+
+.sx-network__hint {
+  margin-top: 20px;
+  padding-left: 14px;
+  border-left: 2px solid var(--am-green-300);
+  color: var(--am-text-soft);
+  font-family: var(--am-font-body);
+  font-size: var(--am-text-sm);
+  line-height: 1.7;
+}
+
+.sx-network__actions {
+  margin-top: 28px;
+}
+
+.sx-network__actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-width: 190px;
+  min-height: 48px;
+  padding-inline: 24px;
+  border-radius: var(--am-radius-pill);
+  font-family: var(--am-font-display);
+  font-weight: var(--am-weight-bold);
+}
+
+/* ── Motion accessibility ── */
+@keyframes sx-network-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sx-network__card {
+    animation: none;
+  }
+
+  .sx-network__back {
+    transition: none;
+  }
+
+  .sx-network__back:hover {
+    transform: none;
+  }
 }
 
 /* ---------- Legal / policy ---------- */
