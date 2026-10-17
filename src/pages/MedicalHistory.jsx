@@ -3,7 +3,7 @@ import AuthShell from '../components/AuthShell';
 
 export default function MedicalHistory() {
   return (
-    <AuthShell>
+    <AuthShell hideFooter welcomeMode={false} className="auth-shell--assessment">
       <Questionnaire mode="medical" />
     </AuthShell>
   );
