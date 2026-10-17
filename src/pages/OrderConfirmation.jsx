@@ -49,56 +49,60 @@ export default function OrderConfirmation() {
   return (
     <AppShell tab="cart">
       <section className="or-page or-confirm">
-        <div className="or-confirm__badge" aria-hidden>
-          <Check size={36} strokeWidth={2.5} />
-        </div>
-        <h1>{T.confirmTitle}</h1>
-        <p className="or-confirm__lead">{T.confirmText}</p>
-        {orderNo ? <p className="or-confirm__code">#{orderNo}</p> : null}
-
-        {items.length ? (
-          <div className="or-card">
-            <h2>{T.orderItems}</h2>
-            {items.map((item) => (
-              <div key={item.id || item.variant_id} className="or-item or-item--no-price">
-                <span className="or-item__thumb">
-                  {item.image ? (
-                    <img src={item.image} alt="" loading="lazy" decoding="async" />
-                  ) : (
-                    <Leaf size={20} aria-hidden />
-                  )}
-                </span>
-                <p className="or-item__name">
-                  {item.name}
-                  <small>{T.qtyPrice(item.quantity, formatRupee(item.price))}</small>
-                </p>
-              </div>
-            ))}
+        <div className="or-confirm__layout">
+          <div className="or-confirm__main">
+            <div className="or-confirm__badge" aria-hidden>
+              <Check size={36} strokeWidth={2.5} />
+            </div>
+            <h1>{T.confirmTitle}</h1>
+            <p className="or-confirm__lead">{T.confirmText}</p>
+            {orderNo ? <p className="or-confirm__code">#{orderNo}</p> : null}
+            <div className="or-confirm__actions">
+              <Button variant="secondary" onClick={() => navigate('/home')}>
+                {T.home}
+              </Button>
+              <Button variant="primary" onClick={() => navigate('/products')}>
+                {T.continueShopping}
+              </Button>
+              {order?.id || orderNo ? (
+                <Button
+                  variant="ghost"
+                  onClick={() => navigate(`/profile/orders/${order.id || orderNo}`)}
+                >
+                  {T.trackOrder}
+                </Button>
+              ) : orderNo ? (
+                <Button variant="ghost" onClick={() => navigate('/profile/orders')}>
+                  {T.viewOrders}
+                </Button>
+              ) : null}
+            </div>
           </div>
-        ) : null}
 
-        <div className="or-confirm__actions">
-          <Button variant="secondary" onClick={() => navigate('/home')}>
-            {T.home}
-          </Button>
-          <Button variant="primary" onClick={() => navigate('/products')}>
-            {T.continueShopping}
-          </Button>
-          {order?.id || orderNo ? (
-            <Button
-              variant="ghost"
-              onClick={() => navigate(`/profile/orders/${order.id || orderNo}`)}
-            >
-              {T.trackOrder}
-            </Button>
-          ) : orderNo ? (
-            <Button variant="ghost" onClick={() => navigate('/profile/orders')}>
-              {T.viewOrders}
-            </Button>
-          ) : null}
+          <div className="or-confirm__side">
+            {items.length ? (
+              <div className="or-card">
+                <h2>{T.orderItems}</h2>
+                {items.map((item) => (
+                  <div key={item.id || item.variant_id} className="or-item or-item--no-price">
+                    <span className="or-item__thumb">
+                      {item.image ? (
+                        <img src={item.image} alt="" loading="lazy" decoding="async" />
+                      ) : (
+                        <Leaf size={20} aria-hidden />
+                      )}
+                    </span>
+                    <p className="or-item__name">
+                      {item.name}
+                      <small>{T.qtyPrice(item.quantity, formatRupee(item.price))}</small>
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+            <Disclaimer />
+          </div>
         </div>
-
-        <Disclaimer />
       </section>
     </AppShell>
   );
