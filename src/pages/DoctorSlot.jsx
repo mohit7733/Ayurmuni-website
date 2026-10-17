@@ -1,8 +1,21 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, RefreshCw, Upload } from 'lucide-react';
+import {
+  ArrowLeft,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Lock,
+  Moon,
+  RefreshCw,
+  ShieldCheck,
+  Sun,
+  Sunrise,
+  Upload,
+  Video,
+} from 'lucide-react';
 import AppShell from '../components/AppShell';
-import PageHeader from '../components/PageHeader';
 import { getDoctorById } from '../services/consultService';
 import {
   CONSULT_PAY_KEY,
@@ -10,6 +23,7 @@ import {
   doctorDisplayName,
   doctorExperience,
   doctorImage,
+  doctorLocation,
   doctorQualification,
   doctorRating,
   formatRupee,
@@ -36,13 +50,22 @@ import {
   Disclaimer,
   EmptyState,
   IconButton,
-  Rating,
   Skeleton,
   StepIndicator,
   Textarea,
 } from '../components/ui';
 import { BOOKING_COPY as T } from '../content/booking';
 import '../design/pages/booking.css';
+import '../design/pages/booking-premium.css';
+
+const DAYPART_ICONS = { Morning: Sunrise, Afternoon: Sun, Evening: Moon };
+
+const formatLongDate = (value, size = 'long') => {
+  const ymd = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value || ''));
+  if (!ymd) return '';
+  const date = new Date(Number(ymd[1]), Number(ymd[2]) - 1, Number(ymd[3]));
+  return date.toLocaleDateString('en-IN', { weekday: size, day: 'numeric', month: size });
+};
 
 export default function DoctorSlot() {
   const { doctorId } = useParams();
@@ -135,6 +158,21 @@ export default function DoctorSlot() {
   const canContinue =
     !loading && grouped.length > 0 && selectedSlot && isSlotBookable(selectedSlot, selectedDate);
   const slotLabel = selectedSlot?.displayTime || selectedSlot?.start_time || T.pickSlot;
+  const rating = doctorRating(doctor);
+  const heroMeta = [doctorQualification(doctor), doctorExperience(doctor), doctorLocation(doctor)].filter(Boolean);
+  const selectedDateLabel = formatLongDate(selectedDate);
+  const openSlotCount = grouped.reduce(
+    (sum, [, list]) => sum + list.filter((slot) => isSlotBookable(slot, selectedDate)).length,
+    0,
+  );
+
+  const goBack = () => navigate(doctorId ? `/consult/doctors/${doctorId}` : '/consult/doctors');
+
+  const goNextDay = () => {
+    const index = dates.findIndex((item) => item.fullDate === selectedDate);
+    if (index > -1 && index < dates.length - 1) setSelectedDate(dates[index + 1].fullDate);
+    else setMonthOffset((n) => n + 1);
+  };
 
   const toggleRecord = (id) => {
     const key = String(id);
@@ -229,26 +267,61 @@ export default function DoctorSlot() {
 
   return (
     <AppShell tab="consult">
-      <div className="bk-page bk-slots-page">
-        <PageHeader
-          title={T.slotTitle}
-          subtitle={name}
-          backTo={doctorId ? `/consult/doctors/${doctorId}` : '/consult/doctors'}
-          actions={
-            <Button
-              variant="ghost"
-              size="sm"
-              loading={refreshing}
-              disabled={loading}
+      <div className="bk-page bk-slots-page bkp">
+        <section className="bkp-hero" aria-labelledby="bkp-hero-title">
+          <div className="bkp-hero__bar">
+            <button type="button" className="bkp-ghost" onClick={goBack}>
+              <ArrowLeft size={16} aria-hidden />
+              {T.back}
+            </button>
+            <button
+              type="button"
+              className="bkp-ghost"
+              disabled={loading || refreshing}
               onClick={() => loadSlots(selectedDate, true)}
-              leadingIcon={<RefreshCw size={16} aria-hidden />}
             >
+              <RefreshCw size={15} aria-hidden className={refreshing ? 'bkp-spin' : ''} />
               {refreshing ? T.slotRefreshing : T.slotRefresh}
-            </Button>
-          }
-        />
+            </button>
+          </div>
 
-        <StepIndicator steps={T.steps} current={0} label={T.stepsLabel} />
+          <div className="bkp-hero__body">
+            <span className="bkp-hero__photo" aria-hidden>
+              {image ? <img src={image} alt="" /> : <span>{name.replace(/^dr\.?\s*/i, '').charAt(0)}</span>}
+            </span>
+            <div className="bkp-hero__copy">
+              <p className="bkp-eyebrow">{T.slotEyebrow}</p>
+              <h1 id="bkp-hero-title">{T.slotTitle}</h1>
+              <p className="bkp-hero__name">
+                {name}
+                {rating ? <span className="bkp-rating">★ {rating}</span> : null}
+              </p>
+              {heroMeta.length ? <p className="bkp-hero__meta">{heroMeta.join(' · ')}</p> : null}
+              <ul className="bkp-trust">
+                <li>
+                  <ShieldCheck size={14} aria-hidden />
+                  {T.trustVerified}
+                </li>
+                <li>
+                  <Video size={14} aria-hidden />
+                  {T.trustVideo}
+                </li>
+                <li>
+                  <Lock size={14} aria-hidden />
+                  {T.trustSecure}
+                </li>
+              </ul>
+            </div>
+            {feeLabel ? (
+              <div className="bkp-hero__fee">
+                <small>{T.feeLabel}</small>
+                <strong>{feeLabel}</strong>
+              </div>
+            ) : null}
+          </div>
+        </section>
+
+        <StepIndicator steps={T.steps} current={0} label={T.stepsLabel} className="bkp-steps" />
 
         <div className="bk-layout">
           <div className="bk-main">
@@ -278,11 +351,12 @@ export default function DoctorSlot() {
                     type="button"
                     role="option"
                     aria-selected={selectedDate === item.fullDate}
-                    className={`bk-date${selectedDate === item.fullDate ? ' is-on' : ''}`}
+                    className={`bk-date${selectedDate === item.fullDate ? ' is-on' : ''}${item.isToday ? ' is-today' : ''}`}
                     onClick={() => setSelectedDate(item.fullDate)}
                   >
-                    <small>{item.label}</small>
+                    <small>{item.isToday ? T.today : item.label}</small>
                     <strong>{item.day}</strong>
+                    <i aria-hidden />
                   </button>
                 ))}
               </div>
@@ -290,7 +364,13 @@ export default function DoctorSlot() {
 
             <section className="bk-card" aria-labelledby="bk-slots-title">
               <div className="bk-card__head">
-                <h2 id="bk-slots-title">{T.selectSlot}</h2>
+                <div className="bkp-head-copy">
+                  <h2 id="bk-slots-title">{T.selectSlot}</h2>
+                  {selectedDateLabel ? <small>{selectedDateLabel}</small> : null}
+                </div>
+                {!loading && openSlotCount > 0 ? (
+                  <span className="bkp-count">{T.slotsCount(openSlotCount)}</span>
+                ) : null}
               </div>
 
               {loading ? (
@@ -301,49 +381,98 @@ export default function DoctorSlot() {
                   <span className="am-sr-only">{T.loadingSlots}</span>
                 </div>
               ) : grouped.length === 0 ? (
-                <EmptyState compact title={T.noSlots} description={T.noSlotsText} />
+                <EmptyState
+                  compact
+                  className="bkp-empty"
+                  icon={<CalendarDays size={26} />}
+                  title={T.noSlots}
+                  description={T.noSlotsText}
+                  action={
+                    <Button variant="secondary" size="sm" onClick={goNextDay} trailingIcon={<ChevronRight size={16} aria-hidden />}>
+                      {T.checkNextDay}
+                    </Button>
+                  }
+                />
               ) : (
-                grouped.map(([label, list]) => (
-                  <div key={label} className="bk-slot-group">
-                    <h3>{label}</h3>
-                    <div className="bk-slot-grid" role="listbox" aria-label={label}>
-                      {list.map((slot) => {
-                        const bookable = isSlotBookable(slot, selectedDate);
-                        const on = String(selectedSlot?.id) === String(slot.id);
-                        return (
-                          <button
-                            key={slot.id}
-                            type="button"
-                            role="option"
-                            aria-selected={on}
-                            disabled={!bookable}
-                            className={`bk-slot${on ? ' is-on' : ''}`}
-                            onClick={() => setSelectedSlot(withSlotDate(slot, selectedDate))}
-                          >
-                            {slot.displayTime}
-                          </button>
-                        );
-                      })}
+                grouped.map(([label, list]) => {
+                  const DayIcon = DAYPART_ICONS[label] || Clock;
+                  return (
+                    <div key={label} className="bk-slot-group">
+                      <h3>
+                        <span className="bkp-daypart" aria-hidden>
+                          <DayIcon size={14} />
+                        </span>
+                        {label}
+                      </h3>
+                      <div className="bk-slot-grid" role="listbox" aria-label={label}>
+                        {list.map((slot) => {
+                          const bookable = isSlotBookable(slot, selectedDate);
+                          const on = String(selectedSlot?.id) === String(slot.id);
+                          return (
+                            <button
+                              key={slot.id}
+                              type="button"
+                              role="option"
+                              aria-selected={on}
+                              disabled={!bookable}
+                              className={`bk-slot${on ? ' is-on' : ''}`}
+                              onClick={() => setSelectedSlot(withSlotDate(slot, selectedDate))}
+                            >
+                              {slot.displayTime}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </section>
           </div>
 
           <aside className="bk-aside">
-            <div className="bk-doctor">
-              <span className="bk-doctor__photo" aria-hidden={!image}>
-                {image ? <img src={image} alt="" /> : <span>{name.charAt(0)}</span>}
-              </span>
-              <div className="bk-doctor__copy">
-                {doctorRating(doctor) ? <Rating value={doctorRating(doctor)} size="sm" /> : null}
-                <strong>{name}</strong>
-                {doctorQualification(doctor) ? <p>{doctorQualification(doctor)}</p> : null}
-                {doctorExperience(doctor) ? <small>{doctorExperience(doctor)}</small> : null}
-                {feeLabel ? <p className="bk-doctor__fee">{feeLabel}</p> : null}
+            <section className="bkp-summary" aria-labelledby="bkp-summary-title">
+              <div className="bkp-summary__head">
+                <span className="bkp-summary__photo" aria-hidden>
+                  {image ? <img src={image} alt="" /> : <span>{name.replace(/^dr\.?\s*/i, '').charAt(0)}</span>}
+                </span>
+                <div>
+                  <p className="bkp-eyebrow" id="bkp-summary-title">
+                    {T.summaryTitle}
+                  </p>
+                  <strong>{name}</strong>
+                </div>
               </div>
-            </div>
+              <dl className="bkp-summary__rows">
+                <div>
+                  <dt>
+                    <CalendarDays size={15} aria-hidden />
+                    {T.summaryDate}
+                  </dt>
+                  <dd>{selectedDateLabel || '—'}</dd>
+                </div>
+                <div>
+                  <dt>
+                    <Clock size={15} aria-hidden />
+                    {T.summaryTime}
+                  </dt>
+                  <dd className={selectedSlot ? '' : 'is-muted'}>{selectedSlot ? slotLabel : T.pickSlot}</dd>
+                </div>
+                <div className="is-total">
+                  <dt>{T.summaryFee}</dt>
+                  <dd>{feeLabel || '—'}</dd>
+                </div>
+              </dl>
+              <div className="bk-aside__cta">
+                <Button variant="accent" size="lg" block disabled={!canContinue} onClick={goPay}>
+                  {loading ? T.loadingSlots : T.continue}
+                </Button>
+              </div>
+              <p className="bkp-summary__note">
+                <Lock size={13} aria-hidden />
+                {T.summaryNote}
+              </p>
+            </section>
 
             <section className="bk-card" aria-labelledby="bk-concern-title">
               <div className="bk-card__head">
@@ -416,12 +545,6 @@ export default function DoctorSlot() {
               </div>
             </section>
 
-            <div className="bk-aside__cta">
-              <Button variant="accent" size="lg" block disabled={!canContinue} onClick={goPay}>
-                {loading ? T.loadingSlots : T.continue}
-              </Button>
-            </div>
-
             <Disclaimer />
           </aside>
         </div>
@@ -477,7 +600,11 @@ export default function DoctorSlot() {
       <div className="bk-sticky bk-slots-sticky" role="region" aria-label={T.continue}>
         <div className="bk-sticky__meta">
           <strong>{feeLabel || T.consultFee}</strong>
-          <small>{slotLabel}</small>
+          <small>
+            {selectedSlot && selectedDate
+              ? `${formatLongDate(selectedDate, 'short')} · ${slotLabel}`
+              : slotLabel}
+          </small>
         </div>
         <Button variant="accent" disabled={!canContinue} onClick={goPay}>
           {loading ? T.loadingSlots : T.continue}

@@ -3,11 +3,6 @@
    gold hairlines, pill controls. Spacing = homepage tokens: 16/12px top,
    24/20px between panels, 20/14px panel padding, 14px header gap, 8px grids. */
 
-body:has(.dt-page) {
-  --am-font-display: "Satoshi", sans-serif;
-  --am-font-body: "Gilroy", sans-serif;
-}
-
 .dt-page {
   --dt-ink: #1d2b27;
   --dt-muted: #5d6b66;

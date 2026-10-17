@@ -2,12 +2,8 @@
 @import '../product-card-home.css';
 
 /* ─── Home page (hm-*) ─── mobile-first · tokens only · no color changes ─── */
-/* Same faces as ayurmuni.com: Gilroy for UI, Satoshi for display. */
-
 .hm-page {
   --hm-gutter: var(--am-gutter);
-  --am-font-display: "Satoshi", sans-serif;
-  --am-font-body: "Gilroy", sans-serif;
   font-family: var(--am-font-body);
   padding-bottom: var(--am-space-8);
 }

@@ -2,11 +2,6 @@
    Loaded after product-detail.css; everything is scoped to .pd-page--brand.
    Tokens: ../brand.css (Satoshi/Gilroy, panel frame, deep green, gold). */
 
-body:has(.pd-page--brand) {
-  --am-font-display: "Satoshi", sans-serif;
-  --am-font-body: "Gilroy", sans-serif;
-}
-
 .pd-page--brand {
   --pd-ink: #1d2b27;
   --pd-muted: #5d6b66;

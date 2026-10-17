@@ -1115,7 +1115,7 @@
   display: block;
   margin: 0;
   padding: 0 0 0.12em;
-  font-family: "Satoshi", sans-serif;
+  font-family: var(--am-font-display);
   font-weight: 700;
   font-size: clamp(4.5rem, 18.6vw, 11rem);
   line-height: 0.95;
