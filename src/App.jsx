@@ -117,7 +117,7 @@ import "./questionnaire/assessment.css";
 
 function withAuthChrome(
   Page,
-  { hideFooter = false, welcomeMode = hideFooter, className = '' } = {},
+  { hideFooter = false, welcomeMode = hideFooter, className = "" } = {},
 ) {
   return function AuthChromePage() {
     return (
@@ -138,7 +138,7 @@ const OtpPage = withAuthChrome(OtpVerify, { hideFooter: true });
 const AccessModePage = withAuthChrome(AccessMode, {
   hideFooter: true,
   welcomeMode: false,
-  className: 'auth-shell--access',
+  className: "auth-shell--access",
 });
 const OnboardingPage = withAuthChrome(Onboarding, {
   hideFooter: true,
@@ -149,12 +149,12 @@ const PolicyDetailPage = withAuthChrome(PolicyDetail);
 const AssessmentPage = withAuthChrome(AssessmentType, {
   hideFooter: true,
   welcomeMode: false,
-  className: 'auth-shell--assessment',
+  className: "auth-shell--assessment",
 });
 const PatientFaqPage = withAuthChrome(PatientFAQ, {
   hideFooter: true,
   welcomeMode: false,
-  className: 'auth-shell--assessment',
+  className: "auth-shell--assessment",
 });
 const PrakritiProfilePage = withAuthChrome(PrakritiProfile, {
   hideFooter: true,
