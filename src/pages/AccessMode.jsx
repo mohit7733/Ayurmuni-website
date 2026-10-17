@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Leaf, Package, Phone, Stethoscope, UserRound } from 'lucide-react';
+import {
+  ArrowRight,
+  Flower2,
+  Heart,
+  Phone,
+  ShoppingBag,
+  Stethoscope,
+} from 'lucide-react';
 import leaf1Img from '/images/leaf1.png';
 import logoImg from '/greenlogo.png';
 import { Utils } from '../common/utils';
@@ -14,7 +21,7 @@ import { Badge, Button, Modal } from '../components/ui';
 import { AUTH_COPY as T } from '../content/auth';
 import '../design/pages/auth.css';
 
-const SHOWCASE_ICONS = [UserRound, Stethoscope, Package, Leaf];
+const SHOWCASE_ICONS = [Flower2, Stethoscope, ShoppingBag, Heart];
 
 export default function AccessMode() {
   const navigate = useNavigate();
@@ -86,8 +93,10 @@ export default function AccessMode() {
   if (checking) {
     return (
       <section className="au-page au-access" aria-busy="true" aria-label="Checking your profile">
-        <div className="au-access__hero au-access__boot">
-          <p>Checking your profile…</p>
+        <div className="au-access__card au-access__card--boot">
+          <div className="au-access__boot">
+            <p>Checking your profile…</p>
+          </div>
         </div>
       </section>
     );
@@ -95,85 +104,91 @@ export default function AccessMode() {
 
   return (
     <section className="au-page au-access">
-      <div className="au-access__hero">
-        <img className="au-access__leaf" src={leaf1Img} alt="" />
-        <div className="au-access__hero-inner">
-          <div className="au-access__top">
-            <Badge tone="success">{T.accessVerified}</Badge>
-            <Button variant="ghost" size="sm" disabled={!!loading} onClick={skipToHome}>
-              {loading === 'skip' ? '…' : T.accessSkip}
-            </Button>
+      <div className="au-access__card">
+        <div className="au-access__hero">
+          <img className="au-access__leaf" src={leaf1Img} alt="" />
+          <div className="au-access__hero-inner">
+            <div className="au-access__top">
+              <Badge tone="success">{T.accessVerified}</Badge>
+              <Button variant="ghost" size="sm" disabled={!!loading} onClick={skipToHome}>
+                {loading === 'skip' ? '…' : T.accessSkip}
+              </Button>
+            </div>
+
+            <div className="au-access__brand">
+              <div className="au-access__logo">
+                <img src={logoImg} alt="Ayurmuni" />
+              </div>
+              <div>
+                <strong>Ayurmuni</strong>
+                <span>{T.accessBrandLine}</span>
+              </div>
+            </div>
+
+            <h1>
+              Your wellness,
+              <br />
+              tuned to you
+            </h1>
+            <p>{T.accessText}</p>
+          </div>
+        </div>
+
+        <div className="au-access__sheet">
+          <p className="au-access__label">{T.unlockLabel}</p>
+          <div className="au-access__grid">
+            {T.showcase.map((item, index) => {
+              const Icon = SHOWCASE_ICONS[index] || Flower2;
+              return (
+                <article className="au-access__feature" key={item.title}>
+                  <span className="au-access__feature-icon" aria-hidden="true">
+                    <Icon size={20} strokeWidth={1.8} />
+                  </span>
+                  <div className="au-access__feature-copy">
+                    <h3>{item.title}</h3>
+                    <p>{item.subtitle}</p>
+                  </div>
+                </article>
+              );
+            })}
           </div>
 
-          <div className="au-access__brand">
-            <div className="au-access__logo">
-              <img src={logoImg} alt="Ayurmuni" />
-            </div>
+          <div className="au-access__trust">
+            {T.trust.map((label) => (
+              <Badge key={label} tone="neutral">
+                {label}
+              </Badge>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            className="au-access__setup"
+            disabled={!!loading}
+            onClick={startOnboarding}
+          >
             <div>
-              <strong>Ayurmuni</strong>
-              <span>{T.accessBrandLine}</span>
+              <h3>{T.setupTitle}</h3>
+              <p>{T.setupSubtitle}</p>
             </div>
-          </div>
+            <span aria-hidden>
+              {loading === 'onboard' ? '…' : <ArrowRight size={20} />}
+            </span>
+          </button>
 
-          <h1>
-            Your wellness,
-            <br />
-            tuned to you
-          </h1>
-          <p>{T.accessText}</p>
+          <Button
+            variant="ghost"
+            block
+            disabled={!!loading}
+            loading={loading === 'signout'}
+            leadingIcon={loading === 'signout' ? null : <Phone size={15} aria-hidden />}
+            onClick={() => setSignOutOpen(true)}
+          >
+            {T.changeNumber}
+          </Button>
+
+          <p className="au-access__note">{T.accessNote}</p>
         </div>
-      </div>
-
-      <div className="au-access__sheet">
-        <p className="au-access__label">{T.unlockLabel}</p>
-        <div className="au-access__grid">
-          {T.showcase.map((item, index) => {
-            const Icon = SHOWCASE_ICONS[index] || Leaf;
-            return (
-              <article className="au-access__feature" key={item.title}>
-                <Icon className="au-access__feature-icon" size={18} aria-hidden />
-                <h3>{item.title}</h3>
-                <p>{item.subtitle}</p>
-              </article>
-            );
-          })}
-        </div>
-
-        <div className="au-access__trust">
-          {T.trust.map((label) => (
-            <Badge key={label} tone="neutral">
-              {label}
-            </Badge>
-          ))}
-        </div>
-
-        <button
-          type="button"
-          className="au-access__setup"
-          disabled={!!loading}
-          onClick={startOnboarding}
-        >
-          <div>
-            <h3>{T.setupTitle}</h3>
-            <p>{T.setupSubtitle}</p>
-          </div>
-          <span aria-hidden>
-            {loading === 'onboard' ? '…' : <ArrowRight size={20} />}
-          </span>
-        </button>
-
-        <Button
-          variant="ghost"
-          block
-          disabled={!!loading}
-          loading={loading === 'signout'}
-          leadingIcon={loading === 'signout' ? null : <Phone size={15} aria-hidden />}
-          onClick={() => setSignOutOpen(true)}
-        >
-          {T.changeNumber}
-        </Button>
-
-        <p className="au-access__note">{T.accessNote}</p>
       </div>
 
       <Modal
