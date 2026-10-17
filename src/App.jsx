@@ -135,7 +135,11 @@ function withAuthChrome(
 const WelcomePage = withAuthChrome(Welcome, { hideFooter: true });
 const LoginPage = withAuthChrome(Login, { hideFooter: true });
 const OtpPage = withAuthChrome(OtpVerify, { hideFooter: true });
-const AccessModePage = withAuthChrome(AccessMode);
+const AccessModePage = withAuthChrome(AccessMode, {
+  hideFooter: true,
+  welcomeMode: false,
+  className: 'auth-shell--access',
+});
 const OnboardingPage = withAuthChrome(Onboarding, {
   hideFooter: true,
   welcomeMode: false,
