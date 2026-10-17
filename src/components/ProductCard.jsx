@@ -13,8 +13,9 @@ import { showPrescriptionRequired } from "../services/prescriptionGate";
 import { showSuccessToast } from "../config/key";
 import { toggleWishlistProduct } from "../services/productService";
 import Badge from "./ui/Badge";
+import CartAddButton from "./CartAddButton";
 
-export default function ProductCard({ item, onWishlistChange }) {
+export default function ProductCard({ item, onWishlistChange, cartButton = false }) {
   const navigate = useNavigate();
   const { variantQuantities, addingVariantId, syncCartQuantity } = useCart();
   const variantId = String(item?.variant_id || "");
@@ -127,7 +128,9 @@ export default function ProductCard({ item, onWishlistChange }) {
       </div>
 
       <div className="am-product-card__action">
-        {out ? (
+        {cartButton ? (
+          <CartAddButton item={item} />
+        ) : out ? (
           <button type="button" className="am-product-card__add" disabled>
             Unavailable
           </button>

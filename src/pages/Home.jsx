@@ -35,7 +35,8 @@ import { requireAuth } from '../services/guestAuth';
 import useRecentVisitedDoctors from '../hooks/useRecentVisitedDoctors';
 import useUpcomingAppointments from '../hooks/useUpcomingAppointments';
 import BannerCarousel from '../components/BannerCarousel';
-import { PromoCareSlide, PromoWhySlide } from '../components/HomePromoSlides';
+import { ActiveDietCard, ActiveDietToast } from '../components/ActiveDietPlan';
+import useActiveDietHome from '../hooks/useActiveDietHome';
 import {
   Button,
   EmptyState,
@@ -82,21 +83,47 @@ const PRAKRITI_BENEFITS = [
   { icon: Users, label: 'Trusted by thousands' },
 ];
 
-function HeroArtwork() {
-  const [src, setSrc] = useState('');
+const HERO_VIDEO = '/videos/hero-herbal-wellness.mp4';
 
+function HeroBackgroundVideo() {
+  const videoRef = useRef(null);
+  const [src, setSrc] = useState('');
+  const [reduced] = useState(
+    () => typeof window !== 'undefined' && Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches),
+  );
+
+  // Desktop only: phones and tablets never request the video.
   useEffect(() => {
     const media = window.matchMedia('(min-width: 1024px)');
-    const sync = () => setSrc(media.matches ? '/home/hero-still-life.webp' : '');
+    const sync = () => setSrc(media.matches ? HERO_VIDEO : '');
     sync();
     media.addEventListener?.('change', sync);
     return () => media.removeEventListener?.('change', sync);
   }, []);
 
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !src) return;
+    video.muted = true;
+    if (reduced) video.pause();
+    else video.play?.().catch(() => {});
+  }, [src, reduced]);
+
   return (
-    <div className="hm-hero__artwork" aria-hidden>
+    <div className="hm-hero__bg" aria-hidden>
       {src ? (
-        <img src={src} alt="" width="960" height="640" decoding="async" fetchPriority="low" />
+        <video
+          ref={videoRef}
+          className="hm-hero__bg-video"
+          src={reduced ? `${src}#t=0.1` : src}
+          autoPlay={!reduced}
+          muted
+          loop
+          playsInline
+          preload={reduced ? 'metadata' : 'auto'}
+          disablePictureInPicture
+          tabIndex={-1}
+        />
       ) : null}
     </div>
   );
@@ -104,8 +131,13 @@ function HeroArtwork() {
 
 function CategoryRow({ items, renderItem }) {
   const listRef = useRef(null);
-  const pausedRef = useRef(false);
   const [carousel, setCarousel] = useState(false);
+  const [revealed, setRevealed] = useState(
+    () =>
+      typeof window === 'undefined' ||
+      typeof IntersectionObserver === 'undefined' ||
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  );
 
   useEffect(() => {
     const list = listRef.current;
@@ -120,46 +152,36 @@ function CategoryRow({ items, renderItem }) {
     return () => observer.disconnect();
   }, [items]);
 
+  // Start at the first item (no auto-advance) and reveal tiles on scroll.
   useEffect(() => {
     const list = listRef.current;
-    if (!list || !carousel) return undefined;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
-
-    const tick = () => {
-      if (pausedRef.current || document.hidden) return;
-      const item = list.querySelector(':scope > li');
-      if (!item) return;
-      const distance = item.getBoundingClientRect().width;
-      if (!distance) return;
-      const max = list.scrollWidth - list.clientWidth;
-      const atEnd = list.scrollLeft >= max - 2;
-      list.scrollTo({
-        left: atEnd ? 0 : Math.min(max, list.scrollLeft + distance),
-        behavior: 'smooth',
-      });
-    };
-
-    const timer = window.setInterval(tick, 2800);
-    return () => window.clearInterval(timer);
-  }, [carousel, items]);
+    if (!list) return undefined;
+    list.scrollLeft = 0;
+    if (revealed) return undefined;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setRevealed(true);
+          io.disconnect();
+        }
+      },
+      { threshold: 0.25 },
+    );
+    io.observe(list);
+    return () => io.disconnect();
+  }, [items, revealed]);
 
   return (
     <ul
       ref={listRef}
-      className={carousel ? 'hm-services__grid is-carousel' : 'hm-services__grid'}
+      className={[
+        'hm-services__grid',
+        carousel && 'is-carousel',
+        revealed && 'is-revealed',
+      ]
+        .filter(Boolean)
+        .join(' ')}
       aria-roledescription={carousel ? 'carousel' : undefined}
-      onPointerEnter={() => {
-        pausedRef.current = true;
-      }}
-      onPointerLeave={() => {
-        pausedRef.current = false;
-      }}
-      onFocusCapture={() => {
-        pausedRef.current = true;
-      }}
-      onBlurCapture={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) pausedRef.current = false;
-      }}
     >
       {items.length
         ? items.map((item) => renderItem(item))
@@ -287,16 +309,19 @@ export default function Home() {
     sections,
     sectionLabels,
     loading,
+    loadingMore,
     refreshing,
     loadingCustomer,
     medicineCategoryId,
     refreshHomeData,
     fetchCustomerData,
   } = useHomeData();
-  const secondaryReady = !loading;  const { doctors: visitedDoctors, loading: loadingVisitedDoctors } =
+  const secondaryReady = !loading;
+  const { doctors: visitedDoctors, loading: loadingVisitedDoctors } =
     useRecentVisitedDoctors(secondaryReady);
   const { appointments: upcomingAppointments, loading: loadingAppointments } =
     useUpcomingAppointments(8, secondaryReady);
+  const { preview: activeDiet } = useActiveDietHome(secondaryReady);
 
   const [name, setName] = useState('');
   const [activeHomeModal, setActiveHomeModal] = useState('none');
@@ -445,22 +470,6 @@ export default function Home() {
     dietProducts.length > 0 ||
     Object.values(sections).some((items) => items?.length);
 
-  const carouselItems = useMemo(() => {
-    if (loading && !bannerItems.length) return [];
-    return [
-      {
-        id: 'promo-why',
-        title: 'Why AyurMuni',
-        render: ({ active }) => <PromoWhySlide interactive={active} onCta={() => navigate('/medicines')} />,
-      },
-      ...bannerItems,
-      {
-        id: 'promo-care',
-        title: 'Holistic Care',
-        render: ({ active }) => <PromoCareSlide interactive={active} onCta={() => navigate('/consult')} />,
-      },
-    ];
-  }, [bannerItems, loading, navigate]);
 
   const bannerCopy = {
     label: T.offersLabel,
@@ -481,6 +490,15 @@ export default function Home() {
   const featuredProducts = sections.featured || [];
   const recentProducts = sections.recently_viewed || [];
 
+  // Product-type panels pack two per row; an odd last panel spans the row.
+  const productPanels = [
+    { key: 'medicines', title: T.medicinesTitle, items: medicineProducts, to: '/medicines' },
+    { key: 'products', title: T.productsTitle, items: storeProducts, to: '/products' },
+    { key: 'recently_viewed', title: sectionLabels.recently_viewed, items: recentProducts, to: '/products' },
+    { key: 'trending', title: sectionLabels.trending, description: T.trendingText, items: sections.trending || [], to: '/products' },
+    { key: 'featured', title: sectionLabels.featured, description: T.featuredText, items: featuredProducts, to: '/products' },
+  ].filter((panel) => panel.items?.length > 0);
+
   const renderProductRail = (items, label, auto = false) => (
     <Rail label={label} auto={auto}>
       {items.map((item) => (
@@ -495,6 +513,7 @@ export default function Home() {
     <AppShell tab="home">
       <div className="hm-page">
         <section className="hm-hero" aria-labelledby="hm-hero-title">
+          <HeroBackgroundVideo />
           <div className="hm-hero__inner">
             
             
@@ -549,7 +568,10 @@ export default function Home() {
               </ul>
             </div>
 
-            <HeroArtwork />
+            {/* Empty slot keeps the original 3-column hero geometry. */}
+            <div className="hm-hero__artwork" aria-hidden>
+              <span className="hm-hero__spacer" />
+            </div>
 
             <aside className="hm-prakriti" aria-labelledby="hm-prakriti-title">
               <img className="hm-prakriti__art" src="/home/prakriti-meditation.jpg" alt="" />
@@ -595,11 +617,15 @@ export default function Home() {
             <CategoryRow items={serviceList} renderItem={renderServiceItem} />
           </section>
 
+          <ActiveDietCard plan={activeDiet} />
+          <ActiveDietToast plan={activeDiet} />
+
+          {loading || bannerItems.length ? (
           <div className="hm-dash">
             <div className="hm-dash__main">
               <BannerCarousel
-                items={carouselItems}
-                initialIndex={1}
+                items={bannerItems}
+                initialIndex={0}
                 interval={6000}
                 onSelect={handleBannerPress}
                 loading={loading}
@@ -607,6 +633,7 @@ export default function Home() {
               />
             </div>
           </div>
+          ) : null}
 
           {loadingAppointments || upcomingAppointments?.length ? (
             <div className="hm-plan">
@@ -615,7 +642,7 @@ export default function Home() {
           ) : null}
 
           {healthConcerns.length > 0 ? (
-            <Reveal as="section" className="hm-section" aria-labelledby="hm-concerns-title">
+            <Reveal as="section" className="hm-section hm-panel hm-concerns-panel" aria-labelledby="hm-concerns-title">
               <SectionHeader
                 id="hm-concerns-title"
                 className="hm-concerns-head"
@@ -701,80 +728,43 @@ export default function Home() {
             </div>
           ) : null}
 
-          {loading && !medicineProducts.length ? (
-            <section className="hm-section" aria-busy="true">
-              <SectionHeader title={T.medicinesTitle} />
+          {productPanels.length || (loading && !medicineProducts.length && !storeProducts.length) ? (
+            <div className="hm-product-row hm-product-grid">
+              {loading && !medicineProducts.length && !storeProducts.length ? (
+                <>
+                  <section className="hm-section hm-products" aria-busy="true">
+                    <DoctorRailHeader title={T.medicinesTitle} onViewAll={() => navigate('/medicines')} />
+                    <RailSkeleton />
+                  </section>
+                  <section className="hm-section hm-products" aria-busy="true">
+                    <DoctorRailHeader title={T.productsTitle} onViewAll={() => navigate('/products')} />
+                    <RailSkeleton />
+                  </section>
+                </>
+              ) : null}
+              {productPanels.map((panel) => (
+                <Reveal
+                  as="section"
+                  key={panel.key}
+                  className="hm-section hm-products"
+                  aria-labelledby={`hm-panel-${panel.key}`}
+                >
+                  <DoctorRailHeader
+                    id={`hm-panel-${panel.key}`}
+                    title={panel.title}
+                    description={panel.description}
+                    onViewAll={() => navigate(panel.to)}
+                  />
+                  {renderProductRail(panel.items, panel.title, true)}
+                </Reveal>
+              ))}
+            </div>
+          ) : null}
+          {loadingMore && !yogaSessions.length && !dietProducts.length ? (
+            <section className="hm-section hm-panel" aria-busy="true">
               <RailSkeleton />
             </section>
           ) : null}
-
-          {medicineProducts.length > 0 ? (
-            <Reveal as="section" className="hm-section" aria-labelledby="hm-medicines-title">
-              <SectionHeader
-                id="hm-medicines-title"
-                title={T.medicinesTitle}
-                action={medicineProducts.length > 1 ? <ViewAll label={T.medicinesTitle} onClick={() => navigate('/medicines')} /> : null}
-              />
-              {renderProductRail(medicineProducts, T.medicinesTitle)}
-            </Reveal>
-          ) : null}
-
-          {(storeProducts.length > 0 || recentProducts.length > 0 || (loading && !storeProducts.length)) ? (
-            <div className={storeProducts.length > 0 && recentProducts.length > 0 ? 'hm-product-row hm-product-row--split' : 'hm-product-row'}>
-              {loading && !storeProducts.length ? (
-                <section className="hm-section hm-products" aria-busy="true">
-                  <DoctorRailHeader title={T.productsTitle} onViewAll={() => navigate('/products')} />
-                  <RailSkeleton />
-                </section>
-              ) : null}
-
-              {storeProducts.length > 0 ? (
-                <Reveal as="section" className="hm-section hm-products" aria-labelledby="hm-products-title">
-                  <DoctorRailHeader
-                    id="hm-products-title"
-                    title={T.productsTitle}
-                    onViewAll={() => navigate('/products')}
-                  />
-                  {renderProductRail(storeProducts, T.productsTitle, true)}
-                </Reveal>
-              ) : null}
-
-              {recentProducts.length > 0 ? (
-                <Reveal as="section" className="hm-section hm-products" aria-labelledby="hm-sec-recently_viewed">
-                  <DoctorRailHeader
-                    id="hm-sec-recently_viewed"
-                    title={sectionLabels.recently_viewed}
-                    onViewAll={() => navigate('/products')}
-                  />
-                  {renderProductRail(recentProducts, sectionLabels.recently_viewed, true)}
-                </Reveal>
-              ) : null}
-            </div>
-          ) : null}
-
-          {['trending', 'featured'].map((key) => {
-            const items = key === 'featured' ? featuredProducts : sections[key];
-            if (!items?.length) return null;
-            const title = sectionLabels[key] || key;
-            const description = key === 'featured' ? T.featuredText : T.trendingText;
-            return (
-              <Reveal
-                as="section"
-                className={`hm-section hm-showcase hm-showcase--${key}`}
-                key={key}
-                aria-labelledby={`hm-sec-${key}`}
-              >
-                <SectionHeader
-                  className="hm-showcase__head"
-                  id={`hm-sec-${key}`}
-                  title={title}
-                  description={description}
-                  action={items.length > 1 ? <ViewAll label={title} onClick={() => navigate('/products')} /> : null}
-                />
-                {renderProductRail(items, title, true)}
-              </Reveal>
-            );
-          })}
 
           {yogaSessions.length > 0 || dietProducts.length > 0 ? (
             <div
@@ -832,7 +822,7 @@ export default function Home() {
             </div>
           ) : null}
 
-          <Reveal as="section" className="hm-section" aria-labelledby="hm-packages-title">
+          <Reveal as="section" className="hm-section hm-panel" aria-labelledby="hm-packages-title">
             <SectionHeader
               id="hm-packages-title"
               title={T.packagesTitle}
@@ -847,7 +837,7 @@ export default function Home() {
             </Rail>
           </Reveal>
 
-          <Reveal as="section" className="hm-section" aria-labelledby="hm-lab-title">
+          <Reveal as="section" className="hm-section hm-panel" aria-labelledby="hm-lab-title">
             <SectionHeader
               id="hm-lab-title"
               title={T.labTitle}

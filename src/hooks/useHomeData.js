@@ -76,6 +76,8 @@ export default function useHomeData() {
     recently_viewed: [],
   });
   const [loading, setLoading] = useState(true);
+  // Second wave (yoga, diet, product sections, concerns) loads after the first.
+  const [loadingMore, setLoadingMore] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [loadingCustomer, setLoadingCustomer] = useState(true);
 
@@ -121,7 +123,10 @@ export default function useHomeData() {
 
   const loadAll = useCallback(async (isRefresh = false, isCancelled = () => false) => {
     if (isRefresh) setRefreshing(true);
-    else setLoading(true);
+    else {
+      setLoading(true);
+      setLoadingMore(true);
+    }
 
     const load = (key, fn) => (isRefresh ? fn() : once(key, fn));
     const asBanners = (bannerRes) =>
@@ -238,7 +243,10 @@ export default function useHomeData() {
       ),
       fetchCustomerData(),
     ]);
-    if (!isCancelled()) setRefreshing(false);
+    if (!isCancelled()) {
+      setRefreshing(false);
+      setLoadingMore(false);
+    }
   }, [fetchCustomerData]);
 
   useEffect(() => {
@@ -262,6 +270,7 @@ export default function useHomeData() {
     sections,
     sectionLabels: SECTION_LABELS,
     loading,
+    loadingMore,
     refreshing,
     loadingCustomer,
     medicineCategoryId,

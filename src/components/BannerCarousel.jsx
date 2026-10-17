@@ -14,6 +14,11 @@ const DEFAULT_COPY = {
 };
 
 const SWIPE_MIN = 40;
+const HOVER_INTENT_MS = 180;
+const TRANSITION_MS = 600;
+
+const canHoverPointer = () =>
+  typeof window !== 'undefined' && Boolean(window.matchMedia?.('(hover: hover) and (pointer: fine)').matches);
 
 const prefersReducedMotion = () =>
   typeof window !== 'undefined' && Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
@@ -37,7 +42,13 @@ export default function BannerCarousel({
   const [userPaused, setUserPaused] = useState(false);
   const [ratio, setRatio] = useState(null);
   const [reduced] = useState(prefersReducedMotion);
+  const [hoverPointer] = useState(canHoverPointer);
   const touchX = useRef(null);
+  const ratios = useRef({});
+  const hoverTimer = useRef(null);
+  const movingUntil = useRef(0);
+  const pointerX = useRef(0);
+  const hoverAnchorX = useRef(null);
   const remaining = useRef(interval);
   const startedAt = useRef(0);
   const shownIndex = useRef(index);
@@ -49,6 +60,13 @@ export default function BannerCarousel({
   useEffect(() => {
     if (count && index >= count) setIndex(0);
   }, [count, index]);
+
+  // Mark a slide change as in progress so hover-intent can't fire mid-transition.
+  useEffect(() => {
+    movingUntil.current = Date.now() + (reduced ? 0 : TRANSITION_MS);
+  }, [active, reduced]);
+
+  useEffect(() => () => clearTimeout(hoverTimer.current), []);
 
   // Autoplay: one timeout per slide; pausing banks the elapsed time and
   // resuming waits only for the remainder, matching the CSS progress bar.
@@ -95,9 +113,35 @@ export default function BannerCarousel({
     return d;
   };
 
+  // One card ratio for every slide: the median of all loaded banner ratios (images then cover it),
+  // so mixed-ratio banners never letterbox and the carousel height never jumps between slides.
   const onImageLoad = (event) => {
-    const { naturalWidth: w, naturalHeight: h } = event.currentTarget;
-    if (!ratio && w && h) setRatio(w / h);
+    const img = event.currentTarget;
+    const { naturalWidth: w, naturalHeight: h } = img;
+    if (!w || !h) return;
+    ratios.current[img.currentSrc || img.src] = w / h;
+    const list = Object.values(ratios.current).sort((a, b) => a - b);
+    const mid = list.length >> 1;
+    const median = list.length % 2 ? list[mid] : (list[mid - 1] + list[mid]) / 2;
+    const next = Math.round(median * 100) / 100;
+    if (next !== ratio) setRatio(next);
+  };
+
+  const cancelHoverIntent = () => {
+    clearTimeout(hoverTimer.current);
+    hoverTimer.current = null;
+  };
+  const startHoverIntent = (i) => {
+    if (!hoverPointer || hoverAnchorX.current != null) return;
+    cancelHoverIntent();
+    const wait = Math.max(HOVER_INTENT_MS, movingUntil.current - Date.now());
+    hoverTimer.current = setTimeout(() => {
+      hoverTimer.current = null;
+      // Require real pointer travel before another hover can activate, so the
+      // peek that slides under a resting cursor doesn't chain-advance.
+      hoverAnchorX.current = pointerX.current;
+      setIndex(i);
+    }, wait);
   };
 
   const onKeyDown = (event) => {
@@ -128,7 +172,17 @@ export default function BannerCarousel({
       aria-roledescription="carousel"
       aria-label={T.label}
       onMouseEnter={() => setHoverPaused(true)}
-      onMouseLeave={() => setHoverPaused(false)}
+      onMouseLeave={() => {
+        setHoverPaused(false);
+        cancelHoverIntent();
+        hoverAnchorX.current = null;
+      }}
+      onMouseMove={(event) => {
+        pointerX.current = event.clientX;
+        if (hoverAnchorX.current != null && Math.abs(event.clientX - hoverAnchorX.current) > 80) {
+          hoverAnchorX.current = null;
+        }
+      }}
       onFocus={() => setHoverPaused(true)}
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) setHoverPaused(false);
@@ -153,7 +207,12 @@ export default function BannerCarousel({
               aria-roledescription="slide"
               aria-label={label}
               aria-hidden={on ? undefined : true}
-              onClick={on ? undefined : () => setIndex(i)}
+              onClick={on ? undefined : () => {
+                cancelHoverIntent();
+                setIndex(i);
+              }}
+              onMouseEnter={on ? undefined : () => startHoverIntent(i)}
+              onMouseLeave={on ? undefined : cancelHoverIntent}
             >
               {coded ? (
                 item.render({ active: on })

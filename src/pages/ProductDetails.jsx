@@ -1,6 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FileText, Heart, Leaf, Minus, Plus, ShoppingBag, Star } from 'lucide-react';
+import {
+  ArrowLeft,
+  BadgeCheck,
+  FileText,
+  Heart,
+  Leaf,
+  LockKeyhole,
+  Minus,
+  Plus,
+  ShieldCheck,
+  ShoppingBag,
+  Star,
+} from 'lucide-react';
 import AppShell from '../components/AppShell';
 import AutoScrollRail from '../components/AutoScrollRail';
 import PageHeader from '../components/PageHeader';
@@ -42,6 +54,9 @@ import {
 } from '../components/ui';
 import { PRODUCT_DETAIL_COPY as T } from '../content/productDetail';
 import '../design/pages/product-detail.css';
+import '../design/brand.css';
+import '../design/product-card-home.css';
+import '../design/pages/product-detail-brand.css';
 
 const galleryFromProduct = (product, variant) => {
   const urls = [];
@@ -73,6 +88,7 @@ export default function ProductDetails() {
   const [imageIndex, setImageIndex] = useState(0);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [zoomOpen, setZoomOpen] = useState(false);
+  const [infoTab, setInfoTab] = useState('');
 
   useEffect(() => {
     let alive = true;
@@ -140,6 +156,21 @@ export default function ProductDetails() {
     Number(active?.mrp) > Number(active?.selling_price || 0)
       ? Math.round(((active.mrp - active.selling_price) / active.mrp) * 100)
       : 0;
+  const textOf = (value) => (typeof value === 'string' ? value.trim() : '');
+  const infoSections = [
+    { key: 'description', label: T.description, text: textOf(product?.description) },
+    { key: 'benefits', label: T.benefits, text: textOf(product?.benefits) },
+    { key: 'ingredients', label: T.ingredients, text: textOf(product?.ingredients) },
+    { key: 'usage', label: T.howToUse, text: textOf(product?.how_to_use || product?.usage) },
+  ].filter((s) => s.text);
+  const currentInfo = infoSections.find((s) => s.key === infoTab) || infoSections[0];
+  const ratingValue = Number(active?.rating ?? product?.rating ?? product?.average_rating);
+  const ratingCount = Number(product?.review_count ?? product?.reviews_count ?? reviews.length);
+  const categoryLabel = textOf(product?.category_name || product?.category?.name);
+  const goBack = () => {
+    if (window.history.length > 1) navigate(-1);
+    else navigate('/products');
+  };
   const discoveryProductId = String(
     product?.product_id ?? product?.id ?? active?.product_id ?? '',
   ).trim();
@@ -225,7 +256,7 @@ export default function ProductDetails() {
   if (loading) {
     return (
       <AppShell tab="products">
-        <section className="pd-page" aria-busy="true" aria-label={T.loading}>
+        <section className="pd-page pd-page--brand" aria-busy="true" aria-label={T.loading}>
           <PageHeader title={T.title} actions={cartAction} />
           <div className="pd-skel">
             <Skeleton className="pd-skel-gallery" />
@@ -239,7 +270,7 @@ export default function ProductDetails() {
   if (!product && !active) {
     return (
       <AppShell tab="products">
-        <section className="pd-page">
+        <section className="pd-page pd-page--brand">
           <PageHeader title={T.notFoundTitle} backTo="/products" actions={cartAction} />
           <EmptyState
             title={T.notFoundTitle}
@@ -257,8 +288,14 @@ export default function ProductDetails() {
 
   return (
     <AppShell tab="products">
-      <section className="pd-page">
-        <PageHeader title={displayName} subtitle={packLabel || undefined} actions={cartAction} />
+      <section className="pd-page pd-page--brand">
+        <div className="pd-topbar">
+          <button type="button" className="am-back" onClick={goBack}>
+            <ArrowLeft size={18} aria-hidden />
+            Back
+          </button>
+          {cartAction}
+        </div>
 
         <div className="pd-layout">
           <div className="pd-gallery">
@@ -306,8 +343,9 @@ export default function ProductDetails() {
             ) : null}
           </div>
 
-          <div className="pd-aside">
-            <div className="pd-main">
+          <div className="pd-aside pd-info">
+            <div className="pd-info__top">
+              {categoryLabel ? <p className="am-eyebrow pd-info__eyebrow">{categoryLabel}</p> : <span />}
               <div className="pd-head">
                 <IconButton
                   label={wish ? T.savedWishlist : T.saveWishlist}
@@ -325,15 +363,32 @@ export default function ProductDetails() {
                   showModal={true}
                 />
               </div>
+            </div>
 
-              <p className="pd-price">
-                <strong>{price}</strong>
-                {mrp ? <s>{mrp}</s> : null}
-                {discount > 0 ? <Badge tone="success">{discount}% off</Badge> : null}
-                <span className="pd-price__note">{T.perUnit}</span>
+            <h1 className="pd-title">{displayName}</h1>
+            {packLabel || (ratingValue > 0) ? (
+              <p className="pd-meta">
+                {ratingValue > 0 ? (
+                  <span className="pd-meta__rating">
+                    <Star size={14} aria-hidden fill="currentColor" />
+                    {ratingValue.toFixed(1)}
+                    {ratingCount > 0 ? <span className="pd-meta__count">({ratingCount})</span> : null}
+                  </span>
+                ) : null}
+                {packLabel ? <span className="pd-meta__pack">{packLabel}</span> : null}
               </p>
+            ) : null}
 
-              {variants.length > 1 ? (
+            <p className="pd-price">
+              <strong>{price}</strong>
+              {mrp ? <s>{mrp}</s> : null}
+              {discount > 0 ? <Badge tone="success">{discount}% off</Badge> : null}
+              <span className="pd-price__note">{T.perUnit}</span>
+            </p>
+
+            {variants.length > 1 ? (
+              <div className="pd-field">
+                <span className="pd-field__label">{T.pack}</span>
                 <div className="pd-variants" role="group" aria-label={T.pack}>
                   {variants.map((item) => {
                     const id = String(item.id ?? item.variant_id);
@@ -345,10 +400,12 @@ export default function ProductDetails() {
                     );
                   })}
                 </div>
-              ) : null}
+              </div>
+            ) : null}
 
-              <div className="pd-qty">
-                <span className="pd-qty__label">{T.quantity}</span>
+            <div className="pd-field">
+              <span className="pd-field__label">{T.quantity}</span>
+              <div className="pd-purchase">
                 <div className="am-stepper" role="group" aria-label={T.quantity}>
                   <button
                     type="button"
@@ -363,31 +420,74 @@ export default function ProductDetails() {
                     <Plus size={18} aria-hidden />
                   </button>
                 </div>
+                <div className="pd-buy" aria-label="Purchase options" role="group">
+                  {renderBuyActions(true)}
+                </div>
               </div>
-
-              {product?.description ? (
-                <div className="pd-card">
-                  <h2>{T.description}</h2>
-                  <p>{product.description}</p>
-                </div>
-              ) : null}
-
-              {product?.benefits ? (
-                <div className="pd-card">
-                  <h2>{T.benefits}</h2>
-                  <p>{product.benefits}</p>
-                </div>
-              ) : null}
-
-              <Disclaimer />
             </div>
 
-            <aside className="pd-buy" aria-label="Purchase options">
-              <p className="pd-buy__price">{price}</p>
-              {renderBuyActions(true)}
-            </aside>
+            <ul className="pd-trust" aria-label={T.trustLabel}>
+              <li>
+                <BadgeCheck size={18} aria-hidden />
+                <span>{T.trustAuthentic}</span>
+              </li>
+              <li>
+                <LockKeyhole size={18} aria-hidden />
+                <span>{T.trustSecure}</span>
+              </li>
+              <li>
+                <ShieldCheck size={18} aria-hidden />
+                <span>{T.trustPrivate}</span>
+              </li>
+            </ul>
           </div>
         </div>
+
+        {infoSections.length ? (
+          <section className="pd-details" aria-label={T.details}>
+            {infoSections.length > 1 ? (
+              <div className="pd-tabs" role="tablist" aria-label={T.details}>
+                {infoSections.map((s) => (
+                  <button
+                    key={s.key}
+                    type="button"
+                    role="tab"
+                    id={`pd-tab-${s.key}`}
+                    aria-controls="pd-tabpanel"
+                    aria-selected={s.key === currentInfo.key}
+                    tabIndex={s.key === currentInfo.key ? 0 : -1}
+                    className={`pd-tab${s.key === currentInfo.key ? ' is-on' : ''}`}
+                    onClick={() => setInfoTab(s.key)}
+                    onKeyDown={(ev) => {
+                      if (ev.key !== 'ArrowRight' && ev.key !== 'ArrowLeft') return;
+                      const i = infoSections.findIndex((x) => x.key === currentInfo.key);
+                      const step = ev.key === 'ArrowRight' ? 1 : -1;
+                      const next = infoSections[(i + step + infoSections.length) % infoSections.length];
+                      setInfoTab(next.key);
+                      document.getElementById(`pd-tab-${next.key}`)?.focus();
+                    }}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <h2 className="pd-details__title">{currentInfo.label}</h2>
+            )}
+            <div
+              className="pd-tabpanel"
+              id="pd-tabpanel"
+              role={infoSections.length > 1 ? 'tabpanel' : undefined}
+              aria-labelledby={infoSections.length > 1 ? `pd-tab-${currentInfo.key}` : undefined}
+              key={currentInfo.key}
+            >
+              <p>{currentInfo.text}</p>
+            </div>
+            <Disclaimer />
+          </section>
+        ) : (
+          <Disclaimer />
+        )}
 
         <section className="pd-reviews" aria-labelledby="pd-reviews-title">
           <SectionHeader

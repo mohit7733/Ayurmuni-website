@@ -94,3 +94,12 @@ export const formatOrderStockError = (message) => {
   }
   return null;
 };
+
+/** True when an item carries any stock signal (quantity or availability flag). */
+export const hasStockInfo = (item) => {
+  if (!item || typeof item !== 'object') return false;
+  if (getProductStockQty(item) !== null) return true;
+  return ['in_stock', 'is_available', 'available', 'out_of_stock', 'is_out_of_stock'].some(
+    (key) => item[key] !== undefined && item[key] !== null,
+  );
+};

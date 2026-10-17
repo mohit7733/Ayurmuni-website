@@ -48,7 +48,7 @@ export default function ProductDiscoveryRails({ productId, excludeVariantId }) {
             itemClassName="pd-discovery__item"
           >
             {rails[section].map((item) => (
-              <ProductCard key={item.variant_id || item.id} item={item} />
+              <ProductCard key={item.variant_id || item.id} item={item} cartButton />
             ))}
           </AutoScrollRail>
         </section>

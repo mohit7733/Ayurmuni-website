@@ -1,0 +1,64 @@
+/* ─── Brand layer shared by the homepage and store pages ───
+   Same faces as ayurmuni.com: Satoshi for display, Gilroy for UI text.
+   Panel tokens mirror the homepage "unified panel" frame. */
+
+@font-face {
+  font-family: "Gilroy";
+  src: url("/fonts/Gilroy-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Gilroy";
+  src: url("/fonts/Gilroy-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("/fonts/Satoshi-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("/fonts/Satoshi-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("/fonts/Satoshi-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+body:has(.hm-page),
+body:has(.st-page--products) {
+  --am-font-display: "Satoshi", sans-serif;
+  --am-font-body: "Gilroy", sans-serif;
+}
+
+:root {
+  --am-brand-green: #105343;
+  --am-brand-green-deep: #0b3b30;
+  --am-brand-gold: #c9a55a;
+  --am-brand-gold-soft: rgba(201, 165, 90, 0.45);
+  --am-panel-border: 1px solid rgba(216, 204, 180, 0.85);
+  --am-panel-radius: 20px;
+  --am-panel-bg: linear-gradient(180deg, #ffffff 0%, #fbf8f2 100%);
+  --am-panel-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 12px 32px rgba(19, 35, 30, 0.06);
+  --am-panel-pad: clamp(14px, 1.8vw, 20px);
+}
+@media (max-width: 639px) {
+  :root { --am-panel-radius: 16px; }
+}

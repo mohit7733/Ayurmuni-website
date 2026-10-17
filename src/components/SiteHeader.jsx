@@ -105,7 +105,7 @@ export default function SiteHeader({ minimal = false }) {
   }, [location.pathname, params]);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
+    const onScroll = () => setScrolled(window.scrollY > 24);
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
@@ -267,6 +267,7 @@ export default function SiteHeader({ minimal = false }) {
         'site-header',
         menuOpen && 'is-menu-open',
         scrolled && 'is-scrolled',
+        scrolled && !menuOpen && 'is-elevated',
         searchOpen && 'is-search-open',
       )}
     >

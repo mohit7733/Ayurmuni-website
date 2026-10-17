@@ -9,6 +9,7 @@ export const STORE_COPY = {
   recentOrdersText: 'Quick reorder from your past purchases.',
   viewHistory: 'Order history',
   allProducts: 'All products',
+  allProductsText: 'The full range — sort and filter to find what suits you.',
   noProducts: 'No products available',
   noProductsText: 'Check back soon, or try searching for something specific.',
   viewAll: 'View all',

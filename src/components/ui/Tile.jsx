@@ -19,8 +19,15 @@ export default function Tile({
   loopCopy = false,
 }) {
   return (
-    <li aria-hidden={loopCopy || undefined} inert={loopCopy ? true : undefined}>
-      <button type="button" className={cx('am-tile', cutout && 'am-tile--cutout', className)} onClick={onClick}>
+    // Loop copies stay hoverable/clickable (no `inert`) but are hidden from
+    // assistive tech and skipped by keyboard focus.
+    <li aria-hidden={loopCopy || undefined}>
+      <button
+        type="button"
+        className={cx('am-tile', cutout && 'am-tile--cutout', className)}
+        onClick={onClick}
+        tabIndex={loopCopy ? -1 : undefined}
+      >
         <span className="am-tile__img" aria-hidden>
           {image ? <img src={image} alt="" loading="lazy" decoding="async" /> : <Icon size={26} />}
         </span>

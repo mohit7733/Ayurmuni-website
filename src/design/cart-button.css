@@ -1,0 +1,93 @@
+/* In-card cart control (CartAddButton). Deep green pill, gold focus ring. */
+.am-cart-btn {
+  --cb-h: 38px;
+  position: relative;
+  z-index: 2; /* above .am-stretched card link */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  height: var(--cb-h);
+  padding: 0 14px;
+  border: 1px solid #105343;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #13624f 0%, #105343 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 6px 14px -8px rgba(16, 83, 67, 0.7);
+  font: 700 13px/1 var(--am-font-body, inherit);
+  letter-spacing: 0.01em;
+  color: #fbf6ea;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 200ms ease, box-shadow 220ms ease, transform 160ms ease, color 200ms ease;
+}
+.am-cart-btn:not(.is-added):not(.is-qty):not(.is-out):hover:not(:disabled) {
+  background: #0b3b30;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 10px 18px -8px rgba(16, 83, 67, 0.8);
+}
+.am-cart-btn:not(.is-qty):active:not(:disabled) { transform: scale(0.97); }
+.am-cart-btn:focus-visible,
+.am-cart-btn button:focus-visible {
+  outline: 2px solid #d9b86c;
+  outline-offset: 2px;
+}
+.am-cart-btn.is-loading { cursor: progress; opacity: 0.9; }
+.am-cart-btn__spin { animation: am-cart-spin 800ms linear infinite; }
+@keyframes am-cart-spin { to { transform: rotate(360deg); } }
+
+.am-cart-btn.is-added {
+  border-color: #d9b86c;
+  background: linear-gradient(180deg, #f6e7c2 0%, #ecd18f 100%);
+  color: #0b3b30;
+  box-shadow: 0 6px 14px -8px rgba(160, 127, 60, 0.7);
+  animation: am-cart-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.am-cart-btn.is-added svg { animation: am-cart-check 420ms ease both; }
+@keyframes am-cart-pop { 0% { transform: scale(0.92); } 100% { transform: none; } }
+@keyframes am-cart-check { from { opacity: 0; transform: scale(0.4) rotate(-20deg); } to { opacity: 1; transform: none; } }
+
+.am-cart-btn.is-qty {
+  justify-content: space-between;
+  gap: 0;
+  padding: 0 4px;
+  border-color: rgba(16, 83, 67, 0.35);
+  background: #fffdf8;
+  box-shadow: none;
+  color: #105343;
+  cursor: default;
+}
+.am-cart-btn.is-qty button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(16, 83, 67, 0.08);
+  color: #105343;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
+}
+.am-cart-btn.is-qty button:hover:not(:disabled) { background: #105343; color: #fbf6ea; }
+.am-cart-btn.is-qty button:disabled { opacity: 0.45; cursor: default; }
+.am-cart-btn.is-qty > span { display: inline-grid; place-items: center; min-width: 28px; font-size: 14px; }
+
+.am-cart-btn.is-out,
+.am-cart-btn:disabled.is-out {
+  border-color: rgba(93, 107, 102, 0.25);
+  background: #f1eee6;
+  box-shadow: none;
+  color: #7c8783;
+  cursor: not-allowed;
+}
+
+.am-cart-btn--sm { --cb-h: 32px; width: auto; padding: 0 12px; font-size: 12px; }
+.am-cart-btn--sm.is-qty { width: 104px; }
+.am-cart-btn--sm.is-qty button { width: 26px; height: 26px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .am-cart-btn,
+  .am-cart-btn.is-added,
+  .am-cart-btn.is-added svg { animation: none; transition: none; }
+  .am-cart-btn__spin { animation-duration: 2s; }
+}

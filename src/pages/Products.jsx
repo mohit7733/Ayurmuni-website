@@ -1,10 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, ShoppingBag, SlidersHorizontal, X } from "lucide-react";
+import { ArrowRight, ShoppingBag, SlidersHorizontal, Sparkles, X } from "lucide-react";
 import AppShell from "../components/AppShell";
 import BannerCarousel from "../components/BannerCarousel";
 import ProductCard from "../components/ProductCard";
+import CartAddButton from "../components/CartAddButton";
+import CategoryCarousel from "../components/CategoryCarousel";
 import { getBanners } from "../services/bannerService";
+import { getProductByVariant } from "../services/productService";
+import { hasStockInfo } from "../product/stock";
 import {
   formatRupee,
   getBannerImageUri,
@@ -30,11 +34,12 @@ import {
   SearchField,
   SectionHeader,
   SkeletonGrid,
-  Tile,
-  TileGrid,
 } from "../components/ui";
 import { STORE_COPY as T } from "../content/store";
 import "../design/pages/store.css";
+import "../design/brand.css";
+import "../design/product-card-home.css";
+import "../design/pages/products.css";
 
 export default function Products() {
   const navigate = useNavigate();
@@ -54,6 +59,16 @@ export default function Products() {
     useCategoryProducts(productFilter, [], {
       enabled: Boolean(productsCategoryId) || !homeLoading,
     });
+  // The service-category filter can legitimately return nothing (the homepage
+  // never uses it); fall back to the unfiltered real catalogue in that case.
+  const serviceEmpty =
+    Boolean(productsCategoryId) && !loading && products.length === 0;
+  const catalogFallback = useCategoryProducts({}, [], { enabled: serviceEmpty });
+  const listProducts = serviceEmpty ? catalogFallback.products : products;
+  const listLoading = serviceEmpty ? catalogFallback.loading : loading;
+  const listHasMore = serviceEmpty ? catalogFallback.hasMore : hasMore;
+  const listLoadingMore = serviceEmpty ? catalogFallback.loadingMore : loadingMore;
+  const listLoadMore = serviceEmpty ? catalogFallback.loadMore : loadMore;
   const { categories: productCategories, loading: categoriesLoading } =
     useProductCategories(null, productsCategoryId);
 
@@ -114,13 +129,51 @@ export default function Products() {
     };
   }, []);
 
+  // Buy again: the order API carries no stock, so look each variant up with
+  // the same product API the detail page uses. Unknown stock => no button.
+  const [recentStock, setRecentStock] = useState({});
+  useEffect(() => {
+    const ids = [...new Set(recentProducts.map((r) => r.variantId).filter(Boolean))];
+    if (!ids.length) return undefined;
+    let alive = true;
+    (async () => {
+      const entries = await Promise.all(
+        ids.map(async (id) => {
+          try {
+            const res = await getProductByVariant(id);
+            const raw = res?.data ?? res;
+            const product = Array.isArray(raw)
+              ? raw[0]
+              : Array.isArray(raw?.results)
+                ? raw.results[0]
+                : raw;
+            if (!product || product.success === false) return [id, null];
+            const variants = Array.isArray(product.variants) ? product.variants : [];
+            const variant =
+              variants.find(
+                (v) => String(v?.id) === id || String(v?.variant_id) === id,
+              ) || product;
+            return [id, { ...variant, prescription_required: variant.prescription_required ?? product.prescription_required }];
+          } catch {
+            return [id, null];
+          }
+        }),
+      );
+      if (alive) setRecentStock(Object.fromEntries(entries));
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [recentProducts]);
+
   // Apply client-side filters and sorting
   const filteredAndSortedProducts = useMemo(() => {
-    let filtered = [...products];
+    let filtered = [...listProducts];
 
-    // Filter by price range
+    // Filter by price range (items without a numeric price are kept)
     filtered = filtered.filter((product) => {
-      const price = Number(product.price || product.selling_price || 0);
+      const price = Number(product.selling_price ?? product.price);
+      if (!Number.isFinite(price)) return true;
       return price >= priceRange[0] && price <= priceRange[1];
     });
 
@@ -163,7 +216,7 @@ export default function Products() {
     });
 
     return filtered;
-  }, [products, priceRange, minRating, inStockOnly, sortBy]);
+  }, [listProducts, priceRange, minRating, inStockOnly, sortBy]);
 
   const hasActiveFilters =
     priceRange[0] !== 0 ||
@@ -179,7 +232,36 @@ export default function Products() {
     setSortBy("relevance");
   };
 
-  const showSkeleton = loading && products.length === 0;
+  const showSkeleton = listLoading && listProducts.length === 0;
+
+  // Hero: up to 3 real products with images, best rated first.
+  const heroProducts = useMemo(() => {
+    const withImage = listProducts.filter((p) => p?.image_url);
+    return [...withImage]
+      .sort(
+        (a, b) =>
+          Number(b.rating || b.average_rating || 0) -
+          Number(a.rating || a.average_rating || 0),
+      )
+      .slice(0, 3);
+  }, [listProducts]);
+  const heroRef = useRef(null);
+
+  // "/" focuses the store search, like modern storefronts.
+  useEffect(() => {
+    const onKey = (event) => {
+      if (event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey) return;
+      const el = document.activeElement;
+      const tag = el?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || el?.isContentEditable) return;
+      const input = heroRef.current?.querySelector(".am-search__input");
+      if (!input) return;
+      event.preventDefault();
+      input.focus();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   const goSearch = (value) => {
     const query = String(value || search || "").trim();
@@ -190,30 +272,111 @@ export default function Products() {
 
   return (
     <AppShell tab="products">
-      <div className="st-page">
-        <section className="st-hero" aria-labelledby="st-products-title">
-          <div className="st-hero__copy">
-            <p className="am-eyebrow">Store</p>
+      <div className="st-page st-page--products">
+        <section
+          ref={heroRef}
+          className="st-hero st-hero--modern has-visual"
+          aria-labelledby="st-products-title"
+        >
+          <div className="st-hero__art" aria-hidden="true">
+            <svg viewBox="0 0 600 240" preserveAspectRatio="xMidYMid slice">
+              <g fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round">
+                <path d="M470 250 C 470 170, 500 110, 560 60" />
+                <path d="M482 196 C 450 180, 430 160, 424 128 C 456 136, 476 160, 482 196 Z" />
+                <path d="M496 150 C 522 128, 548 122, 578 128 C 560 152, 530 162, 496 150 Z" />
+                <path d="M520 104 C 506 80, 504 56, 512 30 C 532 50, 536 78, 520 104 Z" />
+                <path d="M40 -10 C 70 50, 120 80, 190 92" />
+                <path d="M96 52 C 100 26, 118 10, 144 4 C 140 30, 122 46, 96 52 Z" />
+                <path d="M150 84 C 160 60, 182 48, 210 48 C 198 72, 176 84, 150 84 Z" />
+              </g>
+            </svg>
+          </div>
+
+          <div className="st-hero__main">
+            <p className="st-hero__chip">
+              <Sparkles size={12} aria-hidden />
+              Store
+            </p>
             <h1 id="st-products-title">{T.productsTitle}</h1>
             <p className="st-hero__lede">{T.productsLede}</p>
+            <div className="st-hero__row">
+              <div className="st-hero__search">
+                <SearchField
+                  value={search}
+                  onChange={setSearch}
+                  onSubmit={goSearch}
+                  placeholder={T.productsSearch}
+                  label={T.productsSearch}
+                />
+                <kbd className="st-hero__kbd" aria-hidden="true">/</kbd>
+              </div>
+              <Button
+                variant="secondary"
+                className="st-hero__cart"
+                onClick={() => navigate("/cart")}
+                leadingIcon={<ShoppingBag size={18} aria-hidden />}
+              >
+                {T.cart}
+                {itemCount ? <span className="st-hero__count">{itemCount}</span> : null}
+              </Button>
+            </div>
+            {productCategories.length > 0 ? (
+              <nav className="st-hero__chips" aria-label={T.shopByCategory}>
+                <ul>
+                  {productCategories.slice(0, 10).map((item) => (
+                    <li key={item.id}>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          openCategoryBrowse({ category: item.id, name: item.name })
+                        }
+                      >
+                        {item.name}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            ) : null}
           </div>
-          <div className="st-hero__row">
-            <SearchField
-              value={search}
-              onChange={setSearch}
-              onSubmit={goSearch}
-              placeholder={T.productsSearch}
-              label={T.productsSearch}
-            />
-            <Button
-              variant="secondary"
-              onClick={() => navigate("/cart")}
-              leadingIcon={<ShoppingBag size={18} aria-hidden />}
-            >
-              {T.cart}
-              {itemCount ? ` (${itemCount})` : ""}
-            </Button>
-          </div>
+
+          {!heroProducts.length ? (
+            <div className="st-hero__ornament" aria-hidden="true">
+              <svg viewBox="0 0 220 180">
+                <g fill="none" strokeLinecap="round">
+                  <circle cx="110" cy="90" r="78" stroke="rgba(226,194,124,0.35)" />
+                  <circle cx="110" cy="90" r="56" stroke="rgba(226,194,124,0.22)" strokeDasharray="2 6" />
+                  <path d="M110 150 C 110 110, 118 76, 140 44" stroke="rgba(236,209,143,0.75)" strokeWidth="1.4" />
+                  <path d="M114 118 C 92 112, 80 96, 78 74 C 100 80, 112 96, 114 118 Z" fill="rgba(255,255,255,0.08)" stroke="rgba(236,209,143,0.65)" />
+                  <path d="M122 92 C 140 76, 160 72, 182 76 C 168 94, 146 102, 122 92 Z" fill="rgba(255,255,255,0.06)" stroke="rgba(236,209,143,0.55)" />
+                  <path d="M134 60 C 124 44, 124 26, 132 10 C 146 26, 146 46, 134 60 Z" fill="rgba(255,255,255,0.05)" stroke="rgba(236,209,143,0.5)" />
+                </g>
+              </svg>
+            </div>
+          ) : null}
+          {heroProducts.length ? (
+            <ul className="st-hero__visual" aria-label="Featured products">
+              {heroProducts.map((item, index) => (
+                <li key={item.variant_id || item.id} style={{ "--i": index }}>
+                  <button
+                    type="button"
+                    className="st-hero__float"
+                    onClick={() => navigate(`/products/${item.variant_id || item.id}`)}
+                  >
+                    <span className="st-hero__float-img">
+                      <img src={item.image_url} alt="" loading="lazy" decoding="async" />
+                    </span>
+                    <span className="st-hero__float-name">{item.name}</span>
+                    {item.selling_price != null && item.selling_price !== "" ? (
+                      <span className="st-hero__float-price">
+                        {formatRupee(item.selling_price)}
+                      </span>
+                    ) : null}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </section>
 
         {showSkeleton ? (
@@ -228,7 +391,7 @@ export default function Products() {
 
             <Reveal
               as="section"
-              className="st-section"
+              className="st-section st-panel"
               aria-labelledby="st-cats-title"
             >
               <SectionHeader
@@ -251,21 +414,17 @@ export default function Products() {
               {categoriesLoading && productCategories.length === 0 ? (
                 <RailSkeleton count={6} variant="product" />
               ) : productCategories.length > 0 ? (
-                <TileGrid label={T.shopByCategory}>
-                  {productCategories.map((item) => (
-                    <Tile
-                      key={item.id}
-                      image={resolveImageUrl(item)}
-                      label={item.name}
-                      onClick={() =>
-                        openCategoryBrowse({
-                          category: item.id,
-                          name: item.name,
-                        })
-                      }
-                    />
-                  ))}
-                </TileGrid>
+                <CategoryCarousel
+                  label={T.shopByCategory}
+                  items={productCategories.map((item) => ({
+                    id: item.id,
+                    name: item.name,
+                    image: resolveImageUrl(item),
+                  }))}
+                  onSelect={(item) =>
+                    openCategoryBrowse({ category: item.id, name: item.name })
+                  }
+                />
               ) : (
                 <EmptyState
                   compact
@@ -288,7 +447,7 @@ export default function Products() {
             {ordersLoading || recentProducts.length > 0 ? (
               <Reveal
                 as="section"
-                className="st-section"
+                className="st-section st-panel"
                 aria-labelledby="st-recent-title"
               >
                 <SectionHeader
@@ -329,11 +488,23 @@ export default function Products() {
                               navigate(`/products/${item.variantId}`)
                             }
                           />
-                          {item.price ? (
-                            <span className="st-recent__price">
-                              {formatRupee(item.price)}
-                            </span>
-                          ) : null}
+                          <div className="st-recent__foot">
+                            {item.price ? (
+                              <span className="st-recent__price">
+                                {formatRupee(item.price)}
+                              </span>
+                            ) : null}
+                            {hasStockInfo(recentStock[item.variantId]) ? (
+                              <CartAddButton
+                                className="am-cart-btn--sm"
+                                item={{
+                                  ...recentStock[item.variantId],
+                                  variant_id: item.variantId,
+                                  name: item.name,
+                                }}
+                              />
+                            ) : null}
+                          </div>
                         </div>
                       </RailItem>
                     ))}
@@ -342,7 +513,23 @@ export default function Products() {
               </Reveal>
             ) : null}
 
-            <section className="st-section" aria-labelledby="st-all-title">
+            <section className="st-section st-panel" aria-labelledby="st-all-title">
+              <SectionHeader
+                id="st-all-title"
+                title={T.allProducts}
+                description={T.allProductsText}
+                action={
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => openCategoryBrowse({ name: "All Products" })}
+                    trailingIcon={<ArrowRight size={16} aria-hidden />}
+                  >
+                    {T.viewAll}
+                  </Button>
+                }
+              />
+
               {/* Filter & Sort Controls */}
               <div className="st-controls">
                 <div className="st-controls__info">
@@ -387,20 +574,6 @@ export default function Products() {
                 </div>
               </div>
 
-              <SectionHeader
-                id="st-all-title"
-                title={T.allProducts}
-                action={
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => openCategoryBrowse({ name: "All Products" })}
-                    trailingIcon={<ArrowRight size={16} aria-hidden />}
-                  >
-                    {T.viewAll}
-                  </Button>
-                }
-              />
               {filteredAndSortedProducts.length === 0 ? (
                 <EmptyState
                   title={
@@ -425,19 +598,19 @@ export default function Products() {
                 <ul className="am-product-grid">
                   {filteredAndSortedProducts.map((item) => (
                     <li key={item.variant_id || item.id}>
-                      <ProductCard item={item} />
+                      <ProductCard item={item} cartButton />
                     </li>
                   ))}
                 </ul>
               )}
-              {hasMore ? (
+              {listHasMore ? (
                 <div className="st-more">
                   <Button
                     variant="secondary"
-                    loading={loadingMore}
-                    onClick={loadMore}
+                    loading={listLoadingMore}
+                    onClick={listLoadMore}
                   >
-                    {loadingMore ? T.loadingMore : T.loadMore}
+                    {listLoadingMore ? T.loadingMore : T.loadMore}
                   </Button>
                 </div>
               ) : null}
