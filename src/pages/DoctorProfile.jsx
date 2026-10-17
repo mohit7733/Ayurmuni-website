@@ -375,15 +375,15 @@ export default function DoctorProfile() {
                   {qualification ? (
                     <p className="dp-hero__qual">{qualification}</p>
                   ) : null}
-                  <div className="dp-hero__rating">
-                    {ratingValue ? (
+                  {ratingValue ? (
+                    <div className="dp-hero__rating">
                       <Rating
                         value={ratingValue}
                         count={reviewCount}
                         size="md"
                       />
-                    ) : null}
-                  </div>
+                    </div>
+                  ) : null}
                   {(experienceLabel || locationLabel) && (
                     <ul className="dp-hero__meta">
                       {experienceLabel ? (
@@ -424,19 +424,7 @@ export default function DoctorProfile() {
                 <div className="dp-card__head">
                   <h2 id="dp-about">{T.about}</h2>
                 </div>
-                <p className="dp-about">
-                  {aboutText}
-                  {shouldTruncate ? (
-                    <button
-                      type="button"
-                      className="dp-about__toggle"
-                      onClick={() => setShowFullAbout((open) => !open)}
-                      aria-expanded={showFullAbout}
-                    >
-                      {showFullAbout ? T.showLess : T.showMore}
-                    </button>
-                  ) : null}
-                </p>
+                <p className="dp-about">{aboutText}</p>
               </section>
             ) : null}
 

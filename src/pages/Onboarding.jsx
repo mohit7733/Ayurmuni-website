@@ -1,20 +1,20 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Utils } from '../common/utils';
-import { EmailValidator, genderOptions } from '../common/validator';
-import { showSuccessToast } from '../config/key';
-import { persistProfileAndSyncAccess } from '../services/guestAuth';
-import * as AuthServices from '../services/authService';
-import * as ProfileService from '../services/profileService';
-import '../design/pages/onboarding.css';
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Utils } from "../common/utils";
+import { EmailValidator, genderOptions } from "../common/validator";
+import { showSuccessToast } from "../config/key";
+import { persistProfileAndSyncAccess } from "../services/guestAuth";
+import * as AuthServices from "../services/authService";
+import * as ProfileService from "../services/profileService";
+import "../design/pages/onboarding.css";
 
 const emptyErrors = {
-  firstName: '',
-  lastName: '',
-  email: '',
-  gender: '',
-  dob: '',
-  terms: '',
+  firstName: "",
+  lastName: "",
+  email: "",
+  gender: "",
+  dob: "",
+  terms: "",
 };
 
 export default function Onboarding() {
@@ -27,22 +27,22 @@ export default function Onboarding() {
   const [isLoadingImage, setImageLoading] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    gender: '',
-    profileImageUrl: '',
+    firstName: "",
+    lastName: "",
+    email: "",
+    gender: "",
+    profileImageUrl: "",
     profileImage: null,
-    user: '',
+    user: "",
   });
-  const [dob, setDob] = useState({ day: '', month: '', year: '' });
+  const [dob, setDob] = useState({ day: "", month: "", year: "" });
   const [errors, setErrors] = useState(emptyErrors);
-  const [previewUrl, setPreviewUrl] = useState('');
+  const [previewUrl, setPreviewUrl] = useState("");
 
   useEffect(() => {
     (async () => {
       try {
-        const user_id = await Utils.getData('_USER_ID');
+        const user_id = await Utils.getData("_USER_ID");
         setFormData((prev) => ({ ...prev, user: user_id }));
       } catch (error) {
         console.log(error);
@@ -55,19 +55,19 @@ export default function Onboarding() {
       navigate(-1);
       return;
     }
-    navigate('/access-mode');
+    navigate("/access-mode");
   };
 
   const handleFieldChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: '' }));
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
 
   const clearDobError = () => {
     if (errors.dob) {
-      setErrors((prev) => ({ ...prev, dob: '' }));
+      setErrors((prev) => ({ ...prev, dob: "" }));
     }
   };
 
@@ -76,8 +76,8 @@ export default function Onboarding() {
     setImageLoading(true);
     try {
       const formDataImage = new FormData();
-      formDataImage.append('image', file);
-      formDataImage.append('dir', 'customer_avatar');
+      formDataImage.append("image", file);
+      formDataImage.append("dir", "customer_avatar");
 
       const res = await ProfileService.UploadProfilePhoto(formDataImage);
 
@@ -86,7 +86,7 @@ export default function Onboarding() {
           res?.data?.profile_picture ||
           res?.data?.image ||
           res?.data?.url ||
-          '';
+          "";
 
         setFormData((prev) => ({
           ...prev,
@@ -94,14 +94,14 @@ export default function Onboarding() {
           profileImageUrl: uploadedImageUrl,
         }));
         setPreviewUrl(URL.createObjectURL(file));
-        showSuccessToast(res?.message || 'Profile image uploaded', 'success');
+        showSuccessToast(res?.message || "Profile image uploaded", "success");
         return;
       }
 
-      showSuccessToast(res?.message || 'Upload failed', 'error');
+      showSuccessToast(res?.message || "Upload failed", "error");
     } catch (error) {
-      console.log('PROFILE IMAGE ERROR ===>', error);
-      showSuccessToast('Something went wrong', 'error');
+      console.log("PROFILE IMAGE ERROR ===>", error);
+      showSuccessToast("Something went wrong", "error");
     } finally {
       setImageLoading(false);
     }
@@ -112,19 +112,19 @@ export default function Onboarding() {
     const newErrors = { ...emptyErrors };
 
     if (!formData.firstName.trim()) {
-      newErrors.firstName = 'First name is required';
+      newErrors.firstName = "First name is required";
       isValid = false;
     }
     if (!formData.lastName.trim()) {
-      newErrors.lastName = 'Last name is required';
+      newErrors.lastName = "Last name is required";
       isValid = false;
     }
     if (formData.email.trim() && !EmailValidator(formData.email.trim())) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = "Please enter a valid email address";
       isValid = false;
     }
     if (!formData.gender) {
-      newErrors.gender = 'Gender is required';
+      newErrors.gender = "Gender is required";
       isValid = false;
     }
 
@@ -133,7 +133,7 @@ export default function Onboarding() {
     const year = Number(dob.year);
 
     if (!day || !month || !year) {
-      newErrors.dob = 'Date of birth is required';
+      newErrors.dob = "Date of birth is required";
       isValid = false;
     } else {
       const enteredDate = new Date(year, month - 1, day);
@@ -144,10 +144,10 @@ export default function Onboarding() {
         enteredDate.getDate() === day;
 
       if (!isRealDate) {
-        newErrors.dob = 'Please enter a valid date';
+        newErrors.dob = "Please enter a valid date";
         isValid = false;
       } else if (enteredDate > today) {
-        newErrors.dob = 'Future date is not allowed';
+        newErrors.dob = "Future date is not allowed";
         isValid = false;
       } else {
         let age = today.getFullYear() - year;
@@ -156,7 +156,7 @@ export default function Onboarding() {
           age--;
         }
         if (age < 1) {
-          newErrors.dob = 'Please enter a valid age';
+          newErrors.dob = "Please enter a valid age";
           isValid = false;
         }
       }
@@ -244,34 +244,34 @@ export default function Onboarding() {
             true,
         };
         await persistProfileAndSyncAccess(profilePayload);
-        showSuccessToast(response?.message || 'Welcome to Ayurmuni', 'success');
-        navigate('/policy-accept', {
+        showSuccessToast(response?.message || "Welcome to Ayurmuni", "success");
+        navigate("/policy-accept", {
           replace: true,
           state: {
             nextRoute: {
-              name: 'AssessmentType',
-              params: { form: 'all' },
+              name: "AssessmentType",
+              params: { form: "all" },
             },
           },
         });
         return;
       }
 
-      showSuccessToast(response?.message || 'Something went wrong', 'error');
+      showSuccessToast(response?.message || "Something went wrong", "error");
     } catch (error) {
-      console.log('Network Error:', error);
-      showSuccessToast('Network error, please try again', 'error');
+      console.log("Network Error:", error);
+      showSuccessToast("Network error, please try again", "error");
     } finally {
       setIsLoading(false);
     }
   };
 
   const openPolicy = (policyType) => {
-    navigate('/policy-detail', {
+    navigate("/policy-detail", {
       state: {
         policyType,
         title:
-          policyType === 'terms_of_service' ? 'Terms of Use' : 'Privacy Policy',
+          policyType === "terms_of_service" ? "Terms of Use" : "Privacy Policy",
       },
     });
   };
@@ -291,31 +291,50 @@ export default function Onboarding() {
       </div>
 
       <div className="onboard-card">
-        <h2>Create Account</h2>
-        <p className="onboard-sub">
-          Add your details below. This helps us tailor recommendations for you.
-        </p>
-
-        <button
-          type="button"
-          className="avatar-wrap"
-          onClick={() => fileRef.current?.click()}
-        >
-          <div className="avatar-ring">
-            {isLoadingImage ? (
-              <span className="avatar-loading">…</span>
-            ) : previewUrl ? (
-              <img src={previewUrl} alt="" />
-            ) : formData.firstName ? (
-              <span className="avatar-letter">
-                {formData.firstName.charAt(0).toUpperCase()}
-              </span>
-            ) : (
-              <span className="avatar-upload">Upload Photo</span>
-            )}
+        <div className="card-header">
+          <button
+            type="button"
+            className="avatar-wrap"
+            onClick={() => fileRef.current?.click()}
+            disabled={isLoadingImage}
+          >
+            <div className="avatar-ring">
+              {isLoadingImage ? (
+                <span className="avatar-loading">…</span>
+              ) : previewUrl ? (
+                <img src={previewUrl} alt="" />
+              ) : formData.firstName ? (
+                <span className="avatar-letter">
+                  {formData.firstName.charAt(0).toUpperCase()}
+                </span>
+              ) : (
+                <span className="avatar-placeholder">👤</span>
+              )}
+            </div>
+            <span className="avatar-cam">
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                <circle cx="12" cy="13" r="4" />
+              </svg>
+            </span>
+          </button>
+          <div className="card-header-text">
+            <h2>Create Account</h2>
+            <p className="onboard-sub">
+              Add your details below. This helps us tailor recommendations for
+              you.
+            </p>
           </div>
-          <span className="avatar-cam">📷</span>
-        </button>
+        </div>
         <input
           ref={fileRef}
           type="file"
@@ -330,7 +349,7 @@ export default function Onboarding() {
             <input
               placeholder="ABC"
               value={formData.firstName}
-              onChange={(e) => handleFieldChange('firstName', e.target.value)}
+              onChange={(e) => handleFieldChange("firstName", e.target.value)}
             />
             {errors.firstName ? (
               <span className="field-error">{errors.firstName}</span>
@@ -341,7 +360,7 @@ export default function Onboarding() {
             <input
               placeholder="XYZ"
               value={formData.lastName}
-              onChange={(e) => handleFieldChange('lastName', e.target.value)}
+              onChange={(e) => handleFieldChange("lastName", e.target.value)}
             />
             {errors.lastName ? (
               <span className="field-error">{errors.lastName}</span>
@@ -355,7 +374,7 @@ export default function Onboarding() {
             type="email"
             placeholder="email@gmail.com"
             value={formData.email}
-            onChange={(e) => handleFieldChange('email', e.target.value)}
+            onChange={(e) => handleFieldChange("email", e.target.value)}
             autoCapitalize="none"
           />
           {errors.email ? (
@@ -370,8 +389,8 @@ export default function Onboarding() {
               <button
                 type="button"
                 key={item.id}
-                className={formData.gender === item.value ? 'on' : ''}
-                onClick={() => handleFieldChange('gender', item.value)}
+                className={formData.gender === item.value ? "on" : ""}
+                onClick={() => handleFieldChange("gender", item.value)}
               >
                 {item.label}
               </button>
@@ -386,18 +405,20 @@ export default function Onboarding() {
           Date of Birth <span className="req">*</span>
           <div className="dob-row">
             <input
-              placeholder={focusedField === 'day' || dob.year === '' ? 'DD' : ''}
+              placeholder={
+                focusedField === "day" || dob.year === "" ? "DD" : ""
+              }
               value={dob.day}
               maxLength={2}
               inputMode="numeric"
               onFocus={() => {
-                setFocusedField('day');
+                setFocusedField("day");
                 clearDobError();
               }}
               onBlur={() => setFocusedField(null)}
               onChange={(e) => {
                 clearDobError();
-                const value = e.target.value.replace(/[^0-9]/g, '');
+                const value = e.target.value.replace(/[^0-9]/g, "");
                 setDob({ ...dob, day: value });
                 if (value.length === 2) monthRef.current?.focus();
               }}
@@ -405,24 +426,24 @@ export default function Onboarding() {
             <input
               ref={monthRef}
               placeholder={
-                focusedField === 'month' || dob.year === '' ? 'MM' : ''
+                focusedField === "month" || dob.year === "" ? "MM" : ""
               }
               value={dob.month}
               maxLength={2}
               inputMode="numeric"
               onFocus={() => {
-                setFocusedField('month');
+                setFocusedField("month");
                 clearDobError();
               }}
               onBlur={() => setFocusedField(null)}
               onChange={(e) => {
                 clearDobError();
-                const value = e.target.value.replace(/[^0-9]/g, '');
+                const value = e.target.value.replace(/[^0-9]/g, "");
                 setDob({ ...dob, month: value });
                 if (value.length === 2) yearRef.current?.focus();
               }}
               onKeyDown={(e) => {
-                if (e.key === 'Backspace' && dob.month.length === 0) {
+                if (e.key === "Backspace" && dob.month.length === 0) {
                   e.preventDefault();
                 }
               }}
@@ -431,47 +452,49 @@ export default function Onboarding() {
               ref={yearRef}
               className="dob-year"
               placeholder={
-                focusedField === 'year' || dob.year === '' ? 'YYYY' : ''
+                focusedField === "year" || dob.year === "" ? "YYYY" : ""
               }
               value={dob.year}
               maxLength={4}
               inputMode="numeric"
               onFocus={() => {
-                setFocusedField('year');
+                setFocusedField("year");
                 clearDobError();
               }}
               onBlur={() => setFocusedField(null)}
               onChange={(e) => {
                 clearDobError();
-                const value = e.target.value.replace(/[^0-9]/g, '');
+                const value = e.target.value.replace(/[^0-9]/g, "");
                 setDob({ ...dob, year: value });
               }}
             />
           </div>
-          {errors.dob ? <span className="field-error">{errors.dob}</span> : null}
+          {errors.dob ? (
+            <span className="field-error">{errors.dob}</span>
+          ) : null}
         </div>
 
         <p className="onboard-terms">
-          After creating your profile you will review and accept our{' '}
-          <button type="button" onClick={() => openPolicy('terms_of_service')}>
+          After creating your profile you will review and accept our{" "}
+          <button type="button" onClick={() => openPolicy("terms_of_service")}>
             Terms of Use
-          </button>{' '}
-          and{' '}
-          <button type="button" onClick={() => openPolicy('privacy_policy')}>
+          </button>{" "}
+          and{" "}
+          <button type="button" onClick={() => openPolicy("privacy_policy")}>
             Privacy Policy
           </button>
           .
         </p>
-      </div>
 
-      <div className="onboard-bottom">
-        <button
-          className="cta"
-          disabled={!canProceed || isLoading}
-          onClick={handleProceed}
-        >
-          {isLoading ? 'Please wait…' : 'Proceed'}
-        </button>
+        <div className="onboard-bottom">
+          <button
+            className="cta"
+            disabled={!canProceed || isLoading}
+            onClick={handleProceed}
+          >
+            {isLoading ? "Please wait…" : "Proceed"}
+          </button>
+        </div>
       </div>
     </section>
   );
