@@ -18,7 +18,6 @@ import {
   Heart,
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
-import AyurmuniBrandShade from '../components/AyurmuniBrandShade';
 import DiseaseSelectionModal from '../components/DiseaseSelectionModal';
 import LabHomeBanner from '../components/LabHomeBanner';
 import { Utils } from '../common/utils';
@@ -918,13 +917,6 @@ export default function Home() {
                 </RailItem>
               ))}
             </Rail>
-          </Reveal>
-
-          <Reveal as="div">
-            <AyurmuniBrandShade
-              onConsult={() => navigate('/consult')}
-              onShop={() => navigate('/medicines')}
-            />
           </Reveal>
 
           {!loading && !hasAnyContent ? (

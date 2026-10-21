@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { CircleCheck, Clock } from 'lucide-react';
 import { formatMessageTime } from '../../chat/dateFormatter';
 import { getChatDisabledReason, shouldSuppressChatError } from '../../chat/chatAccessUtils';
 import { dedupeMessages, isTempMessage } from '../../chat/messageUtils';
 import { formatDoctorDisplayName } from '../../consult/appointmentUtils';
 import { doctorDisplayName, doctorImage, getDoctorId } from '../../consult/doctors';
 import { useChat } from '../../hooks/useChat';
+import { findRelatedAppointmentIds } from '../../hooks/useChatInbox';
 import { requireAuth } from '../../services/guestAuth';
 import { chatService } from '../../services/chatService';
 import { getAppointmentDetail } from '../../services/consultService';
@@ -30,6 +31,7 @@ const readChatMeta = (appointmentId, extras) => {
     appointmentDate: extras.appointmentDate || stored.appointmentDate || '',
     chatContext: extras.chatContext || stored.chatContext || null,
     doctorId: extras.doctorId || stored.doctorId || '',
+    relatedAppointmentIds: extras.relatedAppointmentIds || stored.relatedAppointmentIds || [],
   };
 };
 
@@ -46,20 +48,7 @@ const writeChatMeta = (appointmentId, meta) => {
 
 const formatChatDay = (value) => {
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '';
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const day = new Date(date);
-  day.setHours(0, 0, 0, 0);
-  const diff = Math.round((today.getTime() - day.getTime()) / 86400000);
-  if (diff === 0) return 'Today';
-  if (diff === 1) return 'Yesterday';
-  return date.toLocaleDateString('en-IN', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
+  return Number.isNaN(date.getTime()) ? '' : date.toDateString();
 };
 
 export default function ChatConversation({
@@ -69,13 +58,11 @@ export default function ChatConversation({
   embedded = false,
   onMessagesChange,
 }) {
-  const navigate = useNavigate();
   const [meta, setMeta] = useState(() => readChatMeta(appointmentId, extras || {}));
 
   const {
     messages,
     isLoading,
-    isConnected,
     error,
     participantRole,
     sendMessage,
@@ -83,7 +70,13 @@ export default function ChatConversation({
     chatAccess,
     loadMessages,
     isChatEnabled,
-  } = useChat(appointmentId, meta.role, meta.appointmentDate, meta.chatContext);
+  } = useChat(
+    appointmentId,
+    meta.role,
+    meta.appointmentDate,
+    meta.chatContext,
+    meta.relatedAppointmentIds,
+  );
 
   const listRef = useRef(null);
   const fileRef = useRef(null);
@@ -106,12 +99,7 @@ export default function ChatConversation({
       ? meta.patientName || 'Patient'
       : formatDoctorDisplayName(meta.doctorName);
   const headerAvatar = participantRole === 'doctor' ? meta.patientAvatar : meta.doctorAvatar;
-  const roleLabel = participantRole === 'doctor' ? 'Doctor' : 'Patient';
-  const statusLine = !isChatEnabled
-    ? 'Chat closed — read only'
-    : isConnected
-      ? `Connected • ${roleLabel}`
-      : `Connecting • ${roleLabel}`;
+  const statusLine = `Connected • ${participantRole === 'doctor' ? 'Doctor' : 'Patient'}`;
 
   useEffect(() => {
     setMeta(readChatMeta(appointmentId, extras || {}));
@@ -133,13 +121,13 @@ export default function ChatConversation({
       const patient = appointment.patient || {};
       setMeta((prev) => ({
         ...prev,
-        doctorName: prev.doctorName && prev.doctorName !== 'Doctor' ? prev.doctorName : doctorDisplayName(doctor),
-        doctorAvatar: prev.doctorAvatar || doctorImage(doctor),
-        patientName: prev.patientName && prev.patientName !== 'Patient' ? prev.patientName : patient.patient_name || prev.patientName,
-        patientAvatar: prev.patientAvatar || patient.patient_image || '',
-        appointmentDate: prev.appointmentDate || appointment.appointment_date || '',
+        doctorName: doctor.doctor_name || (prev.doctorName !== 'Doctor' ? prev.doctorName : doctorDisplayName(doctor)),
+        doctorAvatar: doctor.doctor_image || prev.doctorAvatar || doctorImage(doctor),
+        patientName: patient.patient_name || prev.patientName,
+        patientAvatar: patient.patient_image || prev.patientAvatar || '',
+        appointmentDate: appointment.appointment_date || prev.appointmentDate,
         doctorId: prev.doctorId || getDoctorId(doctor),
-        chatContext: prev.chatContext || {
+        chatContext: {
           call_status: appointment.call_status,
           appointment_status: appointment.appointment_status,
           appointment_date: appointment.appointment_date,
@@ -148,6 +136,24 @@ export default function ChatConversation({
       }));
     })();
   }, [appointmentId]);
+
+  useEffect(() => {
+    if (meta.relatedAppointmentIds?.length) return undefined;
+    const doctorId = meta.doctorId;
+    const doctorName = meta.doctorName;
+    if (!doctorId && (!doctorName || doctorName === 'Doctor')) return undefined;
+    let cancelled = false;
+    (async () => {
+      const ids = await findRelatedAppointmentIds({ doctorId, doctorName });
+      if (cancelled || ids.length < 2) return;
+      setMeta((prev) =>
+        prev.relatedAppointmentIds?.length ? prev : { ...prev, relatedAppointmentIds: ids },
+      );
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [meta.doctorId, meta.doctorName, meta.relatedAppointmentIds]);
 
   useEffect(() => {
     loadMessages();
@@ -253,23 +259,14 @@ export default function ChatConversation({
             ←
           </button>
         ) : null}
-        <button
-          type="button"
-          className="chat-avatar-wrap"
-          onClick={() => {
-            if (participantRole === 'patient' && meta.doctorId) {
-              navigate(`/consult/doctors/${meta.doctorId}`);
-            }
-          }}
-          aria-label={headerTitle}
-        >
+        <div className="chat-avatar-wrap">
           {headerAvatar ? (
             <img src={headerAvatar} alt="" />
           ) : (
             <span>{String(headerTitle || '?').charAt(0).toUpperCase()}</span>
           )}
-          <i className={isConnected && isChatEnabled ? 'on' : ''} />
-        </button>
+          <i className="on" />
+        </div>
         <div>
           <strong>{headerTitle || 'Unknown'}</strong>
           <small>{statusLine}</small>
@@ -329,8 +326,19 @@ export default function ChatConversation({
                   <small>
                     {formatMessageTime(item.created_at).toUpperCase()}
                     {isOwn ? (
-                      <b className={item.is_seen ? 'seen' : pending ? 'pending' : ''}>
-                        {pending ? '…' : item.is_seen ? '✓✓' : '✓'}
+                      <b
+                        className={pending ? 'pending' : item.is_seen ? 'seen' : ''}
+                        aria-label={pending ? 'Sending' : item.is_seen ? 'Seen' : 'Sent'}
+                      >
+                        {pending ? (
+                          <Clock size={14} strokeWidth={2.2} aria-hidden />
+                        ) : (
+                          <CircleCheck
+                            size={item.is_seen ? 16 : 15}
+                            strokeWidth={item.is_seen ? 2.4 : 2.2}
+                            aria-hidden
+                          />
+                        )}
                       </b>
                     ) : null}
                   </small>

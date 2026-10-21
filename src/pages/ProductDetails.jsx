@@ -43,6 +43,7 @@ import {
   toggleWishlistProduct,
 } from '../services/productService';
 import { requireAuth } from '../services/guestAuth';
+import { findReviewableProductOrder } from '../services/reviewService';
 import { showPrescriptionRequired } from '../services/prescriptionGate';
 import { showSuccessToast } from '../config/key';
 import {
@@ -95,7 +96,8 @@ export default function ProductDetails() {
   const [qty, setQty] = useState(1);
   const [wish, setWish] = useState(false);
   const [imageIndex, setImageIndex] = useState(0);
-  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewTarget, setReviewTarget] = useState(null);
+  const [reviewLookupBusy, setReviewLookupBusy] = useState(false);
   const [zoomOpen, setZoomOpen] = useState(false);
   const [descExpanded, setDescExpanded] = useState(false);
   const [expandedDetail, setExpandedDetail] = useState('');
@@ -260,6 +262,27 @@ export default function ProductDetails() {
   const discoveryProductId = String(
     product?.product_id ?? product?.id ?? active?.product_id ?? '',
   ).trim();
+
+  const openReviewModal = async () => {
+    if (!(await requireAuth('Please login to write a review'))) return;
+    setReviewLookupBusy(true);
+    try {
+      const match = await findReviewableProductOrder([cartVariantId, variantId]);
+      if (!match) {
+        showSuccessToast('You can review this product once your order for it is delivered', 'error');
+        return;
+      }
+      if (match.alreadyReviewed) {
+        showSuccessToast('You have already reviewed this product', 'error');
+        return;
+      }
+      setReviewTarget(match);
+    } catch {
+      showSuccessToast('Could not check your orders. Please try again.', 'error');
+    } finally {
+      setReviewLookupBusy(false);
+    }
+  };
 
   useEffect(() => {
     setWish(Boolean(active?.is_wishlist_item ?? product?.is_wishlist_item));
@@ -769,10 +792,8 @@ export default function ProductDetails() {
                 <Button
                   variant="secondary"
                   size="sm"
-                  onClick={async () => {
-                    if (!(await requireAuth('Please login to write a review'))) return;
-                    setShowReviewModal(true);
-                  }}
+                  onClick={openReviewModal}
+                  loading={reviewLookupBusy}
                   leadingIcon={<Star size={16} />}
                 >
                   Write Review
@@ -855,11 +876,11 @@ export default function ProductDetails() {
 
       {/* Review Submit Modal */}
       <ReviewSubmitModal
-        open={showReviewModal}
-        onClose={() => setShowReviewModal(false)}
+        open={Boolean(reviewTarget)}
+        onClose={() => setReviewTarget(null)}
         product={{
-          product_id: product?.product_id || product?.id,
-          variant_id: variantId,
+          variant_id: reviewTarget?.variantId,
+          order_id: reviewTarget?.orderId,
           name: product?.name,
           image: selected?.cover_image || selected?.image_url || product?.cover_image,
           size: selected?.size,
@@ -869,8 +890,8 @@ export default function ProductDetails() {
           try {
             const reviewRes = await getReviews({ entity_type: 'product', variant_id: variantId });
             setReviews(normalizeReviewsForDisplay(extractReviewsList(reviewRes)));
-          } catch (error) {
-            console.error('Failed to refresh reviews:', error);
+          } catch {
+            /* keep the existing list */
           }
         }}
       />

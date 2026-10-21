@@ -118,99 +118,19 @@
 .svc-catalog {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: 8px;
   margin: 0;
   padding: 0;
   list-style: none;
-}
-
-/* Square frame so packshots and wide lifestyle photos both stay fully visible. */
-.svc-catalog .am-product-card {
-  border-radius: 16px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(19, 35, 30, 0.05);
-}
-
-.svc-catalog .am-product-card:hover {
-  transform: none;
-}
-
-.svc-catalog .am-product-card:hover .am-product-card__media img {
-  transform: none;
-}
-
-.svc-catalog .am-product-card__media {
-  aspect-ratio: 1 / 1;
-  background: #f4f1ea;
-}
-
-.svc-catalog .am-product-card__media img {
-  padding: 16px;
-  object-fit: contain;
-  object-position: center;
-}
-
-.svc-catalog .am-product-card__badges .am-badge--accent {
-  display: none;
-}
-
-.svc-catalog .am-product-card__body {
-  gap: 6px;
-  padding: 12px 12px 0;
-}
-
-.svc-catalog .am-product-card__name {
-  min-height: 2.6em;
-}
-
-.svc-catalog .am-product-card__price {
-  flex-wrap: nowrap;
-  gap: 6px;
-}
-
-.svc-catalog .am-product-card__price s,
-.svc-catalog .am-product-card__off {
-  white-space: nowrap;
-}
-
-.svc-catalog .am-product-card__action {
-  padding: 12px;
-}
-
-.svc-catalog .am-stepper,
-.svc-catalog .am-product-card__add {
-  min-height: 44px;
-  border: 1px solid var(--am-primary);
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: none;
-  color: var(--am-primary);
-}
-
-.svc-catalog .am-stepper button:hover:not(:disabled) {
-  background: rgba(17, 84, 67, 0.08);
-}
-
-.svc-catalog .am-product-card__add:hover:not(:disabled) {
-  background: var(--am-primary);
-  color: #fff;
-  box-shadow: none;
-  transform: none;
 }
 
 .svc-catalog > li > * {
   height: 100%;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 640px) {
   .svc-catalog {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (min-width: 1100px) {
-  .svc-catalog {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(172px, 1fr));
   }
 }
 

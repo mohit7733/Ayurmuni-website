@@ -26,6 +26,7 @@ import {
   EmptyState,
   MediaCard,
   Modal,
+  PageBar,
   Rail,
   RailItem,
   RailSkeleton,
@@ -268,65 +269,25 @@ export default function Products() {
   return (
     <AppShell tab="products">
       <div className="st-page st-page--products">
-        <section
-          ref={heroRef}
-          className="st-hero st-hero--modern has-visual"
-          aria-labelledby="st-products-title"
-        >
-          <div className="st-hero__art" aria-hidden="true">
-            <svg viewBox="0 0 600 240" preserveAspectRatio="xMidYMid slice">
-              <g fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round">
-                <path d="M470 250 C 470 170, 500 110, 560 60" />
-                <path d="M482 196 C 450 180, 430 160, 424 128 C 456 136, 476 160, 482 196 Z" />
-                <path d="M496 150 C 522 128, 548 122, 578 128 C 560 152, 530 162, 496 150 Z" />
-                <path d="M520 104 C 506 80, 504 56, 512 30 C 532 50, 536 78, 520 104 Z" />
-                <path d="M40 -10 C 70 50, 120 80, 190 92" />
-                <path d="M96 52 C 100 26, 118 10, 144 4 C 140 30, 122 46, 96 52 Z" />
-                <path d="M150 84 C 160 60, 182 48, 210 48 C 198 72, 176 84, 150 84 Z" />
-              </g>
-            </svg>
-          </div>
+        <BannerCarousel items={banners} interval={4000} />
 
-          <div className="st-hero__main">
-            <p className="st-hero__chip">The store</p>
-            <h1 id="st-products-title">{T.productsTitle}</h1>
-            <p className="st-hero__lede">{T.productsLede}</p>
-            <div className="st-hero__row">
-              <div className="st-hero__search">
-                <SearchField
-                  value={search}
-                  onChange={setSearch}
-                  onSubmit={goSearch}
-                  placeholder={T.productsSearch}
-                  label={T.productsSearch}
-                />
-                <kbd className="st-hero__kbd" aria-hidden="true">/</kbd>
-              </div>
-              <Button
-                variant="secondary"
-                className="st-hero__cart"
-                onClick={() => navigate("/cart")}
-                leadingIcon={<ShoppingBag size={18} aria-hidden />}
-              >
-                {T.cart}
-                {itemCount ? <span className="st-hero__count">{itemCount}</span> : null}
-              </Button>
-            </div>
-          </div>
-
-          <div className="st-hero__ornament" aria-hidden="true">
-              <svg viewBox="0 0 220 180">
-                <g fill="none" strokeLinecap="round">
-                  <circle cx="110" cy="90" r="78" stroke="rgba(214,184,122,0.28)" />
-                  <circle cx="110" cy="90" r="56" stroke="rgba(214,184,122,0.18)" strokeDasharray="1.5 7" />
-                  <path d="M110 150 C 110 110, 118 76, 140 44" stroke="rgba(247,241,228,0.72)" strokeWidth="1.2" />
-                  <path d="M114 118 C 92 112, 80 96, 78 74 C 100 80, 112 96, 114 118 Z" fill="rgba(214,184,122,0.08)" stroke="rgba(214,184,122,0.7)" />
-                  <path d="M122 92 C 140 76, 160 72, 182 76 C 168 94, 146 102, 122 92 Z" fill="rgba(247,241,228,0.04)" stroke="rgba(214,184,122,0.55)" />
-                  <path d="M134 60 C 124 44, 124 26, 132 10 C 146 26, 146 46, 134 60 Z" fill="rgba(214,184,122,0.06)" stroke="rgba(247,241,228,0.45)" />
-                </g>
-              </svg>
-            </div>
-        </section>
+        <PageBar ref={heroRef} id="st-products-title" title={T.productsTitle}>
+          <SearchField
+            value={search}
+            onChange={setSearch}
+            onSubmit={goSearch}
+            placeholder={T.productsSearch}
+            label={T.productsSearch}
+          />
+          <Button
+            variant="secondary"
+            onClick={() => navigate("/cart")}
+            leadingIcon={<ShoppingBag size={18} aria-hidden />}
+          >
+            {T.cart}
+            {itemCount ? <span className="am-page-bar__count">{itemCount}</span> : null}
+          </Button>
+        </PageBar>
 
         {showSkeleton ? (
           <SkeletonGrid
@@ -336,8 +297,6 @@ export default function Products() {
           />
         ) : (
           <>
-            <BannerCarousel items={banners} interval={4000} />
-
             <section className="st-section st-panel" aria-labelledby="st-all-title">
               <SectionHeader
                 id="st-all-title"

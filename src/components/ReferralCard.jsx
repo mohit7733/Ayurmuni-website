@@ -44,8 +44,8 @@ export default function ReferralCard() {
           total_earnings: historyRes.data.total_earnings || 0,
         });
       }
-    } catch (error) {
-      console.error('Error loading referral data:', error);
+    } catch {
+      /* empty state below covers failures */
     } finally {
       setLoading(false);
     }
@@ -60,7 +60,7 @@ export default function ReferralCard() {
     try {
       await navigator.clipboard.writeText(referralCode);
       showSuccessToast('Referral code copied!', 'success');
-    } catch (error) {
+    } catch {
       // Fallback for older browsers
       const input = document.createElement('input');
       input.value = referralCode;
@@ -81,7 +81,7 @@ export default function ReferralCard() {
     try {
       await navigator.clipboard.writeText(referralLink);
       showSuccessToast('Referral link copied!', 'success');
-    } catch (error) {
+    } catch {
       // Fallback
       const input = document.createElement('input');
       input.value = referralLink;
@@ -111,7 +111,6 @@ export default function ReferralCard() {
       }
     } catch (error) {
       if (error.name !== 'AbortError') {
-        console.error('Share error:', error);
         await copyLink();
       }
     }

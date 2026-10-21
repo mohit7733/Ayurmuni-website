@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
+  CreditCard,
   Download,
   Headphones,
   Leaf,
   MapPin,
   Package,
   Phone,
+  ReceiptText,
   RefreshCw,
   Share2,
   ShoppingBag,
@@ -14,7 +16,22 @@ import {
   Truck,
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
-import PageHeader from '../components/PageHeader';
+import {
+  ActionStack,
+  DetailCard,
+  DetailEmpty,
+  DetailHero,
+  DetailLayout,
+  DetailPage,
+  DetailSkeleton,
+  DetailTop,
+  InfoGrid,
+  MetaChip,
+  PersonCard,
+  StatusPill,
+  SummaryRows,
+  Timeline,
+} from '../components/detail/Detail';
 import { formatAddress } from '../cart/mapCart';
 import { formatRupee, resolveImageUrl } from '../home/catalog';
 import { useCart } from '../hooks/useCart';
@@ -47,22 +64,8 @@ import {
   SUPPORT_EMAIL,
   TRACKING_ALLOWED,
 } from '../utils/orderDetailUtils';
-import {
-  Badge,
-  Button,
-  Chip,
-  Disclaimer,
-  EmptyState,
-  Modal,
-  Skeleton,
-  SkeletonText,
-  Textarea,
-} from '../components/ui';
-import {
-  ORDERS_COPY as T,
-  orderStatusLabel,
-  orderStatusTone,
-} from '../content/orders';
+import { Button, Chip, Disclaimer, Modal, Textarea } from '../components/ui';
+import { ORDERS_COPY as T, orderStatusLabel } from '../content/orders';
 import '../design/pages/orders.css';
 
 export default function OrderDetails() {
@@ -245,84 +248,246 @@ export default function OrderDetails() {
     window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
 
+  const trackingTimeline = trackingSteps.map((step) => ({
+    key: step.key,
+    title: step.label,
+    text: step.subtitle,
+    time: step.date,
+    state:
+      step.key === 'cancelled' || step.key === 'returned'
+        ? 'failed'
+        : step.active
+          ? 'current'
+          : step.completed
+            ? 'done'
+            : 'pending',
+  }));
+  const itemCount = items.reduce((sum, item) => sum + (Number(item?.quantity) || 1), 0);
+  const words = (value) => (value ? String(value).replace(/_/g, ' ') : '');
+  const method = (value) => (/^(upi|cod|emi|nb)$/i.test(String(value || '')) ? String(value).toUpperCase() : words(value));
+  const paymentMethod = method(order?.payment_method || order?.payment_type);
+
   return (
     <AppShell tab="profile">
-      <section className="or-page">
-        <PageHeader
-          title={T.detailTitle}
-          subtitle={orderCode ? `#${formatOrderId(orderCode)}` : undefined}
+      <DetailPage>
+        <DetailTop
           backTo="/profile/orders"
+          backLabel="My orders"
+          actions={
+            order ? (
+              <Button variant="ghost" size="sm" leadingIcon={<Share2 size={14} />} onClick={handleShare}>
+                {T.shareOrder}
+              </Button>
+            ) : null
+          }
         />
 
         {loading ? (
-          <div className="or-skel" aria-busy="true" aria-label={T.detailLoading}>
-            <Skeleton style={{ height: 120, borderRadius: 'var(--am-radius-lg)' }} />
-            <SkeletonText lines={4} />
-          </div>
+          <DetailSkeleton media={false} label={T.detailLoading} />
         ) : !order ? (
-          <EmptyState
-            icon={<Package size={28} />}
+          <DetailEmpty
+            icon={Package}
             title={T.notFoundTitle}
-            description={T.notFoundText}
-            action={
-              <Button variant="primary" onClick={() => navigate('/profile/orders')}>
-                {T.backToOrders}
-              </Button>
-            }
+            text={T.notFoundText}
+            action={<Button onClick={() => navigate('/profile/orders')}>{T.backToOrders}</Button>}
           />
         ) : (
-          <div className="or-detail">
-            <div className="or-detail__main">
-              <div className="or-card or-hero-actions">
-                <div className="or-status-block or-status-block--inline">
-                  <p className="or-status-block__label">{T.status}</p>
-                  <Badge tone={orderStatusTone(status)} size="md">
-                    {orderStatusLabel(status)}
-                  </Badge>
-                  {order?.created_at ? (
-                    <p className="or-row__meta">{formatOrderDateTime(order.created_at)}</p>
-                  ) : null}
-                </div>
-                <div className="or-action-row">
-                  {canInvoice ? (
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      loading={invoiceLoading}
-                      leadingIcon={<Download size={14} />}
-                      onClick={handleInvoice}
-                    >
-                      {T.invoice}
-                    </Button>
-                  ) : null}
-                  {canReturn ? (
-                    <Button variant="secondary" size="sm" leadingIcon={<RefreshCw size={14} />} onClick={() => setReturnOpen(true)}>
-                      {T.returnOrder}
-                    </Button>
-                  ) : null}
-                  {canCancel ? (
-                    <Button variant="danger" size="sm" onClick={() => setCancelOpen(true)}>
-                      {T.cancelOrder}
-                    </Button>
-                  ) : null}
-                  <Button variant="ghost" size="sm" leadingIcon={<Share2 size={14} />} onClick={handleShare}>
-                    {T.shareOrder}
-                  </Button>
+          <>
+            <DetailHero
+              variant="band"
+              titleId="order-title"
+              eyebrow={T.detailTitle}
+              title={`#${formatOrderId(orderCode)}`}
+              lede={order?.created_at ? `Placed on ${formatOrderDateTime(order.created_at)}` : undefined}
+              chips={
+                <>
+                  <MetaChip icon={Package} tone="gold">
+                    {itemCount} {itemCount === 1 ? 'item' : 'items'}
+                  </MetaChip>
+                  {paymentMethod ? <MetaChip icon={CreditCard}>{paymentMethod}</MetaChip> : null}
+                  {eta ? <MetaChip icon={Truck}>{T.arrivingBy(eta)}</MetaChip> : null}
+                </>
+              }
+              aside={
+                <>
+                  <StatusPill status={status}>{orderStatusLabel(status)}</StatusPill>
+                  <div className="dx-figure">
+                    <small>{T.total}</small>
+                    <strong>{formatRupee(order.total_amount ?? order.payable_amount)}</strong>
+                  </div>
+                </>
+              }
+            >
+              <div className="dx-actions dx-actions--row">
+                <Button
+                  variant="accent"
+                  size="sm"
+                  leadingIcon={<ShoppingBag size={14} />}
+                  loading={reorderLoading}
+                  onClick={handleReorder}
+                >
+                  {T.reorder}
+                </Button>
+                {canInvoice ? (
                   <Button
-                    variant="ghost"
+                    variant="secondary"
                     size="sm"
-                    leadingIcon={<Headphones size={14} />}
-                    onClick={() => contactSupport(`Help with order ${formatOrderId(orderCode)}`)}
+                    loading={invoiceLoading}
+                    leadingIcon={<Download size={14} />}
+                    onClick={handleInvoice}
                   >
-                    {T.contactSupport}
+                    {T.invoice}
                   </Button>
-                </div>
+                ) : null}
+                {canReturn ? (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    leadingIcon={<RefreshCw size={14} />}
+                    onClick={() => setReturnOpen(true)}
+                  >
+                    {T.returnOrder}
+                  </Button>
+                ) : null}
+                {canCancel ? (
+                  <Button variant="secondary" size="sm" onClick={() => setCancelOpen(true)}>
+                    {T.cancelOrder}
+                  </Button>
+                ) : null}
               </div>
+            </DetailHero>
 
-              <div className="or-card">
-                <div className="or-section-head">
-                  <h2>{T.trackOrder}</h2>
-                  {canTrackLive ? (
+            <DetailLayout
+              aside={
+                <>
+                  <DetailCard id="order-bill" title={T.bill} icon={ReceiptText}>
+                    <SummaryRows
+                      rows={[
+                        { label: T.itemsTotal, value: formatRupee(payment.itemsTotal) },
+                        {
+                          label: T.discount,
+                          value: payment.discount > 0 ? `- ${formatRupee(payment.discount)}` : '',
+                          tone: 'success',
+                        },
+                        { label: T.giftWrap, value: payment.giftWrap > 0 ? formatRupee(payment.giftWrap) : '' },
+                        {
+                          label: T.platformFee,
+                          value: payment.platformFee > 0 ? formatRupee(payment.platformFee) : '',
+                        },
+                        { label: T.gst, value: payment.gst > 0 ? formatRupee(payment.gst) : '' },
+                        { label: T.shipping, value: payment.shipping > 0 ? formatRupee(payment.shipping) : T.free },
+                        { label: T.cod, value: payment.cod > 0 ? formatRupee(payment.cod) : '' },
+                      ]}
+                      total={{ label: T.total, value: formatRupee(order.total_amount ?? order.payable_amount) }}
+                    />
+                  </DetailCard>
+
+                  {address ? (
+                    <DetailCard id="order-address" title={T.delivery} icon={MapPin}>
+                      <p className="dx-prose">{address}</p>
+                    </DetailCard>
+                  ) : null}
+
+                  <DetailCard id="order-info" title={T.orderInfo} icon={Package}>
+                    <InfoGrid
+                      items={[
+                        { label: T.placedOn, value: formatOrderDateTime(order.created_at) },
+                        { label: T.paymentMethod, value: paymentMethod },
+                        { label: T.paymentStatus, value: words(order.payment_status) },
+                        { label: T.shippingMethod, value: words(order.shipping_method) },
+                      ]}
+                    />
+                  </DetailCard>
+
+                  {refund ? (
+                    <DetailCard id="order-refund" title={T.refund} icon={RefreshCw} tone="accent">
+                      <InfoGrid
+                        columns={2}
+                        items={[
+                          { label: T.refundStatus, value: words(refund.status) },
+                          { label: T.refundAmount, value: refund.amount != null ? formatRupee(refund.amount) : '' },
+                          { label: T.refundMethod, value: words(refund.method), wide: true },
+                        ]}
+                      />
+                    </DetailCard>
+                  ) : null}
+
+                  <DetailCard id="order-help" title="Need help with this order?" icon={Headphones}>
+                    <ActionStack>
+                      <Button
+                        variant="secondary"
+                        leadingIcon={<Headphones size={16} />}
+                        onClick={() => contactSupport(`Help with order ${formatOrderId(orderCode)}`)}
+                      >
+                        {T.contactSupport}
+                      </Button>
+                    </ActionStack>
+                  </DetailCard>
+                </>
+              }
+            >
+              <DetailCard
+                id="order-items"
+                title={T.itemsTitle}
+                icon={ShoppingBag}
+                meta={`${itemCount} ${itemCount === 1 ? 'item' : 'items'}`}
+              >
+                <ul className="dx-items">
+                  {items.map((item) => {
+                    const variantId = resolveOrderItemVariantId(item);
+                    const local = localReviews[variantId];
+                    const rated = isOrderItemRated(item) || Boolean(local);
+                    const image = resolveImageUrl(item?.variant || item);
+                    const name = item?.variant?.variant_title || item?.product_name || item?.name;
+                    const unit = Number(item.selling_price ?? item.price ?? item.unit_price) || 0;
+                    const qty = Number(item.quantity) || 1;
+                    const lineTotal = Number(item.total_price ?? item.subtotal) || unit * qty;
+                    const rating = local?.rating || item?.review?.rating;
+                    return (
+                      <li key={item.id || item.variant_id} className="dx-item">
+                        <span className="dx-item__media">
+                          {image ? (
+                            <img src={image} alt="" loading="lazy" decoding="async" />
+                          ) : (
+                            <Leaf size={20} aria-hidden />
+                          )}
+                        </span>
+                        <span className="dx-item__copy">
+                          <strong>{name}</strong>
+                          <small>{T.qty(qty)}</small>
+                          {rated ? (
+                            <small className="dx-item__rated">
+                              <Star size={12} aria-hidden />
+                              {rating ? T.youRated(rating) : T.reviewSubmitted}
+                            </small>
+                          ) : null}
+                        </span>
+                        <span className="dx-item__end">
+                          <strong>{formatRupee(lineTotal)}</strong>
+                          {unit * qty > lineTotal ? <s className="dx-item__was">{formatRupee(unit * qty)}</s> : null}
+                          {!rated && variantId && canReview ? (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              leadingIcon={<Star size={14} aria-hidden />}
+                              onClick={() => openProductReview(item)}
+                            >
+                              {T.rate}
+                            </Button>
+                          ) : null}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </DetailCard>
+
+              <DetailCard
+                id="order-track"
+                title={T.trackOrder}
+                icon={Truck}
+                action={
+                  canTrackLive ? (
                     <Button
                       variant="ghost"
                       size="sm"
@@ -332,212 +497,51 @@ export default function OrderDetails() {
                     >
                       {T.refresh}
                     </Button>
-                  ) : null}
-                </div>
-                <ol className="or-track">
-                  {trackingSteps.map((step) => (
-                    <li
-                      key={step.key}
-                      className={`or-track__step${step.completed ? ' is-done' : ''}${step.active ? ' is-active' : ''}${
-                        step.key === 'cancelled' || step.key === 'returned' ? ' is-cancelled' : ''
-                      }`}
-                    >
-                      <span className="or-track__dot" aria-hidden />
-                      <div>
-                        <strong>{step.label}</strong>
-                        {step.subtitle ? <small>{step.subtitle}</small> : null}
-                        {step.date ? <small>{step.date}</small> : null}
-                      </div>
-                    </li>
-                  ))}
-                </ol>
+                  ) : null
+                }
+              >
+                {eta || currentLocation ? (
+                  <div className="dx-link dx-link--static">
+                    <span className="dx-link__icon" aria-hidden>
+                      <MapPin size={18} />
+                    </span>
+                    <span className="dx-link__copy">
+                      {eta ? <strong>{T.arrivingBy(eta)}</strong> : <strong>{currentLocation}</strong>}
+                      {eta && currentLocation ? <span>{currentLocation}</span> : null}
+                    </span>
+                  </div>
+                ) : null}
+                <Timeline items={trackingTimeline} />
                 {liveTracking?.trackingNumber ? (
-                  <p className="or-row__meta">
+                  <p className="dx-note">
                     {liveTracking.carrier ? `${liveTracking.carrier} · ` : ''}
                     AWB {liveTracking.trackingNumber}
                     {liveTracking.lastUpdated ? ` · Updated ${liveTracking.lastUpdated}` : ''}
                   </p>
                 ) : null}
-                {eta || currentLocation ? (
-                  <div className="or-eta">
-                    <MapPin size={16} aria-hidden />
-                    <div>
-                      {eta ? <strong>{T.arrivingBy(eta)}</strong> : null}
-                      {currentLocation ? <small>{currentLocation}</small> : null}
-                    </div>
-                  </div>
-                ) : null}
                 {agent ? (
-                  <div className="or-agent">
-                    <Truck size={18} aria-hidden />
-                    <div>
-                      <strong>{agent.name}</strong>
-                      {agent.phone ? <small>{agent.phone}</small> : null}
-                    </div>
-                    {agent.phone ? (
-                      <Button href={`tel:${agent.phone}`} variant="secondary" size="sm" leadingIcon={<Phone size={14} />}>
-                        {T.call}
-                      </Button>
-                    ) : null}
-                  </div>
-                ) : null}
-              </div>
-
-              <div className="or-card">
-                <h2>{T.itemsTitle}</h2>
-                {items.map((item) => {
-                  const variantId = resolveOrderItemVariantId(item);
-                  const local = localReviews[variantId];
-                  const rated = isOrderItemRated(item) || Boolean(local);
-                  const image = resolveImageUrl(item?.variant || item);
-                  const name = item?.variant?.variant_title || item?.product_name || item?.name;
-                  const unitPrice = formatRupee(item.selling_price ?? item.price ?? item.unit_price);
-                  return (
-                    <div key={item.id || item.variant_id} className="or-item">
-                      <span className="or-item__thumb">
-                        {image ? (
-                          <img src={image} alt="" loading="lazy" decoding="async" />
-                        ) : (
-                          <Leaf size={20} aria-hidden />
-                        )}
-                      </span>
-                      <p className="or-item__name">
-                        {name}
-                        <small>
-                          {T.qty(item.quantity)} · {unitPrice}
-                        </small>
-                        {rated ? (
-                          <small>
-                            {local?.rating || item?.review?.rating
-                              ? T.youRated(local?.rating || item?.review?.rating)
-                              : T.reviewSubmitted}
-                          </small>
-                        ) : null}
-                      </p>
-                      {!rated && variantId && canReview ? (
+                  <PersonCard
+                    fallback={<Truck size={18} />}
+                    name={agent.name}
+                    role="Delivery partner"
+                    meta={agent.phone}
+                    action={
+                      agent.phone ? (
                         <Button
-                          className="or-item__action"
+                          href={`tel:${agent.phone}`}
                           variant="secondary"
                           size="sm"
-                          leadingIcon={<Star size={14} aria-hidden />}
-                          onClick={() => openProductReview(item)}
+                          leadingIcon={<Phone size={14} />}
                         >
-                          {T.rate}
+                          {T.call}
                         </Button>
-                      ) : null}
-                    </div>
-                  );
-                })}
-                <Button
-                  variant="secondary"
-                  leadingIcon={<ShoppingBag size={16} />}
-                  loading={reorderLoading}
-                  onClick={handleReorder}
-                >
-                  {T.reorder}
-                </Button>
-              </div>
-            </div>
-
-            <aside className="or-aside">
-              {address ? (
-                <div className="or-card or-delivery">
-                  <h2>
-                    <MapPin size={16} aria-hidden />
-                    {T.delivery}
-                  </h2>
-                  <p>{address}</p>
-                </div>
-              ) : null}
-
-              <div className="or-card">
-                <h2>{T.orderInfo}</h2>
-                {[
-                  [T.placedOn, formatOrderDateTime(order.created_at)],
-                  [T.paymentMethod, order.payment_method || order.payment_type],
-                  [T.paymentStatus, order.payment_status],
-                  [T.shippingMethod, order.shipping_method],
-                ]
-                  .filter(([, value]) => value)
-                  .map(([label, value]) => (
-                    <p key={label} className="or-info-row">
-                      <span>{label}</span>
-                      <strong>{String(value).replace(/_/g, ' ')}</strong>
-                    </p>
-                  ))}
-              </div>
-
-              {refund ? (
-                <div className="or-card">
-                  <h2>{T.refund}</h2>
-                  {refund.status ? (
-                    <p className="or-info-row">
-                      <span>{T.refundStatus}</span>
-                      <strong>{String(refund.status).replace(/_/g, ' ')}</strong>
-                    </p>
-                  ) : null}
-                  {refund.amount != null ? (
-                    <p className="or-info-row">
-                      <span>{T.refundAmount}</span>
-                      <strong>{formatRupee(refund.amount)}</strong>
-                    </p>
-                  ) : null}
-                  {refund.method ? (
-                    <p className="or-info-row">
-                      <span>{T.refundMethod}</span>
-                      <strong>{String(refund.method).replace(/_/g, ' ')}</strong>
-                    </p>
-                  ) : null}
-                </div>
-              ) : null}
-
-              <div className="or-card">
-                <h2>{T.bill}</h2>
-                <p className="or-info-row">
-                  <span>{T.itemsTotal}</span>
-                  <strong>{formatRupee(payment.itemsTotal)}</strong>
-                </p>
-                {payment.discount > 0 ? (
-                  <p className="or-info-row">
-                    <span>{T.discount}</span>
-                    <strong>- {formatRupee(payment.discount)}</strong>
-                  </p>
+                      ) : null
+                    }
+                  />
                 ) : null}
-                {payment.giftWrap > 0 ? (
-                  <p className="or-info-row">
-                    <span>{T.giftWrap}</span>
-                    <strong>{formatRupee(payment.giftWrap)}</strong>
-                  </p>
-                ) : null}
-                {payment.platformFee > 0 ? (
-                  <p className="or-info-row">
-                    <span>{T.platformFee}</span>
-                    <strong>{formatRupee(payment.platformFee)}</strong>
-                  </p>
-                ) : null}
-                {payment.gst > 0 ? (
-                  <p className="or-info-row">
-                    <span>{T.gst}</span>
-                    <strong>{formatRupee(payment.gst)}</strong>
-                  </p>
-                ) : null}
-                <p className="or-info-row">
-                  <span>{T.shipping}</span>
-                  <strong>{payment.shipping > 0 ? formatRupee(payment.shipping) : T.free}</strong>
-                </p>
-                {payment.cod > 0 ? (
-                  <p className="or-info-row">
-                    <span>{T.cod}</span>
-                    <strong>{formatRupee(payment.cod)}</strong>
-                  </p>
-                ) : null}
-                <p className="or-total">
-                  <span>{T.total}</span>
-                  <span>{formatRupee(order.total_amount ?? order.payable_amount)}</span>
-                </p>
-              </div>
-            </aside>
-          </div>
+              </DetailCard>
+            </DetailLayout>
+          </>
         )}
 
         <Modal
@@ -597,7 +601,7 @@ export default function OrderDetails() {
         />
 
         <Disclaimer />
-      </section>
+      </DetailPage>
     </AppShell>
   );
 }

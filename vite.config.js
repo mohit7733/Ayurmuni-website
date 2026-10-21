@@ -12,6 +12,21 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    esbuild: mode === 'production' ? { pure: ['console.log', 'console.debug', 'console.info'] } : undefined,
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (!id.includes('node_modules')) return undefined;
+            if (/[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/.test(id)) {
+              return 'vendor-react';
+            }
+            if (id.includes('lucide-react')) return 'vendor-icons';
+            return undefined;
+          },
+        },
+      },
+    },
     server: {
       port: 5173,
       proxy: {

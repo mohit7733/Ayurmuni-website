@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BadgeCheck, LockKeyhole, SearchX, Stethoscope } from 'lucide-react';
+import { SearchX, Stethoscope } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import BannerCarousel from '../components/BannerCarousel';
 import SuggestedDoctorCard from '../components/SuggestedDoctorCard';
@@ -8,7 +8,7 @@ import DummyOfferCard from '../components/DummyOfferCard';
 import LabHomeBanner from '../components/LabHomeBanner';
 import ProductCard from '../components/ProductCard';
 import ConsultationCard from '../components/consult/ConsultationCard';
-import { SectionHead, ServiceHero, ViewAll } from '../components/ServiceHome';
+import { SectionHead, ViewAll } from '../components/ServiceHome';
 import { loadBannerCarouselForScreen } from '../services/bannerService';
 import { mapProductCategory, normalizeApiList } from '../home/catalog';
 import { getServiceCategoryId, resolveBannerNavigation } from '../home/serviceCategories';
@@ -25,6 +25,7 @@ import {
   Button,
   ConcernCarousel,
   EmptyState,
+  PageBar,
   Rail,
   RailItem,
   Reveal,
@@ -37,12 +38,6 @@ import { HOME_COPY as H } from '../content/home';
 import { DUMMY_LAB_TESTS } from '../data/homeDummySections';
 import '../design/pages/dummy-offers.css';
 import '../design/pages/orange-lab.css';
-
-const TRUST = [
-  { icon: BadgeCheck, label: H.trustDoctors },
-  { icon: LockKeyhole, label: H.trustPayments },
-  { icon: Stethoscope, label: 'Video consults' },
-];
 
 const matchesSearch = (q, ...values) => {
   const needle = String(q || '').trim().toLowerCase();
@@ -122,7 +117,6 @@ export default function Consult() {
     return () => {
       alive = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [consultCategoryId]);
 
   useEffect(() => {
@@ -209,15 +203,25 @@ export default function Consult() {
   return (
     <AppShell tab="consult">
       <div className="hm-page svc-page">
-        <ServiceHero
-          id="cs-hero"
-          eyebrow={T.eyebrow}
-          title="Consult a"
-          accent="doctor."
-          lede={T.heroLede}
-          trust={TRUST}
-        >
-          <div className="svc-search">
+        <div className="hm-body">
+          {bannersLoading || categoriesLoading || banners.length > 0 ? (
+            <BannerCarousel
+              items={banners}
+              loading={bannersLoading || categoriesLoading}
+              interval={6000}
+              onSelect={openBanner}
+              copy={{
+                label: H.offersLabel,
+                open: H.openOffer,
+                of: H.of,
+                show: H.showOffer,
+                pause: H.pauseOffers,
+                play: H.playOffers,
+              }}
+            />
+          ) : null}
+
+          <PageBar id="cs-hero" title="Consult a doctor">
             <SearchField
               value={search}
               onChange={setSearch}
@@ -225,50 +229,17 @@ export default function Consult() {
               placeholder={T.searchPlaceholder}
               label={T.searchLabel}
             />
-          </div>
-          <div className="hm-hero__ctas">
             <Button
               variant="accent"
-              size="lg"
-              className="hm-hero__primary"
               onClick={() => navigate('/consult/doctors')}
               leadingIcon={<Stethoscope size={16} aria-hidden />}
             >
               {T.browseAll}
             </Button>
-            <Button
-              variant="secondary"
-              size="lg"
-              className="hm-hero__ghost"
-              onClick={() => navigate('/consult/history')}
-            >
+            <Button variant="secondary" onClick={() => navigate('/consult/history')}>
               {T.history}
             </Button>
-          </div>
-        </ServiceHero>
-
-        <div className="hm-body">
-          {bannersLoading || categoriesLoading || banners.length > 0 ? (
-            <div className="hm-dash">
-              <div className="hm-dash__main">
-                <BannerCarousel
-                  items={banners}
-                  loading={bannersLoading || categoriesLoading}
-                  interval={6000}
-                  onSelect={openBanner}
-                  copy={{
-                    label: H.offersLabel,
-                    open: H.openOffer,
-                    of: H.of,
-                    show: H.showOffer,
-                    pause: H.pauseOffers,
-                    play: H.playOffers,
-                  }}
-                />
-              </div>
-            </div>
-          ) : null}
-
+          </PageBar>
           {filteredHistory.length > 0 ? (
             <div className="hm-product-row">
               <section className="hm-section hm-panel svc-rail-section" aria-labelledby="cs-recent-title">

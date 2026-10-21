@@ -68,19 +68,24 @@ export function isChatSendEnabled(access, appointmentDate, fallback) {
   const callStatus = normalize(merged.call_status);
   const appointmentStatus = normalize(merged.appointment_status);
   const followUp = merged.follow_up;
+  const resolvedDate = appointmentDate ?? fallback?.appointment_date;
+  const withinWindow = isWithinDefaultChatWindow(resolvedDate, fallback);
 
-  if (access?.can_send === true) return true;
   if (callStatus === 'in_progress') return true;
-  if (appointmentStatus === 'confirmed' || appointmentStatus === 'in_progress') return true;
   if (merged.follow_up_active === true) return true;
-  if (isFollowUpChatWindowOpen(followUp, appointmentDate ?? fallback?.appointment_date, fallback)) {
-    return true;
+  if (isFollowUpChatWindowOpen(followUp, resolvedDate, fallback)) return true;
+
+  // A confirmed visit stays open through the appointment day and the
+  // following DEFAULT_CHAT_DAYS. After that it is read-only, same as a
+  // completed visit. An explicit API allow does not extend a closed window.
+  if (access?.can_send === true || appointmentStatus === 'confirmed' || appointmentStatus === 'in_progress') {
+    return withinWindow;
   }
 
   const isCompleted = appointmentStatus === 'completed' || callStatus === 'ended';
   if (isCompleted) {
     if (followUp?.date || followUp?.schedule) return false;
-    return isWithinDefaultChatWindow(appointmentDate, fallback);
+    return withinWindow;
   }
   return false;
 }

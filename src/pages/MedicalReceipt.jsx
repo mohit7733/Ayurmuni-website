@@ -1,6 +1,22 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Download, Mail, Printer, ReceiptText, ShieldCheck } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import ShareButton from '../components/ShareButton';
+import { Button } from '../components/ui';
+import {
+  ActionStack,
+  DetailCard,
+  DetailEmpty,
+  DetailLayout,
+  DetailPage,
+  DetailSkeleton,
+  DetailTop,
+  InfoGrid,
+  PersonCard,
+  StatusPill,
+  SummaryRows,
+} from '../components/detail/Detail';
 import { formatDoctorDisplayName } from '../consult/appointmentUtils';
 import { doctorDisplayName, doctorImage } from '../consult/doctors';
 import { formatRupee } from '../home/catalog';
@@ -11,19 +27,26 @@ import { formatDisplayIdHash, formatReceiptId } from '../utils/formatDisplayId';
 import { parseConsultationReceiptBreakdown } from '../utils/consultationReceiptUtils';
 import { saveBrowserFile } from '../utils/prescriptionDetailUtils';
 import { getEmailShareUrl } from '../utils/shareUtils';
-import ShareButton from '../components/ShareButton';
+
+const COMPANY = 'TruIndyaWellness Private Limited';
 
 const formatReceiptDate = (value) => {
   if (!value) return '';
   const date = typeof value === 'string' ? new Date(value) : value;
   if (Number.isNaN(date.getTime())) return String(value);
-  return date.toISOString().split('T')[0];
+  return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
-const buildReceiptText = (receipt, breakdown) => {
-  const specialization = Array.isArray(receipt?.info?.doctor_specialization)
+const specializationOf = (receipt) =>
+  Array.isArray(receipt?.info?.doctor_specialization)
     ? receipt.info.doctor_specialization.join(', ')
     : receipt?.info?.doctor_specialization || '';
+
+const receiptNumber = (receipt, breakdown) =>
+  formatDisplayIdHash('RCP', breakdown.paymentId || receipt?.payment_id || receipt?.consultation_id);
+
+const buildReceiptText = (receipt, breakdown) => {
+  const specialization = specializationOf(receipt);
   const doctorName = receipt?.info?.doctor_name || receipt?.doctor_name || 'Doctor';
   const statusLabel = breakdown.paymentStatus
     ? breakdown.paymentStatus.charAt(0).toUpperCase() + breakdown.paymentStatus.slice(1)
@@ -31,10 +54,10 @@ const buildReceiptText = (receipt, breakdown) => {
   const legacyAdmin = Number(receipt?.administrative_charges ?? 0);
   const legacyDigital = Number(receipt?.digital_report_access ?? 0);
   return [
-    'TruIndyaWellness Private Limited',
+    COMPANY,
     'DIGITAL CONSULTATION RECEIPT',
     '----------------------------------------',
-    `Receipt No.: ${formatDisplayIdHash('RCP', breakdown.paymentId || receipt?.payment_id || receipt?.consultation_id)}`,
+    `Receipt No.: ${receiptNumber(receipt, breakdown)}`,
     `Date: ${formatReceiptDate(receipt?.date)}`,
     `Patient: ${receipt?.patient_name || '-'}`,
     `Payment Method: ${breakdown.paymentMethod}`,
@@ -95,15 +118,22 @@ export default function MedicalReceipt() {
     })();
   }, [fetchReceipt]);
 
-  const specialization = Array.isArray(receipt?.info?.doctor_specialization)
-    ? receipt.info.doctor_specialization.join(', ')
-    : receipt?.info?.doctor_specialization || '';
+  const specialization = specializationOf(receipt);
   const doctorName = receipt?.info?.doctor_name || receipt?.doctor_name || 'Doctor';
-  const doctor = receipt?.info || { doctor_name: doctorName, doctor_image: receipt?.info?.doctor_image };
-  const breakdown = receipt ? parseConsultationReceiptBreakdown(receipt) : null;
-  const statusLabel = breakdown?.paymentStatus
-    ? breakdown.paymentStatus.charAt(0).toUpperCase() + breakdown.paymentStatus.slice(1)
-    : '';
+  const doctor = receipt?.info || { doctor_name: doctorName };
+  const parsed = receipt ? parseConsultationReceiptBreakdown(receipt) : null;
+  const breakdown = parsed
+    ? {
+        ...parsed,
+        paymentMethod: /^(upi|cod|emi|nb)$/i.test(parsed.paymentMethod || '')
+          ? parsed.paymentMethod.toUpperCase()
+          : parsed.paymentMethod,
+      }
+    : null;
+  const statusLabel =
+    !breakdown?.paymentStatus || /^(success|captured|paid)$/i.test(breakdown.paymentStatus)
+      ? 'Paid'
+      : breakdown.paymentStatus.charAt(0).toUpperCase() + breakdown.paymentStatus.slice(1);
   const legacyAdmin = Number(receipt?.administrative_charges ?? 0);
   const legacyDigital = Number(receipt?.digital_report_access ?? 0);
   const receiptText = receipt && breakdown ? buildReceiptText(receipt, breakdown) : '';
@@ -117,12 +147,7 @@ export default function MedicalReceipt() {
       const fileName = `Medical_Receipt_${formatReceiptId(
         receipt?.consultation_id ?? receipt?.payment_id,
       ).replace(/[^a-zA-Z0-9._-]/g, '_')}.txt`;
-      saveBrowserFile(
-        new Blob([buildReceiptText(receipt, parseConsultationReceiptBreakdown(receipt))], {
-          type: 'text/plain;charset=utf-8',
-        }),
-        fileName,
-      );
+      saveBrowserFile(new Blob([receiptText], { type: 'text/plain;charset=utf-8' }), fileName);
     } catch (error) {
       showSuccessToast(error?.message || 'Unable to save receipt', 'error');
     }
@@ -130,133 +155,11 @@ export default function MedicalReceipt() {
 
   return (
     <AppShell tab="profile">
-      <section className="catalog-page receipt-page">
-        <header className="catalog-head">
-          <button type="button" className="text-back" onClick={() => navigate(-1)}>
-            ← Back
-          </button>
-          <div>
-            <h1>Medical Receipt</h1>
-            <p>Digital consultation receipt</p>
-          </div>
-        </header>
-
-        {loading ? (
-          <p className="muted">Loading receipt…</p>
-        ) : !receipt ? (
-          <p className="empty-copy">Receipt not found</p>
-        ) : (
-          <>
-            <article className="receipt-card">
-              <div className="receipt-icon">+</div>
-              <h2>TruIndyaWellness Private Limited</h2>
-              <p className="receipt-sub">Digital consultation receipt</p>
-
-              <div className="receipt-row">
-                <div>
-                  <small>Receipt No.</small>
-                  <strong>
-                    {formatDisplayIdHash(
-                      'RCP',
-                      breakdown.paymentId || receipt?.payment_id || receipt?.consultation_id,
-                    )}
-                  </strong>
-                </div>
-                <div>
-                  <small>Date</small>
-                  <strong>{formatReceiptDate(receipt?.date)}</strong>
-                </div>
-              </div>
-              <div className="receipt-row">
-                <div>
-                  <small>Patient Name</small>
-                  <strong>{receipt?.patient_name || '—'}</strong>
-                </div>
-                <div>
-                  <small>Payment Method</small>
-                  <strong className="receipt-pay">{breakdown.paymentMethod}</strong>
-                </div>
-              </div>
-              {statusLabel || breakdown.bank ? (
-                <div className="receipt-row">
-                  {statusLabel ? (
-                    <div>
-                      <small>Payment Status</small>
-                      <strong>{statusLabel}</strong>
-                    </div>
-                  ) : null}
-                  {breakdown.bank ? (
-                    <div>
-                      <small>Bank</small>
-                      <strong>{breakdown.bank}</strong>
-                    </div>
-                  ) : null}
-                </div>
-              ) : null}
-              {breakdown.paymentId ? (
-                <p className="muted">Payment ID: {breakdown.paymentId}</p>
-              ) : null}
-              {breakdown.orderId ? <p className="muted">Order ID: {breakdown.orderId}</p> : null}
-              {breakdown.bankTransactionId ? (
-                <p className="muted">Bank Transaction ID: {breakdown.bankTransactionId}</p>
-              ) : null}
-
-              <hr />
-
-              <div className="receipt-doctor">
-                {doctorImage(doctor) || receipt?.info?.doctor_image ? (
-                  <img src={doctorImage(doctor) || receipt.info.doctor_image} alt="" />
-                ) : (
-                  <span>{String(doctorName).charAt(0)}</span>
-                )}
-                <div>
-                  <small>Consulting Doctor</small>
-                  <strong>{formatDoctorDisplayName(doctorDisplayName(doctor) || doctorName)}</strong>
-                  {specialization ? <p>{specialization}</p> : null}
-                  {receipt?.info?.doctor_id ? (
-                    <p>ID: {String(receipt.info.doctor_id).slice(0, 8)}…</p>
-                  ) : null}
-                </div>
-              </div>
-
-              <div className="receipt-price">
-                <span>Consultation Fee</span>
-                <strong>{formatRupee(breakdown.consultationFee)}</strong>
-              </div>
-              {breakdown.platformFee > 0 ? (
-                <div className="receipt-price">
-                  <span>Platform Fee</span>
-                  <strong>{formatRupee(breakdown.platformFee)}</strong>
-                </div>
-              ) : null}
-              {breakdown.gstAmount > 0 ? (
-                <div className="receipt-price">
-                  <span>GST</span>
-                  <strong>{formatRupee(breakdown.gstAmount)}</strong>
-                </div>
-              ) : null}
-              {legacyAdmin > 0 ? (
-                <div className="receipt-price">
-                  <span>Administrative Charges</span>
-                  <strong>{formatRupee(legacyAdmin)}</strong>
-                </div>
-              ) : null}
-              {legacyDigital > 0 ? (
-                <div className="receipt-price">
-                  <span>Digital Report Access</span>
-                  <strong>{formatRupee(legacyDigital)}</strong>
-                </div>
-              ) : null}
-              <hr />
-              <div className="receipt-total">
-                <span>Total Paid</span>
-                <strong>{formatRupee(breakdown.totalPaid)}</strong>
-              </div>
-              <p className="receipt-note">
-                THIS IS A COMPUTER GENERATED RECEIPT. NO SIGNATURE IS REQUIRED.
-              </p>
-            </article>
-            <div className="history-actions receipt-actions">
+      <DetailPage className="dx-page--print">
+        <DetailTop
+          backLabel="Back"
+          actions={
+            receipt ? (
               <ShareButton
                 title="Medical Receipt - Ayurmuni"
                 text={receiptText}
@@ -264,28 +167,120 @@ export default function MedicalReceipt() {
                 variant="soft"
                 size="sm"
               />
-              <button
-                type="button"
-                className="ghost"
-                onClick={() => {
-                  window.location.href = getEmailShareUrl(
-                    'Medical Receipt - Ayurmuni',
-                    receiptText,
-                  );
-                }}
-              >
-                Email
-              </button>
-              <button type="button" className="ghost" onClick={() => window.print()}>
-                Print
-              </button>
-              <button type="button" className="cta receipt-download" onClick={downloadReceipt}>
-                Download Receipt
-              </button>
-            </div>
-          </>
+            ) : null
+          }
+        />
+
+        {loading ? (
+          <DetailSkeleton media={false} label="Loading receipt" />
+        ) : !receipt ? (
+          <DetailEmpty
+            icon={ReceiptText}
+            title="Receipt not found"
+            text="This receipt isn't available yet. Receipts appear once the consultation payment is confirmed."
+            action={<Button onClick={() => navigate('/profile/appointments')}>My appointments</Button>}
+          />
+        ) : (
+          <DetailLayout
+            aside={
+              <>
+                <DetailCard id="receipt-actions" title="Save or share" icon={Download}>
+                  <ActionStack>
+                    <Button leadingIcon={<Download size={16} aria-hidden />} onClick={downloadReceipt}>
+                      Download receipt
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      leadingIcon={<Printer size={16} aria-hidden />}
+                      onClick={() => window.print()}
+                    >
+                      Print
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      leadingIcon={<Mail size={16} aria-hidden />}
+                      onClick={() => {
+                        window.location.href = getEmailShareUrl('Medical Receipt - Ayurmuni', receiptText);
+                      }}
+                    >
+                      Email
+                    </Button>
+                  </ActionStack>
+                </DetailCard>
+                <p className="dx-note">
+                  <ShieldCheck size={14} aria-hidden />
+                  Valid for insurance and reimbursement claims. Keep it with your prescription.
+                </p>
+              </>
+            }
+          >
+            <article className="dx-doc" aria-labelledby="receipt-title">
+              <header className="dx-doc__head">
+                <img className="dx-doc__logo" src="/images/FinalLogo.webp" alt="" />
+                <div className="dx-doc__brand">
+                  <strong>{COMPANY}</strong>
+                  <span>Ayurmuni · Digital consultation</span>
+                </div>
+                <StatusPill status={breakdown.paymentStatus || 'paid'}>{statusLabel}</StatusPill>
+              </header>
+
+              <div className="dx-doc__title">
+                <p className="dx-eyebrow">Medical receipt</p>
+                <h1 id="receipt-title" className="dx-title">
+                  {formatRupee(breakdown.totalPaid)}
+                </h1>
+                <span className="dx-doc__sub">
+                  {receiptNumber(receipt, breakdown)}
+                  {receipt?.date ? ` · ${formatReceiptDate(receipt.date)}` : ''}
+                </span>
+              </div>
+
+              <InfoGrid
+                items={[
+                  { label: 'Patient', value: receipt?.patient_name || '—' },
+                  { label: 'Payment method', value: breakdown.paymentMethod },
+                  { label: 'Bank', value: breakdown.bank },
+                  { label: 'Payment ID', value: breakdown.paymentId },
+                  { label: 'Order ID', value: breakdown.orderId },
+                  { label: 'Bank transaction', value: breakdown.bankTransactionId },
+                ]}
+              />
+
+              <div className="dx-doc__section">
+                <p className="dx-doc__label">Consulting doctor</p>
+                <PersonCard
+                  image={doctorImage(doctor) || receipt?.info?.doctor_image}
+                  name={formatDoctorDisplayName(doctorDisplayName(doctor) || doctorName)}
+                  role={specialization}
+                  onClick={
+                    receipt?.info?.doctor_id
+                      ? () => navigate(`/consult/doctors/${receipt.info.doctor_id}`)
+                      : undefined
+                  }
+                />
+              </div>
+
+              <div className="dx-doc__section">
+                <p className="dx-doc__label">Bill summary</p>
+                <SummaryRows
+                  rows={[
+                    { label: 'Consultation fee', value: formatRupee(breakdown.consultationFee) },
+                    { label: 'Platform fee', value: breakdown.platformFee > 0 ? formatRupee(breakdown.platformFee) : '' },
+                    { label: 'GST', value: breakdown.gstAmount > 0 ? formatRupee(breakdown.gstAmount) : '' },
+                    { label: 'Administrative charges', value: legacyAdmin > 0 ? formatRupee(legacyAdmin) : '' },
+                    { label: 'Digital report access', value: legacyDigital > 0 ? formatRupee(legacyDigital) : '' },
+                  ]}
+                  total={{ label: 'Total paid', value: formatRupee(breakdown.totalPaid) }}
+                />
+              </div>
+
+              <footer className="dx-doc__foot">
+                This is a computer generated receipt. No signature is required.
+              </footer>
+            </article>
+          </DetailLayout>
         )}
-      </section>
+      </DetailPage>
     </AppShell>
   );
 }

@@ -6,7 +6,7 @@ import PageHeader from '../components/PageHeader';
 import ChatConversation from '../components/chat/ChatConversation';
 import ThreadAvatar from '../components/chat/ThreadAvatar';
 import { Button, EmptyState, Skeleton } from '../components/ui';
-import { formatConsultDate, formatListTime, previewText } from '../chat/inboxFormat';
+import { formatListTime, previewText } from '../chat/inboxFormat';
 import { formatDoctorDisplayName } from '../consult/appointmentUtils';
 import { useChatInbox } from '../hooks/useChatInbox';
 import '../design/pages/chat-inbox.css';
@@ -143,7 +143,6 @@ export default function ChatInbox() {
         {visibleThreads.map((thread) => {
           const active = thread.id === selectedId;
           const unread = thread.unreadCount > 0;
-          const consultDate = formatConsultDate(thread.appointmentDate);
           return (
             <li key={thread.id}>
               <button
@@ -158,11 +157,7 @@ export default function ChatInbox() {
                     <strong>{formatDoctorDisplayName(thread.doctorName)}</strong>
                     <time>{formatListTime(thread.lastMessage?.created_at)}</time>
                   </div>
-                  <small className="ci-row__meta">
-                    {[consultDate && `Consult ${consultDate}`, thread.specialty]
-                      .filter(Boolean)
-                      .join(' · ')}
-                  </small>
+                  {thread.specialty ? <small className="ci-row__meta">{thread.specialty}</small> : null}
                   <div className="ci-row__bottom">
                     <p>{previewText(thread)}</p>
                     {unread ? (

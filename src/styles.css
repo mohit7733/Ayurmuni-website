@@ -2874,8 +2874,8 @@
   }
 
   .catalog-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
   }
 }
 
@@ -3155,8 +3155,8 @@
 
 .catalog-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .pcard-img {
@@ -3505,9 +3505,9 @@
   width: auto;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 640px) {
   .catalog-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(172px, 1fr));
   }
 }
 
@@ -6959,7 +6959,6 @@ button.rx-file-preview {
   border: 0;
   padding: 0;
   background: transparent;
-  cursor: pointer;
 }
 
 .chat-avatar-wrap img,
@@ -7114,8 +7113,9 @@ button.rx-file-preview {
 }
 
 .chat-bubble small b {
-  font-weight: 700;
-  color: var(--am-text-subtle);
+  display: inline-flex;
+  margin-left: 2px;
+  color: #94a3b8;
 }
 
 .chat-bubble small b.seen {

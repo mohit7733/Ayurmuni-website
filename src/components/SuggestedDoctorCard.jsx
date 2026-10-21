@@ -9,7 +9,6 @@ import {
   doctorFeeLabel,
   doctorImage,
   doctorLocation,
-  doctorOffersVideo,
   doctorQualification,
   doctorRating,
   doctorSpeciality,
@@ -20,7 +19,6 @@ import { showSuccessToast } from '../config/key';
 import { requireAuth } from '../services/guestAuth';
 import { toggleFavDoctor } from '../services/consultService';
 import FavButton from './ui/FavButton';
-import VideoCallButton from './ui/VideoCallButton';
 
 export default function SuggestedDoctorCard({ item, fallbackSpeciality = 'Ayurveda' }) {
   const navigate = useNavigate();
@@ -36,17 +34,8 @@ export default function SuggestedDoctorCard({ item, fallbackSpeciality = 'Ayurve
   const verified = Boolean(item?.is_verified);
   const [fav, setFav] = useState(() => doctorFavorite(item));
 
-  const video = doctorOffersVideo(item);
-
   const openProfile = () => {
     if (id) navigate(`/consult/doctors/${id}`);
-  };
-
-  const bookVideo = async (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    if (!(await requireAuth('Please login to book a video consultation'))) return;
-    if (id) navigate(`/consult/doctors/${id}/slots`, { state: { doctor: item } });
   };
 
   const toggleFav = async (event) => {
@@ -107,9 +96,6 @@ export default function SuggestedDoctorCard({ item, fallbackSpeciality = 'Ayurve
             label={fav ? `Remove ${name} from favourites` : `Save ${name}`}
             onClick={toggleFav}
           />
-          {video ? (
-            <VideoCallButton label={`Book a video call with ${name}`} onClick={bookVideo} />
-          ) : null}
         </div>
 
         <div className="am-flip-doc__copy">

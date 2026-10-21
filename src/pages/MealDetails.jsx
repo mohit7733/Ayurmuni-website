@@ -1,12 +1,38 @@
 import { useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import {
+  CheckCircle2,
+  ChefHat,
+  ChevronRight,
+  Circle,
+  Flame,
+  Leaf,
+  PlayCircle,
+  Salad,
+  Utensils,
+  Wheat,
+} from 'lucide-react';
 import AppShell from '../components/AppShell';
-import dietCoverImg from '/images/login/14.jpg';
+import { Button } from '../components/ui';
+import {
+  ActionStack,
+  DetailCard,
+  DetailEmpty,
+  DetailHero,
+  DetailLayout,
+  DetailPage,
+  DetailTop,
+  MetaChip,
+  StatGrid,
+  Steps,
+} from '../components/detail/Detail';
+import dietCoverImg from '/images/login/14.webp';
 import { requireAuth } from '../services/guestAuth';
 import { updateDietPlanProgress } from '../services/dietService';
 import { nowIso } from '../diet/utils';
 import { showSuccessToast } from '../config/key';
-import '../design/pages/meal-details.css';
+
+const grams = (value) => (value == null || value === '' ? '' : `${value}g`);
 
 export default function MealDetails() {
   const navigate = useNavigate();
@@ -14,24 +40,20 @@ export default function MealDetails() {
   const item = useLocation().state?.meal;
   const [logging, setLogging] = useState(false);
   const [logged, setLogged] = useState(item?.status === 'done');
+  const planPath = `/diet/${planId}`;
 
   if (!item) {
     return (
       <AppShell tab="home">
-        <section className="catalog-page meal-page meal-unavailable">
-          <header className="catalog-head">
-            <div>
-              <button type="button" className="text-back" onClick={() => navigate(`/diet/${planId}`)}>
-                ← Back
-              </button>
-              <h1>Meal</h1>
-            </div>
-          </header>
-          <div className="empty-copy">
-            <strong>Meal unavailable</strong>
-            <p>Open this meal again from the diet plan.</p>
-          </div>
-        </section>
+        <DetailPage>
+          <DetailTop backTo={planPath} backLabel="Diet plan" />
+          <DetailEmpty
+            icon={Salad}
+            title="Meal unavailable"
+            text="Open this meal again from your diet plan to see its recipe and nutrition."
+            action={<Button onClick={() => navigate(planPath)}>Back to plan</Button>}
+          />
+        </DetailPage>
       </AppShell>
     );
   }
@@ -71,93 +93,130 @@ export default function MealDetails() {
     }
   };
 
+  const logButton = (
+    <Button
+      variant={logged ? 'secondary' : 'primary'}
+      loading={logging}
+      aria-pressed={logged}
+      leadingIcon={logged ? <Circle size={16} aria-hidden /> : <CheckCircle2 size={16} aria-hidden />}
+      onClick={onLogMeal}
+    >
+      {logged ? 'Mark as pending' : 'Mark as done'}
+    </Button>
+  );
+
   return (
     <AppShell tab="home">
-      <section className="catalog-page meal-page">
-        <header className="catalog-head">
-          <div>
-            <button type="button" className="text-back" onClick={() => navigate(`/diet/${planId}`)}>
-              ← Back
-            </button>
-            <h1>{item.title || 'Meal'}</h1>
-            <p>{item.type}</p>
-          </div>
-        </header>
+      <DetailPage>
+        <DetailTop backTo={planPath} backLabel="Diet plan" />
 
-        <div className="diet-hero">
-          <img src={item.image || dietCoverImg} alt="" />
-        </div>
+        <DetailHero
+          titleId="meal-title"
+          media={<img src={item.image || dietCoverImg} alt="" />}
+          eyebrow={item.type || 'Meal'}
+          title={item.title || 'Meal'}
+          lede={
+            item.description ||
+            'Prepared fresh and balanced for your prakriti. Follow the recipe below and log it once you have eaten.'
+          }
+          chips={
+            <>
+              {item.kcal != null && item.kcal !== '' ? (
+                <MetaChip icon={Flame} tone="gold">
+                  {item.kcal} kcal
+                </MetaChip>
+              ) : null}
+              {ingredients.length ? (
+                <MetaChip icon={Leaf}>
+                  {ingredients.length} {ingredients.length === 1 ? 'ingredient' : 'ingredients'}
+                </MetaChip>
+              ) : null}
+              {logged ? (
+                <MetaChip icon={CheckCircle2} tone="plain">
+                  Completed
+                </MetaChip>
+              ) : null}
+            </>
+          }
+        >
+          <div className="dx-actions dx-actions--row">{logButton}</div>
+        </DetailHero>
 
-        <div className="diet-nutrition">
-          <div>
-            <strong>{item.kcal ?? '—'}</strong>
-            <small>Calories</small>
-          </div>
-          <div>
-            <strong>{item.carbs ?? 0}g</strong>
-            <small>Carbs</small>
-          </div>
-          <div>
-            <strong>{item.protein ?? 0}g</strong>
-            <small>Protein</small>
-          </div>
-          <div>
-            <strong>{item.fat ?? 0}g</strong>
-            <small>Fat</small>
-          </div>
-        </div>
+        <DetailLayout
+          aside={
+            <>
+              <DetailCard id="meal-nutrition" title="Nutrition" icon={Wheat} meta="Per serving">
+                <StatGrid
+                  items={[
+                    { label: 'Calories', value: item.kcal != null && item.kcal !== '' ? `${item.kcal}` : '—' },
+                    { label: 'Carbs', value: grams(item.carbs ?? 0) },
+                    { label: 'Protein', value: grams(item.protein ?? 0) },
+                    { label: 'Fat', value: grams(item.fat ?? 0) },
+                  ]}
+                />
+              </DetailCard>
+              <ActionStack>
+                {logButton}
+                <Button variant="secondary" onClick={() => navigate(planPath)}>
+                  Back to plan
+                </Button>
+              </ActionStack>
+            </>
+          }
+        >
+          {ingredients.length ? (
+            <DetailCard id="meal-ingredients" title="Ingredients" icon={Utensils} meta={`${ingredients.length} items`}>
+              <ul className="dx-ingredients">
+                {ingredients.map((food, index) => (
+                  <li key={`${food.name || food.label}-${index}`}>
+                    <span className="dx-ingredients__icon" aria-hidden>
+                      <Leaf size={14} />
+                    </span>
+                    <span className="dx-ingredients__copy">
+                      <strong>{food.name || food.label}</strong>
+                      {food.notes ? <small>{food.notes}</small> : null}
+                    </span>
+                    {food.quantity ? <span className="dx-ingredients__qty">{food.quantity}</span> : null}
+                  </li>
+                ))}
+              </ul>
+            </DetailCard>
+          ) : null}
 
-        {ingredients.length ? (
-          <section className="meal-detail-section" aria-labelledby="meal-ingredients-title">
-            <h3 className="yoga-section" id="meal-ingredients-title">Ingredients</h3>
-            <ul className="meal-list">
-              {ingredients.map((food, index) => (
-                <li key={index}>
-                  <strong>{food.name || food.label}</strong>
-                  {food.quantity ? <small>{food.quantity}</small> : null}
-                  {food.notes ? <p>{food.notes}</p> : null}
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
+          {steps.length ? (
+            <DetailCard id="meal-preparation" title="Preparation" icon={ChefHat} meta={`${steps.length} steps`}>
+              <div className="dx-steps--solid">
+                <Steps items={steps.map((step, index) => ({ id: index, text: step }))} />
+              </div>
+            </DetailCard>
+          ) : null}
 
-        {steps.length ? (
-          <section className="meal-detail-section" aria-labelledby="meal-preparation-title">
-            <h3 className="yoga-section" id="meal-preparation-title">Preparation</h3>
-            <ol className="meal-steps">
-              {steps.map((step, index) => (
-                <li key={index}>{step}</li>
-              ))}
-            </ol>
-          </section>
-        ) : null}
+          {videos.length ? (
+            <DetailCard id="meal-videos" title="Prep videos" icon={PlayCircle}>
+              <div className="dx-actions">
+                {videos.map((url, index) => (
+                  <a key={url} className="dx-link" href={url} target="_blank" rel="noreferrer">
+                    <span className="dx-link__icon" aria-hidden>
+                      <PlayCircle size={18} />
+                    </span>
+                    <span className="dx-link__copy">
+                      <strong>Watch video {videos.length > 1 ? index + 1 : ''}</strong>
+                      <span>Opens in a new tab</span>
+                    </span>
+                    <ChevronRight className="dx-link__chev" size={18} aria-hidden />
+                  </a>
+                ))}
+              </div>
+            </DetailCard>
+          ) : null}
 
-        {videos.length ? (
-          <section className="meal-detail-section" aria-labelledby="meal-videos-title">
-            <h3 className="yoga-section" id="meal-videos-title">Prep videos</h3>
-            <div className="diet-chips">
-              {videos.map((url) => (
-                <a key={url} className="chip" href={url} target="_blank" rel="noreferrer">
-                  Watch video
-                </a>
-              ))}
-            </div>
-          </section>
-        ) : null}
-
-        <div className="detail-cta">
-          <button
-            type="button"
-            className={`cta ${logged ? 'meal-done' : ''}`}
-            disabled={logging}
-            aria-pressed={logged}
-            onClick={onLogMeal}
-          >
-            {logging ? 'Saving…' : logged ? 'Mark as pending' : 'Mark as done'}
-          </button>
-        </div>
-      </section>
+          {!ingredients.length && !steps.length ? (
+            <DetailCard id="meal-empty" title="Recipe" icon={ChefHat}>
+              <p className="dx-prose">Your nutritionist has not added a recipe for this meal yet.</p>
+            </DetailCard>
+          ) : null}
+        </DetailLayout>
+      </DetailPage>
     </AppShell>
   );
 }

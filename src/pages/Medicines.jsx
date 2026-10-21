@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BadgeCheck, Leaf, LockKeyhole, Pill, Search, ShoppingBag } from 'lucide-react';
+import { Leaf, Pill, ShoppingBag } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import BannerCarousel from '../components/BannerCarousel';
 import ProductCard from '../components/ProductCard';
-import { DietPlanCard, SectionHead, ServiceHero, ViewAll } from '../components/ServiceHome';
+import { DietPlanCard, SectionHead, ViewAll } from '../components/ServiceHome';
 import { getBanners } from '../services/bannerService';
 import {
   formatRupee,
@@ -25,20 +25,16 @@ import {
   Button,
   ConcernCarousel,
   EmptyState,
+  PageBar,
   Rail,
   RailItem,
   RailSkeleton,
   Reveal,
+  SearchField,
   SkeletonGrid,
   Tile,
 } from '../components/ui';
 import { HOME_COPY as H } from '../content/home';
-
-const TRUST = [
-  { icon: Leaf, label: H.trustAuthentic },
-  { icon: LockKeyhole, label: H.trustPayments },
-  { icon: BadgeCheck, label: 'Doctor-reviewed formulas' },
-];
 
 export default function Medicines() {
   const navigate = useNavigate();
@@ -63,7 +59,13 @@ export default function Medicines() {
   const [brands, setBrands] = useState([]);
   const [recent, setRecent] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
+  const [search, setSearch] = useState('');
   const moreRef = useRef(null);
+
+  const goSearch = (value) => {
+    const query = String(value || search || '').trim();
+    navigate(`/search?mode=product${query ? `&q=${encodeURIComponent(query)}` : ''}`);
+  };
 
   useEffect(() => {
     let alive = true;
@@ -144,52 +146,47 @@ export default function Medicines() {
   return (
     <AppShell tab="medicines">
       <div className="hm-page svc-page">
-        <ServiceHero
-          id="med-hero"
-          eyebrow={H.trustAuthentic}
-          title="Shop"
-          accent="medicines."
-          lede="Authentic Ayurvedic medicines, chosen for everyday care and delivered to your door."
-          trust={TRUST}
-        >
-          <div className="hm-hero__ctas">
-            <button type="button" className="hm-search" onClick={() => navigate('/search')}>
-              <Search size={18} aria-hidden />
-              <span>{H.searchPlaceholder}</span>
-            </button>
+        <div className="hm-body">
+          {banners.length ? (
+            <BannerCarousel
+              items={banners}
+              interval={6000}
+              onSelect={openBanner}
+              copy={{
+                label: H.offersLabel,
+                open: H.openOffer,
+                of: H.of,
+                show: H.showOffer,
+                pause: H.pauseOffers,
+                play: H.playOffers,
+              }}
+            />
+          ) : null}
+
+          <PageBar id="med-hero" title="Shop medicines">
+            <SearchField
+              value={search}
+              onChange={setSearch}
+              onSubmit={goSearch}
+              placeholder={H.searchPlaceholder}
+              label="Search medicines"
+            />
             <Button
               variant="secondary"
-              size="lg"
-              className="hm-hero__ghost"
               onClick={() => navigate('/cart')}
-              leadingIcon={<ShoppingBag size={16} aria-hidden />}
+              leadingIcon={<ShoppingBag size={18} aria-hidden />}
             >
-              Cart{itemCount ? ` (${itemCount > 99 ? '99+' : itemCount})` : ''}
+              Cart
+              {itemCount ? (
+                <span className="am-page-bar__count">{itemCount > 99 ? '99+' : itemCount}</span>
+              ) : null}
             </Button>
-          </div>
-        </ServiceHero>
+          </PageBar>
 
-        <div className="hm-body">
           {showSkeleton ? (
             <SkeletonGrid count={8} className="svc-catalog" label="Loading medicines" />
           ) : (
             <>
-              {banners.length ? (
-                <BannerCarousel
-                  items={banners}
-                  interval={6000}
-                  onSelect={openBanner}
-                  copy={{
-                    label: H.offersLabel,
-                    open: H.openOffer,
-                    of: H.of,
-                    show: H.showOffer,
-                    pause: H.pauseOffers,
-                    play: H.playOffers,
-                  }}
-                />
-              ) : null}
-
               {ordersLoading || recent.length > 0 ? (
                 <div className="hm-doctor-row">
                   <Reveal as="section" className="hm-section" aria-labelledby="med-recent">

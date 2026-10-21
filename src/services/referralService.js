@@ -1,94 +1,38 @@
 import { apiClient } from './apiClient';
 
-/**
- * Get user's referral code and stats
- */
-export async function getReferralInfo() {
-  try {
-    const response = await apiClient.get('/api/referral/info');
-    return {
-      success: true,
-      data: response.data?.data || response.data || {},
-    };
-  } catch (error) {
-    console.error('Get referral info error:', error);
-    return {
-      success: false,
-      message: error.response?.data?.message || 'Failed to fetch referral info',
-      data: null,
-    };
-  }
-}
+const EMPTY_HISTORY = {
+  total_referrals: 0,
+  successful_referrals: 0,
+  total_earnings: 0,
+  history: [],
+};
 
-/**
- * Generate a new referral code (if not exists)
- */
-export async function generateReferralCode() {
-  try {
-    const response = await apiClient.post('/api/referral/generate');
-    return {
-      success: true,
-      data: response.data?.data || response.data || {},
-    };
-  } catch (error) {
-    console.error('Generate referral code error:', error);
-    return {
-      success: false,
-      message: error.response?.data?.message || 'Failed to generate referral code',
-      data: null,
-    };
-  }
-}
+const unwrap = (response, fallback) => ({
+  success: Boolean(response?.success),
+  message: response?.message || '',
+  data: response?.success ? response?.data ?? fallback : fallback,
+});
 
-/**
- * Get referral history/stats
- */
-export async function getReferralHistory() {
-  try {
-    const response = await apiClient.get('/api/referral/history');
-    return {
-      success: true,
-      data: response.data?.data || response.data || {
-        total_referrals: 0,
-        successful_referrals: 0,
-        total_earnings: 0,
-        history: [],
-      },
-    };
-  } catch (error) {
-    console.error('Get referral history error:', error);
-    return {
-      success: false,
-      message: error.response?.data?.message || 'Failed to fetch referral history',
-      data: {
-        total_referrals: 0,
-        successful_referrals: 0,
-        total_earnings: 0,
-        history: [],
-      },
-    };
-  }
-}
+/** Referral code and link for the logged-in user. */
+export const getReferralInfo = async () =>
+  unwrap(await apiClient('referral/info/', { method: 'GET' }), null);
 
-/**
- * Apply referral code when signing up
- */
-export async function applyReferralCode(code) {
-  try {
-    const response = await apiClient.post('/api/referral/apply', {
-      referral_code: code,
-    });
-    return {
-      success: true,
-      data: response.data?.data || response.data || {},
-      message: response.data?.message || 'Referral code applied successfully',
-    };
-  } catch (error) {
-    console.error('Apply referral code error:', error);
-    return {
-      success: false,
-      message: error.response?.data?.message || 'Invalid referral code',
-      data: null,
-    };
-  }
-}
+/** Generates a referral code if the user does not have one yet. */
+export const generateReferralCode = async () =>
+  unwrap(await apiClient('referral/generate/', { method: 'POST' }), null);
+
+/** Referral counts, earnings and history. */
+export const getReferralHistory = async () =>
+  unwrap(await apiClient('referral/history/', { method: 'GET' }), EMPTY_HISTORY);
+
+/** Applies a friend's referral code to the current account. */
+export const applyReferralCode = async (code) => {
+  const response = await apiClient('referral/apply/', {
+    method: 'POST',
+    body: JSON.stringify({ referral_code: code }),
+  });
+  return {
+    ...unwrap(response, null),
+    message: response?.message || (response?.success ? 'Referral code applied successfully' : 'Invalid referral code'),
+  };
+};

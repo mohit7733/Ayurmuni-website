@@ -1,5 +1,10 @@
+const API_BASE_URL = String(import.meta.env.VITE_API_BASE || 'https://ayurmuni.aimantra.info/').replace(
+  /\/*$/,
+  '/',
+);
+
 export const BaseUrl = {
-  base_url: "https://ayurmuni.aimantra.info/"
+  base_url: API_BASE_URL,
 };
 
 export const Method = {

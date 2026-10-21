@@ -28,7 +28,7 @@ export default function ShareModal({ open, onClose, title, text, url }) {
       await copyToClipboard(shareUrl);
       showSuccessToast('Link copied to clipboard!', 'success');
       onClose();
-    } catch (error) {
+    } catch {
       showSuccessToast('Could not copy link', 'error');
     }
   };
@@ -37,7 +37,7 @@ export default function ShareModal({ open, onClose, title, text, url }) {
     try {
       window.open(getUrl(), '_blank', 'noopener,noreferrer');
       onClose();
-    } catch (error) {
+    } catch {
       showSuccessToast('Could not open share window', 'error');
     }
   };

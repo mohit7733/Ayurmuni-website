@@ -2,11 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Calendar, Leaf, Salad } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import BannerCarousel from '../components/BannerCarousel';
 import { ActiveDietCard } from '../components/ActiveDietPlan';
-import dietCoverImg from '/images/login/14.jpg';
-import { DietPlanCard, SectionHead, ServiceHero, ViewAll } from '../components/ServiceHome';
+import dietCoverImg from '/images/login/14.webp';
+import { DietPlanCard, SectionHead, ViewAll } from '../components/ServiceHome';
 import { formatRupee, mapProductCategory, normalizeApiList } from '../home/catalog';
-import { getServiceCategoryId } from '../home/serviceCategories';
+import { getServiceCategoryId, resolveBannerNavigation } from '../home/serviceCategories';
+import { loadBannerCarouselForScreen } from '../services/bannerService';
 import useDashboardCategories from '../hooks/useDashboardCategories';
 import useActiveDietHome from '../hooks/useActiveDietHome';
 import { getHealthCategories } from '../services/productService';
@@ -21,6 +23,7 @@ import {
   Chip,
   ConcernCarousel,
   EmptyState,
+  PageBar,
   SearchField,
   SkeletonGrid,
   Tile,
@@ -119,6 +122,31 @@ export default function Diet() {
     };
   }, [medicineId]);
 
+  const [banners, setBanners] = useState([]);
+  const [bannersLoading, setBannersLoading] = useState(true);
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const items = await loadBannerCarouselForScreen('diet');
+      if (!alive) return;
+      setBanners(items);
+      setBannersLoading(false);
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const openBanner = (item) => {
+    const target = resolveBannerNavigation(item);
+    if (!target) return;
+    if (target.external) {
+      window.open(target.href, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    navigate(target.path);
+  };
+
   const showSkeleton = loadingList && plans.length === 0;
   const listTitle =
     statusTab === 'active' ? 'Active plans' : statusTab === 'inactive' ? 'Past plans' : H.dietTitle;
@@ -126,19 +154,25 @@ export default function Diet() {
   return (
     <AppShell tab="home">
       <div className="hm-page svc-page">
-        <ServiceHero
-          id="dt-title"
-          eyebrow="Nourish"
-          title={categoryName || 'Diet'}
-          accent="plans."
-          lede={H.dietText}
-          trust={[
-            { icon: Salad, label: 'Seasonal meals' },
-            { icon: Leaf, label: 'Tuned to your Prakriti' },
-            { icon: Calendar, label: 'Weekly planner' },
-          ]}
-        >
-          <div className="svc-search">
+        <div className="hm-body">
+          {bannersLoading || banners.length > 0 ? (
+            <BannerCarousel
+              items={banners}
+              loading={bannersLoading}
+              interval={6000}
+              onSelect={openBanner}
+              copy={{
+                label: H.offersLabel,
+                open: H.openOffer,
+                of: H.of,
+                show: H.showOffer,
+                pause: H.pauseOffers,
+                play: H.playOffers,
+              }}
+            />
+          ) : null}
+
+          <PageBar id="dt-title" title={`${categoryName || 'Diet'} plans`}>
             <SearchField
               value={search}
               onChange={setSearch}
@@ -146,22 +180,16 @@ export default function Diet() {
               placeholder="Search diet plans"
               label="Search diet plans"
             />
-          </div>
-          <div className="hm-hero__ctas">
             <Button
               variant="accent"
-              size="lg"
-              className="hm-hero__primary"
               onClick={() => navigate('/diet/weekly')}
               leadingIcon={<Calendar size={16} aria-hidden />}
               trailingIcon={<ArrowRight size={16} aria-hidden />}
             >
               Weekly planner
             </Button>
-          </div>
-        </ServiceHero>
+          </PageBar>
 
-        <div className="hm-body">
           {activeDiet ? <ActiveDietCard plan={activeDiet} /> : null}
 
           {concerns.length ? (

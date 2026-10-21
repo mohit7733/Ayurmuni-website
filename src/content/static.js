@@ -9,6 +9,17 @@ export const STATIC_COPY = {
   networkMark: 'Offline',
   goBack: 'Go back',
 
+  notFoundMark: '404',
+  notFoundTitle: 'Page not found',
+  notFoundText: 'The page you are looking for does not exist or may have been moved.',
+  goHome: 'Go to home',
+
+  crashMark: 'Something went wrong',
+  crashTitle: 'We hit an unexpected error',
+  crashText: 'Please reload the page. If the problem continues, try again in a few minutes.',
+  reload: 'Reload page',
+  pageLoading: 'Loading…',
+
   policyLoading: 'Loading policy…',
   policyRetry: 'Retry',
   policyUpdated: (v) =>

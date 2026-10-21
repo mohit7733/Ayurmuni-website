@@ -1,46 +1,45 @@
-/* Homepage product card — one source for the homepage rails, the /products
-   listing and product detail related rails. Moved verbatim from home.css. */
+/* Homepage product card — one source for every product rail and grid on the site. */
 
-:is(.hm-products, .st-page--products, .pd-page--brand) .am-product-card {
+:is(.hm-products, .st-page--products, .pd-page--brand, .svc-catalog, .am-product-grid, .catalog-grid) .am-product-card {
   border: 1px solid color-mix(in srgb, var(--am-ink-900) 8%, transparent);
   border-radius: 16px;
   background: #fff;
   box-shadow: 0 1px 2px rgba(19, 35, 30, 0.04);
 }
 
-:is(.hm-products, .st-page--products, .pd-page--brand) .am-product-card:hover {
+:is(.hm-products, .st-page--products, .pd-page--brand, .svc-catalog, .am-product-grid, .catalog-grid) .am-product-card:hover {
   border-color: color-mix(in srgb, #115443 30%, var(--am-line));
   box-shadow: 0 10px 24px rgba(19, 35, 30, 0.08);
   transform: none;
 }
 
-:is(.hm-products, .st-page--products, .pd-page--brand) .am-product-card:hover .am-product-card__media img {
+:is(.hm-products, .st-page--products, .pd-page--brand, .svc-catalog, .am-product-grid, .catalog-grid) .am-product-card:hover .am-product-card__media img {
   transform: none;
 }
 
-:is(.hm-products, .st-page--products, .pd-page--brand) .am-product-card__media {
+:is(.hm-products, .st-page--products, .pd-page--brand, .svc-catalog, .am-product-grid, .catalog-grid) .am-product-card__media {
   aspect-ratio: 4 / 3;
   margin: 0;
   border-radius: 15px 15px 0 0;
   background: #f6f4ee;
 }
 
-:is(.hm-products, .st-page--products, .pd-page--brand) .am-product-card__media img {
+:is(.hm-products, .st-page--products, .pd-page--brand, .svc-catalog, .am-product-grid, .catalog-grid) .am-product-card__media img {
   padding: 0;
   object-fit: cover;
   object-position: center;
 }
 
-:is(.hm-products, .st-page--products, .pd-page--brand) .am-product-card__badges .am-badge--accent {
+:is(.hm-products, .st-page--products, .pd-page--brand, .svc-catalog, .am-product-grid, .catalog-grid) .am-product-card__badges .am-badge--accent {
   display: none;
 }
 
-:is(.hm-products, .st-page--products, .pd-page--brand) .am-product-card__body {
+:is(.hm-products, .st-page--products, .pd-page--brand, .svc-catalog, .am-product-grid, .catalog-grid) .am-product-card__body {
   gap: 4px;
   padding: 8px 8px 0;
 }
 
-:is(.hm-products, .st-page--products, .pd-page--brand) .am-product-card__name {
+:is(.hm-products, .st-page--products, .pd-page--brand, .svc-catalog, .am-product-grid, .catalog-grid) .am-product-card__name {
   min-height: 0;
   font-size: 12px;
   font-weight: var(--am-weight-semibold);
@@ -50,16 +49,16 @@
   -webkit-box-orient: vertical;
 }
 
-:is(.hm-products, .st-page--products, .pd-page--brand) .am-product-card__price strong {
+:is(.hm-products, .st-page--products, .pd-page--brand, .svc-catalog, .am-product-grid, .catalog-grid) .am-product-card__price strong {
   font-size: 13px;
 }
 
-:is(.hm-products, .st-page--products, .pd-page--brand) .am-product-card__action {
+:is(.hm-products, .st-page--products, .pd-page--brand, .svc-catalog, .am-product-grid, .catalog-grid) .am-product-card__action {
   padding: 8px;
 }
 
-:is(.hm-products, .st-page--products, .pd-page--brand) .am-stepper,
-:is(.hm-products, .st-page--products, .pd-page--brand) .am-product-card__add {
+:is(.hm-products, .st-page--products, .pd-page--brand, .svc-catalog, .am-product-grid, .catalog-grid) .am-stepper,
+:is(.hm-products, .st-page--products, .pd-page--brand, .svc-catalog, .am-product-grid, .catalog-grid) .am-product-card__add {
   border-color: #115443;
   border-radius: 10px;
   background: #115443;
@@ -67,7 +66,7 @@
   box-shadow: none;
 }
 
-:is(.hm-products, .st-page--products, .pd-page--brand) .am-product-card__add:hover:not(:disabled) {
+:is(.hm-products, .st-page--products, .pd-page--brand, .svc-catalog, .am-product-grid, .catalog-grid) .am-product-card__add:hover:not(:disabled) {
   background: #0d4538;
   color: var(--am-sand-50);
   box-shadow: none;

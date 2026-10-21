@@ -41,7 +41,7 @@ export const extractReviewsList = (response) => {
   return [];
 };
 
-export const uploadReviewAsset = async (file, entityType = 'product') => {
+export const uploadReviewAsset = async (file) => {
   const body = new FormData();
   body.append('image', file, file?.name || `review_${Date.now()}.jpg`);
   body.append('dir', REVIEW_UPLOAD_DIR);

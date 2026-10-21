@@ -217,6 +217,28 @@
   }
 }
 
+/* ---------- Route loader (lazy page fallback) ---------- */
+.am-route-loader {
+  display: grid;
+  place-items: center;
+  min-height: 60vh;
+  opacity: 0;
+  animation: am-route-loader-in 200ms ease-out 250ms forwards;
+}
+.am-route-loader__ring {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid color-mix(in srgb, var(--am-primary) 18%, transparent);
+  border-top-color: var(--am-primary);
+  animation: am-spin 800ms linear infinite;
+}
+@keyframes am-route-loader-in {
+  to {
+    opacity: 1;
+  }
+}
+
 /* ---------- Icon button ---------- */
 .am-icon-btn {
   position: relative;
@@ -2170,6 +2192,36 @@
   }
 }
 
+/* ---------- Page toolbar (search + actions under the offers banner) ---------- */
+.am-page-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+}
+.am-page-bar > .am-search {
+  flex: 1 1 180px;
+  min-width: 0;
+  max-width: none;
+}
+.am-page-bar > :not(.am-search) {
+  flex: none;
+}
+.am-page-bar__count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: var(--am-radius-pill);
+  background: var(--am-primary);
+  color: #fff;
+  font-size: 11px;
+  font-weight: var(--am-weight-bold);
+  line-height: 1;
+}
+
 /* ---------- Card grids ---------- */
 .am-doctor-grid,
 .am-product-grid {
@@ -2219,18 +2271,20 @@
 }
 .am-product-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
 }
 .am-doctor-grid > li > *,
 .am-product-grid > li > * {
   height: 100%;
 }
-@media (min-width: 768px) {
-  .am-doctor-grid,
+@media (min-width: 640px) {
   .am-product-grid {
-    gap: var(--am-space-5);
+    grid-template-columns: repeat(auto-fill, minmax(172px, 1fr));
   }
-  .am-product-grid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+@media (min-width: 768px) {
+  .am-doctor-grid {
+    gap: var(--am-space-5);
   }
 }
 

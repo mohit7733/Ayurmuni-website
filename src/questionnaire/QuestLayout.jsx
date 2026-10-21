@@ -1,6 +1,6 @@
 import { ArrowLeft } from 'lucide-react';
-import yesHumanImg from '/images/Yes.png';
-import noHumanImg from '/images/No.png';
+import yesHumanImg from '/images/Yes.webp';
+import noHumanImg from '/images/No.webp';
 import { DOSHA } from './configs';
 import { computeDoshaScores, dominantDosha } from './doshaScoreUtils';
 import { getStepKey } from './utils';

@@ -1,8 +1,43 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import {
+  CalendarClock,
+  CalendarDays,
+  CalendarPlus,
+  CalendarX,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  FileText,
+  HeartPulse,
+  MessageCircle,
+  Pill,
+  Radio,
+  ReceiptText,
+  RefreshCw,
+  ShieldCheck,
+  Star,
+  Stethoscope,
+  UserRound,
+  Video,
+} from 'lucide-react';
 import AppShell from '../components/AppShell';
-import PageHeader from '../components/PageHeader';
 import ShareButton from '../components/ShareButton';
+import { Button, Chip, Modal, SkeletonText, Textarea } from '../components/ui';
+import {
+  DetailCard,
+  DetailEmpty,
+  DetailHero,
+  DetailLayout,
+  DetailLink,
+  DetailPage,
+  DetailSkeleton,
+  DetailTop,
+  InfoGrid,
+  MetaChip,
+  PersonCard,
+  StatusPill,
+} from '../components/detail/Detail';
 import {
   buildVideoCallNavParams,
   canModifyAppointment,
@@ -56,20 +91,14 @@ const CANCEL_NOTES = [
   'You can rebook another slot anytime from Appointments.',
 ];
 
-const STATUS_STYLE = {
-  confirmed: { background: '#eef4ff', color: '#1048b9' },
-  upcoming: { background: '#eef4ff', color: '#1048b9' },
-  booked: { background: '#eef4ff', color: '#1048b9' },
-  pending: { background: '#fff7ed', color: '#ea580c' },
-  cancelled: { background: '#fee2e2', color: '#ef4444' },
-  completed: { background: '#dcfce7', color: '#16a34a' },
-  missed: { background: '#f3f4f6', color: '#6b7280' },
-  expired: { background: '#f3f4f6', color: '#6b7280' },
-  no_show: { background: '#f3f4f6', color: '#6b7280' },
-  noshow: { background: '#f3f4f6', color: '#6b7280' },
-  reschedule: { background: '#fef3c7', color: '#b45309' },
-  rescheduled: { background: '#fef3c7', color: '#b45309' },
-};
+const initialsOf = (name) =>
+  String(name || '')
+    .replace(/^dr\.?\s*/i, '')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('');
 
 const formatLabel = (value) => {
   if (!value) return '';
@@ -438,7 +467,6 @@ export default function AppointmentDetails() {
     formatSlotTime(appointment?.start_time);
   const displayEnd =
     formatAppointmentTimeLabel(appointment?.end_time) || formatSlotTime(appointment?.end_time);
-  const statusStyle = STATUS_STYLE[status] || { background: '#f3f4f6', color: '#64748b' };
   const appointmentCode = appointment?.appointment_id ?? appointment?.id ?? ids.appointmentId;
   const shareMessage = getAppointmentShareMessage({
     doctorName: formatDoctorDisplayName(doctorDisplayName(doctor)),
@@ -450,13 +478,44 @@ export default function AppointmentDetails() {
     consultationMode: appointment?.consultation_mode || appointment?.mode || 'Video consultation',
   });
 
+  const doctorName = formatDoctorDisplayName(doctorDisplayName(doctor));
+  const doctorPhoto = doctorImage(doctor);
+  const timeRange = displayEnd ? `${displayStart} – ${displayEnd}` : displayStart;
+  const consultType = formatLabel(appointment?.consultation_type ?? appointment?.mode) || 'Video consultation';
+  const patientMeta = [
+    formatLabel(patient?.relation ?? patient?.patient_relation),
+    patient?.age ? `${patient.age} yrs` : '',
+    formatLabel(patient?.gender),
+  ]
+    .filter(Boolean)
+    .join(' · ');
+  const reviewRating = Number(appointment?.review?.rating || 0);
+
+  const openChat = () =>
+    navigate(`/profile/chat/${chatId}`, {
+      state: {
+        role: 'patient',
+        doctorName: doctor?.doctor_name || doctorDisplayName(doctor),
+        doctorAvatar: doctorPhoto || doctor?.doctor_image,
+        patientName: patient?.patient_name,
+        patientAvatar: patient?.patient_image,
+        appointmentDate: appointment?.appointment_date,
+        doctorId,
+        chatContext: {
+          call_status: appointment?.call_status,
+          appointment_status: appointment?.appointment_status,
+          appointment_date: appointment?.appointment_date,
+          follow_up: appointment?.follow_up || detail?.prescription?.follow_up || detail?.follow_up,
+        },
+      },
+    });
+
   return (
     <AppShell tab="profile">
-      <section className="catalog-page appoint-detail-page">
-        <PageHeader
-          title="Appointment Details"
-          subtitle={formatLabel(status) || 'Consultation'}
+      <DetailPage>
+        <DetailTop
           backTo="/profile/appointments"
+          backLabel="Appointments"
           actions={
             <>
               {detail ? (
@@ -468,408 +527,410 @@ export default function AppointmentDetails() {
                   size="sm"
                 />
               ) : null}
-              <button type="button" className="ghost" onClick={onRefresh} disabled={refreshing || loading}>
-                {refreshing ? 'Refreshing…' : 'Refresh'}
-              </button>
+              <Button
+                variant="ghost"
+                size="sm"
+                leadingIcon={<RefreshCw size={14} aria-hidden />}
+                loading={refreshing}
+                disabled={loading}
+                onClick={onRefresh}
+              >
+                Refresh
+              </Button>
             </>
           }
         />
 
         {loading ? (
-          <p className="muted">Loading appointment…</p>
+          <DetailSkeleton media={false} label="Loading appointment" />
         ) : !detail ? (
-          <div className="empty-copy">
-            <strong>Appointment not found</strong>
-            <p>This visit may have been removed or the link is incomplete.</p>
-            <button type="button" className="cta" onClick={() => navigate('/profile/appointments')}>
-              My appointments
-            </button>
-          </div>
+          <DetailEmpty
+            icon={CalendarX}
+            title="Appointment not found"
+            text="This visit may have been removed or the link is incomplete."
+            action={<Button onClick={() => navigate('/profile/appointments')}>My appointments</Button>}
+          />
         ) : (
-          <div className="appoint-detail-layout">
-            <div className="appoint-detail-main">
-            {status ? (
-              <span className="confirm-status" style={{ background: statusStyle.background, color: statusStyle.color }}>
-                {formatLabel(status)}
-              </span>
-            ) : null}
-
-            <div className="hero-doc compact appoint-hero">
-              <div className="doctor-photo">
-                {doctorImage(doctor) ? <img src={doctorImage(doctor)} alt="" /> : <span>+</span>}
-              </div>
-              <div>
-                <div className="history-name-row">
-                  <h2>{formatDoctorDisplayName(doctorDisplayName(doctor))}</h2>
-                  {isLive ? <em className="live-badge">LIVE</em> : null}
+          <>
+            <DetailHero
+              variant="band"
+              titleId="appointment-title"
+              avatar={doctorPhoto ? <img src={doctorPhoto} alt="" /> : initialsOf(doctorName)}
+              eyebrow={appointmentCode ? `Appointment · #${formatAppointmentId(appointmentCode)}` : 'Appointment'}
+              title={doctorName}
+              lede={specialization}
+              chips={
+                <>
+                  {isLive ? (
+                    <MetaChip icon={Radio} tone="gold">
+                      Live now
+                    </MetaChip>
+                  ) : null}
+                  {displayDate || appointment?.appointment_date ? (
+                    <MetaChip icon={CalendarDays}>{displayDate || appointment?.appointment_date}</MetaChip>
+                  ) : null}
+                  {timeRange ? <MetaChip icon={Clock}>{timeRange}</MetaChip> : null}
+                  <MetaChip icon={Video}>{consultType}</MetaChip>
+                </>
+              }
+              aside={
+                <>
+                  <StatusPill status={status}>{formatLabel(status) || 'Booked'}</StatusPill>
+                  {paymentAmount != null ? (
+                    <div className="dx-figure">
+                      <small>Consultation fee</small>
+                      <strong>{formatRupee(paymentAmount)}</strong>
+                    </div>
+                  ) : null}
+                </>
+              }
+            >
+              {isLive || canOpenChat || showButtons ? (
+                <div className="dx-actions dx-actions--row">
+                  {isLive ? (
+                    <Button variant="accent" size="sm" leadingIcon={<Video size={14} aria-hidden />} onClick={joinCall}>
+                      Join video call
+                    </Button>
+                  ) : null}
+                  {canOpenChat ? (
+                    <Button
+                      variant={isLive ? 'secondary' : 'accent'}
+                      size="sm"
+                      leadingIcon={<MessageCircle size={14} aria-hidden />}
+                      onClick={openChat}
+                    >
+                      Chat with doctor
+                    </Button>
+                  ) : null}
+                  {showButtons ? (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      leadingIcon={<CalendarClock size={14} aria-hidden />}
+                      onClick={openReschedule}
+                    >
+                      {isRescheduleRequest ? 'Request change' : 'Reschedule'}
+                    </Button>
+                  ) : null}
+                  {showButtons ? (
+                    <Button variant="secondary" size="sm" onClick={openCancelFlow}>
+                      Cancel
+                    </Button>
+                  ) : null}
                 </div>
-                <p>{specialization}</p>
-              </div>
-            </div>
+              ) : null}
+            </DetailHero>
 
-            <div className="confirm-meta-grid appoint-meta">
-              <div className="confirm-meta-chip">
-                <small>Date</small>
-                <strong>{displayDate || appointment?.appointment_date || '—'}</strong>
-              </div>
-              <div className="confirm-meta-chip">
-                <small>Time</small>
-                <strong>
-                  {displayEnd ? `${displayStart} – ${displayEnd}` : displayStart || '—'}
-                </strong>
-              </div>
-            </div>
-
-            {patient ? (
-              <div className="checkout-card appoint-patient">
-                <h3>Patient information</h3>
-                {[
-                  ['Name', patient.patient_name],
-                  ['Relation', patient.relation ?? patient.patient_relation],
-                  ['Age', patient.age],
-                  ['Gender', formatLabel(patient.gender)],
-                  ['Phone', patient.phone_number ?? patient.phone],
-                  ['Email', patient.email],
-                ]
-                  .filter(([, value]) => value !== undefined && value !== null && value !== '')
-                  .map(([label, value]) => (
-                    <div key={label} className="txn-detail-row">
-                      <span>{label}</span>
-                      <strong>{String(value)}</strong>
+            <DetailLayout
+              aside={
+                <>
+                  <DetailCard id="appointment-records" title="Visit records" icon={FileText}>
+                    <div className="dx-actions">
+                      {showPrescriptionCta ? (
+                        <DetailLink
+                          icon={Pill}
+                          title="View prescription"
+                          text="Medicines, advice and follow-up from this visit"
+                          onClick={openPrescription}
+                        />
+                      ) : null}
+                      {ids.consultationId ? (
+                        <DetailLink
+                          icon={ReceiptText}
+                          title="Medical receipt"
+                          text="Download your consultation payment receipt"
+                          onClick={() => navigate(`/profile/receipts/${ids.consultationId}`)}
+                        />
+                      ) : null}
+                      {showAddToCalendar ? (
+                        <DetailLink
+                          icon={CalendarPlus}
+                          title="Add to calendar"
+                          text="Save this visit on your device"
+                          onClick={addToCalendar}
+                        />
+                      ) : null}
+                      {doctorId ? (
+                        <DetailLink
+                          icon={Stethoscope}
+                          title="View doctor profile"
+                          text="Experience, reviews and next available slots"
+                          onClick={() => navigate(`/consult/doctors/${doctorId}`)}
+                        />
+                      ) : null}
                     </div>
-                  ))}
-              </div>
-            ) : null}
+                  </DetailCard>
 
-            <div className="checkout-card appoint-facts">
-              <h3>Appointment details</h3>
-              {[
-                ['Appointment ID', appointmentCode ? formatAppointmentId(appointmentCode) : ''],
-                ['Date', displayDate || appointment?.appointment_date],
-                ['Start Time', displayStart],
-                ['End Time', displayEnd],
-                ['Status', formatLabel(appointment?.appointment_status)],
-                ['Call Status', formatLabel(appointment?.call_status)],
-                ['Consultation Type', formatLabel(appointment?.consultation_type ?? appointment?.mode)],
-                ['Consultation Fee', paymentAmount != null ? formatRupee(paymentAmount) : null],
-                ['Payment', formatLabel(paymentStatusValue)],
-                ['Follow-up date', followUpLabel(detail, appointment)],
-                ['Cancellation Reason', appointment?.cancellation_reason],
-                ['Reschedule Reason', appointment?.reschedule_reason],
-              ]
-                .filter(([, value]) => value !== undefined && value !== null && value !== '')
-                .map(([label, value]) => (
-                  <div key={label} className="txn-detail-row">
-                    <span>{label}</span>
-                    <strong>{String(value)}</strong>
-                  </div>
-                ))}
-            </div>
-
-            {appointment?.concern ? (
-              <div className="checkout-card appoint-concern">
-                <h3>Reason for visit</h3>
-                <p>{appointment.concern}</p>
-              </div>
-            ) : null}
-
-            {status === 'completed' ? (
-              <div className="checkout-card appoint-review">
-                <h3>Your review</h3>
-                {alreadyReviewed ? (
-                  <>
-                    <div className="review-stars static">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <span key={star} className={star <= Number(appointment?.review?.rating || 0) ? 'on' : ''}>
-                          ★
-                        </span>
-                      ))}
-                    </div>
-                    {appointment?.review?.review ? <p>{appointment.review.review}</p> : null}
-                  </>
-                ) : (
-                  <button type="button" className="ghost" onClick={() => setReviewOpen(true)}>
-                    Tap to rate your consultation
-                  </button>
-                )}
-              </div>
-            ) : null}
-            </div>
-
-            <aside className="appoint-detail-side">
-            <div className="detail-cta appoint-hero-actions">
-              {isLive ? (
-                <button type="button" className="cta" onClick={joinCall}>
-                  Join Video Call
-                </button>
+                  {showButtons ? (
+                    <p className="dx-note">
+                      <ShieldCheck size={14} aria-hidden />
+                      Free cancellation up to 6 hours before your consultation.
+                    </p>
+                  ) : null}
+                </>
+              }
+            >
+              {appointment?.concern ? (
+                <DetailCard id="appointment-concern" title="Reason for visit" icon={HeartPulse} tone="accent">
+                  <p className="dx-prose">{appointment.concern}</p>
+                </DetailCard>
               ) : null}
-              {canOpenChat ? (
-                <button
-                  type="button"
-                  className="ghost"
-                  onClick={() =>
-                    navigate(`/profile/chat/${chatId}`, {
-                      state: {
-                        role: 'patient',
-                        doctorName: doctor?.doctor_name || doctorDisplayName(doctor),
-                        doctorAvatar: doctorImage(doctor) || doctor?.doctor_image,
-                        patientName: patient?.patient_name,
-                        patientAvatar: patient?.patient_image,
-                        appointmentDate: appointment?.appointment_date,
-                        doctorId,
-                        chatContext: {
-                          call_status: appointment?.call_status,
-                          appointment_status: appointment?.appointment_status,
-                          appointment_date: appointment?.appointment_date,
-                          follow_up:
-                            appointment?.follow_up ||
-                            detail?.prescription?.follow_up ||
-                            detail?.follow_up,
-                        },
-                      },
-                    })
-                  }
-                >
-                  Chat with Doctor
-                </button>
+
+              <DetailCard id="appointment-facts" title="Appointment details" icon={CalendarDays}>
+                <InfoGrid
+                  items={[
+                    { label: 'Appointment ID', value: appointmentCode ? formatAppointmentId(appointmentCode) : '' },
+                    { label: 'Date', value: displayDate || appointment?.appointment_date },
+                    { label: 'Time', value: timeRange },
+                    { label: 'Consultation type', value: consultType },
+                    { label: 'Status', value: formatLabel(appointment?.appointment_status) },
+                    { label: 'Call status', value: formatLabel(appointment?.call_status) },
+                    { label: 'Consultation fee', value: paymentAmount != null ? formatRupee(paymentAmount) : '' },
+                    { label: 'Payment', value: formatLabel(paymentStatusValue) },
+                    { label: 'Follow-up', value: followUpLabel(detail, appointment) },
+                    { label: 'Cancellation reason', value: appointment?.cancellation_reason, wide: true },
+                    { label: 'Reschedule reason', value: appointment?.reschedule_reason, wide: true },
+                  ]}
+                />
+              </DetailCard>
+
+              {patient ? (
+                <DetailCard id="appointment-patient" title="Patient" icon={UserRound}>
+                  <PersonCard
+                    image={patient.patient_image}
+                    name={patient.patient_name || 'Patient'}
+                    role={patientMeta}
+                  />
+                  <InfoGrid
+                    items={[
+                      { label: 'Phone', value: patient.phone_number ?? patient.phone },
+                      { label: 'Email', value: patient.email },
+                    ]}
+                  />
+                </DetailCard>
               ) : null}
-              {doctorId ? (
-                <button type="button" className="ghost" onClick={() => navigate(`/consult/doctors/${doctorId}`)}>
-                  View doctor
-                </button>
+
+              {status === 'completed' ? (
+                <DetailCard id="appointment-review" title="Your review" icon={Star}>
+                  {alreadyReviewed ? (
+                    <>
+                      <span className="dx-stars" role="img" aria-label={`Rated ${reviewRating} out of 5`}>
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star key={star} size={20} className={star <= reviewRating ? 'is-on' : ''} aria-hidden />
+                        ))}
+                      </span>
+                      {appointment?.review?.review ? <p className="dx-prose">{appointment.review.review}</p> : null}
+                    </>
+                  ) : (
+                    <Button variant="secondary" leadingIcon={<Star size={16} aria-hidden />} onClick={() => setReviewOpen(true)}>
+                      Rate your consultation
+                    </Button>
+                  )}
+                </DetailCard>
               ) : null}
-            </div>
-
-            {showPrescriptionCta ? (
-              <button type="button" className="checkout-card order-row appoint-link" onClick={openPrescription}>
-                <p>
-                  View Prescription
-                  <small>Medicines, advice, and follow-up from this visit</small>
-                </p>
-              </button>
-            ) : null}
-
-            {ids.consultationId ? (
-              <button
-                type="button"
-                className="checkout-card order-row appoint-link"
-                onClick={() => navigate(`/profile/receipts/${ids.consultationId}`)}
-              >
-                <p>
-                  Medical Receipt
-                  <small>Download your consultation payment receipt</small>
-                </p>
-              </button>
-            ) : null}
-
-            {showAddToCalendar ? (
-              <button type="button" className="checkout-card order-row appoint-link" onClick={addToCalendar}>
-                <p>
-                  Add to Calendar
-                  <small>Save this visit on your device</small>
-                </p>
-              </button>
-            ) : null}
-
-            {showButtons ? (
-              <div className="checkout-sticky">
-                <button type="button" className="ghost" onClick={openReschedule}>
-                  {isRescheduleRequest ? 'Request change' : 'Reschedule'}
-                </button>
-                <button type="button" className="cta danger" onClick={openCancelFlow}>
-                  Cancel
-                </button>
-              </div>
-            ) : null}
-            </aside>
-          </div>
+            </DetailLayout>
+          </>
         )}
 
-        {cancelOpen ? (
-          <div className="web-modal" role="dialog">
-            <div className="web-modal-card">
-              <h3>Cancel Appointment</h3>
-              <p>Please review the cancellation notes before confirming.</p>
-              <ul className="cancel-notes">
-                {CANCEL_NOTES.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-              <p>Reason for cancellation</p>
-              {CANCEL_REASONS.map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  className={`chip ${cancelReason === item ? 'on' : ''}`}
-                  onClick={() => setCancelReason(item)}
-                >
-                  {item}
-                </button>
-              ))}
-              <textarea
-                rows={3}
-                placeholder="Add a note (optional)"
-                value={cancelNote}
-                onChange={(e) => setCancelNote(e.target.value)}
-              />
-              <div className="detail-cta">
-                <button type="button" className="ghost" onClick={() => setCancelOpen(false)} disabled={saving}>
-                  Keep appointment
-                </button>
-                <button
-                  type="button"
-                  className="cta danger"
-                  disabled={saving || !cancelReason}
-                  onClick={() =>
-                    runAction({
-                      action: 'cancel',
-                      cancellation_reason: cancelNote.trim()
-                        ? `${cancelReason} — ${cancelNote.trim()}`
-                        : cancelReason,
-                    })
-                  }
-                >
-                  {saving ? 'Cancelling…' : 'Confirm cancel'}
-                </button>
-              </div>
-            </div>
+        <Modal
+          open={cancelOpen}
+          onClose={() => !saving && setCancelOpen(false)}
+          title="Cancel appointment"
+          description="Please review the cancellation notes before confirming."
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setCancelOpen(false)} disabled={saving}>
+                Keep appointment
+              </Button>
+              <Button
+                variant="danger"
+                loading={saving}
+                disabled={!cancelReason}
+                onClick={() =>
+                  runAction({
+                    action: 'cancel',
+                    cancellation_reason: cancelNote.trim()
+                      ? `${cancelReason} — ${cancelNote.trim()}`
+                      : cancelReason,
+                  })
+                }
+              >
+                Confirm cancel
+              </Button>
+            </>
+          }
+        >
+          <ul className="dx-notes">
+            {CANCEL_NOTES.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+          <p className="dx-field-label">Reason for cancellation</p>
+          <div className="dx-chip-group">
+            {CANCEL_REASONS.map((item) => (
+              <Chip key={item} selected={cancelReason === item} onClick={() => setCancelReason(item)}>
+                {item}
+              </Chip>
+            ))}
           </div>
-        ) : null}
+          <Textarea
+            rows={3}
+            placeholder="Add a note (optional)"
+            value={cancelNote}
+            onChange={(e) => setCancelNote(e.target.value)}
+          />
+        </Modal>
 
-        {activateOpen ? (
-          <div className="web-modal" role="dialog">
-            <div className="web-modal-card">
-              <h3>Switch patient profile</h3>
-              <p>
-                {patient?.patient_name
-                  ? `${patient.patient_name} is not the active profile. Activate this patient to cancel the appointment.`
-                  : 'This appointment belongs to an inactive patient profile. Activate that patient to cancel the appointment.'}
-              </p>
-              <div className="detail-cta">
-                <button type="button" className="ghost" onClick={() => setActivateOpen(false)}>
-                  Not now
-                </button>
-                <button type="button" className="cta" disabled={activating} onClick={confirmActivateThenCancel}>
-                  {activating ? 'Switching…' : 'Activate and continue'}
-                </button>
-              </div>
-            </div>
+        <Modal
+          open={activateOpen}
+          onClose={() => setActivateOpen(false)}
+          title="Switch patient profile"
+          description={
+            patient?.patient_name
+              ? `${patient.patient_name} is not the active profile. Activate this patient to cancel the appointment.`
+              : 'This appointment belongs to an inactive patient profile. Activate that patient to cancel the appointment.'
+          }
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setActivateOpen(false)}>
+                Not now
+              </Button>
+              <Button loading={activating} onClick={confirmActivateThenCancel}>
+                Activate and continue
+              </Button>
+            </>
+          }
+        />
+
+        <Modal
+          open={rescheduleOpen}
+          onClose={() => !saving && setRescheduleOpen(false)}
+          title={isRescheduleRequest ? 'Request change' : 'Reschedule appointment'}
+          description={`Pick a new slot with ${doctorName}.`}
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setRescheduleOpen(false)} disabled={saving}>
+                Close
+              </Button>
+              <Button
+                loading={saving}
+                disabled={!slotId}
+                onClick={() =>
+                  runAction({
+                    action: isRescheduleRequest ? 'confirm_reschedule' : 'reschedule',
+                    availability: slotId,
+                    ...(!isRescheduleRequest ? { reschedule_reason: rescheduleReason.trim() } : {}),
+                  })
+                }
+              >
+                Confirm
+              </Button>
+            </>
+          }
+        >
+          <div className="dx-month">
+            <button
+              type="button"
+              aria-label="Previous month"
+              disabled={monthOffset === 0}
+              onClick={() => setMonthOffset((n) => n - 1)}
+            >
+              <ChevronLeft size={18} aria-hidden />
+            </button>
+            <strong>{monthLabel}</strong>
+            <button type="button" aria-label="Next month" onClick={() => setMonthOffset((n) => n + 1)}>
+              <ChevronRight size={18} aria-hidden />
+            </button>
           </div>
-        ) : null}
-
-        {rescheduleOpen ? (
-          <div className="web-modal" role="dialog">
-            <div className="web-modal-card">
-              <h3>{isRescheduleRequest ? 'Request change' : 'Reschedule'}</h3>
-              <div className="month-nav">
-                <button type="button" className="ghost" disabled={monthOffset === 0} onClick={() => setMonthOffset((n) => n - 1)}>
-                  ‹
-                </button>
-                <span>{monthLabel}</span>
-                <button type="button" className="ghost" onClick={() => setMonthOffset((n) => n + 1)}>
-                  ›
-                </button>
-              </div>
-              <div className="home-rail date-rail">
-                {dates.map((item) => (
-                  <button
-                    key={item.fullDate}
-                    type="button"
-                    className={`date-chip ${slotDate === item.fullDate ? 'on' : ''}`}
-                    onClick={() => {
-                      setSlotDate(item.fullDate);
-                      loadSlots(item.fullDate);
-                    }}
-                  >
-                    <small>{item.label}</small>
-                    <strong>{item.day}</strong>
-                  </button>
-                ))}
-              </div>
-              {slotsLoading ? (
-                <p className="muted">Loading slots…</p>
-              ) : (
-                <div className="slot-grid">
-                  {slots.filter((slot) => isSlotBookable(slot, slotDate)).map((slot) => (
-                    <button
+          <div className="dx-dates" role="listbox" aria-label="Choose a date">
+            {dates.map((item) => (
+              <button
+                key={item.fullDate}
+                type="button"
+                role="option"
+                aria-selected={slotDate === item.fullDate}
+                className={slotDate === item.fullDate ? 'is-on' : ''}
+                onClick={() => {
+                  setSlotDate(item.fullDate);
+                  loadSlots(item.fullDate);
+                }}
+              >
+                <small>{item.label}</small>
+                <strong>{item.day}</strong>
+              </button>
+            ))}
+          </div>
+          {slotsLoading ? (
+            <SkeletonText lines={2} />
+          ) : (
+            (() => {
+              const open = slots.filter((slot) => isSlotBookable(slot, slotDate));
+              return open.length ? (
+                <div className="dx-chip-group">
+                  {open.map((slot) => (
+                    <Chip
                       key={slot.id}
-                      type="button"
-                      className={`chip ${String(slotId) === String(slot.id) ? 'on' : ''}`}
+                      selected={String(slotId) === String(slot.id)}
                       onClick={() => setSlotId(slot.id)}
                     >
                       {formatSlotTime(slot.start_time)}
-                    </button>
+                    </Chip>
                   ))}
                 </div>
-              )}
-              {!isRescheduleRequest ? (
-                <textarea
-                  rows={3}
-                  placeholder="Reason for reschedule"
-                  value={rescheduleReason}
-                  onChange={(e) => setRescheduleReason(e.target.value)}
-                />
-              ) : null}
-              <div className="detail-cta">
-                <button type="button" className="ghost" onClick={() => setRescheduleOpen(false)} disabled={saving}>
-                  Close
-                </button>
-                <button
-                  type="button"
-                  className="cta"
-                  disabled={saving || !slotId}
-                  onClick={() =>
-                    runAction({
-                      action: isRescheduleRequest ? 'confirm_reschedule' : 'reschedule',
-                      availability: slotId,
-                      ...(!isRescheduleRequest ? { reschedule_reason: rescheduleReason.trim() } : {}),
-                    })
-                  }
-                >
-                  {saving ? 'Saving…' : 'Confirm'}
-                </button>
-              </div>
-            </div>
-          </div>
-        ) : null}
+              ) : (
+                <p className="dx-note">No open slots on this day. Try another date.</p>
+              );
+            })()
+          )}
+          {!isRescheduleRequest ? (
+            <Textarea
+              rows={3}
+              placeholder="Reason for reschedule"
+              value={rescheduleReason}
+              onChange={(e) => setRescheduleReason(e.target.value)}
+            />
+          ) : null}
+        </Modal>
 
-        {reviewOpen && !alreadyReviewed ? (
-          <div className="web-modal" role="dialog">
-            <div className="web-modal-card">
-              <h3>Rate your consultation</h3>
-              <p>How was your visit with {formatDoctorDisplayName(doctorDisplayName(doctor))}?</p>
-              <div className="review-stars">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    type="button"
-                    className={star <= reviewStars ? 'on' : ''}
-                    onClick={() => setReviewStars(star)}
-                  >
-                    ★
-                  </button>
-                ))}
-              </div>
-              <div className="detail-cta">
-                <button type="button" className="ghost" onClick={() => setReviewOpen(false)}>
-                  Later
-                </button>
-                <button
-                  type="button"
-                  className="cta"
-                  disabled={!reviewStars}
-                  onClick={() => {
-                    setReviewOpen(false);
-                    openShareExperience(reviewStars);
-                  }}
-                >
-                  Continue
-                </button>
-              </div>
-            </div>
+        <Modal
+          open={reviewOpen && !alreadyReviewed}
+          onClose={() => setReviewOpen(false)}
+          title="Rate your consultation"
+          description={`How was your visit with ${doctorName}?`}
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setReviewOpen(false)}>
+                Later
+              </Button>
+              <Button
+                disabled={!reviewStars}
+                onClick={() => {
+                  setReviewOpen(false);
+                  openShareExperience(reviewStars);
+                }}
+              >
+                Continue
+              </Button>
+            </>
+          }
+        >
+          <div className="dx-stars dx-stars--pick" role="radiogroup" aria-label="Rating">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                type="button"
+                role="radio"
+                aria-checked={reviewStars === star}
+                aria-label={`${star} star${star > 1 ? 's' : ''}`}
+                className={star <= reviewStars ? 'is-on' : ''}
+                onClick={() => setReviewStars(star)}
+              >
+                <Star size={28} aria-hidden />
+              </button>
+            ))}
           </div>
-        ) : null}
-      </section>
+        </Modal>
+      </DetailPage>
     </AppShell>
   );
 }

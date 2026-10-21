@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Star, X, ImagePlus, ShieldCheck } from "lucide-react";
 import { Button, Modal } from "./ui";
 import { showSuccessToast } from "../config/key";
-import { submitReview } from "../services/reviewService";
+import { createReview } from "../services/reviewService";
+import { setPendingProductReview } from "../utils/pendingReviews";
+import { buildReviewSubmitPayload, uploadReviewAsset } from "../utils/reviewUtils";
 import "../design/components/review-modal.css";
 
 const RATING_LABELS = {
@@ -13,7 +15,6 @@ const RATING_LABELS = {
   5: "Excellent!",
 };
 
-const MAX_TITLE = 100;
 const MAX_COMMENT = 1000;
 const MAX_IMAGES = 5;
 
@@ -25,7 +26,6 @@ export default function ReviewSubmitModal({
 }) {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
-  const [title, setTitle] = useState("");
   const [comment, setComment] = useState("");
   const [images, setImages] = useState([]);
   const [submitting, setSubmitting] = useState(false);
@@ -45,7 +45,6 @@ export default function ReviewSubmitModal({
   const resetForm = () => {
     setRating(0);
     setHoverRating(0);
-    setTitle("");
     setComment("");
     setImages([]);
   };
@@ -61,25 +60,42 @@ export default function ReviewSubmitModal({
       return;
     }
 
+    const variantId = String(product?.variant_id || "");
+    const orderId = String(product?.order_id || "");
+    if (!variantId || !orderId) {
+      showSuccessToast("Missing order or product reference", "error");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
-      const formData = new FormData();
-
-      formData.append("product_id", product.product_id || product.id);
-      formData.append("variant_id", product.variant_id || product.id);
-      formData.append("rating", rating);
-      formData.append("title", title.trim());
-      formData.append("comment", comment.trim());
-
-      images.forEach((image, index) => {
-        formData.append(`image_${index}`, image);
+      const imageUrls = await Promise.all(
+        images.map((image) => uploadReviewAsset(image)),
+      );
+      const result = await createReview({
+        entityType: "product",
+        variantId,
+        orderId,
+        reviewData: buildReviewSubmitPayload({
+          rating,
+          review: comment,
+          imageUrls,
+          entityType: "product",
+          orderId,
+          variantId,
+        }),
       });
 
-      const result = await submitReview(formData);
-
-      if (result?.success !== false) {
-        showSuccessToast("Review submitted successfully!", "success");
+      if (result?.success) {
+        setPendingProductReview({
+          variantId,
+          orderId,
+          rating,
+          review: comment.trim(),
+          image_urls: imageUrls.filter(Boolean),
+        });
+        showSuccessToast(result.message || "Review submitted successfully!", "success");
         resetForm();
         onSuccess?.();
         onClose();
@@ -87,7 +103,7 @@ export default function ReviewSubmitModal({
         showSuccessToast(result?.message || "Failed to submit review", "error");
       }
     } catch (error) {
-      showSuccessToast("Failed to submit review. Please try again.", "error");
+      showSuccessToast(error?.message || "Failed to submit review. Please try again.", "error");
     } finally {
       setSubmitting(false);
     }
@@ -214,28 +230,8 @@ export default function ReviewSubmitModal({
           </div>
         </section>
 
-        {/* Review Title + Review Comment */}
+        {/* Review Comment */}
         <div className="rv-fields">
-          <div className="rv-field">
-            <label htmlFor="review-title" className="rv-label">
-              Review Title <span className="rv-opt">(Optional)</span>
-            </label>
-
-            <input
-              id="review-title"
-              type="text"
-              className="rv-input"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Sum up your experience"
-              maxLength={MAX_TITLE}
-            />
-
-            <p className={`rv-count ${countClass(title.length, MAX_TITLE)}`}>
-              {title.length}/{MAX_TITLE}
-            </p>
-          </div>
-
           <div className="rv-field">
             <label htmlFor="review-comment" className="rv-label">
               Your Review <span className="rv-req">*</span>

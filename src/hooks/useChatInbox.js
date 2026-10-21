@@ -33,7 +33,7 @@ const runPool = async (items, limit, worker) => {
 const buildThreadBase = (item) => {
   const raw = item.raw || {};
   const appointment = raw.appointment || raw;
-  const followUp = raw.follow_up || appointment.follow_up;
+  const followUp = appointment.follow_up || raw.prescription?.follow_up || raw.follow_up;
   const chatContext = {
     call_status: item.call_status,
     appointment_status: item.status,
@@ -67,6 +67,15 @@ export const summarizeMessages = (messages) => {
   const last = list[list.length - 1] || null;
   const unread = list.filter((m) => m.sender_role !== PATIENT_ROLE && !m.is_seen).length;
   return { lastMessage: last, unreadCount: unread, messageCount: list.length };
+};
+
+export const findRelatedAppointmentIds = async ({ doctorId, doctorName } = {}) => {
+  const key = doctorId
+    ? `id:${String(doctorId).trim()}`
+    : `name:${String(doctorName || '').trim().toLowerCase()}`;
+  if (key === 'id:' || key === 'name:') return [];
+  const bases = await fetchHistory();
+  return bases.filter((thread) => doctorKey(thread) === key).map((thread) => thread.id);
 };
 
 const fetchHistory = async () => {
@@ -130,6 +139,45 @@ const sortThreads = (threads) =>
     return threadActivityTime(b) - threadActivityTime(a);
   });
 
+const doctorKey = (thread) => {
+  const id = String(thread.doctorId || '').trim();
+  if (id) return `id:${id}`;
+  return `name:${String(thread.doctorName || '').trim().toLowerCase()}`;
+};
+
+/** One row per doctor. Messages stay on their appointment, but the list and the open chat show them together. */
+const groupByDoctor = (threads) => {
+  const groups = new Map();
+  threads.forEach((thread) => {
+    const key = doctorKey(thread);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(thread);
+  });
+
+  return [...groups.values()].map((group) => {
+    const sendable = group
+      .filter((thread) => thread.canSend)
+      .sort((a, b) => toTime(b.appointmentDate) - toTime(a.appointmentDate));
+    const primary = sendable[0] || [...group].sort((a, b) => threadActivityTime(b) - threadActivityTime(a))[0];
+    const lastMessages = group
+      .map((thread) => thread.lastMessage)
+      .filter(Boolean)
+      .sort((a, b) => toTime(a.created_at) - toTime(b.created_at));
+    const lastMessage = lastMessages[lastMessages.length - 1] || null;
+    return {
+      ...primary,
+      lastMessage,
+      messageCount: group.reduce((sum, thread) => sum + thread.messageCount, 0),
+      unreadCount: group.reduce((sum, thread) => sum + thread.unreadCount, 0),
+      canSend: group.some((thread) => thread.canSend),
+      extras: {
+        ...primary.extras,
+        relatedAppointmentIds: group.map((thread) => thread.id),
+      },
+    };
+  });
+};
+
 export function useChatInbox({ enabled = true, refreshMs = REFRESH_INTERVAL_MS } = {}) {
   const [threads, setThreads] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -146,7 +194,7 @@ export function useChatInbox({ enabled = true, refreshMs = REFRESH_INTERVAL_MS }
       const bases = await fetchHistory();
       const loaded = await runPool(bases, FETCH_CONCURRENCY, loadThread);
       if (!mountedRef.current) return;
-      setThreads(sortThreads(loaded.filter(isVisibleThread)));
+      setThreads(sortThreads(groupByDoctor(loaded.filter(isVisibleThread))));
       setError('');
     } catch {
       if (mountedRef.current) setError('Unable to load your conversations.');

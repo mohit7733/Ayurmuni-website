@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
-import consultImg from "/images/login/10.png";
-import medicineImg from "/images/login/9.png";
-import deliveryImg from "/images/login/delivery.png";
-import dietImg from "/images/login/14.jpg";
-import yogaImg from "/images/login/8.png";
-import logoImg from "/images/FinalLogo2.png";
+import consultImg from "/images/login/10.webp";
+import medicineImg from "/images/login/9.webp";
+import deliveryImg from "/images/login/delivery.webp";
+import dietImg from "/images/login/14.webp";
+import yogaImg from "/images/login/8.webp";
+import logoImg from "/images/FinalLogo2.webp";
 import welcomeVideo from "/videos/welcome.mp4";
 import { Button } from "../components/ui";
 import { AUTH_COPY as T } from "../content/auth";

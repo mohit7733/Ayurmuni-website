@@ -175,7 +175,7 @@ export function VideoCallProvider({ children }) {
     endCallDueToRemoteRef.current = endCallDueToRemote;
   }, [endCallDueToRemote]);
 
-  const bindClientEvents = useCallback((client, appointmentId) => {
+  const bindClientEvents = useCallback((client) => {
     client.on('user-published', async (user, mediaType) => {
       await client.subscribe(user, mediaType);
       hadRemoteParticipantRef.current = true;

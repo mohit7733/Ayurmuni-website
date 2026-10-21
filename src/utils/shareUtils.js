@@ -206,7 +206,6 @@ export function getTwitterShareUrl(text, url) {
  * Generate Telegram share URL
  */
 export function getTelegramShareUrl(text, url) {
-  const message = `${text}\n\n${url}`;
   return `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
 }
 

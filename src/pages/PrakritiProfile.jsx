@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import logoImg from '/images/FinalLogo.png';
+import logoImg from '/images/FinalLogo.webp';
 import { PRAKRITI_IMAGES } from '../questionnaire/configs';
 import * as ProfileServices from '../services/profileService';
 

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import AppShell from '../components/AppShell';
-import dietCoverImg from '/images/login/14.jpg';
+import dietCoverImg from '/images/login/14.webp';
 import useDietPlans from '../diet/useDietPlans';
 import '../design/pages/weekly-meal.css';
 

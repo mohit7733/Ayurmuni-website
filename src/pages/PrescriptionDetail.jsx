@@ -1,7 +1,36 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import {
+  CalendarClock,
+  Check,
+  Download,
+  FileText,
+  History,
+  LifeBuoy,
+  Phone,
+  Pill,
+  Printer,
+  Salad,
+  Share2,
+  ShoppingBag,
+  Stethoscope,
+  X,
+} from 'lucide-react';
 import AppShell from '../components/AppShell';
-import PageHeader from '../components/PageHeader';
+import { Button } from '../components/ui';
+import {
+  ActionStack,
+  DetailCard,
+  DetailEmpty,
+  DetailLayout,
+  DetailLink,
+  DetailPage,
+  DetailSkeleton,
+  DetailTop,
+  InfoGrid,
+  MetaChip,
+  StatusPill,
+} from '../components/detail/Detail';
 import {
   formatAppointmentTimeLabel,
   formatDoctorDisplayName,
@@ -39,24 +68,33 @@ import {
 } from '../utils/prescriptionDetailUtils';
 import { useCart } from '../hooks/useCart';
 
+const capitalize = (value) => {
+  const text = String(value || '');
+  return text.charAt(0).toUpperCase() + text.slice(1);
+};
+
 const ExpandableList = ({ title, items, tone }) => {
   const [expanded, setExpanded] = useState(false);
   const shown = expanded ? items : items.slice(0, 2);
   const canToggle = items.length > 2;
+  const Icon = tone === 'do' ? Check : X;
   return (
-    <div className={`rx-advice ${tone}`}>
-      <div className="rx-advice-head">
+    <div className={`dx-advice dx-advice--${tone}`}>
+      <div className="dx-advice__head">
+        <span className="dx-advice__icon" aria-hidden>
+          <Icon size={14} />
+        </span>
         <strong>{title}</strong>
-        <span>{items.length}</span>
+        <span className="dx-advice__count">{items.length}</span>
       </div>
-      {shown.map((item, index) => (
-        <p key={`${title}-${index}`}>
-          <b>{index + 1}.</b> {item}
-        </p>
-      ))}
+      <ul>
+        {shown.map((item, index) => (
+          <li key={`${title}-${index}`}>{item}</li>
+        ))}
+      </ul>
       {canToggle ? (
-        <button type="button" onClick={() => setExpanded((v) => !v)}>
-          {expanded ? 'Read less' : `Read more (+${items.length - 2})`}
+        <button type="button" className="dx-advice__toggle" onClick={() => setExpanded((v) => !v)}>
+          {expanded ? 'Show less' : `Show ${items.length - 2} more`}
         </button>
       ) : null}
     </div>
@@ -165,13 +203,13 @@ export default function PrescriptionDetail() {
       '';
   const patientLine = [
     patient?.age != null ? `${patient.age} yrs` : '',
-    patient?.gender ? String(patient.gender) : '',
-    patient?.relation ? String(patient.relation) : '',
+    patient?.gender ? capitalize(patient.gender) : '',
+    patient?.relation ? capitalize(patient.relation) : '',
   ]
     .filter(Boolean)
     .join(' · ');
   const visitLine = [
-    appointment?.consultation_type ? String(appointment.consultation_type).replace(/_/g, ' ') : '',
+    appointment?.consultation_type ? capitalize(String(appointment.consultation_type).replace(/_/g, ' ')) : '',
     appointment?.start_time && appointment?.end_time
       ? `${formatAppointmentTimeLabel(appointment.start_time)} – ${formatAppointmentTimeLabel(appointment.end_time)}`
       : formatAppointmentTimeLabel(appointment?.start_time),
@@ -182,7 +220,10 @@ export default function PrescriptionDetail() {
     .replace(/_/g, ' ')
     .trim();
   const presentingComplaint =
-    concernText && concernText.toLowerCase() !== symptomText.toLowerCase() ? concernText : '';
+    concernText &&
+    ![symptomText, diagnosisText].some((text) => text && concernText.toLowerCase() === text.toLowerCase())
+      ? concernText
+      : '';
 
   const openDietPlan = (diet) => {
     const planId = diet?.diet_plan_id || diet?.id || diet?.plan_id || null;
@@ -323,268 +364,290 @@ export default function PrescriptionDetail() {
     }
   };
 
+  const doctorName = formatDoctorDisplayName(doctorDisplayName(doctor) || doctor?.doctor_name);
+  const doctorPhoto = doctorImage(doctor);
+  const doctorMeta = [
+    doctor?.experience_display
+      ? `${doctor.experience_display} yrs exp`
+      : doctor?.experience_years
+        ? `${doctor.experience_years} yrs exp`
+        : '',
+    doctorLocation,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+  const hasCode = prescriptionCode && prescriptionCode !== '-';
+  const clinicalItems = [
+    { label: 'Chief complaint', value: presentingComplaint, wide: true },
+    { label: 'Symptoms', value: symptomText, wide: true },
+    { label: 'Examination', value: clinicalNotes, wide: true },
+    { label: 'Allergies', value: allergies.join(', '), tone: 'danger' },
+    { label: 'Past illness', value: pastIllnessText },
+    { label: 'Family history', value: familyHistoryText },
+  ];
+  const hasClinical = clinicalItems.some((item) => item.value);
+
   return (
     <AppShell tab="profile">
-      <section className="catalog-page rx-page">
-        <PageHeader
-          title="Prescription"
-          subtitle={prescriptionCode && prescriptionCode !== '-' ? prescriptionCode : 'Consultation Rx'}
+      <DetailPage>
+        <DetailTop
+          backLabel="Back"
           actions={
-            <>
-              {hasContent ? (
-                <button type="button" className="ghost" onClick={onDownloadPdf} disabled={downloadingPdf}>
-                  {downloadingPdf ? 'Saving…' : 'Download'}
-                </button>
-              ) : null}
-              {hasContent ? (
-                <button type="button" className="ghost" onClick={onPrint}>
-                  Print
-                </button>
-              ) : null}
-              {doctorId ? (
-                <button
-                  type="button"
-                  className="ghost"
-                  onClick={() =>
-                    navigate(`/consult/doctors/${doctorId}/history`, {
-                      state: { doctorName: doctor?.doctor_name },
-                    })
-                  }
-                >
-                  History
-                </button>
-              ) : null}
-            </>
+            hasContent ? (
+              <Button variant="ghost" size="sm" leadingIcon={<Share2 size={14} aria-hidden />} onClick={onShare}>
+                Share
+              </Button>
+            ) : null
           }
         />
 
         {loading && !payload ? (
-          <p className="muted">Loading prescription…</p>
+          <DetailSkeleton media={false} label="Loading prescription" />
         ) : !hasContent ? (
-          <div className="empty-copy">
-            <strong>No prescription yet</strong>
-            <p>Medicines and advice will appear here once the doctor issues them.</p>
-            <button type="button" className="cta" onClick={() => navigate('/profile/appointments')}>
-              My appointments
-            </button>
-          </div>
+          <DetailEmpty
+            icon={FileText}
+            title="No prescription yet"
+            text="Medicines and advice will appear here once the doctor issues them."
+            action={<Button onClick={() => navigate('/profile/appointments')}>My appointments</Button>}
+          />
         ) : (
-          <>
-            <article className="rx-paper">
-              <button
-                type="button"
-                className="rx-letterhead"
-                onClick={() => doctorId && navigate(`/consult/doctors/${doctorId}`)}
-              >
-                {doctorImage(doctor) ? (
-                  <img src={doctorImage(doctor)} alt="" />
-                ) : (
-                  <span>{String(doctorDisplayName(doctor) || 'D').charAt(0)}</span>
-                )}
-                <div>
-                  <strong>{formatDoctorDisplayName(doctorDisplayName(doctor) || doctor?.doctor_name)}</strong>
-                  {specialization ? <small>{specialization}</small> : null}
-                  <small>
-                    {[
-                      doctor?.experience_display
-                        ? `${doctor.experience_display} yrs exp`
-                        : doctor?.experience_years
-                          ? `${doctor.experience_years} yrs exp`
-                          : '',
-                      doctorLocation,
-                    ]
-                      .filter(Boolean)
-                      .join(' · ')}
-                  </small>
-                </div>
-                <em>℞</em>
-              </button>
+          <DetailLayout
+            aside={
+              <>
+                <DetailCard id="rx-actions" title="Your prescription" icon={Pill}>
+                  <ActionStack>
+                    <Button
+                      leadingIcon={<ShoppingBag size={16} aria-hidden />}
+                      loading={ordering}
+                      onClick={onOrderMedicines}
+                    >
+                      {expiry.expired ? 'Consult to reorder' : 'Order medicines'}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      leadingIcon={<Download size={16} aria-hidden />}
+                      loading={downloadingPdf}
+                      onClick={onDownloadPdf}
+                    >
+                      Download PDF
+                    </Button>
+                    <Button variant="secondary" leadingIcon={<Printer size={16} aria-hidden />} onClick={onPrint}>
+                      Print
+                    </Button>
+                  </ActionStack>
+                </DetailCard>
+
+                {dietPlans.length ? (
+                  <DetailCard id="rx-diet" title="Recommended diet" icon={Salad}>
+                    <div className="dx-actions">
+                      {dietPlans.map((diet, index) => (
+                        <DetailLink
+                          key={String(diet?.diet_plan_id || diet?.id || index)}
+                          icon={Salad}
+                          title={diet?.name || diet?.title || 'Diet Plan'}
+                          text={
+                            [
+                              diet?.avg_daily_calories != null
+                                ? `~${Math.round(Number(diet.avg_daily_calories))} kcal/day`
+                                : '',
+                              diet?.meals_per_day != null ? `${diet.meals_per_day} meals/day` : '',
+                            ]
+                              .filter(Boolean)
+                              .join(' · ') || 'Open plan'
+                          }
+                          onClick={() => openDietPlan(diet)}
+                        />
+                      ))}
+                    </div>
+                  </DetailCard>
+                ) : null}
+
+                <DetailCard id="rx-help" title="Need help with this Rx?" icon={LifeBuoy} tone="accent">
+                  <p className="dx-prose">
+                    For severe reactions or worsening symptoms, contact your doctor right away.
+                  </p>
+                  <div className="dx-actions">
+                    {doctorPhone ? (
+                      <Button href={`tel:${doctorPhone}`} variant="secondary" leadingIcon={<Phone size={16} aria-hidden />}>
+                        Call doctor
+                      </Button>
+                    ) : null}
+                    {doctorId ? (
+                      <DetailLink
+                        icon={History}
+                        title="Consultation history"
+                        text="Past visits and prescriptions with this doctor"
+                        onClick={() =>
+                          navigate(`/consult/doctors/${doctorId}/history`, {
+                            state: { doctorName: doctor?.doctor_name },
+                          })
+                        }
+                      />
+                    ) : null}
+                  </div>
+                </DetailCard>
+              </>
+            }
+          >
+            <article className="dx-doc dx-doc--rx" aria-labelledby="rx-title">
+              <header className="dx-doc__head">
+                <button
+                  type="button"
+                  className="dx-doc__doctor"
+                  onClick={() => doctorId && navigate(`/consult/doctors/${doctorId}`)}
+                  disabled={!doctorId}
+                >
+                  <span className="dx-person__avatar" aria-hidden>
+                    {doctorPhoto ? <img src={doctorPhoto} alt="" /> : String(doctorName || 'D').replace(/^dr\.?\s*/i, '').charAt(0)}
+                  </span>
+                  <span className="dx-doc__brand">
+                    <strong id="rx-title">{doctorName}</strong>
+                    {specialization ? <span>{specialization}</span> : null}
+                    {doctorMeta ? <span>{doctorMeta}</span> : null}
+                  </span>
+                </button>
+                <span className="dx-rx-mark" aria-hidden>
+                  ℞
+                </span>
+              </header>
+
               {diseaseTags.length ? (
-                <div className="rx-tags">
+                <div className="dx-chips">
                   {diseaseTags.map((tag) => (
-                    <span key={tag}>{tag}</span>
+                    <MetaChip key={tag} tone="plain">
+                      {tag}
+                    </MetaChip>
                   ))}
                 </div>
               ) : null}
-              <div className="rx-patient">
+
+              <div className="dx-rx-patient">
                 <div>
-                  <small>Patient</small>
+                  <p className="dx-doc__label">Patient</p>
                   <strong>{patient?.patient_name || 'Patient'}</strong>
-                  {patientLine ? <p>{patientLine}</p> : null}
-                  {visitLine ? <p>{visitLine}</p> : null}
+                  {patientLine ? <span>{patientLine}</span> : null}
+                  {visitLine ? <span className="dx-rx-patient__visit">{visitLine}</span> : null}
                 </div>
-                <div className="rx-meta">
-                  {prescriptionCode && prescriptionCode !== '-' ? <b>{prescriptionCode}</b> : null}
+                <div className="dx-rx-patient__meta">
+                  <StatusPill status={statusLabel}>{statusLabel}</StatusPill>
+                  {hasCode ? <strong>{prescriptionCode}</strong> : null}
                   <span>{formatIssuedLabel(normalized.issuedOn)}</span>
                   {expiry.label ? (
-                    <span className={expiry.expired ? 'rx-expiry is-expired' : 'rx-expiry'}>
+                    <span className={expiry.expired ? 'dx-rx-expiry is-expired' : 'dx-rx-expiry'}>
                       {expiry.expired ? `Expired ${expiry.label}` : `Valid until ${expiry.label}`}
                     </span>
                   ) : null}
-                  <i>{statusLabel}</i>
-                  {paymentAmount != null ? <span>{formatRupee(paymentAmount)}</span> : null}
-                  {paymentStatus ? <small>{paymentStatus.replace(/_/g, ' ')}</small> : null}
+                  {paymentAmount != null ? (
+                    <span>
+                      {formatRupee(paymentAmount)}
+                      {paymentStatus ? ` · ${paymentStatus.replace(/_/g, ' ')}` : ''}
+                    </span>
+                  ) : null}
                 </div>
               </div>
-            </article>
 
-            {presentingComplaint ||
-            symptomText ||
-            clinicalNotes ||
-            allergies.length ||
-            pastIllnessText ||
-            familyHistoryText ? (
-              <div className="checkout-card">
-                <h3>Clinical findings</h3>
-                {[
-                  ['Chief complaint', presentingComplaint],
-                  ['Symptoms', symptomText],
-                  ['Examination', clinicalNotes],
-                  ['Allergies', allergies.join(', ')],
-                  ['Past illness', pastIllnessText],
-                  ['Family history', familyHistoryText],
-                ]
-                  .filter(([, value]) => value)
-                  .map(([label, value]) => (
-                    <div key={label} className={`txn-detail-row ${label === 'Allergies' ? 'rx-alert' : ''}`}>
-                      <span>{label}</span>
-                      <strong>{value}</strong>
-                    </div>
-                  ))}
-              </div>
-            ) : null}
-
-            {diagnosisText ? (
-              <div className="rx-diagnosis">
-                <h3>Diagnosis & advice</h3>
-                <p>{diagnosisText}</p>
-              </div>
-            ) : null}
-
-            <div className="checkout-card">
-              <h3>
-                Prescribed medicines
-                {medicines.length ? <small> {medicines.length}</small> : null}
-              </h3>
-              {medicines.length === 0 ? (
-                <p className="muted">No medicines prescribed</p>
-              ) : (
-                medicines.map((medicine, index) => {
-                  const chips = getMedicineScheduleChips(medicine);
-                  const subtitle =
-                    medicine?.product_name || medicine?.brand_name || medicine?.composition || '';
-                  const showSub =
-                    !!subtitle &&
-                    String(subtitle).toLowerCase() !==
-                      String(medicine?.medicine_name || '').toLowerCase();
-                  return (
-                    <div key={medicine?.id || `${medicine?.medicine_name}-${index}`} className="rx-med">
-                      <b>{index + 1}</b>
-                      <div>
-                        <strong>
-                          {medicine?.medicine_name || medicine?.product_name || 'Medicine'}
-                        </strong>
-                        {showSub ? <small>{subtitle}</small> : null}
-                        {chips.length ? (
-                          <div className="rx-chips">
-                            {chips.map((chip) => (
-                              <span key={chip.key}>
-                                <i>{chip.caption}</i>
-                                {chip.label}
-                              </span>
-                            ))}
-                          </div>
-                        ) : null}
-                        {medicine?.instruction ? <p>{String(medicine.instruction)}</p> : null}
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-
-            {dietPlans.length ? (
-              <div className="checkout-card">
-                <h3>Recommended diet</h3>
-                {dietPlans.map((diet, index) => {
-                  const planId = diet?.diet_plan_id || diet?.id || index;
-                  return (
-                    <button
-                      key={String(planId)}
-                      type="button"
-                      className="order-row"
-                      onClick={() => openDietPlan(diet)}
-                    >
-                      <p>
-                        {diet?.name || diet?.title || 'Diet Plan'}
-                        <small>
-                          {[
-                            diet?.avg_daily_calories != null
-                              ? `~${Math.round(Number(diet.avg_daily_calories))} kcal/day`
-                              : '',
-                            diet?.meals_per_day != null ? `${diet.meals_per_day} meals/day` : '',
-                          ]
-                            .filter(Boolean)
-                            .join(' · ') || 'Open plan'}
-                        </small>
-                      </p>
-                    </button>
-                  );
-                })}
-              </div>
-            ) : null}
-
-            {doItems.length || dontItems.length ? (
-              <div className="checkout-card">
-                <h3>Lifestyle guidelines</h3>
-                {doItems.length ? <ExpandableList title="Do's" items={doItems} tone="do" /> : null}
-                {dontItems.length ? (
-                  <ExpandableList title="Don'ts" items={dontItems} tone="dont" />
-                ) : null}
-              </div>
-            ) : null}
-
-            {suggestions.length ? (
-              <div className="checkout-card">
-                <h3>Additional instructions</h3>
-                <ul className="rx-bullets">
-                  {suggestions.map((item, index) => (
-                    <li key={`sug-${index}`}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-
-            {followUp.hasContent ? (
-              <div className="rx-follow">
-                <strong>{followUp.schedule ? 'Follow-up scheduled' : 'Follow-up advised'}</strong>
-                <p>{followUp.dateLabel || 'Date to be confirmed'}</p>
-                {followUp.reason ? <small>{followUp.reason}</small> : null}
-              </div>
-            ) : null}
-
-            <div className="rx-help">
-              <strong>Need help with this Rx?</strong>
-              <p>For severe reactions or worsening symptoms, contact your doctor right away.</p>
-              {doctorPhone ? (
-                <a href={`tel:${doctorPhone}`}>Call doctor</a>
+              {hasClinical ? (
+                <section className="dx-doc__section" aria-label="Clinical findings">
+                  <p className="dx-doc__label">Clinical findings</p>
+                  <InfoGrid items={clinicalItems} />
+                </section>
               ) : null}
-            </div>
 
-            <div className="checkout-sticky rx-sticky">
-              <button type="button" className="ghost" onClick={onShare}>
-                Share
-              </button>
-              <button type="button" className="ghost" onClick={onPrint}>
-                Print
-              </button>
-              <button type="button" className="cta" onClick={onOrderMedicines} disabled={ordering}>
-                {ordering ? 'Adding…' : expiry.expired ? 'Consult to reorder' : 'Order medicines'}
-              </button>
-            </div>
-          </>
+              {diagnosisText ? (
+                <section className="dx-callout" aria-label="Diagnosis and advice">
+                  <Stethoscope size={18} aria-hidden />
+                  <div>
+                    <p className="dx-doc__label">Diagnosis & advice</p>
+                    <p>{diagnosisText}</p>
+                  </div>
+                </section>
+              ) : null}
+
+              <section className="dx-doc__section" aria-label="Prescribed medicines">
+                <p className="dx-doc__label">
+                  Prescribed medicines{medicines.length ? ` · ${medicines.length}` : ''}
+                </p>
+                {medicines.length === 0 ? (
+                  <p className="dx-note">No medicines prescribed.</p>
+                ) : (
+                  <ol className="dx-meds">
+                    {medicines.map((medicine, index) => {
+                      const chips = getMedicineScheduleChips(medicine);
+                      const subtitle =
+                        medicine?.product_name || medicine?.brand_name || medicine?.composition || '';
+                      const showSub =
+                        !!subtitle &&
+                        String(subtitle).toLowerCase() !== String(medicine?.medicine_name || '').toLowerCase();
+                      return (
+                        <li key={medicine?.id || `${medicine?.medicine_name}-${index}`} className="dx-med">
+                          <span className="dx-med__num" aria-hidden>
+                            {index + 1}
+                          </span>
+                          <div className="dx-med__body">
+                            <strong>{medicine?.medicine_name || medicine?.product_name || 'Medicine'}</strong>
+                            {showSub ? <small>{subtitle}</small> : null}
+                            {chips.length ? (
+                              <div className="dx-med__chips">
+                                {chips.map((chip) => (
+                                  <span key={chip.key}>
+                                    <small>{chip.caption}</small>
+                                    {chip.label}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : null}
+                            {medicine?.instruction ? <p>{String(medicine.instruction)}</p> : null}
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                )}
+              </section>
+
+              {doItems.length || dontItems.length ? (
+                <section className="dx-doc__section" aria-label="Lifestyle guidelines">
+                  <p className="dx-doc__label">Lifestyle guidelines</p>
+                  <div className="dx-advice-grid">
+                    {doItems.length ? <ExpandableList title="Do's" items={doItems} tone="do" /> : null}
+                    {dontItems.length ? <ExpandableList title="Don'ts" items={dontItems} tone="dont" /> : null}
+                  </div>
+                </section>
+              ) : null}
+
+              {suggestions.length ? (
+                <section className="dx-doc__section" aria-label="Additional instructions">
+                  <p className="dx-doc__label">Additional instructions</p>
+                  <ul className="dx-bullets">
+                    {suggestions.map((item, index) => (
+                      <li key={`sug-${index}`}>{item}</li>
+                    ))}
+                  </ul>
+                </section>
+              ) : null}
+
+              {followUp.hasContent ? (
+                <section className="dx-callout dx-callout--gold" aria-label="Follow-up">
+                  <CalendarClock size={18} aria-hidden />
+                  <div>
+                    <p className="dx-doc__label">
+                      {followUp.schedule ? 'Follow-up scheduled' : 'Follow-up advised'}
+                    </p>
+                    <p>
+                      <strong>{followUp.dateLabel || 'Date to be confirmed'}</strong>
+                    </p>
+                    {followUp.reason ? <p>{followUp.reason}</p> : null}
+                  </div>
+                </section>
+              ) : null}
+
+              <footer className="dx-doc__foot">
+                Digitally issued via Ayurmuni. Take medicines only as prescribed.
+              </footer>
+            </article>
+          </DetailLayout>
         )}
-      </section>
+      </DetailPage>
     </AppShell>
   );
 }

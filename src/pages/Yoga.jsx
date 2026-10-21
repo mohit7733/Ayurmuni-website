@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { BadgeCheck, Flower2, Leaf } from 'lucide-react';
+import { Flower2 } from 'lucide-react';
 import AppShell from '../components/AppShell';
-import yogaPosterImg from '/images/login/8.png';
-import { SectionHead, ServiceHero, YogaSessionCard } from '../components/ServiceHome';
+import BannerCarousel from '../components/BannerCarousel';
+import yogaPosterImg from '/images/login/8.webp';
+import { SectionHead, YogaSessionCard } from '../components/ServiceHome';
+import { loadBannerCarouselForScreen } from '../services/bannerService';
+import { resolveBannerNavigation } from '../home/serviceCategories';
 import { getYogaSession } from '../services/yogaService';
 import {
   itemMatchesHealthConcern,
@@ -11,14 +14,8 @@ import {
   normalizeYogaSessionList,
   resolveYogaThumbnailUri,
 } from '../yoga/utils';
-import { EmptyState, SearchField, SkeletonGrid } from '../components/ui';
+import { EmptyState, PageBar, SearchField, SkeletonGrid } from '../components/ui';
 import { HOME_COPY as H } from '../content/home';
-
-const TRUST = [
-  { icon: Flower2, label: 'Guided practice' },
-  { icon: Leaf, label: 'Breath and strength' },
-  { icon: BadgeCheck, label: 'Made for your routine' },
-];
 
 export default function Yoga() {
   const navigate = useNavigate();
@@ -31,6 +28,21 @@ export default function Yoga() {
   const [debounced, setDebounced] = useState('');
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [banners, setBanners] = useState([]);
+  const [bannersLoading, setBannersLoading] = useState(true);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const items = await loadBannerCarouselForScreen('yoga');
+      if (!alive) return;
+      setBanners(items);
+      setBannersLoading(false);
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const concernMatch = useMemo(
     () => ({
@@ -81,18 +93,38 @@ export default function Yoga() {
 
   const title = categoryName ? `${categoryName}` : 'Yoga';
 
+  const openBanner = (item) => {
+    const target = resolveBannerNavigation(item);
+    if (!target) return;
+    if (target.external) {
+      window.open(target.href, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    navigate(target.path);
+  };
+
   return (
     <AppShell tab="home">
       <div className="hm-page svc-page">
-        <ServiceHero
-          id="yg-hero"
-          eyebrow="Move"
-          title={title}
-          accent="sessions."
-          lede={H.yogaText}
-          trust={TRUST}
-        >
-          <div className="svc-search">
+        <div className="hm-body">
+          {bannersLoading || banners.length > 0 ? (
+            <BannerCarousel
+              items={banners}
+              loading={bannersLoading}
+              interval={6000}
+              onSelect={openBanner}
+              copy={{
+                label: H.offersLabel,
+                open: H.openOffer,
+                of: H.of,
+                show: H.showOffer,
+                pause: H.pauseOffers,
+                play: H.playOffers,
+              }}
+            />
+          ) : null}
+
+          <PageBar id="yg-hero" title={`${title} sessions`}>
             <SearchField
               value={search}
               onChange={setSearch}
@@ -100,10 +132,7 @@ export default function Yoga() {
               placeholder="Search yoga sessions"
               label="Search yoga sessions"
             />
-          </div>
-        </ServiceHero>
-
-        <div className="hm-body">
+          </PageBar>
           <section className="hm-well hm-well--move" aria-labelledby="yg-list-title">
             <SectionHead
               id="yg-list-title"

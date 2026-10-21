@@ -13,7 +13,7 @@ export const Utils = {
     try {
       const jsonValue = localStorage.getItem(PREFIX + key);
       return jsonValue != null ? JSON.parse(jsonValue) : null;
-    } catch (e) {
+    } catch {
       return null;
     }
   },
@@ -29,7 +29,7 @@ export const Utils = {
   async getStringData(key) {
     try {
       return localStorage.getItem(PREFIX + key);
-    } catch (e) {
+    } catch {
       return null;
     }
   },

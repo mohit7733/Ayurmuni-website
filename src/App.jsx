@@ -14,6 +14,9 @@ import Login from "./pages/Login";
 import OtpVerify from "./pages/OtpVerify";
 import Home from "./pages/Home";
 import NetworkError from "./pages/NetworkError";
+import NotFound from "./pages/NotFound";
+import ErrorBoundary from "./components/ErrorBoundary";
+import { STATIC_COPY } from "./content/static";
 
 const loadPage = (loader) => lazy(loader);
 const loadVideoCall = () => import("./pages/VideoCall");
@@ -177,6 +180,19 @@ function NavBinder() {
   return null;
 }
 
+function RouteErrorBoundary({ children }) {
+  const { pathname } = useLocation();
+  return <ErrorBoundary resetKey={pathname}>{children}</ErrorBoundary>;
+}
+
+function RouteLoader() {
+  return (
+    <div className="am-route-loader" role="status" aria-label={STATIC_COPY.pageLoading}>
+      <span className="am-route-loader__ring" aria-hidden />
+    </div>
+  );
+}
+
 function ScrollToTop() {
   const location = useLocation();
 
@@ -198,7 +214,8 @@ export default function App() {
             <ToastHost />
             <FloatingVideoOverlay />
             <NetworkGuard>
-              <Suspense fallback={null}>
+              <RouteErrorBoundary>
+              <Suspense fallback={<RouteLoader />}>
               <Routes>
                 <Route path="/" element={<Splash />} />
                 <Route path="/welcome" element={<WelcomePage />} />
@@ -420,8 +437,10 @@ export default function App() {
                   />
                   <Route path="/search" element={<ProductSearch />} />
                 </Route>
+                <Route path="*" element={<NotFound />} />
               </Routes>
               </Suspense>
+              </RouteErrorBoundary>
             </NetworkGuard>
             <ChatLauncher />
           </CartProvider>

@@ -33,39 +33,6 @@ export function SectionHead({ id, eyebrow, title, description, action }) {
   );
 }
 
-export function ServiceHero({ id, eyebrow, title, accent, lede, trust, children }) {
-  return (
-    <section className="hm-hero" aria-labelledby={id}>
-      <div className="hm-hero__inner">
-        <div className="hm-hero__copy">
-          {eyebrow ? <p className="hm-hero__hello">{eyebrow}</p> : null}
-          <h1 id={id} className="hm-hero__title">
-            {title}
-            {accent ? (
-              <>
-                {' '}
-                <span className="hm-hero__gold">{accent}</span>
-              </>
-            ) : null}
-          </h1>
-          {lede ? <p className="hm-hero__lede">{lede}</p> : null}
-          {children}
-          {trust?.length ? (
-            <ul className="hm-hero__trust">
-              {trust.map(({ icon: Icon, label }) => (
-                <li key={label}>
-                  <Icon size={16} aria-hidden />
-                  {label}
-                </li>
-              ))}
-            </ul>
-          ) : null}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function shortLabel(value) {
   const text = String(value || '').replace(/\s+/g, ' ').trim();
   if (!text || text.length > 28) return '';

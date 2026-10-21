@@ -870,3 +870,35 @@
     transform: none !important;
   }
 }
+/* Detail-kit layout */
+.dp-score {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--am-gold-50);
+}
+.dp-score > strong {
+  color: var(--am-brand-green-deep);
+  font-family: var(--am-font-display);
+  font-size: 34px;
+  line-height: 1;
+}
+.dp-score > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.dp-score small {
+  color: var(--am-text-muted);
+  font-size: 12px;
+}
+.dp-page--dx .dp-avail {
+  margin: 0;
+}
+@media (max-width: 767px) {
+  .dp-page--dx {
+    padding-bottom: 110px;
+  }
+}

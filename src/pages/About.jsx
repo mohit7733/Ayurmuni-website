@@ -52,7 +52,7 @@ export default function About() {
                 className="sx-about__brand-orbit sx-about__brand-orbit--inner"
                 aria-hidden="true"
               />
-              <img src="/images/FinalLogo.png" alt="" />
+              <img src="/images/FinalLogo.webp" alt="" />
               <span className="sx-about__brand-caption">
                 Grounded in nature · Focused on you
               </span>
