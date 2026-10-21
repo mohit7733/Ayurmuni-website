@@ -914,3 +914,8 @@
 @media (prefers-reduced-motion: reduce) {
   .st-page--products .st-hero__ornament svg { animation: none; }
 }
+
+/* Responsive: fluid hero heading on phones */
+@media (max-width: 767px) {
+  .st-page--products .st-hero--modern h1 { font-size: clamp(1.35rem, 1.05rem + 1.6vw, 1.7rem); }
+}

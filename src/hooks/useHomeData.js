@@ -54,6 +54,20 @@ const loadSuggestedCatalog = async (kind) => {
   return normalizeApiList(res).map(mapCatalogProductItem).filter(Boolean);
 };
 
+// Recently viewed is per-user: only the discovery endpoint supports it
+// (GET customers/products/discovery/?section=recently_viewed, auth required).
+// The generic products list (customers/products/) is not a per-user history.
+const loadRecentlyViewed = async () => {
+  if (!(await isAuthenticated()) || (await isGuestUser())) return [];
+  const res = await ProductServices.getProductDiscovery({
+    section: 'recently_viewed',
+    page: 1,
+    page_size: 12,
+  });
+  if (!res || res.success === false) return [];
+  return normalizeApiList(res).map(mapCatalogProductItem).filter(Boolean);
+};
+
 const loadSectionProducts = async (section) => {
   const res = await ProductServices.getProducts({ section, page_size: 12 });
   if (!res || res.success === false) return [];
@@ -221,7 +235,7 @@ export default function useHomeData() {
         setSections((prev) => ({ ...prev, trending })),
       ),
       apply(
-        safe(() => load('recent', () => loadSectionProducts('recently_viewed')), []),
+        safe(() => load('recent', loadRecentlyViewed), []),
         (recentlyViewed) =>
           setSections((prev) => ({ ...prev, recently_viewed: recentlyViewed })),
       ),

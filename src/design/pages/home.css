@@ -3480,3 +3480,8 @@
   .am-diet-active__cta:hover { transform: none; }
 }
 @keyframes am-diet-fade { from { opacity: 0; } to { opacity: 1; } }
+
+/* ---------- Responsive: smallest phones ---------- */
+@media (max-width: 360px) {
+  .hm-hero__title { font-size: 2.1rem; }
+}

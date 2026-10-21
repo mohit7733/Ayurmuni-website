@@ -3659,3 +3659,26 @@
     transform: none !important;
   }
 }
+
+/* ---------- Responsive (<1200px): keep 3D side cards inside the viewport ---------- */
+@media (max-width: 1199px) {
+  .am-banner--multi { overflow-x: clip; }
+}
+@supports not (overflow: clip) {
+  @media (max-width: 1199px) {
+    .am-banner--multi { overflow-x: hidden; }
+  }
+}
+
+/* Keep visually-hidden rating text inside its card so it cannot widen the page from inside a scroll rail. */
+.am-rating { position: relative; }
+
+/* ---------- Responsive: fluid section headers (<1200px); may wrap, never overflow ---------- */
+@media (max-width: 1199px) {
+  .am-section-header { min-width: 0; }
+  .am-section-header__title {
+    font-size: clamp(1.125rem, 0.95rem + 0.9vw, 1.5rem);
+    overflow-wrap: anywhere;
+  }
+  .am-section-header > :last-child:not(.am-section-header__copy) { flex-shrink: 0; }
+}

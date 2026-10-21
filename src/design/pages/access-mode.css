@@ -277,3 +277,8 @@ body:has(.ax-page) {
   .ax-feature:hover, .ax-setup:hover:not(:disabled), .ax-setup:hover:not(:disabled) .ax-setup__arrow { transform: none; }
   .ax-setup:hover:not(:disabled)::after { transition: none; left: -120%; }
 }
+
+/* Responsive: fluid heading + 44px targets on phones/tablets */
+@media (max-width: 860px) {
+  .ax-brand h1 { font-size: clamp(1.45rem, 1.1rem + 1.8vw, 1.85rem); }
+}

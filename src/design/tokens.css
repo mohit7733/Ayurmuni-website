@@ -256,3 +256,11 @@
     --am-header-h: 72px;
   }
 }
+
+/* Responsive: ≥44px touch targets on phones and tablets (desktop ≥1200px unchanged). */
+@media (max-width: 1199px) {
+  :root {
+    --am-tap-min: 44px;
+    --am-control-h: 44px;
+  }
+}

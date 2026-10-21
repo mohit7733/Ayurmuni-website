@@ -910,3 +910,14 @@ html:has(.pd-page) {
     transform: none !important;
   }
 }
+
+/* ---------- Responsive: rails on phones are touch-swipe rows; arrows only waste width ---------- */
+@media (max-width: 639px) {
+  .pd-auto-rail { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .pd-auto-rail__control { display: none; }
+  .pd-review-item { flex-basis: 84%; }
+}
+@media (hover: none) and (min-width: 640px) and (max-width: 1199px) {
+  .pd-auto-rail__control { width: 44px; height: 44px; }
+  .pd-auto-rail { grid-template-columns: 44px minmax(0, 1fr) 44px; }
+}

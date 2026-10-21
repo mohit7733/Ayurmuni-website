@@ -330,3 +330,14 @@
   .pz-chip, .pz-chip__check, .pz-save, .pz-save svg { transition: none; }
   .pz-chip:hover, .pz-chip:active, .pz-save:hover:not(:disabled), .pz-save:hover:not(:disabled) svg { transform: none; }
 }
+
+/* Phones in landscape / short tablets: keep the split popup inside the viewport */
+@media (max-height: 520px) and (min-width: 640px) and (max-width: 1199px) {
+  .am-modal__panel.pz-modal { height: 94dvh; }
+  .pz { grid-template-columns: 200px minmax(0, 1fr); }
+  .pz-brand { padding: 14px; }
+  .pz-brand__copy h2 { margin-top: 8px; font-size: 18px; }
+  .pz-brand__copy p { font-size: 12px; }
+  .pz-count__num { font-size: 30px; }
+  .pz-foot { padding-block: 8px calc(8px + env(safe-area-inset-bottom)); }
+}
