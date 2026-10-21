@@ -25,19 +25,7 @@ import { requireAuth } from '../services/guestAuth';
 import { Badge, Button, Disclaimer, EmptyState } from '../components/ui';
 import { CHECKOUT_COPY as T } from '../content/checkout';
 import '../design/pages/checkout.css';
-
-const loadRazorpay = () =>
-  new Promise((resolve, reject) => {
-    if (window.Razorpay) {
-      resolve(window.Razorpay);
-      return;
-    }
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.onload = () => resolve(window.Razorpay);
-    script.onerror = () => reject(new Error('Unable to load Razorpay'));
-    document.body.appendChild(script);
-  });
+import { extractRazorpayCheckout, loadRazorpay, preloadRazorpay } from '../payment/razorpay';
 
 const pickPaymentData = (orderResponse) => {
   const data = orderResponse?.data && typeof orderResponse.data === 'object' ? orderResponse.data : {};
@@ -73,6 +61,10 @@ export default function Checkout() {
   const [verifying, setVerifying] = useState(false);
   const [orderError, setOrderError] = useState('');
   const [customer, setCustomer] = useState(null);
+
+  useEffect(() => {
+    preloadRazorpay();
+  }, []);
 
   useEffect(() => {
     const fromState = location.state?.selectedProducts;
@@ -346,12 +338,20 @@ export default function Checkout() {
         return;
       }
       const payment = pickPaymentData(result);
-      const key = String(payment?.razorpay_key ?? payment?.key ?? payment?.key_id ?? '').trim();
-      const orderId = String(
-        payment?.razorpay_order_id ?? payment?.razorpayOrderId ?? payment?.rzp_order_id ?? '',
-      ).trim();
+      const { key, orderId } = extractRazorpayCheckout(result);
       if (!key || !orderId) {
-        showSuccessToast('Payment gateway not ready. Please try again.', 'error');
+        if (import.meta.env.DEV) {
+          console.warn('[checkout] prepaid order response has no Razorpay key/order id', {
+            hasKey: Boolean(key),
+            hasOrderId: Boolean(orderId),
+            keys: Object.keys(payment || {}),
+          });
+        }
+        const failMsg = !key
+          ? 'Online payment is not configured right now. Please choose Cash on Delivery or contact support.'
+          : 'We could not start the payment for this order. Please check My Orders before trying again.';
+        setOrderError(failMsg);
+        showSuccessToast(failMsg, 'error');
         return;
       }
       const contactDigits = String(

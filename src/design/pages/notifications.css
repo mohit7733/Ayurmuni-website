@@ -276,6 +276,8 @@
   font-size: var(--am-text-xs);
   font-weight: var(--am-weight-regular);
   line-height: var(--am-leading-relaxed);
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .notif-page .notif-row .notif-dot {

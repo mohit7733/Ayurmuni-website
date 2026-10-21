@@ -2198,12 +2198,30 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  margin: 12px 0;
+  margin: 8px 0 12px;
 }
 .am-page-bar > .am-search {
-  flex: 1 1 180px;
-  min-width: 0;
-  max-width: none;
+  flex: 1 1 200px;
+  width: min(100%, 360px);
+  max-width: 360px;
+  height: 36px;
+  min-height: 36px;
+  padding-left: 12px;
+}
+.am-page-bar > .am-search .am-search__input {
+  height: 32px;
+  font-size: 13px;
+}
+.am-page-bar > .am-search .am-search__icon {
+  width: 16px;
+  height: 16px;
+}
+.am-page-bar > .am-btn {
+  flex: none;
+  height: 36px;
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 13px;
 }
 .am-page-bar > :not(.am-search) {
   flex: none;
