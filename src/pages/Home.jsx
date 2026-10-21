@@ -955,13 +955,13 @@ export default function Home() {
                   ) : null
                 }
               />
-              <Rail label={T.yogaTitle}>
+              <AutoScrollRail label={T.yogaTitle}>
                 {yogaSessions.map((item) => (
                   <RailItem key={item.id} size="wide">
                     <MediaCard
+                      className="hm-yoga-card"
                       image={item.thumbnail_url}
                       title={item.title}
-                      subtitle={item.short_description}
                       fallbackIcon={Flower2}
                       onClick={() =>
                         navigate(`/yoga/${item.id}`, { state: { item } })
@@ -969,7 +969,7 @@ export default function Home() {
                     />
                   </RailItem>
                 ))}
-              </Rail>
+              </AutoScrollRail>
             </Reveal>
           ) : null}
 
@@ -1048,7 +1048,7 @@ export default function Home() {
                 <ViewAll label={T.labTitle} onClick={() => navigate("/labs")} />
               }
             />
-            <Rail label={T.labTitle}>
+            <AutoScrollRail label={T.labTitle}>
               {DUMMY_LAB_TESTS.map((item) => (
                 <RailItem key={item.id} size="product">
                   <DummyOfferCard
@@ -1058,7 +1058,7 @@ export default function Home() {
                   />
                 </RailItem>
               ))}
-            </Rail>
+            </AutoScrollRail>
           </Reveal>
 
           {!loading && !hasAnyContent ? (
