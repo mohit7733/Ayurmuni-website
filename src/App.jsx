@@ -24,6 +24,7 @@ const loadVideoCall = () => import("./pages/VideoCall");
 const AccessMode = loadPage(() => import("./pages/AccessMode"));
 const Onboarding = loadPage(() => import("./pages/Onboarding"));
 const PolicyDetail = loadPage(() => import("./pages/PolicyDetail"));
+const PolicyAccept = loadPage(() => import("./pages/PolicyAccept"));
 const AssessmentType = loadPage(() => import("./pages/AssessmentType"));
 const Questionnaire = loadPage(() => import("./pages/Questionnaire"));
 const PatientFAQ = loadPage(() => import("./pages/PatientFAQ"));
@@ -153,7 +154,7 @@ const OnboardingPage = withAuthChrome(Onboarding, {
   hideFooter: true,
   welcomeMode: false,
 });
-//  const PolicyAcceptPage = withAuthChrome(PolicyAccept);
+const PolicyAcceptPage = withAuthChrome(PolicyAccept);
 const PolicyDetailPage = withAuthChrome(PolicyDetail);
 const AssessmentPage = withAuthChrome(AssessmentType, {
   hideFooter: true,
@@ -224,7 +225,7 @@ export default function App() {
                 <Route path="/otp" element={<OtpPage />} />
                 <Route path="/access-mode" element={<AccessModePage />} />
                 <Route path="/onboarding" element={<OnboardingPage />} />
-                {/* <Route path="/policy-accept" element={<PolicyAcceptPage />} /> */}
+                <Route path="/policy-accept" element={<PolicyAcceptPage />} />
                 <Route path="/policy-detail" element={<PolicyDetailPage />} />
                 <Route path="/terms" element={<TermsCondition />} />
                 <Route path="/network-error" element={<NetworkError />} />
