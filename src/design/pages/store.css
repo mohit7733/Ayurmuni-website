@@ -45,6 +45,16 @@
   color: var(--am-text);
 }
 
+@media (max-width: 630px) {
+  .st-hero h1 {
+    margin: 0;
+    max-width: 18ch;
+    font-size: var(--am-text-xl);
+    line-height: var(--am-leading-tight);
+    color: var(--am-text);
+  }
+}
+
 .st-hero__lede {
   margin: 0;
   max-width: 52ch;
@@ -334,6 +344,87 @@
   width: 100%;
 }
 
+/* Product landing page mobile rails */
+.st-products-mobile-rail {
+  display: none;
+}
+
+.st-medicines-mobile-rail {
+  display: none;
+}
+
+.st-products-rail {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 36px;
+  align-items: center;
+  gap: var(--am-space-2);
+  width: 100%;
+  min-width: 0;
+}
+
+.st-products-rail.is-static {
+  display: block;
+}
+
+.st-products-rail__track {
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: var(--am-space-2) 4px var(--am-space-4);
+  overflow-x: auto;
+  overflow-y: hidden;
+  gap: var(--am-space-4);
+  list-style: none;
+  overscroll-behavior-inline: contain;
+  scroll-behavior: smooth;
+  scroll-padding-inline: 4px;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.st-products-rail__track::-webkit-scrollbar {
+  display: none;
+}
+
+.st-products-rail__track.is-static {
+  flex-wrap: wrap;
+  overflow: visible;
+  scroll-snap-type: none;
+}
+
+.st-products-rail__item {
+  min-width: 0;
+  flex: 0 0 min(82%, 300px);
+  scroll-snap-align: start;
+}
+
+.st-products-rail__item > * {
+  height: 100%;
+}
+
+.st-products-rail__control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--am-line-strong);
+  border-radius: 50%;
+  background: var(--am-surface);
+  color: var(--am-primary);
+  box-shadow: 0 2px 8px rgba(10, 40, 32, 0.1);
+  cursor: pointer;
+}
+
+.st-products-rail__control:focus-visible {
+  outline: 2px solid var(--am-primary);
+  outline-offset: 2px;
+}
+
 /* Category browse layout */
 .st-browse {
   display: grid;
@@ -452,7 +543,7 @@
   }
 }
 
-@media (min-width: 768px) {
+@media (min-width: 640px) {
   .st-page {
     gap: var(--am-space-10);
     padding-top: var(--am-space-8);
@@ -468,6 +559,187 @@
     padding: 0;
     flex-wrap: wrap;
     overflow: visible;
+  }
+
+  .st-products-rail {
+    display: block;
+  }
+
+  .st-products-rail__item {
+    flex-basis: calc((100% - 2 * var(--am-space-4) - 8px) / 3);
+  }
+}
+
+@media (max-width: 639px) {
+  .st-page {
+    gap: var(--am-space-5);
+    padding-bottom: var(--am-space-3);
+    margin-bottom: -50px;
+  }
+
+  .st-section-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .st-brands-header {
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .st-brands-header .am-section-header__copy {
+    width: 100%;
+    align-items: center;
+    text-align: center;
+  }
+
+  .st-brands-header .am-section-header__title::after {
+    margin-inline: auto;
+  }
+
+  .st-section-header .am-section-header__copy {
+    align-items: center;
+    width: 100%;
+    text-align: center;
+  }
+
+  .st-section-header .am-section-header__action {
+    align-self: center;
+    margin-inline: auto;
+  }
+
+  .st-section-header .am-section-header__title::after {
+    margin-inline: auto;
+  }
+
+  .st-products-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .st-products-header .am-section-header__copy {
+    align-items: center;
+    width: 100%;
+    text-align: center;
+  }
+
+  .st-products-header .am-section-header__action {
+    align-self: center;
+    margin-inline: auto;
+  }
+
+  .st-products-header .am-section-header__title::after {
+    margin-inline: auto;
+  }
+
+  .st-medicines-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .st-medicines-header .am-section-header__copy {
+    align-items: center;
+    width: 100%;
+    text-align: center;
+  }
+
+  .st-medicines-header .am-section-header__action {
+    align-self: center;
+    margin-inline: auto;
+  }
+
+  .st-medicines-header .am-section-header__title::after {
+    margin-inline: auto;
+  }
+
+  .st-buy-again-rail__item {
+    flex-basis: 100%;
+  }
+
+  .st-buy-again-rail {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) repeat(2, 34px) minmax(0, 1fr);
+    gap: var(--am-space-2);
+  }
+
+  .st-buy-again-rail__control {
+    width: 34px;
+    height: 34px;
+  }
+
+  .st-buy-again-rail__control:first-child {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .st-buy-again-rail__control:last-child {
+    grid-column: 3;
+    grid-row: 2;
+  }
+
+  .st-buy-again-rail__track {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .st-products-grid-desktop {
+    display: none !important;
+  }
+
+  .st-medicines-grid-desktop {
+    display: none !important;
+  }
+
+  .st-products-mobile-rail {
+    display: block;
+  }
+
+  .st-medicines-mobile-rail {
+    display: block;
+  }
+
+  .st-products-rail {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) repeat(2, 34px) minmax(0, 1fr);
+  }
+
+  .st-products-rail__item {
+    flex-basis: 100%;
+  }
+
+  .st-products-rail__control {
+    width: 34px;
+    height: 34px;
+  }
+
+  .st-products-rail__control:first-child {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .st-products-rail__control:last-child {
+    grid-column: 3;
+    grid-row: 2;
+  }
+
+  .st-products-rail__track {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .st-foot {
+    gap: var(--am-space-1);
   }
 }
 

@@ -7,10 +7,11 @@ export default function AutoScrollRail({
   className,
   trackClassName,
   itemClassName,
+  showControls = false,
 }) {
   const railRef = useRef(null);
   const [paused, setPaused] = useState(false);
-  const shouldScroll = Children.count(children) > 4;
+  const shouldScroll = Children.count(children) > 4 || showControls;
 
   const moveRail = useCallback((direction, wrap = false) => {
     const rail = railRef.current;

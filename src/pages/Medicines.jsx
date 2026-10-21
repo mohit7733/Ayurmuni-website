@@ -190,6 +190,7 @@ export default function Medicines() {
             {ordersLoading || recent.length > 0 ? (
               <Reveal as="section" className="st-section" aria-labelledby="st-med-recent">
                 <SectionHeader
+                className="st-section-header"
                   id="st-med-recent"
                   title={T.recentOrders}
                   action={
@@ -232,6 +233,7 @@ export default function Medicines() {
             {concerns.length > 0 ? (
               <Reveal as="section" className="st-section" aria-labelledby="st-concerns">
                 <SectionHeader
+                  className="st-section-header"
                   id="st-concerns"
                   title={T.shopByConcern}
                   description={T.shopByConcernText}
@@ -275,7 +277,11 @@ export default function Medicines() {
 
             {brands.length > 0 ? (
               <Reveal as="section" className="st-section" aria-labelledby="st-brands">
-                <SectionHeader id="st-brands" title={T.trustedBrands} />
+                <SectionHeader
+                  id="st-brands"
+                  title={T.trustedBrands}
+                  className="st-brands-header"
+                />
                 <TileGrid label={T.trustedBrands}>
                   {brands.map((item) => (
                     <Tile
@@ -297,6 +303,7 @@ export default function Medicines() {
 
             <section className="st-section" aria-labelledby="st-all-med">
               <SectionHeader
+                className="st-medicines-header"
                 id="st-all-med"
                 title={T.allMedicines}
                 action={
@@ -319,13 +326,30 @@ export default function Medicines() {
               {products.length === 0 ? (
                 <EmptyState title={T.noMedicines} description={T.noMedicinesText} />
               ) : (
-                <ul className="am-product-grid">
-                  {products.map((item) => (
-                    <li key={item.variant_id || item.id}>
-                      <ProductCard item={item} />
-                    </li>
-                  ))}
-                </ul>
+                <>
+                  <ul className="am-product-grid st-medicines-grid-desktop">
+                    {products.map((item) => (
+                      <li key={item.variant_id || item.id}>
+                        <ProductCard item={item} />
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="st-medicines-mobile-rail">
+                    <AutoScrollRail
+                      label={T.allMedicines}
+                      className="st-products-rail"
+                      trackClassName="st-products-rail__track"
+                      itemClassName="st-products-rail__item"
+                      showControls
+                    >
+                      {products.map((item) => (
+                        <div key={item.variant_id || item.id}>
+                          <ProductCard item={item} />
+                        </div>
+                      ))}
+                    </AutoScrollRail>
+                  </div>
+                </>
               )}
             </section>
 

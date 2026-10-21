@@ -1,11 +1,17 @@
-import { NavLink } from 'react-router-dom';
-import { House, LayoutGrid, Pill, ShoppingBag, Stethoscope } from 'lucide-react';
-import { COPY } from '../content/copy';
-import { useCart } from '../hooks/useCart';
-import useLoggedIn from '../hooks/useLoggedIn';
-import { TAB_ITEMS } from '../site/nav';
-import SiteFooter from './SiteFooter';
-import SiteHeader from './SiteHeader';
+import { NavLink } from "react-router-dom";
+import {
+  House,
+  LayoutGrid,
+  Pill,
+  ShoppingBag,
+  Stethoscope,
+} from "lucide-react";
+import { COPY } from "../content/copy";
+import { useCart } from "../hooks/useCart";
+import useLoggedIn from "../hooks/useLoggedIn";
+import { TAB_ITEMS } from "../site/nav";
+import SiteFooter from "./SiteFooter";
+import SiteHeader from "./SiteHeader";
 
 const TAB_ICONS = {
   home: House,
@@ -15,11 +21,15 @@ const TAB_ICONS = {
   consult: Stethoscope,
 };
 
-export default function AppShell({ children, tab = 'home', hideFooter = false }) {
+export default function AppShell({
+  children,
+  tab = "home",
+  hideFooter = false,
+}) {
   const loggedIn = useLoggedIn();
   const { itemCount } = useCart();
   return (
-    <div className={`app-shell ${loggedIn ? '' : 'is-logged-out'}`}>
+    <div className={`app-shell ${loggedIn ? "" : "is-logged-out"}`}>
       <a className="am-skip-link" href="#main">
         {COPY.skipToContent}
       </a>
@@ -29,28 +39,34 @@ export default function AppShell({ children, tab = 'home', hideFooter = false })
       </main>
       {hideFooter ? null : <SiteFooter />}
       {loggedIn ? (
-      <nav className="tab-bar" aria-label="Main">
-        {TAB_ITEMS.map((item) => {
-          const Icon = TAB_ICONS[item.id];
-          const active = tab === item.id;
-          const showBadge = item.id === 'cart' && itemCount > 0;
-          return (
-            <NavLink
-              key={item.id}
-              to={item.to}
-              className={`tab-item ${active ? 'active' : ''}`}
-              aria-current={active ? 'page' : undefined}
-              aria-label={showBadge ? `${item.label} (${itemCount})` : undefined}
-            >
-              <span className="tab-icon" aria-hidden>
-                <Icon size={22} strokeWidth={active ? 2.2 : 1.8} />
-                {showBadge ? <i className="tab-badge">{itemCount > 99 ? '99+' : itemCount}</i> : null}
-              </span>
-              <span className="tab-label">{item.label}</span>
-            </NavLink>
-          );
-        })}
-      </nav>
+        <nav className="tab-bar" aria-label="Main">
+          {TAB_ITEMS.map((item) => {
+            const Icon = TAB_ICONS[item.id];
+            const active = tab === item.id;
+            const showBadge = item.id === "cart" && itemCount > 0;
+            return (
+              <NavLink
+                key={item.id}
+                to={item.to}
+                className={`tab-item ${active ? "active" : ""}`}
+                aria-current={active ? "page" : undefined}
+                aria-label={
+                  showBadge ? `${item.label} (${itemCount})` : undefined
+                }
+              >
+                <span className="tab-icon" aria-hidden>
+                  <Icon size={22} strokeWidth={active ? 2.2 : 1.8} />
+                  {showBadge ? (
+                    <i className="tab-badge">
+                      {itemCount > 99 ? "99+" : itemCount}
+                    </i>
+                  ) : null}
+                </span>
+                <span className="tab-label">{item.label}</span>
+              </NavLink>
+            );
+          })}
+        </nav>
       ) : null}
     </div>
   );

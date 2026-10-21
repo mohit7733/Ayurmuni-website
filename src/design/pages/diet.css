@@ -208,6 +208,10 @@
   gap: var(--am-space-4);
 }
 
+.diet-page .diet-carousel-controls {
+  display: none;
+}
+
 .diet-page .diet-card {
   min-width: 0;
   min-height: 100%;
@@ -375,32 +379,190 @@
 
   .diet-page .catalog-head > .diet-chips {
     width: 100%;
+    flex-wrap: wrap;
+    gap: var(--am-space-2);
   }
 
   .diet-page > .diet-chips {
-    flex-wrap: nowrap;
-    margin-inline: calc(var(--am-gutter) * -1);
-    padding-inline: var(--am-gutter);
-    scrollbar-width: none;
+    min-width: 0;
+    flex-wrap: wrap;
+    gap: var(--am-space-1);
+    margin: 0;
+    padding: var(--am-space-2);
   }
 
-  .diet-page > .diet-chips::-webkit-scrollbar {
-    display: none;
+  .diet-page .diet-prakriti-filters::before,
+  .diet-page .diet-status-filters::before {
+    min-height: 32px;
+    width: 100%;
+    margin: 0 0 var(--am-space-1);
+    padding: 0 0 var(--am-space-1);
+    border-right: 0;
+    border-bottom: 1px solid var(--am-line);
+  }
+
+  .diet-page > .diet-chips .chip {
+    min-height: 36px;
+    padding-inline: var(--am-space-3);
+  }
+
+  .diet-page .search-form {
+    width: 100%;
+    gap: var(--am-space-1);
+  }
+
+  .diet-page .search-form input {
+    padding-inline: var(--am-space-2);
+    font-size: var(--am-text-sm);
+  }
+
+  .diet-page .search-form .cta {
+    min-width: 0;
+    padding-inline: var(--am-space-3);
+  }
+
+  .diet-page .diet-results-heading h2 {
+    font-size: var(--am-text-lg);
   }
 
   .diet-page .diet-grid {
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
-    gap: var(--am-space-3);
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    gap: 0;
+    margin: 0;
+    padding: 0 0 var(--am-space-2);
+    scroll-padding-inline: 0;
+  }
+
+  .diet-page .diet-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .diet-page .diet-grid > .diet-card {
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 100%;
+    flex: 0 0 100%;
+    scroll-snap-align: start;
   }
 
   .diet-page .diet-card-media {
-    height: 160px;
+    height: clamp(190px, 58vw, 280px);
+  }
+
+  .diet-page .diet-card > strong,
+  .diet-page .diet-card > small,
+  .diet-page .diet-card > em,
+  .diet-page .diet-card > p {
+    padding-inline: var(--am-space-3);
+  }
+
+  .diet-page .diet-card > strong {
+    min-height: 0;
+    font-size: var(--am-text-sm);
+  }
+
+  .diet-page .diet-card > em {
+    margin-inline: var(--am-space-3);
+  }
+
+  .diet-page .diet-carousel-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--am-space-4);
+    margin-top: calc(var(--am-space-2) * -1);
+  }
+
+  .diet-page .diet-carousel-controls button {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    place-items: center;
+    border: 1px solid var(--am-primary-tint);
+    border-radius: 50%;
+    background: var(--am-surface);
+    color: var(--am-primary-strong);
+    font: inherit;
+    font-size: 28px;
+    line-height: 1;
+    box-shadow: var(--am-shadow-xs);
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .diet-page .diet-carousel-controls button > span {
+    display: block;
+    transform: translateY(-1px);
+    font-family: Arial, sans-serif;
+    font-size: 28px;
+    line-height: 1;
+  }
+
+  .diet-page .diet-carousel-controls button:disabled {
+    opacity: 0.42;
+  }
+
+  .diet-page .diet-carousel-controls button:focus-visible {
+    outline: 2px solid var(--am-primary);
+    outline-offset: 3px;
+  }
+
+  .diet-page .diet-carousel-controls > span {
+    min-width: 4ch;
+    color: var(--am-text-muted);
+    font-size: var(--am-text-xs);
+    font-weight: var(--am-weight-semibold);
+    text-align: center;
   }
 }
 
 @media (max-width: 420px) {
+  .diet-page.catalog-page {
+    padding-inline: max(12px, var(--am-gutter));
+  }
+
+  .diet-page .catalog-head {
+    padding: var(--am-space-3);
+  }
+
+  .diet-page .catalog-head > .diet-chips .chip {
+    min-height: 40px;
+    flex: 1 1 auto;
+    padding-inline: var(--am-space-3);
+  }
+
   .diet-page .diet-grid {
-    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .diet-page .diet-grid > .diet-card {
+    flex-basis: 100%;
+  }
+
+  .diet-page .diet-card {
+    border-radius: var(--am-radius-lg);
+  }
+
+  .diet-page .diet-card-media {
+    height: clamp(190px, 58vw, 250px);
+  }
+
+  .diet-page .diet-card > strong,
+  .diet-page .diet-card > small,
+  .diet-page .diet-card > em,
+  .diet-page .diet-card > p {
+    padding-inline: var(--am-space-2);
+  }
+
+  .diet-page .diet-card > em {
+    margin-inline: var(--am-space-2);
   }
 }
 

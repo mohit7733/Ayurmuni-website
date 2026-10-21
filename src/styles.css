@@ -2449,11 +2449,23 @@
 
 .hero-main {
   display: grid;
-  grid-template-columns: 1fr auto;
   align-items: center;
-
   gap: 32px;
   margin-top: 24px;
+}
+
+.hero-main img {
+  margin: auto;
+}
+
+@media (min-width: 630px) {
+  .hero-main {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 32px;
+    margin-top: 24px;
+  }
 }
 
 .hero-main > div:first-child {
@@ -5317,6 +5329,14 @@ button.checkout-item {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 20px;
   align-items: stretch;
+}
+
+@media (max-width: 630px) {
+  .yoga-list {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: 10px;
+  }
 }
 
 /* Yoga session card */
@@ -9473,6 +9493,18 @@ button.rx-file-preview {
   box-shadow: 0 6px 14px rgba(13, 97, 78, 0.25);
 }
 
+@media (max-width: 630px) {
+  .prakriti-head .onboard-back {
+    width: 30px;
+    height: 30px;
+    border: 0;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--am-primary), #14876a);
+    color: #fff;
+    box-shadow: 0 6px 14px rgba(13, 97, 78, 0.25);
+  }
+}
+
 .prakriti-head .onboard-back:hover {
   background: linear-gradient(135deg, #0b715b, #1a9a7a);
   transform: translateX(-2px);
@@ -9500,6 +9532,16 @@ button.rx-file-preview {
   gap: 16px;
   width: var(--prakriti-w);
   margin: 0 auto;
+}
+
+@media (max-width: 630px) {
+  .prakriti-page .prakriti-content {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: 16px;
+    width: var(--prakriti-w);
+    margin: 0 auto;
+  }
 }
 
 /* children of .prakriti-body join the same grid */
@@ -9576,4 +9618,25 @@ button.rx-file-preview {
 
 .essence-card h3 {
   font-size: 24px;
+}
+
+@media (max-width: 630px) {
+  .prakriti-head h1 {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  .prakriti-head h1::after {
+    content: "Your Ayurvedic body constitution";
+    display: block;
+    margin-top: 3px;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--am-primary);
+    opacity: 0.8;
+  }
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import AppShell from '../components/AppShell';
 import dietCoverImg from '/images/login/14.jpg';
@@ -40,6 +40,9 @@ export default function Diet() {
   const [debounced, setDebounced] = useState('');
   const [prakriti, setPrakriti] = useState('all');
   const [statusTab, setStatusTab] = useState('all');
+  const [carouselIndex, setCarouselIndex] = useState(0);
+  const carouselRef = useRef(null);
+  const carouselIndexRef = useRef(0);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebounced(search.trim()), 400);
@@ -66,6 +69,38 @@ export default function Diet() {
     if (statusTab === 'active') return plans.filter((p) => getDietListStatus(p) === 'active');
     return plans.filter((p) => getDietListStatus(p) !== 'active');
   }, [plans, statusTab]);
+
+  useEffect(() => {
+    setCarouselIndex(0);
+    carouselIndexRef.current = 0;
+    if (carouselRef.current) carouselRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+  }, [visible]);
+
+  useEffect(() => {
+    if (visible.length < 2) return undefined;
+    const timer = window.setInterval(() => {
+      const next = (carouselIndexRef.current + 1) % visible.length;
+      carouselIndexRef.current = next;
+      setCarouselIndex(next);
+      carouselRef.current?.children[next]?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'start',
+      });
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, [visible.length]);
+
+  const moveCarousel = (direction) => {
+    const next = Math.min(visible.length - 1, Math.max(0, carouselIndex + direction));
+    carouselIndexRef.current = next;
+    setCarouselIndex(next);
+    carouselRef.current?.children[next]?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest',
+      inline: 'start',
+    });
+  };
 
   return (
     <AppShell tab="home">
@@ -166,7 +201,16 @@ export default function Diet() {
                 {visible.length} {visible.length === 1 ? 'plan' : 'plans'}
               </span>
             </div>
-            <div className="diet-grid">
+            <div className="diet-grid" ref={carouselRef} onScroll={(event) => {
+              if (window.matchMedia('(max-width: 640px)').matches) {
+                const firstCard = event.currentTarget.firstElementChild;
+                const cardWidth = firstCard?.getBoundingClientRect().width || 1;
+                const gap = Number.parseFloat(getComputedStyle(event.currentTarget).columnGap) || 0;
+                const index = Math.min(visible.length - 1, Math.round(event.currentTarget.scrollLeft / (cardWidth + gap)));
+                carouselIndexRef.current = index;
+                setCarouselIndex(index);
+              }
+            }}>
               {visible.map((item) => {
                 const cover = getDietPlanCoverUrl(item) || dietCoverImg;
                 const rating = getDietPlanRatingLabel(item);
@@ -198,6 +242,25 @@ export default function Diet() {
                 );
               })}
             </div>
+            {visible.length > 1 ? <div className="diet-carousel-controls" aria-label="Diet plan carousel controls">
+              <button
+                type="button"
+                aria-label="Previous diet plan"
+                disabled={carouselIndex === 0}
+                onClick={() => moveCarousel(-1)}
+              >
+                <span aria-hidden="true">‹</span>
+              </button>
+              <span aria-live="polite">{carouselIndex + 1} / {visible.length}</span>
+              <button
+                type="button"
+                aria-label="Next diet plan"
+                disabled={carouselIndex >= visible.length - 1}
+                onClick={() => moveCarousel(1)}
+              >
+                <span aria-hidden="true">›</span>
+              </button>
+            </div> : null}
           </>
         )}
 

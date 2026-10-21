@@ -1103,3 +1103,23 @@
     grid-template-columns: repeat(7, minmax(0, 1fr));
   }
 }
+
+@media (max-width: 630px) {
+  .catalog-head h1 {
+    font-size: var(--type-title);
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    margin-top: 10px;
+  }
+
+  .catalog-head p {
+    font-size: 15px;
+    line-height: 1.45;
+    margin-top: 6px;
+    margin-bottom: 6px;
+  }
+
+  .catalog-page {
+    margin-bottom: -90px;
+  }
+}

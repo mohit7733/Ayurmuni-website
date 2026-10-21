@@ -240,6 +240,7 @@ export default function Products() {
               aria-labelledby="st-cats-title"
             >
               <SectionHeader
+                  className="st-section-header"
                 id="st-cats-title"
                 title={T.shopByCategory}
                 description={T.shopByCategoryText}
@@ -300,6 +301,7 @@ export default function Products() {
                 aria-labelledby="st-recent-title"
               >
                 <SectionHeader
+                  className="st-section-header"
                   id="st-recent-title"
                   title={T.recentOrders}
                   description={T.recentOrdersText}
@@ -353,6 +355,21 @@ export default function Products() {
             ) : null}
 
             <section className="st-section" aria-labelledby="st-all-title">
+              <SectionHeader
+                className="st-products-header"
+                id="st-all-title"
+                title={T.allProducts}
+                action={
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => openCategoryBrowse({ name: "All Products" })}
+                    trailingIcon={<ArrowRight size={16} aria-hidden />}
+                  >
+                    {T.viewAll}
+                  </Button>
+                }
+              />
               {/* Filter & Sort Controls */}
               <div className="st-controls">
                 <div className="st-controls__info">
@@ -396,21 +413,6 @@ export default function Products() {
                   </Button>
                 </div>
               </div>
-
-              <SectionHeader
-                id="st-all-title"
-                title={T.allProducts}
-                action={
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => openCategoryBrowse({ name: "All Products" })}
-                    trailingIcon={<ArrowRight size={16} aria-hidden />}
-                  >
-                    {T.viewAll}
-                  </Button>
-                }
-              />
               {filteredAndSortedProducts.length === 0 ? (
                 <EmptyState
                   title={
@@ -432,13 +434,30 @@ export default function Products() {
                   }
                 />
               ) : (
-                <ul className="am-product-grid">
-                  {filteredAndSortedProducts.map((item) => (
-                    <li key={item.variant_id || item.id}>
-                      <ProductCard item={item} />
-                    </li>
-                  ))}
-                </ul>
+                <>
+                  <ul className="am-product-grid st-products-grid-desktop">
+                    {filteredAndSortedProducts.map((item) => (
+                      <li key={item.variant_id || item.id}>
+                        <ProductCard item={item} />
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="st-products-mobile-rail">
+                    <AutoScrollRail
+                      label={T.allProducts}
+                      className="st-products-rail"
+                      trackClassName="st-products-rail__track"
+                      itemClassName="st-products-rail__item"
+                      showControls
+                    >
+                      {filteredAndSortedProducts.map((item) => (
+                        <div key={item.variant_id || item.id}>
+                          <ProductCard item={item} />
+                        </div>
+                      ))}
+                    </AutoScrollRail>
+                  </div>
+                </>
               )}
               {refreshing ? <p className="am-sr-only">{T.refreshing}</p> : null}
             </section>

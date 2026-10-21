@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import AppShell from "../components/AppShell";
 import BannerCarousel from "../components/BannerCarousel";
+import AutoScrollRail from "../components/AutoScrollRail";
 import DoctorCard from "../components/DoctorCard";
 import DummyOfferCard from "../components/DummyOfferCard";
 import ProductCard from "../components/ProductCard";
@@ -266,6 +267,7 @@ export default function Consult() {
             aria-labelledby="cs-recent-title"
           >
             <SectionHeader
+              className="cs-mobile-section-header"
               id="cs-recent-title"
               title={T.recentTitle}
               action={
@@ -306,6 +308,7 @@ export default function Consult() {
             aria-labelledby="cs-concerns-title"
           >
             <SectionHeader
+              className="cs-mobile-section-header"
               id="cs-concerns-title"
               eyebrow={T.concernsEyebrow}
               title={T.concernsTitle}
@@ -340,6 +343,7 @@ export default function Consult() {
 
         <section className="cs-section" aria-labelledby="cs-doctors-title">
           <SectionHeader
+            className="cs-mobile-section-header"
             id="cs-doctors-title"
             eyebrow={T.topDoctorsEyebrow}
             title={T.topDoctorsTitle}
@@ -399,6 +403,7 @@ export default function Consult() {
             aria-labelledby="cs-products-title"
           >
             <SectionHeader
+              className="cs-mobile-section-header"
               id="cs-products-title"
               title={T.productsTitle}
               action={
@@ -417,13 +422,30 @@ export default function Consult() {
             {productsLoading && !products.length ? (
               <SkeletonGrid count={4} className="am-product-grid" />
             ) : (
-              <ul className="am-product-grid">
-                {products.slice(0, 5).map((item) => (
-                  <li key={item.variant_id || item.id}>
-                    <ProductCard item={item} />
-                  </li>
-                ))}
-              </ul>
+              <>
+                <ul className="am-product-grid cs-products-grid-desktop">
+                  {products.slice(0, 5).map((item) => (
+                    <li key={item.variant_id || item.id}>
+                      <ProductCard item={item} />
+                    </li>
+                  ))}
+                </ul>
+                <div className="cs-products-mobile-wrap">
+                  <AutoScrollRail
+                    label={T.productsTitle}
+                    className="cs-mobile-products-rail"
+                    trackClassName="cs-mobile-products-rail__track"
+                    itemClassName="cs-mobile-products-rail__item"
+                    showControls
+                  >
+                    {products.slice(0, 5).map((item) => (
+                      <div key={item.variant_id || item.id}>
+                        <ProductCard item={item} />
+                      </div>
+                    ))}
+                  </AutoScrollRail>
+                </div>
+              </>
             )}
           </Reveal>
         ) : null}
@@ -434,6 +456,7 @@ export default function Consult() {
           aria-labelledby="cs-lab-title"
         >
           <SectionHeader
+            className="cs-mobile-section-header"
             id="cs-lab-title"
             title={T.labTitle}
             action={
@@ -447,17 +470,38 @@ export default function Consult() {
               </Button>
             }
           />
-          <Rail label={T.labTitle}>
-            {DUMMY_LAB_TESTS.map((item) => (
-              <RailItem key={item.id} size="product">
-                <DummyOfferCard
-                  item={item}
-                  kind="lab"
-                  onClick={() => navigate("/labs")}
-                />
-              </RailItem>
-            ))}
-          </Rail>
+          <div className="cs-lab-desktop-rail">
+            <Rail label={T.labTitle}>
+              {DUMMY_LAB_TESTS.map((item) => (
+                <RailItem key={item.id} size="product">
+                  <DummyOfferCard
+                    item={item}
+                    kind="lab"
+                    onClick={() => navigate("/labs")}
+                  />
+                </RailItem>
+              ))}
+            </Rail>
+          </div>
+          <div className="cs-lab-mobile-wrap">
+            <AutoScrollRail
+              label={T.labTitle}
+              className="cs-mobile-lab-rail"
+              trackClassName="cs-mobile-lab-rail__track"
+              itemClassName="cs-mobile-lab-rail__item"
+              showControls
+            >
+              {DUMMY_LAB_TESTS.map((item) => (
+                <div key={item.id}>
+                  <DummyOfferCard
+                    item={item}
+                    kind="lab"
+                    onClick={() => navigate("/labs")}
+                  />
+                </div>
+              ))}
+            </AutoScrollRail>
+          </div>
         </Reveal>
 
         <footer className="cs-foot">
