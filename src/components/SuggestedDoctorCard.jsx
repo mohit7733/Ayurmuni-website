@@ -60,8 +60,6 @@ export default function SuggestedDoctorCard({ item, fallbackSpeciality = 'Ayurve
     }
   };
 
-  const reviewLabel = reviewCount === 1 ? '1 review' : `${reviewCount} reviews`;
-
   return (
     <article className="am-flip-doc">
       <div className="am-flip-doc__media">
@@ -97,45 +95,45 @@ export default function SuggestedDoctorCard({ item, fallbackSpeciality = 'Ayurve
             onClick={toggleFav}
           />
         </div>
-
-        <div className="am-flip-doc__copy">
-          <h3 className="am-flip-doc__name">
-            <button type="button" className="am-stretched" onClick={openProfile}>
-              {name}
-            </button>
-          </h3>
-          {credential ? <p className="am-flip-doc__spec">{credential}</p> : null}
-          {experience || location || rating ? (
-            <ul className="am-flip-doc__facts">
-              {experience ? (
-                <li>
-                  <Briefcase size={13} aria-hidden />
-                  {experience}
-                </li>
-              ) : null}
-              {location ? (
-                <li>
-                  <MapPin size={13} aria-hidden />
-                  {location}
-                </li>
-              ) : null}
-              {rating ? (
-                <li>
-                  <Star size={13} aria-hidden fill="currentColor" />
-                  {rating} rating{reviewCount ? ` · ${reviewLabel}` : ''}
-                </li>
-              ) : null}
-            </ul>
-          ) : null}
-        </div>
       </div>
 
-      <div className="am-flip-doc__cta">
-        {fee ? <span className="am-flip-doc__fee">{fee}</span> : null}
-        <span className="am-flip-doc__cta-link">
-          View profile
-          <ArrowRight size={14} aria-hidden />
-        </span>
+      <div className="am-flip-doc__body">
+        <h3 className="am-flip-doc__name">
+          <button type="button" className="am-stretched" onClick={openProfile}>
+            {name}
+          </button>
+        </h3>
+        {credential ? <p className="am-flip-doc__spec">{credential}</p> : null}
+        {experience || location ? (
+          <ul className="am-flip-doc__facts">
+            {experience ? (
+              <li>
+                <Briefcase size={13} aria-hidden />
+                {experience}
+              </li>
+            ) : null}
+            {location ? (
+              <li>
+                <MapPin size={13} aria-hidden />
+                {location}
+              </li>
+            ) : null}
+          </ul>
+        ) : null}
+        <div className="am-flip-doc__cta">
+          {fee ? (
+            <span className="am-flip-doc__fee">
+              <small>Consult</small>
+              {fee}
+            </span>
+          ) : (
+            <span />
+          )}
+          <span className="am-flip-doc__cta-link">
+            View profile
+            <ArrowRight size={14} aria-hidden />
+          </span>
+        </div>
       </div>
     </article>
   );

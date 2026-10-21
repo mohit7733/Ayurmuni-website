@@ -30,6 +30,7 @@ export const STORE_COPY = {
   shopByConcernText: 'Start with what’s bothering you.',
   trustedBrands: 'Trusted brands',
   allMedicines: 'All medicines',
+  allMedicinesText: 'The full Ayurvedic medicine range we stock.',
   noMedicines: 'No medicines available',
   noMedicinesText: 'Try another concern, or search by medicine name.',
 

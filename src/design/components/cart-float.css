@@ -1,0 +1,206 @@
+.cart-float {
+  --cf-h: 52px;
+  --cf-gap: 10px;
+  --cf-bottom: calc(var(--am-tabbar-h) + var(--am-space-2) + var(--cf-gap) + env(safe-area-inset-bottom));
+  position: fixed;
+  left: 50%;
+  right: auto;
+  bottom: var(--cf-bottom);
+  z-index: calc(var(--am-z-header) + 2);
+  display: flex;
+  justify-content: center;
+  width: max-content;
+  max-width: min(280px, calc(100vw - 24px));
+  transform: translateX(-50%);
+  pointer-events: none;
+  animation: cf-in 360ms var(--am-ease-out) both;
+}
+
+.cart-float__bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: max-content;
+  max-width: 100%;
+  height: var(--cf-h);
+  padding: 0 5px 0 6px;
+  border-radius: var(--am-radius-pill);
+  background: linear-gradient(160deg, var(--am-green-600, #17634f), var(--am-brand-green, #105343));
+  color: #fbf6ea;
+  text-decoration: none;
+  pointer-events: auto;
+  box-shadow:
+    0 0 0 2px rgba(217, 184, 108, 0.85),
+    0 2px 6px rgba(19, 35, 30, 0.18),
+    0 18px 34px -12px rgba(16, 83, 67, 0.6);
+  transition:
+    transform var(--am-dur-base) var(--am-ease-out),
+    box-shadow var(--am-dur-base) var(--am-ease-standard);
+}
+
+.cart-float__bar:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 0 2px rgba(217, 184, 108, 1),
+    0 4px 10px rgba(19, 35, 30, 0.2),
+    0 22px 38px -12px rgba(16, 83, 67, 0.65);
+}
+
+.cart-float__bar:active {
+  transform: scale(0.98);
+}
+
+.cart-float__bar:focus-visible {
+  outline: none;
+  box-shadow: var(--am-focus-ring), 0 18px 34px -12px rgba(16, 83, 67, 0.6);
+}
+
+.cart-float__media {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+}
+
+.cart-float__media img {
+  width: 34px;
+  height: 34px;
+  border: 2px solid #fbf6ea;
+  border-radius: 50%;
+  background: #fffdf8;
+  object-fit: cover;
+}
+
+.cart-float__media img + img {
+  margin-left: -14px;
+}
+
+.cart-float__media > svg {
+  width: 36px;
+  height: 36px;
+  padding: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  color: #e7c56a;
+}
+
+.cart-float__copy {
+  display: flex;
+  flex: 0 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  padding-right: 2px;
+  line-height: 1.15;
+}
+
+.cart-float__copy strong {
+  font-family: var(--am-font-display);
+  font-size: 13px;
+  font-weight: var(--am-weight-bold);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  animation: cf-bump 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.cart-float__copy small {
+  font-size: 12px;
+  font-weight: var(--am-weight-semibold);
+  color: rgba(251, 246, 234, 0.78);
+  font-variant-numeric: tabular-nums;
+}
+
+.cart-float__cta {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 1px;
+  height: 40px;
+  padding: 0 10px 0 12px;
+  border-radius: var(--am-radius-pill);
+  background: #e7c56a;
+  color: #1c2b24;
+  font-size: 13px;
+  font-weight: var(--am-weight-bold);
+  white-space: nowrap;
+}
+
+@keyframes cf-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes cf-bump {
+  0% {
+    transform: scale(0.85);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+/* Make room for the bar: page padding and the chat launcher move up. */
+@media (max-width: 767px) {
+  body:has(.cart-float) .app-shell:not(.auth-shell):not(.is-logged-out) .app-shell-body {
+    padding-bottom: calc(var(--am-tabbar-h) + var(--am-space-8) + 70px + env(safe-area-inset-bottom));
+  }
+
+  body:has(.cart-float) .app-shell:not(.auth-shell):not(.is-logged-out) .site-footer {
+    padding-bottom: calc(var(--am-tabbar-h) + var(--am-space-5) + 70px + env(safe-area-inset-bottom));
+  }
+
+  body:has(.cart-float) .ci-launch {
+    --ci-launch-bottom: calc(var(--am-tabbar-h) + var(--am-space-2) + 12px + 70px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (min-width: 768px) {
+  .cart-float {
+    --cf-bottom: 24px;
+  }
+
+  body:has(.cart-float) .site-footer {
+    padding-bottom: 88px;
+  }
+
+  body:has(.cart-float) .am-diet-toast {
+    bottom: 88px;
+  }
+}
+
+/* Product pages keep their sticky buy bar at the bottom until desktop. */
+@media (max-width: 1023px) {
+  body:has(.pd-sticky) .cart-float {
+    --cf-bottom: calc(var(--pd-sticky-h, 132px) + var(--cf-gap) + env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cart-float,
+  .cart-float__copy strong {
+    animation: none;
+  }
+
+  .cart-float {
+    transform: translateX(-50%);
+  }
+
+  .cart-float__bar,
+  .cart-float__bar:hover {
+    transition: none;
+    transform: none;
+  }
+}
+
+@media print {
+  .cart-float {
+    display: none;
+  }
+}

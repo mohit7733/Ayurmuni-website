@@ -113,6 +113,7 @@ import { VideoCallProvider } from "./context/VideoCallContext";
 import { LocationProvider } from "./context/LocationContext";
 import FloatingVideoOverlay from "./components/FloatingVideoOverlay";
 import ChatLauncher from "./components/chat/ChatLauncher";
+import CartFloat from "./components/CartFloat";
 import AuthShell from "./components/AuthShell";
 import NetworkGuard from "./components/NetworkGuard";
 import RequireAuth from "./components/RequireAuth";
@@ -442,6 +443,7 @@ export default function App() {
               </Suspense>
               </RouteErrorBoundary>
             </NetworkGuard>
+            <CartFloat />
             <ChatLauncher />
           </CartProvider>
         </LocationProvider>

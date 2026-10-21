@@ -115,6 +115,16 @@
   }
 }
 
+.hm-concerns-panel .am-tile.is-on .am-tile__img {
+  outline: 2px solid var(--am-brand-green, var(--am-accent));
+  outline-offset: 2px;
+}
+
+.hm-concerns-panel .am-tile.is-on .am-tile__label {
+  color: var(--am-brand-green, var(--am-accent));
+  font-weight: 700;
+}
+
 .svc-catalog {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
