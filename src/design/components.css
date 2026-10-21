@@ -2780,6 +2780,12 @@
   font-variant-numeric: tabular-nums;
 }
 
+@media (max-width: 630px) {
+  .am-banner {
+    height: 150px;
+  }
+}
+
 /* ---------- Reduced motion ---------- */
 @media (prefers-reduced-motion: reduce) {
   .am-btn__spinner {
