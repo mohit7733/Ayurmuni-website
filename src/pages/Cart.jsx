@@ -417,6 +417,7 @@ export default function Cart() {
             label={T.tabsLabel}
             value={tab}
             onChange={setTab}
+            className="ct-tabs"
             items={[
               { id: "cart", label: T.tabCart, count: cartCount || undefined },
               {

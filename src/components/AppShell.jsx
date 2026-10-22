@@ -30,7 +30,7 @@ export default function AppShell({
   const { itemCount } = useCart();
   return (
     <div className={`app-shell ${loggedIn ? "" : "is-logged-out"}`}>
-      <a className="am-skip-link" href="#main">
+      <a className="am-skip-link" href="/">
         {COPY.skipToContent}
       </a>
       <SiteHeader />
