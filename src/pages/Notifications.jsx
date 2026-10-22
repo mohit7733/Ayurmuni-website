@@ -195,11 +195,9 @@ export default function Notifications() {
 
         <div className="notif-toolbar">
           <div className="notif-toolbar__filters">
-            <div
-              className="notif-filter-group"
-              role="group"
-              aria-label="Filter by read status"
-            >
+            <div className="notif-filter-set">
+              <span className="notif-filter-set__label">STATUS</span>
+              <div className="notif-filter-group" role="group" aria-label="Filter by read status">
               {FILTERS.map((item) => (
                 <button
                   key={item.key}
@@ -211,12 +209,11 @@ export default function Notifications() {
                   {item.label}
                 </button>
               ))}
+              </div>
             </div>
-            <div
-              className="notif-filter-group"
-              role="group"
-              aria-label="Filter by notification type"
-            >
+            <div className="notif-filter-set notif-filter-set--types">
+              <span className="notif-filter-set__label">CATEGORY</span>
+              <div className="notif-filter-group" role="group" aria-label="Filter by notification type">
               {TYPE_FILTERS.map((item) => (
                 <button
                   key={item.key}
@@ -228,6 +225,7 @@ export default function Notifications() {
                   {item.label}
                 </button>
               ))}
+              </div>
             </div>
           </div>
 

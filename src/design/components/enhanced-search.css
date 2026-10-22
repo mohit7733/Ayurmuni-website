@@ -26,6 +26,8 @@
   flex-shrink: 0;
   color: var(--am-text-muted);
   pointer-events: none;
+  width: 20px;
+  height: 20px;
 }
 
 .enhanced-search-input {
@@ -38,6 +40,28 @@
   font-family: var(--am-font-body);
   color: var(--am-text);
   outline: none;
+}
+
+@media (max-width: 639px) {
+  .enhanced-search-input {
+    flex: 1;
+    min-width: 0;
+    padding: var(--am-space-2) var(--am-space-1);
+    border: none;
+    background: transparent;
+    font-size: var(--am-text-sm);
+    font-family: var(--am-font-body);
+    color: var(--am-text);
+    outline: none;
+  }
+
+  .enhanced-search-icon {
+    flex-shrink: 0;
+    color: var(--am-text-muted);
+    pointer-events: none;
+    width: 15px;
+    height: 15px;
+  }
 }
 
 .enhanced-search-input:focus {

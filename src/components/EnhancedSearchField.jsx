@@ -1,20 +1,20 @@
-import { useState, useEffect, useRef } from 'react';
-import { Search, X, Clock, TrendingUp } from 'lucide-react';
-import { useGlobalSearch, useSearchDebounce } from '../hooks/useGlobalSearch';
-import '../design/components/enhanced-search.css';
+import { useState, useEffect, useRef } from "react";
+import { Search, X, Clock, TrendingUp } from "lucide-react";
+import { useGlobalSearch, useSearchDebounce } from "../hooks/useGlobalSearch";
+import "../design/components/enhanced-search.css";
 
 export default function EnhancedSearchField({
   value,
   onChange,
   onSubmit,
   onSelect,
-  placeholder = 'Search...',
+  placeholder = "Search...",
   showHistory = true,
   showSuggestions = true,
   autoFocus = false,
 }) {
   const [isFocused, setIsFocused] = useState(false);
-  const [localValue, setLocalValue] = useState(value || '');
+  const [localValue, setLocalValue] = useState(value || "");
   const inputRef = useRef(null);
   const dropdownRef = useRef(null);
 
@@ -30,7 +30,7 @@ export default function EnhancedSearchField({
   const debouncedGetSuggestions = useSearchDebounce(getSuggestions, 300);
 
   useEffect(() => {
-    setLocalValue(value || '');
+    setLocalValue(value || "");
   }, [value]);
 
   useEffect(() => {
@@ -52,8 +52,8 @@ export default function EnhancedSearchField({
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleInputChange = (e) => {
@@ -79,8 +79,8 @@ export default function EnhancedSearchField({
   };
 
   const handleClear = () => {
-    setLocalValue('');
-    onChange?.('');
+    setLocalValue("");
+    onChange?.("");
     inputRef.current?.focus();
   };
 
@@ -94,10 +94,10 @@ export default function EnhancedSearchField({
     clearHistory();
   };
 
-  const showDropdown = isFocused && (
-    (showHistory && searchHistory.length > 0 && !localValue) ||
-    (showSuggestions && suggestions.length > 0 && localValue)
-  );
+  const showDropdown =
+    isFocused &&
+    ((showHistory && searchHistory.length > 0 && !localValue) ||
+      (showSuggestions && suggestions.length > 0 && localValue));
 
   return (
     <div className="enhanced-search-wrapper">
@@ -155,7 +155,9 @@ export default function EnhancedSearchField({
                       className="enhanced-search-item"
                     >
                       <Clock size={16} className="enhanced-search-item-icon" />
-                      <span className="enhanced-search-item-text">{item.query}</span>
+                      <span className="enhanced-search-item-text">
+                        {item.query}
+                      </span>
                       <button
                         type="button"
                         onClick={(e) => handleRemoveHistory(e, item.query)}
@@ -189,13 +191,15 @@ export default function EnhancedSearchField({
                       <Search size={16} className="enhanced-search-item-icon" />
                       <span className="enhanced-search-item-text">
                         {/* Highlight matching part */}
-                        {suggestion.split(new RegExp(`(${localValue})`, 'gi')).map((part, i) =>
-                          part.toLowerCase() === localValue.toLowerCase() ? (
-                            <strong key={i}>{part}</strong>
-                          ) : (
-                            <span key={i}>{part}</span>
-                          )
-                        )}
+                        {suggestion
+                          .split(new RegExp(`(${localValue})`, "gi"))
+                          .map((part, i) =>
+                            part.toLowerCase() === localValue.toLowerCase() ? (
+                              <strong key={i}>{part}</strong>
+                            ) : (
+                              <span key={i}>{part}</span>
+                            ),
+                          )}
                       </span>
                     </button>
                   </li>
@@ -205,11 +209,14 @@ export default function EnhancedSearchField({
           )}
 
           {/* No Results */}
-          {localValue && showSuggestions && suggestions.length === 0 && !loading && (
-            <div className="enhanced-search-empty">
-              <p>No suggestions found</p>
-            </div>
-          )}
+          {localValue &&
+            showSuggestions &&
+            suggestions.length === 0 &&
+            !loading && (
+              <div className="enhanced-search-empty">
+                <p>No suggestions found</p>
+              </div>
+            )}
         </div>
       )}
     </div>

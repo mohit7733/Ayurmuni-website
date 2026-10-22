@@ -419,9 +419,29 @@
 
 /* ── Mobile: stack vertically ── */
 @media (max-width: 767px) {
+  .auth-shell--welcome {
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .auth-shell--welcome .app-shell-body {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
   .wlc-root {
     grid-template-columns: 1fr;
-    grid-template-rows: 42vh 1fr;
+    grid-template-rows: minmax(0, 50fr) minmax(0, 50fr);
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .wlc-media {
+    min-height: 0;
   }
 
   .wlc-veil {
@@ -449,10 +469,27 @@
   }
 
   .wlc-panel {
+    min-height: 0;
+    justify-content: flex-start;
+    gap: 10px;
     border-left: none;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
-    padding: 20px 18px max(18px, env(safe-area-inset-bottom));
+    padding: 8px 14px max(16px, env(safe-area-inset-bottom));
+    overflow: hidden;
     animation-name: wlc-panel-up;
+  }
+
+  .wlc-copy {
+    flex: 1 1 auto;
+    justify-content: flex-start;
+    gap: 10px;
+    padding-block: 4px 0;
+  }
+
+  .wlc-footer {
+    flex: 0 0 auto;
+    gap: 9px;
+    margin-top: auto;
   }
 
   @keyframes wlc-panel-up {
@@ -463,20 +500,22 @@
   }
 
   .wlc-logo {
-    width: min(130px, 40vw);
-    max-height: 36px;
+    width: min(106px, 30vw);
+    max-height: 27px;
   }
 
   .wlc-tagline {
-    font-size: 0.6rem;
+    font-size: 0.52rem;
   }
 
   .wlc-title {
-    font-size: clamp(1.4rem, 5vw, 1.8rem);
+    font-size: clamp(1rem, 4vw, 1.35rem);
+    line-height: 1.1;
   }
 
   .wlc-body {
-    font-size: var(--am-text-sm);
+    font-size: 0.68rem;
+    line-height: 1.25;
     max-width: none;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -486,28 +525,64 @@
 
   .wlc-features {
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: 6px;
   }
 
   .wlc-feature {
-    padding: 10px 11px;
-    gap: 8px;
+    min-height: 38px;
+    padding: 5px 7px;
+    gap: 6px;
+    border-radius: 9px;
   }
 
   .wlc-feature__icon {
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
+    width: 24px;
+    height: 24px;
+    border-radius: 7px;
   }
 
   .wlc-feature__icon svg {
-    width: 15px;
-    height: 15px;
+    width: 12px;
+    height: 12px;
+  }
+
+  .wlc-feature__text strong {
+    font-size: 0.64rem;
+  }
+
+  .wlc-feature__text span {
+    font-size: 0.56rem;
   }
 
   .wlc-cta.am-btn {
-    min-height: 46px;
-    border-radius: 12px;
+    min-height: 40px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .wlc-panel {
+    align-items: stretch;
+    gap: 6px;
+    padding: 7px 12px max(7px, env(safe-area-inset-bottom));
+  }
+
+  .wlc-brand {
+    gap: 5px;
+    margin-bottom: 2px;
+  }
+
+  .wlc-copy {
+    gap: 9px;
+  }
+
+  .wlc-features {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .wlc-footer {
+    gap: 7px;
   }
 }
 
@@ -646,7 +721,8 @@
 }
 .au-auth--login .au-sheet__intro {
   display: grid;
-  gap: var(--am-space-3);
+  gap: var(--am-space-5);
+  margin-bottom: var(--am-space-2);
   text-align: center;
 }
 .au-auth--login .au-kicker {
@@ -847,6 +923,155 @@
   min-height: 50px;
 }
 
+@media (max-width: 767px) {
+  .au-auth--login,
+  .au-auth--otp {
+    min-height: calc(100svh - var(--am-header-h));
+    align-content: center;
+    padding: max(12px, env(safe-area-inset-top)) 14px
+      max(14px, env(safe-area-inset-bottom));
+  }
+
+  .au-auth--login > .collage,
+  .au-auth--otp > .collage {
+    height: 100%;
+  }
+
+  .au-auth--login .collage-row,
+  .au-auth--otp .collage-row {
+    min-height: 100%;
+    gap: 6px;
+    padding: 6px;
+  }
+
+  .au-auth--login .au-sheet,
+  .au-auth--otp .au-sheet {
+    width: min(100%, 440px);
+    gap: 14px;
+    padding: 18px;
+    border-radius: 22px;
+    box-shadow: 0 18px 46px rgba(4, 32, 26, 0.3);
+  }
+
+  .au-auth--login .au-sheet__intro {
+    gap: 14px;
+    margin-bottom: 4px;
+  }
+
+  .au-auth--login .au-sheet__intro > div {
+    gap: 8px;
+  }
+
+  .au-auth--login .au-headline,
+  .au-auth--otp .au-title {
+    font-size: clamp(1.45rem, 6vw, 1.9rem);
+    line-height: 1.12;
+    margin-bottom: 4px;
+  }
+
+  .au-auth--login .au-headline {
+    min-height: 2.5em;
+  }
+
+  .au-auth--login .au-field {
+    gap: 7px;
+  }
+
+  .au-auth--login .au-phone {
+    min-height: 48px;
+    gap: 8px;
+    padding-inline: 9px;
+  }
+
+  .au-auth--login .au-phone__code {
+    gap: 6px;
+    padding: 7px 9px;
+  }
+
+  .au-auth--login .au-terms {
+    gap: 9px;
+    padding: 10px;
+  }
+
+  .au-auth--login .au-terms > span {
+    font-size: 0.78rem;
+    line-height: 1.45;
+  }
+
+  .au-auth--login .au-sheet > .am-btn--block,
+  .au-auth--otp .au-sheet > .am-btn--block {
+    min-height: 46px;
+  }
+
+  .au-auth--otp .au-phone-row {
+    gap: 8px;
+    padding: 8px 10px;
+    font-size: 0.78rem;
+  }
+
+  .au-auth--otp .au-otp {
+    gap: clamp(8px, 3vw, 14px);
+  }
+
+  .au-auth--otp .au-otp input {
+    width: min(17vw, 58px);
+    min-height: 52px;
+    padding: 6px;
+    font-size: var(--am-text-lg);
+  }
+
+  .au-auth--otp .au-secure {
+    font-size: 0.72rem;
+    line-height: 1.4;
+  }
+}
+
+@media (max-width: 380px) {
+  .au-auth--login,
+  .au-auth--otp {
+    padding-inline: 10px;
+  }
+
+  .au-auth--login .au-sheet,
+  .au-auth--otp .au-sheet {
+    gap: 12px;
+    padding: 15px;
+    border-radius: 19px;
+  }
+
+  .au-auth--login .au-terms > span {
+    font-size: 0.74rem;
+  }
+
+  .au-auth--otp .au-phone-row {
+    font-size: 0.72rem;
+  }
+}
+
+@media (max-width: 767px) and (max-height: 680px) {
+  .au-auth--login,
+  .au-auth--otp {
+    align-content: safe center;
+    overflow-y: auto;
+  }
+
+  .au-auth--login .au-sheet,
+  .au-auth--otp .au-sheet {
+    gap: 10px;
+    margin-block: auto;
+    padding-block: 14px;
+  }
+
+  .au-auth--login .au-headline,
+  .au-auth--otp .au-title {
+    font-size: clamp(1.3rem, 5vw, 1.6rem);
+  }
+
+  .au-auth--otp .au-otp input {
+    min-height: 46px;
+  }
+}
+
 @media (min-width: 900px) {
   .au-auth--login .au-sheet {
     padding: clamp(var(--am-space-6), 5vh, var(--am-space-8))
@@ -946,6 +1171,7 @@
   color: var(--am-green-900);
   font-size: clamp(1.75rem, 5vw, 2.25rem);
   line-height: 1.15;
+  margin-bottom: var(--am-space-2);
 }
 
 .au-auth--otp .au-phone-row {
@@ -1011,6 +1237,95 @@
   color: var(--am-ink-500);
   font-size: var(--am-text-xs);
   text-align: center;
+}
+
+.au-auth--login .au-kicker,
+.au-auth--otp .au-kicker {
+  color: var(--am-green-900);
+  font-size: clamp(1.15rem, 2vw, 1.4rem);
+  font-weight: var(--am-weight-bold);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.au-auth--login .au-headline,
+.au-auth--otp .au-title {
+  font-weight: var(--am-weight-bold);
+}
+
+@media (max-width: 767px) {
+  .au-auth--otp .au-sheet {
+    width: min(100%, 440px);
+    gap: 14px;
+    padding: 18px;
+    border-radius: 22px;
+    box-shadow: 0 18px 46px rgba(4, 32, 26, 0.3);
+  }
+
+  .au-auth--otp .au-title {
+    font-size: clamp(1.45rem, 6vw, 1.9rem);
+    line-height: 1.12;
+  }
+
+  .au-auth--login .au-kicker,
+  .au-auth--otp .au-kicker {
+    font-size: clamp(1.15rem, 5vw, 1.35rem);
+  }
+
+  .au-auth--otp .au-phone-row {
+    gap: 8px;
+    padding: 8px 10px;
+    font-size: 0.78rem;
+  }
+
+  .au-auth--otp .au-otp {
+    gap: clamp(8px, 3vw, 14px);
+  }
+
+  .au-auth--otp .au-otp input {
+    width: min(17vw, 58px);
+    min-height: 52px;
+    padding: 6px;
+    font-size: var(--am-text-lg);
+  }
+
+  .au-auth--otp .au-secure {
+    font-size: 0.72rem;
+    line-height: 1.4;
+  }
+}
+
+@media (max-width: 380px) {
+  .au-auth--otp .au-sheet {
+    gap: 12px;
+    padding: 15px;
+    border-radius: 19px;
+  }
+
+  .au-auth--otp .au-phone-row {
+    font-size: 0.72rem;
+  }
+}
+
+@media (max-width: 767px) and (max-height: 680px) {
+  .au-auth--otp {
+    align-content: safe center;
+    overflow-y: auto;
+  }
+
+  .au-auth--otp .au-sheet {
+    gap: 10px;
+    margin-block: auto;
+    padding-block: 14px;
+  }
+
+  .au-auth--otp .au-title {
+    font-size: clamp(1.3rem, 5vw, 1.6rem);
+  }
+
+  .au-auth--otp .au-otp input {
+    min-height: 46px;
+  }
 }
 
 /* ---------- Access ---------- */

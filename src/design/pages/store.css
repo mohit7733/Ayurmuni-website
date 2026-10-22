@@ -669,7 +669,7 @@
 
   .st-buy-again-rail {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) repeat(2, 34px) minmax(0, 1fr);
+    grid-template-columns: 34px minmax(0, 1fr) 34px;
     gap: var(--am-space-2);
   }
 
@@ -679,17 +679,17 @@
   }
 
   .st-buy-again-rail__control:first-child {
-    grid-column: 2;
-    grid-row: 2;
+    grid-column: 1;
+    grid-row: 1;
   }
 
   .st-buy-again-rail__control:last-child {
     grid-column: 3;
-    grid-row: 2;
+    grid-row: 1;
   }
 
   .st-buy-again-rail__track {
-    grid-column: 1 / -1;
+    grid-column: 2;
     grid-row: 1;
   }
 
@@ -711,7 +711,7 @@
 
   .st-products-rail {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) repeat(2, 34px) minmax(0, 1fr);
+    grid-template-columns: 34px minmax(0, 1fr) 34px;
   }
 
   .st-products-rail__item {
@@ -724,17 +724,17 @@
   }
 
   .st-products-rail__control:first-child {
-    grid-column: 2;
-    grid-row: 2;
+    grid-column: 1;
+    grid-row: 1;
   }
 
   .st-products-rail__control:last-child {
     grid-column: 3;
-    grid-row: 2;
+    grid-row: 1;
   }
 
   .st-products-rail__track {
-    grid-column: 1 / -1;
+    grid-column: 2;
     grid-row: 1;
   }
 

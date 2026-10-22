@@ -449,15 +449,21 @@
   .cs-mobile-products-rail,
   .cs-mobile-lab-rail {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) repeat(2, 34px) minmax(0, 1fr);
+    grid-template-columns: 34px minmax(0, 1fr) 34px;
     width: 100%;
     min-width: 0;
+    align-items: center;
     gap: var(--am-space-2);
+  }
+
+  .cs-mobile-products-rail.is-static,
+  .cs-mobile-lab-rail.is-static {
+    display: block;
   }
 
   .cs-mobile-products-rail__track,
   .cs-mobile-lab-rail__track {
-    grid-column: 1 / -1;
+    grid-column: 2;
     grid-row: 1;
     box-sizing: border-box;
     display: flex;
@@ -499,7 +505,7 @@
     width: 34px;
     height: 34px;
     padding: 0;
-    grid-row: 2;
+    grid-row: 1;
     border: 1px solid var(--am-line-strong);
     border-radius: 50%;
     background: var(--am-surface);
@@ -510,7 +516,7 @@
 
   .cs-mobile-products-rail__control:first-child,
   .cs-mobile-lab-rail__control:first-child {
-    grid-column: 2;
+    grid-column: 1;
   }
 
   .cs-mobile-products-rail__control:last-child,

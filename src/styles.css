@@ -3122,7 +3122,7 @@
   }
 
   .catalog-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
     gap: 10px;
   }
 }
@@ -3403,7 +3403,7 @@
 
 .catalog-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
   gap: 12px;
 }
 

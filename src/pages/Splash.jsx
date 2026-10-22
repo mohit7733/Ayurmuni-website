@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import leaf1Img from '/images/leaf1.png';
 import leaf2Img from '/images/leaf2.png';
 import logoImg from '/greenlogo.png';
+import logoMarkImg from '/images/FinalLogo.png';
 import { Utils } from '../common/utils';
 import * as ProfileServices from '../services/profileService';
 import {
@@ -102,7 +103,10 @@ export default function Splash() {
         <div className="sx-splash__logo-wrap">
           <div className="sx-splash__pulse" aria-hidden />
           <div className="sx-splash__logo">
-            <img src={logoImg} alt="Ayurmuni" />
+            <picture className="sx-splash__logo-picture">
+              <source media="(max-width: 767px)" srcSet={logoMarkImg} />
+              <img src={logoImg} alt="Ayurmuni" />
+            </picture>
           </div>
         </div>
       </div>

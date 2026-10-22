@@ -675,26 +675,154 @@
 
 @media (max-width: 680px) {
   .quest.prakriti {
-    gap: var(--am-space-3);
-    padding-inline: var(--am-gutter);
+    gap: var(--am-space-2);
+    padding: var(--am-space-2) max(12px, var(--am-gutter));
+  }
+
+  .quest.prakriti .quest-top {
+    min-height: 42px;
+    gap: var(--am-space-2);
+  }
+
+  .quest.prakriti .quest-top > button {
+    flex-basis: 36px;
+    width: 36px;
+    height: 36px;
+  }
+
+  .quest.prakriti .quest-top strong {
+    font-size: var(--am-text-sm);
+  }
+
+  .quest.prakriti .quest-top small {
+    font-size: 10px;
+  }
+
+  .quest.prakriti .xp-badge {
+    gap: 4px;
+    padding: 6px 8px;
+    font-size: 10px;
+  }
+
+  .quest.prakriti .quest-hud {
+    gap: 6px;
+    min-height: 26px;
+    padding-inline: 0;
+  }
+
+  .quest.prakriti .quest-hud .pill {
+    min-height: 25px;
+    padding: 3px 8px;
+    font-size: 10px;
+  }
+
+  .quest.prakriti > .track {
+    font-size: 10px;
+  }
+
+  .quest.prakriti .track-label {
+    margin-bottom: 5px;
+  }
+
+  .quest.prakriti .track-bar {
+    height: 5px;
   }
 
   .quest.prakriti .quest-stage {
+    display: flex;
+    flex-direction: column;
     min-height: 0;
-    padding: var(--am-space-5) var(--am-space-4);
+    padding: var(--am-space-4) var(--am-space-3);
+    border-radius: var(--am-radius-xl);
+  }
+
+  .quest.prakriti .quest-options {
+    flex: 1 0 auto;
+    grid-auto-rows: minmax(54px, 1fr);
+    align-content: stretch;
   }
 
   .quest.prakriti .quest-stage h2 {
-    margin-bottom: var(--am-space-4);
+    margin-bottom: var(--am-space-3);
+    font-size: clamp(1.1rem, 4.6vw, 1.35rem);
+    line-height: 1.2;
+  }
+
+  .quest.prakriti .level-badge {
+    margin-bottom: var(--am-space-2);
+    padding: 4px 9px;
+  }
+
+  .quest.prakriti .multi-hint {
+    min-height: 26px;
+    margin-bottom: var(--am-space-3);
+    font-size: 10px;
   }
 
   .quest.prakriti .quest-opt {
-    min-height: 62px;
-    padding: var(--am-space-3);
+    min-height: 54px;
+    gap: var(--am-space-2);
+    padding: var(--am-space-2);
+    border-radius: var(--am-radius-md);
+  }
+
+  .quest.prakriti .quest-opt .opt-num {
+    flex-basis: 24px;
+    width: 24px;
+    height: 24px;
+    font-size: 10px;
+  }
+
+  .quest.prakriti .quest-opt img {
+    flex-basis: 42px;
+    width: 42px;
+    height: 42px;
+  }
+
+  .quest.prakriti .opt-copy strong {
+    font-size: var(--am-text-xs);
+  }
+
+  .quest.prakriti .opt-copy small {
+    font-size: 10px;
+    line-height: 1.3;
+  }
+
+  .quest.prakriti .quest-stage .cta {
+    min-height: 42px;
+    margin-top: var(--am-space-3);
   }
 
   .quest.prakriti .quest-foot {
-    flex-wrap: wrap;
+    min-height: 36px;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  .quest.prakriti .quest-foot > button,
+  .quest.prakriti .quest-foot > div > button {
+    min-height: 34px;
+    padding-inline: 8px;
+    font-size: 10px;
+  }
+
+  .quest.prakriti .quest-foot .exit {
+    padding-inline: 10px;
+  }
+}
+
+@media (max-width: 380px) {
+  .quest.prakriti .quest-options {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .quest.prakriti .quest-stage {
+    padding: var(--am-space-3) var(--am-space-2);
+  }
+
+  .quest.prakriti .quest-foot > div {
+    gap: 0;
   }
 }
 
@@ -908,6 +1036,10 @@
 
   .quest.medical .quest-stage h2 {
     margin-bottom: var(--am-space-4);
+  }
+
+  .quest.medical .multi-hint {
+    margin-top: var(--am-space-2);
   }
 
   .quest.medical .quest-opt {

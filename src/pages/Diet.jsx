@@ -43,6 +43,9 @@ export default function Diet() {
   const [carouselIndex, setCarouselIndex] = useState(0);
   const carouselRef = useRef(null);
   const carouselIndexRef = useRef(0);
+  const carouselScrollTimerRef = useRef(null);
+
+  useEffect(() => () => window.clearTimeout(carouselScrollTimerRef.current), []);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebounced(search.trim()), 400);
@@ -78,15 +81,18 @@ export default function Diet() {
 
   useEffect(() => {
     if (visible.length < 2) return undefined;
+    const isMobileCarousel = window.matchMedia('(max-width: 640px)').matches;
+    if (!isMobileCarousel) return undefined;
+
     const timer = window.setInterval(() => {
       const next = (carouselIndexRef.current + 1) % visible.length;
       carouselIndexRef.current = next;
       setCarouselIndex(next);
-      carouselRef.current?.children[next]?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-        inline: 'start',
-      });
+      const carousel = carouselRef.current;
+      const card = carousel?.children[next];
+      if (carousel && card) {
+        carousel.scrollTo({ left: card.offsetLeft, behavior: 'smooth' });
+      }
     }, 5000);
     return () => window.clearInterval(timer);
   }, [visible.length]);
@@ -95,11 +101,30 @@ export default function Diet() {
     const next = Math.min(visible.length - 1, Math.max(0, carouselIndex + direction));
     carouselIndexRef.current = next;
     setCarouselIndex(next);
-    carouselRef.current?.children[next]?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'nearest',
-      inline: 'start',
-    });
+    const carousel = carouselRef.current;
+    const card = carousel?.children[next];
+    if (carousel && card) {
+      carousel.scrollTo({ left: card.offsetLeft, behavior: 'smooth' });
+    }
+  };
+
+  const handleCarouselScroll = (event) => {
+    if (!window.matchMedia('(max-width: 640px)').matches) return;
+    const carousel = event.currentTarget;
+    window.clearTimeout(carouselScrollTimerRef.current);
+    carouselScrollTimerRef.current = window.setTimeout(() => {
+      const cards = Array.from(carousel.children);
+      if (!cards.length) return;
+      const nearestIndex = cards.reduce((nearest, card, index) => {
+        const nearestCard = cards[nearest];
+        return Math.abs(card.offsetLeft - carousel.scrollLeft) <
+          Math.abs(nearestCard.offsetLeft - carousel.scrollLeft)
+          ? index
+          : nearest;
+      }, 0);
+      carouselIndexRef.current = nearestIndex;
+      setCarouselIndex(nearestIndex);
+    }, 120);
   };
 
   return (
@@ -201,16 +226,7 @@ export default function Diet() {
                 {visible.length} {visible.length === 1 ? 'plan' : 'plans'}
               </span>
             </div>
-            <div className="diet-grid" ref={carouselRef} onScroll={(event) => {
-              if (window.matchMedia('(max-width: 640px)').matches) {
-                const firstCard = event.currentTarget.firstElementChild;
-                const cardWidth = firstCard?.getBoundingClientRect().width || 1;
-                const gap = Number.parseFloat(getComputedStyle(event.currentTarget).columnGap) || 0;
-                const index = Math.min(visible.length - 1, Math.round(event.currentTarget.scrollLeft / (cardWidth + gap)));
-                carouselIndexRef.current = index;
-                setCarouselIndex(index);
-              }
-            }}>
+            <div className="diet-grid" ref={carouselRef} onScroll={handleCarouselScroll}>
               {visible.map((item) => {
                 const cover = getDietPlanCoverUrl(item) || dietCoverImg;
                 const rating = getDietPlanRatingLabel(item);

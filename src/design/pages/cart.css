@@ -270,6 +270,13 @@
   animation: am-spin 0.8s linear infinite;
 }
 
+@media (max-width: 630px) {
+  .ct-page {
+    padding-bottom: 0;
+    margin-bottom: -40px;
+  }
+}
+
 @media (max-width: 767px) {
   .app-shell:has(.ct-sticky) .tab-bar {
     display: none;
