@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Check, Leaf, RefreshCw, SlidersHorizontal, X } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import ProductCard from '../components/ProductCard';
+import AutoScrollRail from '../components/AutoScrollRail';
 import PageHeader from '../components/PageHeader';
 import useProductCategories from '../hooks/useProductCategories';
 import useCategoryProducts from '../hooks/useCategoryProducts';
@@ -304,7 +305,7 @@ export default function CategoryProducts() {
               </div>
             </div>
 
-            <div className="am-section-header">
+            <div className="am-section-header st-category-products-header">
               <div className="am-section-header__copy">
                 <h2 className="am-section-header__title">{T.productsHeading}</h2>
               </div>
@@ -334,13 +335,25 @@ export default function CategoryProducts() {
                 )}
               />
             ) : (
-              <ul className="am-product-grid">
-                {filteredAndSortedProducts.map((item) => (
-                  <li key={item.variant_id || item.id}>
-                    <ProductCard item={item} />
-                  </li>
-                ))}
-              </ul>
+              <>
+                <ul className="am-product-grid st-category-products-desktop">
+                  {filteredAndSortedProducts.map((item) => (
+                    <li key={item.variant_id || item.id}>
+                      <ProductCard item={item} />
+                    </li>
+                  ))}
+                </ul>
+                <AutoScrollRail
+                  label={`${title} products`}
+                  className="st-category-products-mobile"
+                  trackClassName="st-category-products-mobile__track"
+                  itemClassName="st-category-products-mobile__item"
+                >
+                  {filteredAndSortedProducts.map((item) => (
+                    <ProductCard key={item.variant_id || item.id} item={item} />
+                  ))}
+                </AutoScrollRail>
+              </>
             )}
 
             {hasMore ? (

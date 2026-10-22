@@ -872,6 +872,10 @@
   min-width: 0;
 }
 
+.st-category-products-mobile {
+  display: none;
+}
+
 .st-sort-select {
   max-width: 100%;
 }
@@ -938,6 +942,96 @@
   .st-page .am-product-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--am-space-2);
+  }
+
+  .st-page .st-category-products-desktop {
+    display: none;
+  }
+
+  .st-page .st-category-products-mobile {
+    position: relative;
+    display: block;
+    width: 100%;
+    min-width: 0;
+    padding-inline: 40px;
+  }
+
+  .st-page .st-category-products-mobile__track {
+    display: flex;
+    gap: var(--am-space-2);
+    width: min(100%, 340px);
+    min-width: 0;
+    margin: 0 auto;
+    padding: var(--am-space-1) 2px var(--am-space-3);
+    overflow-x: auto;
+    overflow-y: hidden;
+    list-style: none;
+    overscroll-behavior-inline: contain;
+    scroll-behavior: smooth;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .st-page .st-category-products-mobile__track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .st-page .st-category-products-mobile__item {
+    flex: 0 0 100%;
+    min-width: 0;
+    scroll-snap-align: start;
+  }
+
+  .st-page .st-category-products-mobile__item > .am-product-card {
+    width: 100%;
+    height: 100%;
+  }
+
+  .st-page .st-category-products-mobile__control {
+    position: absolute;
+    z-index: 2;
+    top: 50%;
+    width: 38px;
+    height: 38px;
+    border-color: var(--am-line-strong);
+    border-radius: 50%;
+    background: var(--am-surface);
+    color: var(--am-primary);
+    box-shadow: 0 3px 12px rgba(10, 40, 32, 0.14);
+    transform: translateY(-50%);
+  }
+
+  .st-page .st-category-products-mobile__control:first-child {
+    left: 0;
+  }
+
+  .st-page .st-category-products-mobile__control:last-child {
+    right: 0;
+  }
+
+  .st-page .st-category-products-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--am-space-2);
+    text-align: center;
+  }
+
+  .st-page .st-category-products-header .am-section-header__copy {
+    align-items: center;
+    width: 100%;
+    text-align: center;
+  }
+
+  .st-page .st-category-products-header .am-section-header__title::after {
+    margin-inline: auto;
+  }
+
+  .st-page .st-category-products-header .am-section-header__action {
+    align-self: center;
+    margin-inline: auto;
   }
 }
 
