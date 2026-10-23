@@ -16,6 +16,7 @@ import {
   ErrorState,
   Modal,
   SearchField,
+  searchSuggestions,
   SkeletonGrid,
 } from '../components/ui';
 import { CONSULT_COPY as T } from '../content/consult';
@@ -270,6 +271,7 @@ export default function Doctors() {
             onSubmit={(value) => setSubmitted(String(value || '').trim())}
             placeholder={T.listSearch}
             label={T.listSearch}
+            suggestions={searchSuggestions(specialities)}
           />
         </PageHeader>
 

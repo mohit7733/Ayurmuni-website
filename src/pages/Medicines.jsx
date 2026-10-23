@@ -2,18 +2,15 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Check, Leaf, Pill, ShoppingBag, SlidersHorizontal, X } from 'lucide-react';
 import AppShell from '../components/AppShell';
-import BannerCarousel from '../components/BannerCarousel';
 import ProductCard from '../components/ProductCard';
 import { DietPlanCard, SectionHead, ViewAll } from '../components/ServiceHome';
-import { getBanners } from '../services/bannerService';
 import {
   formatRupee,
-  getBannerImageUri,
   mapProductCategory,
   normalizeApiList,
   resolveImageUrl,
 } from '../home/catalog';
-import { getServiceCategoryId, resolveBannerNavigation } from '../home/serviceCategories';
+import { getServiceCategoryId } from '../home/serviceCategories';
 import useDashboardCategories from '../hooks/useDashboardCategories';
 import useCategoryProducts from '../hooks/useCategoryProducts';
 import useProductCategories from '../hooks/useProductCategories';
@@ -33,6 +30,7 @@ import {
   RailSkeleton,
   Reveal,
   SearchField,
+  searchSuggestions,
   SkeletonGrid,
   Tile,
 } from '../components/ui';
@@ -78,7 +76,6 @@ export default function Medicines() {
     { enabled: Boolean(medicineCategoryId) || !homeLoading },
   );
 
-  const [banners, setBanners] = useState([]);
   const [concerns, setConcerns] = useState([]);
   const [brands, setBrands] = useState([]);
   const [recent, setRecent] = useState([]);
@@ -168,19 +165,13 @@ export default function Medicines() {
   useEffect(() => {
     let alive = true;
     (async () => {
-      const [bannerRes, catRes, brandRes] = await Promise.all([
-        getBanners('medicine', medicineCategoryId),
+      const [catRes, brandRes] = await Promise.all([
         getHealthCategories(
           medicineCategoryId ? { service_category_id: medicineCategoryId } : undefined,
         ),
         getBrands(),
       ]);
       if (!alive) return;
-      setBanners(
-        (bannerRes?.data || [])
-          .map((item) => ({ ...item, image: getBannerImageUri(item) }))
-          .filter((item) => item.image),
-      );
       setConcerns(
         normalizeApiList(catRes)
           .map(mapProductCategory)
@@ -303,35 +294,10 @@ export default function Medicines() {
     ? `Medicines in ${activeCategoryName || 'this category'}.`
     : T.allMedicinesText;
 
-  const openBanner = (item) => {
-    const target = resolveBannerNavigation(item);
-    if (!target) return;
-    if (target.external) {
-      window.open(target.href, '_blank', 'noopener,noreferrer');
-      return;
-    }
-    navigate(target.path);
-  };
-
   return (
     <AppShell tab="medicines">
       <div className="hm-page svc-page">
         <div className="hm-body">
-          {banners.length ? (
-            <BannerCarousel
-              items={banners}
-              interval={6000}
-              onSelect={openBanner}
-              copy={{
-                label: H.offersLabel,
-                open: H.openOffer,
-                of: H.of,
-                show: H.showOffer,
-                pause: H.pauseOffers,
-                play: H.playOffers,
-              }}
-            />
-          ) : null}
 
           <PageBar id="med-hero" title="Shop medicines">
             <SearchField
@@ -340,17 +306,24 @@ export default function Medicines() {
               onSubmit={goSearch}
               placeholder={H.searchPlaceholder}
               label="Search medicines"
+              suggestions={searchSuggestions(concerns, brands)}
             />
-            <Button
-              variant="secondary"
+            <button
+              type="button"
+              className="pm-pill"
               onClick={() => navigate('/cart')}
-              leadingIcon={<ShoppingBag size={18} aria-hidden />}
+              aria-label={itemCount ? `Cart, ${itemCount} items` : 'Cart'}
             >
+              <span className="pm-pill__icon" aria-hidden>
+                <ShoppingBag size={16} />
+              </span>
               Cart
               {itemCount ? (
-                <span className="am-page-bar__count">{itemCount > 99 ? '99+' : itemCount}</span>
+                <span className="pm-pill__count" aria-hidden>
+                  {itemCount > 99 ? '99+' : itemCount}
+                </span>
               ) : null}
-            </Button>
+            </button>
           </PageBar>
 
           {showSkeleton ? (

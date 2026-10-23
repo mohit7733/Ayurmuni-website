@@ -1081,62 +1081,6 @@
   white-space: nowrap;
 }
 
-.site-footer-mark {
-  --mark-logo: 112px;
-  --mark-gap: 1.5rem;
-  position: relative;
-  z-index: 0;
-  /* Lift the logo and the word together; the gap between them stays put. */
-  margin: calc((var(--mark-logo) + var(--mark-gap)) * -0.42) 0 0;
-  padding: calc(var(--mark-logo) + var(--mark-gap)) 0 0;
-  overflow: hidden;
-  pointer-events: none;
-  user-select: none;
-  text-align: center;
-}
-
-.site-footer-mark img {
-  position: absolute;
-  left: 50%;
-  top: 0;
-  z-index: 1;
-  display: block;
-  width: var(--mark-logo);
-  height: auto;
-  margin: 0;
-  /* Match the AYURMUNI letters on the footer green. */
-  opacity: 0.66;
-  filter: brightness(0) invert(1);
-  transform: translateX(-50%);
-}
-
-.site-footer-mark span {
-  position: relative;
-  display: block;
-  margin: 0;
-  padding: 0 0 0.12em;
-  font-family: var(--am-font-display);
-  font-weight: 700;
-  font-size: clamp(4.5rem, 18.6vw, 11rem);
-  line-height: 0.95;
-  letter-spacing: -0.02em;
-  color: #fff;
-  white-space: nowrap;
-}
-
-.site-footer-mark span::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background: linear-gradient(
-    rgb(13 97 78 / 28%) 0%,
-    rgb(13 97 78 / 55%) 42%,
-    rgb(13 97 78 / 88%) 78%,
-    #0d614e 100%
-  );
-}
-
 .site-footer-legal nav {
   display: flex;
   flex-wrap: nowrap;
@@ -1162,11 +1106,6 @@
 
   .site-footer-brand {
     grid-column: auto;
-  }
-
-  .site-footer-mark {
-    --mark-logo: 132px;
-    --mark-gap: 2rem;
   }
 }
 /* =====================================================================
@@ -1322,13 +1261,180 @@
   .site-avatar { width: 30px; height: 30px; }
 }
 
-/* ---------- Responsive: footer on phones/tablets ---------- */
+/* ---------- Footer legal row: flush to the bottom, tighter (Rohit) ---------- */
+.site-footer-inner { padding-bottom: var(--am-space-2); }
+.site-footer-bar { padding-top: 8px; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
+.site-footer-legal { gap: 12px; }
+.site-footer-legal nav { gap: 12px; }
+.site-footer-legal a { min-height: 28px; }
 @media (max-width: 767px) {
-  .site-footer-bar { overflow-x: visible; }
-  .site-footer-legal { flex-wrap: wrap; width: auto; min-width: 0; column-gap: 14px; row-gap: 0; }
+  .site-footer-bar { padding-bottom: 6px; }
   .site-footer-legal a { min-height: 44px; }
+  /* Tab-bar clearance only (safe area included), no extra space. */
+  .app-shell:not(.auth-shell):not(.is-logged-out) .site-footer {
+    padding-bottom: calc(var(--am-tabbar-h) + 8px + env(safe-area-inset-bottom));
+  }
+}
+
+/* ---------- Footer mark as a background layer (Rohit) ---------- */
+.site-footer-trust,
+.site-footer-inner,
+.site-footer-bar { position: relative; z-index: 1; }
+/* Original mark styling (from git), kept as a zero-height, click-through layer. */
+.site-footer-mark {
+  --mark-logo: 112px;
+  --mark-gap: 1.25rem;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  margin: 0;
+  padding: calc(var(--mark-logo) + var(--mark-gap)) 0 0;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+  text-align: center;
+}
+.site-footer-mark img {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  z-index: 1;
+  display: block;
+  width: var(--mark-logo);
+  height: auto;
+  margin: 0;
+  opacity: 0.85;
+  filter: brightness(0) invert(1);
+  transform: translateX(-50%);
+}
+.site-footer-mark span {
+  position: relative;
+  display: block;
+  margin: 0;
+  padding: 0 0 0.12em;
+  font-family: var(--am-font-display);
+  font-weight: 700;
+  font-size: clamp(4.5rem, 18.6vw, 11rem);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  color: #fff;
+  white-space: nowrap;
+}
+.site-footer-mark span::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    rgb(13 97 78 / 28%) 0%,
+    rgb(13 97 78 / 55%) 42%,
+    rgb(13 97 78 / 88%) 78%,
+    #0d614e 100%
+  );
+}
+@media (min-width: 901px) {
+  .site-footer-mark { --mark-logo: 120px; --mark-gap: 1.25rem; }
 }
 @media (max-width: 767px) {
-  /* The lifted wordmark overlapped the last footer link on phones; smaller logo, no lift. */
-  .site-footer-mark { --mark-logo: 72px; --mark-gap: 0.75rem; margin-top: 0; }
+  .site-footer-mark { --mark-logo: 100px; --mark-gap: 0.75rem; }
+  .app-shell:not(.auth-shell):not(.is-logged-out) .site-footer-mark {
+    bottom: calc(var(--am-tabbar-h) + 8px + env(safe-area-inset-bottom));
+  }
+}
+/* Keep links crisp over the mark. */
+.site-footer-col a,
+.site-footer-legal,
+.site-footer-brand { text-shadow: 0 1px 2px rgba(6, 45, 36, 0.6); }
+/* Desktop: drop the mark group lower so the emblem clears more of the links;
+   the wordmark's faded base tucks behind the legal row (clipped by the footer). */
+.site-footer { overflow: hidden; }
+@media (min-width: 901px) {
+  .site-footer-mark { bottom: -64px; }
+}
+@media (max-width: 767px) {
+  .app-shell:not(.auth-shell):not(.is-logged-out) .site-footer-mark {
+    bottom: calc(var(--am-tabbar-h) - 16px + env(safe-area-inset-bottom));
+  }
+}
+/* Wordmark sits at the very bottom, under the legal row. */
+@media (min-width: 768px) {
+  .site-footer-bar { margin-bottom: 56px; }
+  .site-footer-mark { bottom: -0.42em; font-size: 1rem; }
+  .site-footer-mark span { margin-bottom: -0.30em; }
+}
+
+
+
+/* ---------- Footer order: links > emblem > wordmark > legal row (Rohit) ---------- */
+.site-footer-mark,
+.app-shell:not(.auth-shell):not(.is-logged-out) .site-footer-mark {
+  position: relative;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  font-size: inherit;
+  margin: var(--am-space-2, 8px) 0 0;
+  padding-top: calc(var(--mark-logo) + var(--mark-gap));
+}
+/* Crop the faded base so no empty band sits above the legal row. */
+.site-footer-mark span { line-height: 0.8; padding-bottom: 0; margin-bottom: -0.14em; }
+.site-footer-bar,
+.site-footer-inner { margin-bottom: 0; }
+@media (min-width: 768px) { .site-footer-bar { margin-bottom: 0; } }
+@media (max-width: 767px) {
+  .site-footer-mark { --mark-logo: 72px; --mark-gap: 0.5rem; }
+}
+
+/* ---------- Pinned mark: emblem top = CARE "Yoga" row (set by SiteFooter) ---------- */
+.site-footer.is-mark-pinned .site-footer-mark,
+.app-shell:not(.auth-shell):not(.is-logged-out) .site-footer.is-mark-pinned .site-footer-mark {
+  position: absolute;
+  top: var(--mark-top, 0px);
+  bottom: auto;
+  left: 0;
+  right: 0;
+  margin: 0;
+  --mark-gap: 0.5rem;
+}
+.site-footer.is-mark-pinned .site-footer-inner { z-index: 1; }
+.site-footer.is-mark-pinned { position: relative; }
+
+/* Fainter background mark + soft white links (Rohit). */
+.site-footer .site-footer-mark img { opacity: 0.28; }
+.site-footer .site-footer-mark span { opacity: 0.22; }
+.site-footer-col a,
+.site-footer-legal a { color: rgba(255, 255, 255, 0.9); }
+.site-footer-col a:hover,
+.site-footer-col a:focus-visible,
+.site-footer-legal a:hover,
+.site-footer-legal a:focus-visible { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
+
+/* Wordmark: full letters, even soft white, no fade/crop (Rohit). */
+.site-footer .site-footer-mark { overflow: visible; }
+.site-footer .site-footer-mark span {
+  line-height: 1;
+  margin-bottom: 0;
+  padding-bottom: 0.02em;
+  color: #fff;
+  opacity: 0.22;
+}
+.site-footer .site-footer-mark span::after { display: none; }
+.site-footer:not(.is-mark-pinned) .site-footer-mark { margin-bottom: -6px; }
+/* Phones (stacked): tight gap from wordmark to the © row. */
+.site-footer:not(.is-mark-pinned) .site-footer-mark,
+.app-shell:not(.auth-shell):not(.is-logged-out) .site-footer:not(.is-mark-pinned) .site-footer-mark { margin-bottom: -6px; }
+.site-footer.is-mark-pinned .site-footer-bar { padding-top: 8px; }
+/* ---------- © row flush to the bottom (Rohit) ---------- */
+.site-footer { padding-bottom: 0; margin-bottom: 0; min-height: 0; }
+.site-footer .site-footer-bar { margin-bottom: 0; padding-bottom: calc(6px + env(safe-area-inset-bottom)); }
+@media (min-width: 768px) {
+  .site-footer .site-footer-legal a { min-height: 0; }
+}
+@media (max-width: 767px) {
+  .site-footer .site-footer-bar { padding-bottom: 6px; }
+  .app-shell:not(.auth-shell):not(.is-logged-out) .site-footer {
+    padding-bottom: calc(var(--am-tabbar-h) + env(safe-area-inset-bottom));
+  }
 }

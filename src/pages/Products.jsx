@@ -2,15 +2,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, ShoppingBag, SlidersHorizontal, X } from "lucide-react";
 import AppShell from "../components/AppShell";
-import BannerCarousel from "../components/BannerCarousel";
 import ProductCard from "../components/ProductCard";
 import CartAddButton from "../components/CartAddButton";
-import { getBanners } from "../services/bannerService";
 import { getProductByVariant } from "../services/productService";
 import { hasStockInfo } from "../product/stock";
 import {
   formatRupee,
-  getBannerImageUri,
   resolveImageUrl,
 } from "../home/catalog";
 import { getServiceCategoryId } from "../home/serviceCategories";
@@ -32,6 +29,7 @@ import {
   RailSkeleton,
   Reveal,
   SearchField,
+  searchSuggestions,
   SectionHeader,
   SkeletonGrid,
 } from "../components/ui";
@@ -78,7 +76,6 @@ export default function Products() {
   const { categories: productCategories, loading: categoriesLoading } =
     useProductCategories(null, productsCategoryId);
 
-  const [banners, setBanners] = useState([]);
   const [recentProducts, setRecentProducts] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -97,22 +94,6 @@ export default function Products() {
     if (extra.name) query.set("name", extra.name);
     navigate(`/products/category?${query.toString()}`);
   };
-
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      const res = await getBanners("product", productsCategoryId);
-      if (!alive) return;
-      setBanners(
-        (res?.data || [])
-          .map((item) => ({ ...item, image: getBannerImageUri(item) }))
-          .filter((item) => item.image),
-      );
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [productsCategoryId]);
 
   useEffect(() => {
     let alive = true;
@@ -269,7 +250,6 @@ export default function Products() {
   return (
     <AppShell tab="products">
       <div className="st-page st-page--products">
-        <BannerCarousel items={banners} interval={4000} />
 
         <PageBar ref={heroRef} id="st-products-title" title={T.productsTitle}>
           <SearchField
@@ -278,15 +258,20 @@ export default function Products() {
             onSubmit={goSearch}
             placeholder={T.productsSearch}
             label={T.productsSearch}
+            suggestions={searchSuggestions(productCategories, listProducts)}
           />
-          <Button
-            variant="secondary"
+          <button
+            type="button"
+            className="pm-pill"
             onClick={() => navigate("/cart")}
-            leadingIcon={<ShoppingBag size={18} aria-hidden />}
+            aria-label={itemCount ? `${T.cart}, ${itemCount} items` : T.cart}
           >
+            <span className="pm-pill__icon" aria-hidden>
+              <ShoppingBag size={16} />
+            </span>
             {T.cart}
-            {itemCount ? <span className="am-page-bar__count">{itemCount}</span> : null}
-          </Button>
+            {itemCount ? <span className="pm-pill__count" aria-hidden>{itemCount}</span> : null}
+          </button>
         </PageBar>
 
         {showSkeleton ? (

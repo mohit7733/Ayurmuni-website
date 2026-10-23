@@ -30,6 +30,7 @@ import {
   RailItem,
   RailSkeleton,
   SearchField,
+  searchSuggestions,
   SectionHeader,
   Skeleton,
   SkeletonGrid,
@@ -291,6 +292,7 @@ export default function CategoryDoctor() {
             onChange={setSearch}
             onSubmit={(value) => setDebounced(String(value || '').trim())}
             placeholder={T.concernSearch}
+            suggestions={searchSuggestions(diseases)}
           />
         </PageHeader>
 

@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { BadgeCheck, Leaf, LockKeyhole, ShieldCheck } from 'lucide-react';
 import logoImg from '/greenlogo.png';
@@ -26,8 +27,53 @@ export default function SiteFooter() {
     ? FOOTER_LEGAL
     : FOOTER_LEGAL.filter((item) => PUBLIC_FOOTER_LINKS.has(item.to));
 
+  const footerRef = useRef(null);
+
+  // Pin the background mark so the emblem's top lines up with the CARE column's
+  // CARE heading (top of the link columns). Falls back to the stacked layout when that row is absent.
+  useLayoutEffect(() => {
+    const footer = footerRef.current;
+    if (!footer) return undefined;
+    const inner = footer.querySelector('.site-footer-inner');
+    const mark = footer.querySelector('.site-footer-mark');
+    const place = () => {
+      footer.classList.remove('is-mark-pinned');
+      inner.style.paddingBottom = '';
+      if (!window.matchMedia('(min-width: 768px)').matches) return;
+      const care = [...footer.querySelectorAll('.site-footer-col')].find(
+        (n) => n.getAttribute('aria-label') === 'Care',
+      );
+      const head = care?.querySelector('h2');
+      if (!head) return;
+      footer.classList.add('is-mark-pinned');
+      const fTop = footer.getBoundingClientRect().top;
+      const top = head.getBoundingClientRect().top - fTop;
+      footer.style.setProperty('--mark-top', `${Math.round(top)}px`);
+      const markBottom = top + mark.offsetHeight;
+      // Lowest real content in the grid (ignores the inner's own padding).
+      const contentBottom = Math.max(
+        ...[...inner.children].map((n) => n.getBoundingClientRect().bottom - fTop),
+      );
+      const innerTop = inner.getBoundingClientRect().top - fTop;
+      const padTop = parseFloat(getComputedStyle(inner).paddingTop) || 0;
+      const target = Math.max(markBottom, contentBottom) + 2;
+      // Bottom padding so the © row starts just below whichever ends lower.
+      const contentHeight = contentBottom - innerTop - padTop;
+      inner.style.paddingBottom = `${Math.max(0, Math.ceil(target - innerTop - padTop - contentHeight))}px`;
+    };
+    place();
+    const ro = new ResizeObserver(place);
+    ro.observe(footer.querySelector('.site-footer-trust'));
+    window.addEventListener('resize', place);
+    document.fonts?.ready.then(place);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', place);
+    };
+  }, [loggedIn]);
+
   return (
-    <footer className="site-footer">
+    <footer className="site-footer" ref={footerRef}>
       <ul className="site-footer-trust" aria-label="Why Ayurmuni">
         {COPY.trust.map((item) => {
           const Icon = TRUST_ICONS[item.id];
@@ -63,6 +109,7 @@ export default function SiteFooter() {
         ))}
       </div>
 
+      {/* Original footer mark, now a background layer (adds no height). */}
       <div className="site-footer-mark" aria-hidden="true">
         <img alt="" src="https://ayurmuni.com/assets/logoround-CDmnakog.png" />
         <span>AYURMUNI</span>

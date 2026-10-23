@@ -2,13 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Calendar, Leaf, Salad } from 'lucide-react';
 import AppShell from '../components/AppShell';
-import BannerCarousel from '../components/BannerCarousel';
 import { ActiveDietCard } from '../components/ActiveDietPlan';
 import dietCoverImg from '/images/login/14.webp';
 import { DietPlanCard, SectionHead, ViewAll } from '../components/ServiceHome';
 import { formatRupee, mapProductCategory, normalizeApiList } from '../home/catalog';
-import { getServiceCategoryId, resolveBannerNavigation } from '../home/serviceCategories';
-import { loadBannerCarouselForScreen } from '../services/bannerService';
+import { getServiceCategoryId } from '../home/serviceCategories';
 import useDashboardCategories from '../hooks/useDashboardCategories';
 import useActiveDietHome from '../hooks/useActiveDietHome';
 import { getHealthCategories } from '../services/productService';
@@ -25,6 +23,7 @@ import {
   EmptyState,
   PageBar,
   SearchField,
+  searchSuggestions,
   SkeletonGrid,
   Tile,
 } from '../components/ui';
@@ -122,31 +121,6 @@ export default function Diet() {
     };
   }, [medicineId]);
 
-  const [banners, setBanners] = useState([]);
-  const [bannersLoading, setBannersLoading] = useState(true);
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      const items = await loadBannerCarouselForScreen('diet');
-      if (!alive) return;
-      setBanners(items);
-      setBannersLoading(false);
-    })();
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  const openBanner = (item) => {
-    const target = resolveBannerNavigation(item);
-    if (!target) return;
-    if (target.external) {
-      window.open(target.href, '_blank', 'noopener,noreferrer');
-      return;
-    }
-    navigate(target.path);
-  };
-
   const showSkeleton = loadingList && plans.length === 0;
   const listTitle =
     statusTab === 'active' ? 'Active plans' : statusTab === 'inactive' ? 'Past plans' : H.dietTitle;
@@ -155,22 +129,6 @@ export default function Diet() {
     <AppShell tab="home">
       <div className="hm-page svc-page">
         <div className="hm-body">
-          {bannersLoading || banners.length > 0 ? (
-            <BannerCarousel
-              items={banners}
-              loading={bannersLoading}
-              interval={6000}
-              onSelect={openBanner}
-              copy={{
-                label: H.offersLabel,
-                open: H.openOffer,
-                of: H.of,
-                show: H.showOffer,
-                pause: H.pauseOffers,
-                play: H.playOffers,
-              }}
-            />
-          ) : null}
 
           <PageBar id="dt-title" title={`${categoryName || 'Diet'} plans`}>
             <SearchField
@@ -179,6 +137,7 @@ export default function Diet() {
               onSubmit={(value) => setDebounced(String(value || '').trim())}
               placeholder="Search diet plans"
               label="Search diet plans"
+              suggestions={searchSuggestions(plans)}
             />
             <Button
               variant="accent"

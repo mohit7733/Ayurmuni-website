@@ -4,6 +4,8 @@ import * as ProductServices from '../services/productService';
 import * as ProfileServices from '../services/profileService';
 import { getBanners } from '../services/bannerService';
 import { isAuthenticated, isGuestUser } from '../services/guestAuth';
+import { getDietPlans } from '../services/dietService';
+import { normalizeDietPlanList } from '../diet/utils';
 import {
   mapCatalogProductItem,
   mapDietPlanForHome,
@@ -218,9 +220,20 @@ export default function useHomeData() {
         safe(
           () =>
             load('diet', async () => {
-              const res = await HomeServices.getSuggestedDietPlans();
-              if (res?.success === false) return [];
-              return normalizeApiList(res)
+              const toCards = (r) =>
+                r && r.success !== false
+                  ? normalizeApiList(r).map(mapDietPlanForHome).filter((item) => item.id)
+                  : [];
+              // Diet endpoints need a token: skip logged-out visitors only.
+              if (!(await isAuthenticated())) return [];
+              const suggested = toCards(await HomeServices.getSuggestedDietPlans());
+              if (suggested.length) return suggested;
+              // Guests (token, no completed profile) can get 401/403/empty from the
+              // suggestions endpoint; fall back to the same plan list /diet shows.
+              // Still 401/403/empty -> [] and the panel hides.
+              const listRes = await getDietPlans({ page: 1 });
+              if (!listRes || listRes.success === false) return [];
+              return normalizeDietPlanList(listRes)
                 .map(mapDietPlanForHome)
                 .filter((item) => item.id);
             }),

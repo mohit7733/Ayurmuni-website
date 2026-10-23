@@ -13,6 +13,7 @@ import {
   Search,
   ShoppingBag,
   Sparkles,
+  Star,
   Stethoscope,
   Users,
   Heart,
@@ -31,7 +32,7 @@ import {
 } from '../home/serviceCategories';
 import useHomeData from '../hooks/useHomeData';
 import { getDoctors } from '../services/consultService';
-import { isAuthenticated, isGuestUser, requireAuth } from '../services/guestAuth';
+import { isAuthenticated, requireAuth } from '../services/guestAuth';
 import {
   doctorDisplayName,
   doctorExperience,
@@ -238,14 +239,15 @@ function shortLabel(value) {
 
 const OUR_DOCTORS_LIMIT = 10;
 
-/** "Our doctors" rail — customers/doctors/ (auth required; hidden for guests, empty or failed responses). */
+/** "Our doctors" rail — customers/doctors/ (needs a token; shown for guests and full users, hidden when logged out, empty or failed (401/403)). */
 function useOurDoctors(enabled) {
   const [items, setItems] = useState([]);
   useEffect(() => {
     if (!enabled) return undefined;
     let alive = true;
     (async () => {
-      if (!(await isAuthenticated()) || (await isGuestUser())) return;
+      // Guests are OTP-verified and hold a token; only logged-out visitors skip the call.
+      if (!(await isAuthenticated())) return;
       const res = await getDoctors({ page: 1, page_size: OUR_DOCTORS_LIMIT });
       if (!alive || !res || res.success === false) return;
       const list = normalizeDoctorList(res, { approvedOnly: true }).filter((d) => getDoctorId(d));
@@ -258,6 +260,14 @@ function useOurDoctors(enabled) {
   return items;
 }
 
+/** Explicit approval flag from the API (not the permissive list filter default). */
+const hasApprovalFlag = (d) => {
+  const status = String(d?.approval_status ?? d?.verification_status ?? '').trim().toLowerCase();
+  if (['approved', 'verified'].includes(status)) return true;
+  const flag = d?.is_approved ?? d?.is_verified;
+  return flag === true || flag === 'true' || flag === 1 || flag === '1';
+};
+
 function OurDoctorCard({ item, index, onOpen }) {
   const name = doctorDisplayName(item);
   const image = doctorImage(item);
@@ -266,44 +276,52 @@ function OurDoctorCard({ item, index, onOpen }) {
   const experience = doctorExperience(item);
   const rating = doctorRating(item);
   const fee = doctorFeeLabel(item);
+  const verified = hasApprovalFlag(item);
+  const line = [qualification, specs && specs !== qualification ? specs : ''].filter(Boolean);
 
   return (
     <article className="hm-odoc" style={{ '--hm-odoc-i': Math.min(index, 6) }}>
-      <div className="hm-odoc__top">
-        <span className="hm-odoc__photo">
-          {image ? (
-            <img src={image} alt="" loading="lazy" decoding="async" width="64" height="64" />
-          ) : (
-            <span aria-hidden>{name.charAt(0)}</span>
-          )}
-        </span>
-        <div className="hm-odoc__id">
-          <h3 className="hm-odoc__name">{name}</h3>
-          {qualification ? <p className="hm-odoc__qual">{qualification}</p> : null}
-          {specs && specs !== qualification ? <p className="hm-odoc__spec">{specs}</p> : null}
-        </div>
-      </div>
-      {experience || rating ? (
-        <ul className="hm-odoc__meta">
-          {experience ? <li>{experience}</li> : null}
-          {rating ? (
-            <li>
-              <span aria-hidden>★</span> {rating}
-            </li>
-          ) : null}
-        </ul>
-      ) : null}
-      <div className="hm-odoc__foot">
-        {fee ? (
-          <p className="hm-odoc__fee">
-            <strong>{fee}</strong> <span>/ consult</span>
-          </p>
+      <span className="hm-odoc__photo">
+        {image ? (
+          <img src={image} alt="" loading="lazy" decoding="async" width="52" height="52" />
         ) : (
-          <span />
+          <span aria-hidden>{name.charAt(0)}</span>
         )}
+      </span>
+      <div className="hm-odoc__id">
+        <h3 className="hm-odoc__name">
+          <span>{name}</span>
+          {verified ? <BadgeCheck className="hm-odoc__tick" size={15} aria-label="Verified" /> : null}
+        </h3>
+        {line.length ? (
+          <p className="hm-odoc__line">
+            {line.map((part, i) => (
+              <span key={part} className={i ? 'hm-odoc__spec' : 'hm-odoc__qual'}>
+                {part}
+              </span>
+            ))}
+          </p>
+        ) : null}
+      </div>
+      <div className="hm-odoc__foot">
+        {experience || rating || fee ? (
+          <ul className="hm-odoc__meta">
+            {experience ? <li>{experience}</li> : null}
+            {rating ? (
+              <li>
+                <Star size={11} aria-hidden /> {rating}
+              </li>
+            ) : null}
+            {fee ? (
+              <li className="hm-odoc__fee">
+                <strong>{fee}</strong>
+              </li>
+            ) : null}
+          </ul>
+        ) : null}
         <button type="button" className="hm-odoc__cta am-stretched" onClick={onOpen}>
           Consult
-          <ArrowRight size={14} aria-hidden />
+          <ArrowRight size={13} aria-hidden />
         </button>
       </div>
     </article>
@@ -688,9 +706,11 @@ export default function Home() {
                 </p>
               </div>
               <h2 id="hm-prakriti-title" className="hm-prakriti__title">
-                {prakritiComplete ? (prakritiName || T.prakritiDoneFallback) : T.prakritiDoneFallback}
+                {prakritiComplete ? prakritiName || T.prakritiDoneFallback : T.prakritiTitle}
               </h2>
-              <p className="hm-prakriti__text">{T.prakritiDoneText}</p>
+              <p className="hm-prakriti__text">
+                {prakritiComplete ? T.prakritiDoneText : T.prakritiText}
+              </p>
               <button
                 type="button"
                 className="hm-prakriti__cta"
@@ -778,6 +798,7 @@ export default function Home() {
           {ourDoctors.length > 0 ? (
             <Reveal as="section" className="hm-section hm-panel hm-odocs" aria-labelledby="hm-odocs-title">
               <SectionHeader
+                className="hm-head-inline"
                 id="hm-odocs-title"
                 title="Our doctors"
                 description="Certified Ayurvedic experts, ready to consult."
@@ -803,8 +824,8 @@ export default function Home() {
           {brands.length > 0 ? (
             <Reveal as="section" className="hm-section hm-panel hm-brands-panel" aria-labelledby="hm-brands-title">
               <SectionHeader
+                className="hm-head-inline"
                 id="hm-brands-title"
-                eyebrow={T.brandsEyebrow}
                 title={T.brandsTitle}
                 description={T.brandsText}
               />

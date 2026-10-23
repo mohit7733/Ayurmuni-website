@@ -919,3 +919,6 @@
 @media (max-width: 767px) {
   .st-page--products .st-hero--modern h1 { font-size: clamp(1.35rem, 1.05rem + 1.6vw, 1.7rem); }
 }
+
+/* Banner removed: start directly under the site header with the homepage top spacing. */
+.st-page.st-page--products { padding-top: 6px; }

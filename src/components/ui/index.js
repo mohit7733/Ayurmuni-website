@@ -15,6 +15,8 @@ export { default as Rating } from './Rating';
 export { default as Reveal } from './Reveal';
 export { default as ReviewCard } from './ReviewCard';
 export { default as SearchField } from './SearchField';
+export { default as PremiumSearch } from './PremiumSearch';
+export { searchSuggestions } from './searchSuggestions';
 export { default as SectionHeader } from './SectionHeader';
 export { default as Tile, TileGrid } from './Tile';
 export { default as ConcernCarousel } from './ConcernCarousel';

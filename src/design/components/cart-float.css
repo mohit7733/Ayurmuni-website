@@ -137,17 +137,6 @@
   }
 }
 
-@keyframes cf-in-dock {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
 @keyframes cf-bump {
   0% {
     transform: scale(0.85);
@@ -191,21 +180,11 @@
 }
 
 @media (min-width: 1024px) {
-  /* Corner stack, above Ayurchat, so the bar does not cover notification text. */
-  .cart-float {
-    left: auto;
-    right: 24px;
-    transform: none;
-    animation-name: cf-in-dock;
-  }
-
-  body:has(.ci-launch) .cart-float {
-    --cf-bottom: calc(24px + 56px + 12px);
-  }
-
+  /* Bottom-centre at every width (Rohit: cart in the centre, not the right).
+     Ayurchat stays alone in the bottom-right corner, so nothing overlaps. */
   body:has(.ci-launch.is-open) .cart-float {
-    --cf-bottom: 24px;
-    right: calc(24px + min(380px, 100vw - 32px) + 12px);
+    /* Chat panel open on the right: centre in the space left of it. */
+    left: calc((100vw - min(380px, 100vw - 32px) - 36px) / 2);
   }
 }
 
@@ -224,12 +203,6 @@
 
   .cart-float {
     transform: translateX(-50%);
-  }
-
-  @media (min-width: 1024px) {
-    .cart-float {
-      transform: none;
-    }
   }
 
   .cart-float__bar,

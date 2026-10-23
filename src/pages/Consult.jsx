@@ -2,18 +2,15 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SearchX, Stethoscope } from 'lucide-react';
 import AppShell from '../components/AppShell';
-import BannerCarousel from '../components/BannerCarousel';
 import SuggestedDoctorCard from '../components/SuggestedDoctorCard';
 import DummyOfferCard from '../components/DummyOfferCard';
 import LabHomeBanner from '../components/LabHomeBanner';
 import ProductCard from '../components/ProductCard';
 import ConsultationCard from '../components/consult/ConsultationCard';
 import { SectionHead, ViewAll } from '../components/ServiceHome';
-import { loadBannerCarouselForScreen } from '../services/bannerService';
 import { mapProductCategory, normalizeApiList } from '../home/catalog';
-import { getServiceCategoryId, resolveBannerNavigation } from '../home/serviceCategories';
+import { getServiceCategoryId } from '../home/serviceCategories';
 import useDashboardCategories from '../hooks/useDashboardCategories';
-import useLoggedIn from '../hooks/useLoggedIn';
 import useCategoryProducts from '../hooks/useCategoryProducts';
 import { getAllApprovedDoctors, getConsultHistory, getSuggestedDoctors } from '../services/consultService';
 import { getHealthCategories } from '../services/productService';
@@ -30,6 +27,7 @@ import {
   RailItem,
   Reveal,
   SearchField,
+  searchSuggestions,
   SkeletonGrid,
   Tile,
 } from '../components/ui';
@@ -56,14 +54,11 @@ const doctorMatchesSearch = (doctor, needle) =>
 
 export default function Consult() {
   const navigate = useNavigate();
-  const { categories: dashboardCategories, loading: categoriesLoading } = useDashboardCategories();
-  const loggedIn = useLoggedIn();
+  const { categories: dashboardCategories } = useDashboardCategories();
   const consultCategoryId = useMemo(
     () => getServiceCategoryId(dashboardCategories, 'consult'),
     [dashboardCategories],
   );
-  const [banners, setBanners] = useState([]);
-  const [bannersLoading, setBannersLoading] = useState(true);
   const [concerns, setConcerns] = useState([]);
   const [doctors, setDoctors] = useState([]);
   const [suggestedDoctors, setSuggestedDoctors] = useState([]);
@@ -118,21 +113,6 @@ export default function Consult() {
       alive = false;
     };
   }, [consultCategoryId]);
-
-  useEffect(() => {
-    let alive = true;
-    setBannersLoading(true);
-    (async () => {
-      if (categoriesLoading) return;
-      const items = await loadBannerCarouselForScreen('consult', consultCategoryId);
-      if (!alive) return;
-      setBanners(items);
-      setBannersLoading(false);
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [consultCategoryId, categoriesLoading, loggedIn]);
 
   const filteredHistory = useMemo(
     () =>
@@ -190,36 +170,10 @@ export default function Consult() {
     return () => observer.disconnect();
   }, [hasMore, loadMore, products.length]);
 
-  const openBanner = (item) => {
-    const target = resolveBannerNavigation(item);
-    if (!target) return;
-    if (target.external) {
-      window.open(target.href, '_blank', 'noopener,noreferrer');
-      return;
-    }
-    navigate(target.path);
-  };
-
   return (
     <AppShell tab="consult">
       <div className="hm-page svc-page">
         <div className="hm-body">
-          {bannersLoading || categoriesLoading || banners.length > 0 ? (
-            <BannerCarousel
-              items={banners}
-              loading={bannersLoading || categoriesLoading}
-              interval={6000}
-              onSelect={openBanner}
-              copy={{
-                label: H.offersLabel,
-                open: H.openOffer,
-                of: H.of,
-                show: H.showOffer,
-                pause: H.pauseOffers,
-                play: H.playOffers,
-              }}
-            />
-          ) : null}
 
           <PageBar id="cs-hero" title="Consult a doctor">
             <SearchField
@@ -228,6 +182,7 @@ export default function Consult() {
               onSubmit={(value) => setDebounced(String(value || '').trim())}
               placeholder={T.searchPlaceholder}
               label={T.searchLabel}
+              suggestions={searchSuggestions(concerns)}
             />
             <Button
               variant="accent"
