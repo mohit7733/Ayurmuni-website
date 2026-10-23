@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import logoImg from '/images/FinalLogo.webp';
 import { PRAKRITI_IMAGES } from '../questionnaire/configs';
 import * as ProfileServices from '../services/profileService';
+import { requireAuth } from '../services/guestAuth';
 
 const getDynamicTitle = (result) => {
   switch (result?.toLowerCase()) {
@@ -144,9 +145,15 @@ export default function PrakritiProfile() {
   }, [getPrakritiInfo]);
 
   const handleGoHome = () => navigate('/home', { replace: true });
-  const handleEditAssessment = () =>
+  // App: both entry points require a complete profile first.
+  const handleEditAssessment = async () => {
+    if (!(await requireAuth('Complete your profile to start prakriti assessment'))) return;
     navigate('/patient-faq', { state: { allowBack: true } });
-  const handleStartAssessment = () => navigate('/patient-faq');
+  };
+  const handleStartAssessment = async () => {
+    if (!(await requireAuth('Complete your profile to start prakriti assessment'))) return;
+    navigate('/patient-faq');
+  };
 
   const dominantHighlight = useMemo(() => {
     if (!analysisData?.doshas?.length) return '#0D614E';

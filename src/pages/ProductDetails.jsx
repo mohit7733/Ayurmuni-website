@@ -53,7 +53,6 @@ import {
 } from '../utils/reviewUtils';
 import {
   Button,
-  Disclaimer,
   EmptyState,
   FavButton,
   Modal,
@@ -777,11 +776,8 @@ export default function ProductDetails() {
                 })}
               </div>
             ) : null}
-            <Disclaimer />
           </section>
-        ) : (
-          <Disclaimer />
-        )}
+        ) : null}
 
         <section className="pd-reviews" aria-labelledby="pd-reviews-title">
           <SectionHeader

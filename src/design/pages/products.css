@@ -468,7 +468,14 @@
 .st-page--products .st-hero .am-search { flex: 1 1 auto; min-width: 0; }
 .st-page--products .am-tile-grid { gap: 4px 8px; }
 .st-page--products .am-tile { padding: 4px 6px; gap: 6px; }
-.st-page--products .st-controls { margin: 0 0 10px; padding: 0 0 10px; min-height: 0; }
+.st-page--products .st-controls { margin: 0 0 16px; padding: 0; min-height: 0; }
+
+/* Medicines card: the panel already pads the title, so don't stack another
+   gap under it. Sticky "top" is measured against this overflow-hidden card,
+   which was shoving the category column below the search row. */
+.hm-section.st-page--products { gap: 12px; }
+.hm-section.st-page--products > .hm-doctor-head { margin-bottom: 0; }
+.hm-section.st-page--products .st-cat-col { top: 0; }
 .st-page--products .st-more { margin-top: 14px; padding: 0; }
 @media (max-width: 767px) {
   .st-page--products { padding-top: 12px; gap: 20px; }

@@ -17,7 +17,13 @@ import {
 } from '../cart/mapCart';
 import { calculateOrderFees, feeRateLabel, parseFeeQuoteConfig } from '../cart/feeQuote';
 import { toRazorpayPaise } from '../consult/doctors';
-import { getOrderFeeQuote, placeOrder, verifyOrderPayment } from '../services/orderService';
+import {
+  buildCartItemIds,
+  buildOrderPayload,
+  getOrderFeeQuote,
+  placeOrder,
+  verifyOrderPayment,
+} from '../services/orderService';
 import { getAddresses, listAddresses, user_profile } from '../services/profileService';
 import { formatOrderStockError } from '../product/stock';
 import { showSuccessToast } from '../config/key';
@@ -120,7 +126,7 @@ export default function Checkout() {
   }, [location.state?.selectedAddress]);
 
   const cartItemIds = useMemo(
-    () => items.map((item) => String(item.cart_item_id || item.id)).filter(Boolean),
+    () => buildCartItemIds(items),
     [items],
   );
   const subtotal = useMemo(
@@ -277,20 +283,18 @@ export default function Checkout() {
     setPlacing(true);
     setOrderError('');
     try {
-      const result = await placeOrder({
-        delivery_address_id: addressId,
-        payment_type: 'cod',
-        payment_method: 'cash',
-        shipping_method: 'STD',
-        shipping_charges: shipping,
-        cod_charges: codFee,
-        prepaid_amount: total,
-        cart_item_ids: cartItemIds,
-        coupon_code: appliedCoupon?.code,
-        gift_wrap_item_ids: items
-          .filter((item) => item.gift_wrap)
-          .map((item) => item.cart_item_id || item.id),
-      });
+      const result = await placeOrder(
+        buildOrderPayload({
+          mode: 'cod',
+          delivery_address_id: addressId,
+          cartItems: items,
+          shipping_charges: shipping,
+          cod_charges: codFee,
+          shipping_method: 'STD',
+          prepaid_amount: total,
+          coupon_code: appliedCoupon?.code,
+        }),
+      );
       if (isOrderSuccessful(result)) {
         await finishOrder(result);
         return;
@@ -317,19 +321,18 @@ export default function Checkout() {
     setPlacing(true);
     setOrderError('');
     try {
-      const result = await placeOrder({
-        delivery_address_id: addressId,
-        payment_type: 'prepaid',
-        shipping_method: 'STD',
-        shipping_charges: shipping,
-        cod_charges: 0,
-        prepaid_amount: total,
-        cart_item_ids: cartItemIds,
-        coupon_code: appliedCoupon?.code,
-        gift_wrap_item_ids: items
-          .filter((item) => item.gift_wrap)
-          .map((item) => item.cart_item_id || item.id),
-      });
+      const result = await placeOrder(
+        buildOrderPayload({
+          mode: 'prepaid',
+          delivery_address_id: addressId,
+          cartItems: items,
+          shipping_charges: shipping,
+          cod_charges: 0,
+          shipping_method: 'STD',
+          prepaid_amount: total,
+          coupon_code: appliedCoupon?.code,
+        }),
+      );
       if (!result?.success && !isOrderSuccessful(result)) {
         const failMsg = failMessage(result, 'Order failed');
         if (handleCouponFailure(failMsg)) return;

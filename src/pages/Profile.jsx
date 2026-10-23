@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
+import { logoutOneSignalUser } from '../services/pushNotificationService';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, LogOut } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import PageHeader from '../components/PageHeader';
-import ReferralCard from '../components/ReferralCard';
 import { Utils } from '../common/utils';
 import { showSuccessToast } from '../config/key';
 import {
@@ -62,6 +62,7 @@ export default function Profile() {
 
   const logout = async () => {
     await clearLocationSession();
+    logoutOneSignalUser();
     await Utils.clearAllData();
     showSuccessToast('Signed out successfully', 'success');
     navigate('/welcome', { replace: true });
@@ -84,6 +85,7 @@ export default function Profile() {
 
   const finishDelete = async () => {
     await clearLocationSession();
+    logoutOneSignalUser();
     await Utils.clearAllData();
     navigate('/welcome', { replace: true });
   };
@@ -225,10 +227,7 @@ export default function Profile() {
           ))}
         </div>
 
-        {/* Referral Card */}
-        <div className="pf-referral-section">
-          <ReferralCard />
-        </div>
+        {/* Refer & Earn (ReferralCard) removed per Rohit. */}
 
         <div className="pf-menus">
           <div className="pf-menu">

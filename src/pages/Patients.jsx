@@ -30,10 +30,15 @@ export default function Patients() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [patientRes, profileRes] = await Promise.all([getPatientList(), user_profile()]);
-    setPatients(listPatients(patientRes));
-    setUser(profileRes?.data || null);
-    setLoading(false);
+    try {
+      const [patientRes, profileRes] = await Promise.all([getPatientList(), user_profile()]);
+      setPatients(listPatients(patientRes));
+      setUser(profileRes?.data || null);
+    } catch {
+      showSuccessToast('Failed to load data', 'error');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -168,7 +173,7 @@ export default function Patients() {
             {patients.length === 0 ? (
               <div className="empty-copy">
                 <strong>No patients added</strong>
-                <p>Add your first family member to get started.</p>
+                <p>Add your first patient to get started.</p>
               </div>
             ) : (
               patients.map((item) => {

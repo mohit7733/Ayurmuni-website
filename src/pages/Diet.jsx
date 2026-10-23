@@ -10,11 +10,13 @@ import { getServiceCategoryId } from '../home/serviceCategories';
 import useDashboardCategories from '../hooks/useDashboardCategories';
 import useActiveDietHome from '../hooks/useActiveDietHome';
 import { getHealthCategories } from '../services/productService';
+import { getDietPlans } from '../services/dietService';
 import useDietPlans from '../diet/useDietPlans';
 import {
   getDietListStatus,
   getDietPlanCoverUrl,
   getDietPlanRatingLabel,
+  normalizeDietPlanList,
 } from '../diet/utils';
 import {
   Button,
@@ -29,7 +31,49 @@ import {
 } from '../components/ui';
 import { HOME_COPY as H } from '../content/home';
 
-const PRAKRITI = ['all', 'Vata', 'Pitta', 'Kapha', 'Vata-Pitta', 'Pitta-Kapha', 'Vata-Kapha'];
+const ALL = 'all';
+// App DietScreen defaults; the lists grow from loaded plans (mergeFilterCatalog).
+const DEFAULT_PRAKRITI = ['Vata', 'Pitta', 'Kapha', 'Vata-Pitta', 'Pitta-Kapha', 'Vata-Kapha'];
+const DEFAULT_DURATIONS = ['7', '14', '21', '30', '45', '60'];
+const DEFAULT_CALORIES = ['1200', '1500', '1800', '2000', '2200', '2500'];
+
+const planDurationValue = (plan) =>
+  String(plan?.duration ?? plan?.duration_days ?? plan?.days ?? plan?.plan_duration ?? '').trim();
+const planCaloriesValue = (plan) =>
+  String(
+    plan?.calories ?? plan?.calorie ?? plan?.daily_calories ?? plan?.total_calories ?? plan?.calorie_target ?? '',
+  ).trim();
+const sortNumericLike = (a, b) => {
+  const na = Number(a);
+  const nb = Number(b);
+  if (Number.isFinite(na) && Number.isFinite(nb)) return na - nb;
+  return a.localeCompare(b);
+};
+const mergeFilterCatalog = (prev, plans) => {
+  const prakriti = new Set(prev.prakriti);
+  const durations = new Set(prev.durations);
+  const calories = new Set(prev.calories);
+  const diseases = new Map(prev.diseases.map((d) => [d.id, d]));
+  plans.forEach((plan) => {
+    const p = String(plan?.prakriti || '').trim();
+    if (p) prakriti.add(p);
+    const dur = planDurationValue(plan);
+    if (dur) durations.add(dur);
+    const cal = planCaloriesValue(plan);
+    if (cal) calories.add(cal);
+    (Array.isArray(plan?.health_diseases) ? plan.health_diseases : []).forEach((d) => {
+      const id = String(d?.id ?? '').trim();
+      const name = String(d?.name ?? '').trim();
+      if (id && name) diseases.set(id, { id, name });
+    });
+  });
+  return {
+    prakriti: Array.from(prakriti).sort((a, b) => a.localeCompare(b)),
+    diseases: Array.from(diseases.values()).sort((a, b) => a.name.localeCompare(b.name)),
+    durations: Array.from(durations).sort(sortNumericLike),
+    calories: Array.from(calories).sort(sortNumericLike),
+  };
+};
 const STATUS_TABS = [
   { key: 'all', label: 'All' },
   { key: 'active', label: 'Active' },
@@ -62,7 +106,18 @@ export default function Diet() {
 
   const [search, setSearch] = useState('');
   const [debounced, setDebounced] = useState('');
-  const [prakriti, setPrakriti] = useState('all');
+  const [prakriti, setPrakriti] = useState(ALL);
+  const [diseaseFilter, setDiseaseFilter] = useState(ALL);
+  const [paidFilter, setPaidFilter] = useState(ALL);
+  const [durationFilter, setDurationFilter] = useState(ALL);
+  const [caloriesFilter, setCaloriesFilter] = useState(ALL);
+  const [sortFilter, setSortFilter] = useState(ALL);
+  const [filterCatalog, setFilterCatalog] = useState({
+    prakriti: DEFAULT_PRAKRITI,
+    diseases: [],
+    durations: DEFAULT_DURATIONS,
+    calories: DEFAULT_CALORIES,
+  });
   const [statusTab, setStatusTab] = useState('all');
 
   useEffect(() => {
@@ -73,17 +128,119 @@ export default function Diet() {
   const listFilters = useMemo(
     () => ({
       search: debounced || undefined,
-      prakriti: prakriti !== 'all' ? prakriti : undefined,
-      health_category_id: !healthDiseaseId && healthCategoryId ? healthCategoryId : undefined,
-      health_disease_id: healthDiseaseId || undefined,
+      prakriti: prakriti !== ALL ? prakriti : undefined,
+      health_category_id:
+        diseaseFilter === ALL && healthCategoryId ? healthCategoryId : undefined,
+      health_disease_id: (diseaseFilter !== ALL ? diseaseFilter : '') || healthDiseaseId || undefined,
+      is_paid: paidFilter === 'true' || paidFilter === 'false' ? paidFilter : undefined,
+      duration: durationFilter !== ALL ? durationFilter : undefined,
+      calories: caloriesFilter !== ALL ? caloriesFilter : undefined,
+      sort: ['popularity', 'latest', 'rating'].includes(sortFilter) ? sortFilter : undefined,
     }),
-    [debounced, prakriti, healthCategoryId, healthDiseaseId],
+    [
+      debounced,
+      prakriti,
+      diseaseFilter,
+      paidFilter,
+      durationFilter,
+      caloriesFilter,
+      sortFilter,
+      healthCategoryId,
+      healthDiseaseId,
+    ],
   );
 
   const { plans, loadingList, loadingMore, hasMore, loadMore } = useDietPlans({
     listType: wantsAll ? 'all' : null,
     listFilters,
   });
+
+  // Grow option lists from loaded plans; never shrink on filter (app behaviour).
+  useEffect(() => {
+    if (!plans?.length) return;
+    setFilterCatalog((prev) => mergeFilterCatalog(prev, plans));
+  }, [plans]);
+
+  // Quiet seed from the catalog, as the app does: GET ?type=all&page=1&page_size=50.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await getDietPlans({ type: 'all', page: 1, page_size: 50 });
+        if (cancelled || res?.success === false) return;
+        const mapped = normalizeDietPlanList(res);
+        if (mapped.length) setFilterCatalog((prev) => mergeFilterCatalog(prev, mapped));
+      } catch {
+        /* non-blocking */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const filterSelects = [
+    {
+      key: 'prakriti',
+      label: 'Prakriti',
+      value: prakriti,
+      set: setPrakriti,
+      options: [{ label: 'All Prakriti', value: ALL }, ...filterCatalog.prakriti.map((v) => ({ label: v, value: v }))],
+    },
+    {
+      key: 'disease',
+      label: 'Health disease',
+      value: diseaseFilter,
+      set: setDiseaseFilter,
+      options: [
+        { label: 'All Diseases', value: ALL },
+        ...filterCatalog.diseases.map((d) => ({ label: d.name, value: d.id })),
+      ],
+    },
+    {
+      key: 'paid',
+      label: 'Paid status',
+      value: paidFilter,
+      set: setPaidFilter,
+      options: [
+        { label: 'All', value: ALL },
+        { label: 'Free', value: 'false' },
+        { label: 'Paid', value: 'true' },
+      ],
+    },
+    {
+      key: 'duration',
+      label: 'Duration',
+      value: durationFilter,
+      set: setDurationFilter,
+      options: [
+        { label: 'All Durations', value: ALL },
+        ...filterCatalog.durations.map((v) => ({ label: `${v} days`, value: v })),
+      ],
+    },
+    {
+      key: 'calories',
+      label: 'Calories',
+      value: caloriesFilter,
+      set: setCaloriesFilter,
+      options: [
+        { label: 'All Calories', value: ALL },
+        ...filterCatalog.calories.map((v) => ({ label: `${v} kcal`, value: v })),
+      ],
+    },
+    {
+      key: 'sort',
+      label: 'Sort by',
+      value: sortFilter,
+      set: setSortFilter,
+      options: [
+        { label: 'Default', value: ALL },
+        { label: 'Popularity', value: 'popularity' },
+        { label: 'Latest', value: 'latest' },
+        { label: 'Highest rating', value: 'rating' },
+      ],
+    },
+  ];
 
   const visible = useMemo(() => {
     if (statusTab === 'all') return plans;
@@ -125,57 +282,24 @@ export default function Diet() {
   const listTitle =
     statusTab === 'active' ? 'Active plans' : statusTab === 'inactive' ? 'Past plans' : H.dietTitle;
 
+  const searchBar = (
+      <PageBar className="am-page-bar--slot" id="dt-title" title={`${categoryName || 'Diet'} plans`}>
+        <SearchField
+          value={search}
+          onChange={setSearch}
+          onSubmit={(value) => setDebounced(String(value || '').trim())}
+          placeholder="Search diet plans"
+          label="Search diet plans"
+          suggestions={searchSuggestions(plans)}
+        />
+      </PageBar>
+  );
+
   return (
     <AppShell tab="home">
       <div className="hm-page svc-page">
         <div className="hm-body">
 
-          <PageBar id="dt-title" title={`${categoryName || 'Diet'} plans`}>
-            <SearchField
-              value={search}
-              onChange={setSearch}
-              onSubmit={(value) => setDebounced(String(value || '').trim())}
-              placeholder="Search diet plans"
-              label="Search diet plans"
-              suggestions={searchSuggestions(plans)}
-            />
-            <Button
-              variant="accent"
-              onClick={() => navigate('/diet/weekly')}
-              leadingIcon={<Calendar size={16} aria-hidden />}
-              trailingIcon={<ArrowRight size={16} aria-hidden />}
-            >
-              Weekly planner
-            </Button>
-          </PageBar>
-
-          {activeDiet ? <ActiveDietCard plan={activeDiet} /> : null}
-
-          {concerns.length ? (
-            <section className="hm-section hm-panel hm-concerns-panel" aria-labelledby="dt-concerns-title">
-              <SectionHead
-                id="dt-concerns-title"
-                title={H.concernsTitle}
-                description="Plans tuned for what you want to improve."
-              />
-              <ConcernCarousel label={H.concernsTitle}>
-                {concerns.map((item) => (
-                  <Tile
-                    cutout
-                    key={item.id}
-                    image={item.image_url}
-                    icon={Salad}
-                    label={item.name}
-                    onClick={() =>
-                      navigate(
-                        `/diet?category=${encodeURIComponent(item.id)}&name=${encodeURIComponent(item.name)}`,
-                      )
-                    }
-                  />
-                ))}
-              </ConcernCarousel>
-            </section>
-          ) : null}
 
           <section className="hm-well hm-well--nourish" aria-labelledby="dt-list-title">
             <SectionHead
@@ -187,15 +311,33 @@ export default function Diet() {
                   : `${visible.length} ${visible.length === 1 ? 'plan' : 'plans'}`
               }
               action={
-                !wantsAll ? <ViewAll label={H.dietTitle} onClick={() => navigate('/diet?view=all')} /> : null
+                <div className="am-head-tools">
+                  {searchBar}
+                  <Button
+                    variant="accent"
+                    onClick={() => navigate('/diet/weekly')}
+                    leadingIcon={<Calendar size={16} aria-hidden />}
+                    trailingIcon={<ArrowRight size={16} aria-hidden />}
+                  >
+                    Weekly planner
+                  </Button>
+                  {!wantsAll ? <ViewAll label={H.dietTitle} onClick={() => navigate('/diet?view=all')} /> : null}
+                </div>
               }
             />
 
-            <div className="svc-chips" role="group" aria-label="Filter by prakriti">
-              {PRAKRITI.map((item) => (
-                <Chip key={item} selected={prakriti === item} onClick={() => setPrakriti(item)}>
-                  {item === 'all' ? 'All prakriti' : item}
-                </Chip>
+            <div className="dt-filters" role="group" aria-label="Filter diet plans">
+              {filterSelects.map((f) => (
+                <label key={f.key} className={`dt-filter${f.value !== ALL ? ' is-active' : ''}`}>
+                  <span className="dt-filter-label">{f.label}</span>
+                  <select value={f.value} onChange={(e) => f.set(e.target.value)} aria-label={f.label}>
+                    {f.options.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
               ))}
             </div>
             <div className="svc-chips" role="group" aria-label="Filter by plan status">
@@ -254,6 +396,35 @@ export default function Diet() {
               </div>
             ) : null}
           </section>
+
+          {activeDiet ? <ActiveDietCard plan={activeDiet} /> : null}
+
+          {concerns.length ? (
+            <section className="hm-section hm-panel hm-concerns-panel" aria-labelledby="dt-concerns-title">
+              <SectionHead
+                id="dt-concerns-title"
+                title={H.concernsTitle}
+                description="Plans tuned for what you want to improve."
+              />
+              <ConcernCarousel label={H.concernsTitle}>
+                {concerns.map((item) => (
+                  <Tile
+                    cutout
+                    key={item.id}
+                    image={item.image_url}
+                    icon={Salad}
+                    label={item.name}
+                    onClick={() =>
+                      navigate(
+                        `/diet?category=${encodeURIComponent(item.id)}&name=${encodeURIComponent(item.name)}`,
+                      )
+                    }
+                  />
+                ))}
+              </ConcernCarousel>
+            </section>
+          ) : null}
+
         </div>
       </div>
     </AppShell>

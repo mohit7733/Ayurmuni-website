@@ -22,7 +22,7 @@ import { AUTH_COPY as T } from '../content/auth';
 import {
   getPoliciesList,
   getPolicyDocument,
-  getRequiredPolicies,
+  getLegalRequiredPolicies,
   normalizePolicyContent,
 } from '../services/policyService';
 import '../design/pages/auth.css';
@@ -78,7 +78,7 @@ export default function Login() {
     setPolicyError(null);
     setPolicyDoc(null);
     try {
-      const res = await getRequiredPolicies(policyType);
+      const res = await getLegalRequiredPolicies(policyType);
       if (res?.success === false) {
         setPolicyError(res?.message || 'Unable to load this policy right now.');
         return;

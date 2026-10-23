@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Check, Leaf, Pill, ShoppingBag, SlidersHorizontal, X } from 'lucide-react';
+import { Check, Leaf, Pill, SlidersHorizontal, X } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import ProductCard from '../components/ProductCard';
 import { DietPlanCard, SectionHead, ViewAll } from '../components/ServiceHome';
@@ -14,7 +14,6 @@ import { getServiceCategoryId } from '../home/serviceCategories';
 import useDashboardCategories from '../hooks/useDashboardCategories';
 import useCategoryProducts from '../hooks/useCategoryProducts';
 import useProductCategories from '../hooks/useProductCategories';
-import { useCart } from '../hooks/useCart';
 import { getHealthCategories } from '../services/productService';
 import { getBrands, listBrands, mapBrandItem } from '../services/medicineService';
 import { getOrders, normalizeOrdersList } from '../services/orderService';
@@ -54,7 +53,6 @@ export default function Medicines() {
   const concernName = params.get('name') || '';
   const categoryId = params.get('category') || '';
   const categoryName = params.get('name') || '';
-  const { itemCount } = useCart();
   const { categories: dashboardCategories, loading: homeLoading } = useDashboardCategories();
   const medicineCategoryId = useMemo(
     () => getServiceCategoryId(dashboardCategories, 'medicine'),
@@ -294,42 +292,188 @@ export default function Medicines() {
     ? `Medicines in ${activeCategoryName || 'this category'}.`
     : T.allMedicinesText;
 
+  const placeBar = showSkeleton ? 'top' : 'all';
+  const searchBar = (
+      <PageBar className="am-page-bar--slot" id="med-hero" title="Shop medicines">
+        <SearchField
+          value={search}
+          onChange={setSearch}
+          onSubmit={goSearch}
+          placeholder={H.searchPlaceholder}
+          label="Search medicines"
+          includeRecent
+        suggestions={searchSuggestions(concerns, brands)}
+        />
+      </PageBar>
+  );
+
   return (
     <AppShell tab="medicines">
       <div className="hm-page svc-page">
         <div className="hm-body">
 
-          <PageBar id="med-hero" title="Shop medicines">
-            <SearchField
-              value={search}
-              onChange={setSearch}
-              onSubmit={goSearch}
-              placeholder={H.searchPlaceholder}
-              label="Search medicines"
-              suggestions={searchSuggestions(concerns, brands)}
-            />
-            <button
-              type="button"
-              className="pm-pill"
-              onClick={() => navigate('/cart')}
-              aria-label={itemCount ? `Cart, ${itemCount} items` : 'Cart'}
-            >
-              <span className="pm-pill__icon" aria-hidden>
-                <ShoppingBag size={16} />
-              </span>
-              Cart
-              {itemCount ? (
-                <span className="pm-pill__count" aria-hidden>
-                  {itemCount > 99 ? '99+' : itemCount}
-                </span>
-              ) : null}
-            </button>
-          </PageBar>
+          {placeBar === 'top' ? searchBar : null}
 
           {showSkeleton ? (
             <SkeletonGrid count={8} className="svc-catalog" label="Loading medicines" />
           ) : (
             <>
+              <div className="hm-doctor-row">
+                <section className="hm-section st-page--products" aria-labelledby="med-all">
+                  <SectionHead
+                    id="med-all"
+                    title={catalogTitle}
+                    description={catalogText}
+                    action={
+                      categoryId ? (
+                        <ViewAll label={T.allMedicines} onClick={showAllMedicines} />
+                      ) : null
+                    }
+                  />
+                  <div className="st-catalog">
+                    <nav className="st-cat-col" aria-labelledby="med-cats-title">
+                      <p className="st-cat-col__eyebrow">Filter</p>
+                      <h3 id="med-cats-title">{T.shopByCategory}</h3>
+                      <ul className="st-cat-filter">
+                        <li>
+                          <button
+                            type="button"
+                            className={!categoryId ? 'is-on' : ''}
+                            aria-pressed={!categoryId}
+                            onClick={showAllMedicines}
+                          >
+                            <span className="st-cat-filter__mark" aria-hidden>
+                              All
+                            </span>
+                            <span className="st-cat-filter__copy">
+                              <strong>{T.allMedicines}</strong>
+                              <em>Full catalogue</em>
+                            </span>
+                          </button>
+                        </li>
+                        {productCategories.map((item) => {
+                          const image = resolveImageUrl(item);
+                          const on = String(categoryId) === String(item.id);
+                          const initial = String(item.name || '?').trim().charAt(0).toUpperCase();
+                          return (
+                            <li key={item.id}>
+                              <button
+                                type="button"
+                                className={on ? 'is-on' : ''}
+                                aria-pressed={on}
+                                onClick={() => selectCategory(item.id, item.name)}
+                              >
+                                <span className="st-cat-filter__mark" aria-hidden>
+                                  {image ? <img src={image} alt="" /> : initial}
+                                </span>
+                                <span className="st-cat-filter__copy">
+                                  <strong>{item.name}</strong>
+                                </span>
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                      {categoriesLoading && productCategories.length === 0 ? (
+                        <p className="st-cat-col__status">Loading categories…</p>
+                      ) : null}
+                    </nav>
+                    <div className="st-catalog__main">
+                  {products.length > 0 || hasActiveFilters || categoryId ? (
+                    <div className="st-controls">
+                      <div className="st-controls__info">
+                        <span>
+                          {filteredProducts.length}{' '}
+                          {filteredProducts.length === 1 ? 'medicine' : 'medicines'}
+                        </span>
+                        {hasActiveFilters ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={clearFilters}
+                            leadingIcon={<X size={14} />}
+                          >
+                            Clear filters
+                          </Button>
+                        ) : null}
+                      </div>
+                      {placeBar === 'all' ? searchBar : null}
+                      <div className="st-controls__actions">
+                        <select
+                          value={sortBy}
+                          onChange={(event) => setSortBy(event.target.value)}
+                          className="st-sort-select"
+                          aria-label="Sort medicines"
+                        >
+                          <option value="relevance">Sort: Relevance</option>
+                          <option value="price_low">Price: Low to High</option>
+                          <option value="price_high">Price: High to Low</option>
+                          <option value="rating">Highest Rated</option>
+                          <option value="name">Name: A-Z</option>
+                        </select>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => setShowFilters(true)}
+                          leadingIcon={<SlidersHorizontal size={16} />}
+                        >
+                          Filters
+                        </Button>
+                      </div>
+                    </div>
+                  ) : placeBar === 'all' ? (
+                    <div className="st-controls st-controls--search-only">{searchBar}</div>
+                  ) : null}
+                  {catalogLoading ? (
+                    <SkeletonGrid count={8} className="svc-catalog" label="Loading medicines" />
+                  ) : filteredProducts.length === 0 ? (
+                    <EmptyState
+                      icon={<Leaf size={28} />}
+                      title={
+                        hasActiveFilters
+                          ? 'No medicines match filters'
+                          : categoryId
+                            ? 'No medicines in this category'
+                            : 'No medicines available'
+                      }
+                      description={
+                        hasActiveFilters
+                          ? 'Try adjusting your filters'
+                          : categoryId
+                            ? 'Try another category, or view all medicines.'
+                            : 'Try another category, or search by medicine name.'
+                      }
+                      action={
+                        hasActiveFilters ? (
+                          <Button variant="secondary" onClick={clearFilters}>
+                            Clear filters
+                          </Button>
+                        ) : categoryId ? (
+                          <Button variant="secondary" onClick={showAllMedicines}>
+                            All medicines
+                          </Button>
+                        ) : null
+                      }
+                    />
+                  ) : (
+                    <ul className="svc-catalog">
+                      {filteredProducts.map((item) => (
+                        <li key={item.variant_id || item.id}>
+                          <ProductCard item={item} />
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {hasMore ? (
+                    <div ref={moreRef} className="svc-more" aria-live="polite">
+                      {loadingMore ? 'Loading…' : ''}
+                    </div>
+                  ) : null}
+                    </div>
+                  </div>
+                </section>
+              </div>
+
               {ordersLoading || recent.length > 0 ? (
                 <div className="hm-doctor-row">
                   <Reveal as="section" className="hm-section" aria-labelledby="med-recent">
@@ -424,158 +568,6 @@ export default function Medicines() {
                 </Reveal>
               ) : null}
 
-              <div className="hm-doctor-row">
-                <section className="hm-section st-page--products" aria-labelledby="med-all">
-                  <SectionHead
-                    id="med-all"
-                    title={catalogTitle}
-                    description={catalogText}
-                    action={
-                      categoryId ? (
-                        <ViewAll label={T.allMedicines} onClick={showAllMedicines} />
-                      ) : null
-                    }
-                  />
-                  <div className="st-catalog">
-                    <nav className="st-cat-col" aria-labelledby="med-cats-title">
-                      <p className="st-cat-col__eyebrow">Filter</p>
-                      <h3 id="med-cats-title">{T.shopByCategory}</h3>
-                      <ul className="st-cat-filter">
-                        <li>
-                          <button
-                            type="button"
-                            className={!categoryId ? 'is-on' : ''}
-                            aria-pressed={!categoryId}
-                            onClick={showAllMedicines}
-                          >
-                            <span className="st-cat-filter__mark" aria-hidden>
-                              All
-                            </span>
-                            <span className="st-cat-filter__copy">
-                              <strong>{T.allMedicines}</strong>
-                              <em>Full catalogue</em>
-                            </span>
-                          </button>
-                        </li>
-                        {productCategories.map((item) => {
-                          const image = resolveImageUrl(item);
-                          const on = String(categoryId) === String(item.id);
-                          const initial = String(item.name || '?').trim().charAt(0).toUpperCase();
-                          return (
-                            <li key={item.id}>
-                              <button
-                                type="button"
-                                className={on ? 'is-on' : ''}
-                                aria-pressed={on}
-                                onClick={() => selectCategory(item.id, item.name)}
-                              >
-                                <span className="st-cat-filter__mark" aria-hidden>
-                                  {image ? <img src={image} alt="" /> : initial}
-                                </span>
-                                <span className="st-cat-filter__copy">
-                                  <strong>{item.name}</strong>
-                                </span>
-                              </button>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                      {categoriesLoading && productCategories.length === 0 ? (
-                        <p className="st-cat-col__status">Loading categories…</p>
-                      ) : null}
-                    </nav>
-                    <div className="st-catalog__main">
-                  {products.length > 0 || hasActiveFilters || categoryId ? (
-                    <div className="st-controls">
-                      <div className="st-controls__info">
-                        <span>
-                          {filteredProducts.length}{' '}
-                          {filteredProducts.length === 1 ? 'medicine' : 'medicines'}
-                        </span>
-                        {hasActiveFilters ? (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={clearFilters}
-                            leadingIcon={<X size={14} />}
-                          >
-                            Clear filters
-                          </Button>
-                        ) : null}
-                      </div>
-                      <div className="st-controls__actions">
-                        <select
-                          value={sortBy}
-                          onChange={(event) => setSortBy(event.target.value)}
-                          className="st-sort-select"
-                          aria-label="Sort medicines"
-                        >
-                          <option value="relevance">Sort: Relevance</option>
-                          <option value="price_low">Price: Low to High</option>
-                          <option value="price_high">Price: High to Low</option>
-                          <option value="rating">Highest Rated</option>
-                          <option value="name">Name: A-Z</option>
-                        </select>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => setShowFilters(true)}
-                          leadingIcon={<SlidersHorizontal size={16} />}
-                        >
-                          Filters
-                        </Button>
-                      </div>
-                    </div>
-                  ) : null}
-                  {catalogLoading ? (
-                    <SkeletonGrid count={8} className="svc-catalog" label="Loading medicines" />
-                  ) : filteredProducts.length === 0 ? (
-                    <EmptyState
-                      icon={<Leaf size={28} />}
-                      title={
-                        hasActiveFilters
-                          ? 'No medicines match filters'
-                          : categoryId
-                            ? 'No medicines in this category'
-                            : 'No medicines available'
-                      }
-                      description={
-                        hasActiveFilters
-                          ? 'Try adjusting your filters'
-                          : categoryId
-                            ? 'Try another category, or view all medicines.'
-                            : 'Try another category, or search by medicine name.'
-                      }
-                      action={
-                        hasActiveFilters ? (
-                          <Button variant="secondary" onClick={clearFilters}>
-                            Clear filters
-                          </Button>
-                        ) : categoryId ? (
-                          <Button variant="secondary" onClick={showAllMedicines}>
-                            All medicines
-                          </Button>
-                        ) : null
-                      }
-                    />
-                  ) : (
-                    <ul className="svc-catalog">
-                      {filteredProducts.map((item) => (
-                        <li key={item.variant_id || item.id}>
-                          <ProductCard item={item} />
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  {hasMore ? (
-                    <div ref={moreRef} className="svc-more" aria-live="polite">
-                      {loadingMore ? 'Loading…' : ''}
-                    </div>
-                  ) : null}
-                    </div>
-                  </div>
-                </section>
-              </div>
             </>
           )}
         </div>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import ChangeNumberAction from '../components/auth/ChangeNumberAction';
 import {
   getOnboardingEntryScreen,
   markAsGuest,
@@ -95,6 +96,7 @@ export default function CompleteDetails() {
       <button type="button" className="ghost" disabled={loading} onClick={leaveGate}>
         Keep browsing
       </button>
+      <ChangeNumberAction disabled={loading} />
     </section>
   );
 }

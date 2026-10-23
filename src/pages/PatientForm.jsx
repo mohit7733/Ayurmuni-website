@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import AppShell from '../components/AppShell';
 import { showSuccessToast } from '../config/key';
+import { Button, Modal } from '../components/ui';
 import { requireAuth } from '../services/guestAuth';
 import { UploadProfilePhoto } from '../services/profileService';
 import { extractUploadUrl } from '../services/prescriptionService';
@@ -27,6 +28,17 @@ const RELATION_OPTIONS = [
   { label: 'Child', value: 'Child' },
   { label: 'Other', value: 'Others' },
 ];
+
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_RE = /^\d{10}$/;
+const API_FIELD_MAP = {
+  first_name: 'fullname', last_name: 'fullname', dob: 'dob', gender: 'gender', blood_group: 'bloodG',
+  relation: 'relation', height: 'height', weight: 'weight', phone_number: 'phonenumber', email: 'email',
+  emergency_contact_name: 'contactName', emergency_contact_relation: 'emergencyRelation',
+  emergency_contact_phone: 'EmergencyNO', insurance_provider: 'insurance',
+  insurance_policy_number: 'policyNO', insurance_valid_thru: 'valid', profile_picture: 'profilePicture',
+};
 
 const BLOOD_GROUP_OPTIONS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
@@ -107,7 +119,18 @@ export default function PatientForm() {
     })();
   }, [isNew, patientId]);
 
-  const setField = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
+  const [errors, setErrors] = useState({});
+  const [submitted, setSubmitted] = useState(false);
+  const [fixFields, setFixFields] = useState(null);
+  const setField = (key, value) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+    setErrors((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  };
 
   const onImage = async (event) => {
     const file = event.target.files?.[0];
@@ -131,31 +154,57 @@ export default function PatientForm() {
     }
   };
 
-  const validateForm = () => {
-    if (!form.fullname.trim()) return 'Full name is required';
-    if (!form.dob) return 'Date of birth is required';
-    if (!form.gender) return 'Gender is required';
-    if (!form.bloodG) return 'Blood group is required';
-    if (!form.relation) return 'Relation is required';
-    if (isSelfRelation(form.relation) && isNew) return 'Self relation cannot be selected';
-    if (!isNew && !isSelfRelation(patientData?.relation) && isSelfRelation(form.relation)) {
-      return 'Self relation cannot be selected';
+  // Port of app AddEditPatientDetail getFieldErrors / API_FIELD_MAP / onSavePatient.
+  const getFieldErrors = (data) => {
+    const errs = {};
+    const t = (v) => String(v || '').trim();
+    if (!t(data.fullname)) errs.fullname = 'Full name is required';
+    if (!t(data.dob)) errs.dob = 'Date of birth is required';
+    else if (!ISO_DATE_RE.test(data.dob)) errs.dob = 'Use YYYY-MM-DD format';
+    if (!t(data.gender)) errs.gender = 'Gender is required';
+    if (!t(data.bloodG)) errs.bloodG = 'Blood group is required';
+    if (!t(data.relation)) errs.relation = 'Relation is required';
+    else if (isSelfRelation(data.relation) && isNew) errs.relation = 'Self relation cannot be selected';
+    else if (!isNew && !isSelfRelation(patientData?.relation) && isSelfRelation(data.relation)) {
+      errs.relation = 'Self relation cannot be selected';
     }
-    if (!/^\d{10}$/.test(form.phonenumber)) return 'Phone number must be 10 digits';
-    return null;
+    if (!t(data.phonenumber)) errs.phonenumber = 'Phone number is required';
+    else if (!PHONE_RE.test(data.phonenumber)) errs.phonenumber = 'Phone number must be 10 digits';
+    if (t(data.email) && !EMAIL_RE.test(t(data.email))) errs.email = 'Enter a valid email address';
+    if (t(data.height)) {
+      const h = Number(data.height);
+      if (!Number.isFinite(h) || h <= 0) errs.height = 'Enter a valid height';
+    }
+    if (t(data.weight)) {
+      const w = Number(data.weight);
+      if (!Number.isFinite(w) || w <= 0) errs.weight = 'Enter a valid weight';
+    }
+    if (t(data.EmergencyNO) && !PHONE_RE.test(data.EmergencyNO)) {
+      errs.EmergencyNO = 'Emergency phone must be 10 digits';
+    }
+    if (t(data.valid) && !ISO_DATE_RE.test(data.valid)) errs.valid = 'Use YYYY-MM-DD format';
+    return errs;
+  };
+
+  const canSubmit = (() => {
+    const t = (v) => String(v || '').trim();
+    if (!(t(form.fullname) && t(form.dob) && t(form.gender) && t(form.bloodG) && t(form.relation) && PHONE_RE.test(form.phonenumber))) return false;
+    if (isSelfRelation(form.relation) && isNew) return false;
+    if (!isNew && !isSelfRelation(patientData?.relation) && isSelfRelation(form.relation)) return false;
+    return true;
+  })();
+
+  const showError = (key) => (submitted || errors[key] ? errors[key] : undefined);
+  const fieldError = (k) => {
+    const msg = showError(k);
+    return msg ? <small className="pf-field-error" role="alert">{msg}</small> : null;
   };
 
   const save = async () => {
-    if (isNew) {
-      const error = validateForm();
-      if (error) {
-        showSuccessToast(error, 'error');
-        return;
-      }
-    } else if (!isSelfRelation(patientData?.relation) && isSelfRelation(form.relation)) {
-      showSuccessToast('Self relation cannot be selected', 'error');
-      return;
-    }
+    setSubmitted(true);
+    const fieldErrors = getFieldErrors(form);
+    setErrors(fieldErrors);
+    if (Object.keys(fieldErrors).length > 0) return;
 
     const nameParts = form.fullname.trim().split(' ');
     const payload = {
@@ -181,20 +230,37 @@ export default function PatientForm() {
     setSaving(true);
     try {
       const res = isNew ? await addPatient(payload) : await updatePatientById(patientId, payload);
-      if (res?.success === false) {
-        const data = res?.data || res;
-        const fieldError =
-          data && typeof data === 'object'
-            ? Object.entries(data)
-                .filter(([, value]) => Array.isArray(value) || typeof value === 'string')
-                .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`)
-                .join('\n')
-            : '';
-        showSuccessToast(fieldError || res?.message || 'Unable to save patient', 'error');
+      const apiError = res?.success === false ? res?.data || res?.errors || res : res?.data;
+      const failed =
+        res?.success === false || Boolean(apiError?.error || apiError?.detail);
+      if (!failed) {
+        navigate(-1);
         return;
       }
-      showSuccessToast(isNew ? 'Patient added' : 'Patient updated', 'success');
-      navigate('/profile/patients');
+      if (apiError && typeof apiError === 'object' && !apiError.message) {
+        const mapped = {};
+        Object.entries(apiError).forEach(([key, value]) => {
+          const field = API_FIELD_MAP[key];
+          if (!field) return;
+          const message = Array.isArray(value) ? value.map(String).join(', ') : String(value || '').trim();
+          if (!message) return;
+          mapped[field] = mapped[field] ? `${mapped[field]} ${message}` : message;
+        });
+        if (Object.keys(mapped).length > 0) {
+          setErrors((prev) => ({ ...prev, ...mapped }));
+          return;
+        }
+        const lines = Object.entries(apiError)
+          .filter(([key]) => key !== 'success')
+          .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`);
+        if (lines.length) {
+          setFixFields(lines);
+          return;
+        }
+      }
+      showSuccessToast(apiError?.message || res?.message || 'Something went wrong', 'error');
+    } catch (error) {
+      showSuccessToast(error?.message || 'Something went wrong', 'error');
     } finally {
       setSaving(false);
     }
@@ -223,10 +289,12 @@ export default function PatientForm() {
         <label className="form-field">
           Full name *
           <input value={form.fullname} onChange={(e) => setField('fullname', e.target.value)} />
+          {fieldError('fullname')}
         </label>
         <label className="form-field">
           Date of birth *
           <input type="date" value={form.dob} onChange={(e) => setField('dob', e.target.value)} />
+          {fieldError('dob')}
         </label>
         <div className="form-field">
           Gender *
@@ -242,6 +310,7 @@ export default function PatientForm() {
               </button>
             ))}
           </div>
+          {fieldError('gender')}
         </div>
         <div className="form-field">
           Blood group *
@@ -257,6 +326,7 @@ export default function PatientForm() {
               </button>
             ))}
           </div>
+          {fieldError('bloodG')}
         </div>
         <div className="form-field">
           Relation *
@@ -272,14 +342,17 @@ export default function PatientForm() {
               </button>
             ))}
           </div>
+          {fieldError('relation')}
         </div>
         <label className="form-field">
           Height (cm)
           <input value={form.height} onChange={(e) => setField('height', e.target.value)} />
+          {fieldError('height')}
         </label>
         <label className="form-field">
           Weight (kg)
           <input value={form.weight} onChange={(e) => setField('weight', e.target.value)} />
+          {fieldError('weight')}
         </label>
         <label className="form-field">
           Phone number *
@@ -287,10 +360,12 @@ export default function PatientForm() {
             value={form.phonenumber}
             onChange={(e) => setField('phonenumber', e.target.value.replace(/[^0-9]/g, '').slice(0, 10))}
           />
+          {fieldError('phonenumber')}
         </label>
         <label className="form-field">
           Email
           <input value={form.email} onChange={(e) => setField('email', e.target.value)} />
+          {fieldError('email')}
         </label>
 
         <h3 className="yoga-section">Emergency contact</h3>
@@ -319,6 +394,7 @@ export default function PatientForm() {
             value={form.EmergencyNO}
             onChange={(e) => setField('EmergencyNO', e.target.value.replace(/[^0-9]/g, '').slice(0, 10))}
           />
+          {fieldError('EmergencyNO')}
         </label>
 
         <h3 className="yoga-section">Insurance</h3>
@@ -333,11 +409,35 @@ export default function PatientForm() {
         <label className="form-field">
           Valid thru
           <input type="date" value={form.valid} onChange={(e) => setField('valid', e.target.value)} />
+          {fieldError('valid')}
         </label>
 
-        <button type="button" className="cta" disabled={saving} onClick={save}>
-          {saving ? 'Saving…' : isNew ? 'Add patient' : 'Save patient'}
-        </button>
+        <div className="pf-form-actions">
+          <button type="button" className="ghost" disabled={saving} onClick={() => navigate(-1)}>
+            Cancel
+          </button>
+          <button type="button" className="cta" disabled={!canSubmit || saving} onClick={save}>
+            {saving ? 'Saving…' : isNew ? 'Add Patient' : 'Update Patient'}
+          </button>
+        </div>
+
+        <Modal
+          open={Boolean(fixFields)}
+          onClose={() => setFixFields(null)}
+          title="Fix These Fields"
+          description={
+            <span className="pf-fix-list">
+              {(fixFields || []).map((line) => (
+                <span key={line}>{line}</span>
+              ))}
+            </span>
+          }
+          footer={
+            <Button variant="primary" onClick={() => setFixFields(null)}>
+              OK
+            </Button>
+          }
+        />
       </section>
     </AppShell>
   );

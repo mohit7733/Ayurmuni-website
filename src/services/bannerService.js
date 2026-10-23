@@ -202,3 +202,76 @@ export const getBanners = async (screen = 'home', serviceCategoryId) => {
     return { success: false, data: [], images: [] };
   }
 };
+
+/**
+ * Port of the app's normalizeHeroEventToBanners (BannerService.tsx): a live hero event
+ * { id, title, scope, media: [{ media_url, media_type, redirect_link }], starts_at, ends_at }
+ * becomes one carousel slide per image media.
+ */
+export const normalizeHeroEventToBanners = (event) => {
+  if (event == null || event === false) return [];
+  if (Array.isArray(event)) return event.filter(Boolean);
+  const mediaList = Array.isArray(event?.media) ? event.media : [];
+  if (mediaList.length > 0) {
+    return mediaList
+      .map((media, index) => {
+        if (!media || typeof media !== 'object') return null;
+        const mediaUrl = String(media.media_url || '').trim();
+        if (!mediaUrl) return null;
+        const mediaType = String(media.media_type || 'image').toLowerCase();
+        if (mediaType && mediaType !== 'image') return null;
+        const redirect = String(media.redirect_link || media.redirect_url || '').trim() || null;
+        return {
+          id: `${event.id || 'hero'}-${index}`,
+          event_id: event.id,
+          title: event.title,
+          scope: event.scope,
+          event_tags: event.event_tags,
+          starts_at: event.starts_at,
+          ends_at: event.ends_at,
+          media_url: mediaUrl,
+          image_url: mediaUrl,
+          media_type: media.media_type || 'image',
+          redirect_link: redirect,
+          redirect_url: redirect,
+          is_active: true,
+        };
+      })
+      .filter(Boolean);
+  }
+  const nested = toList(event);
+  if (nested.length > 0) return nested;
+  if (getBannerImageUri(event)) {
+    const redirect = String(event.redirect_link || event.redirect_url || '').trim() || null;
+    return [{ ...event, media_url: getBannerImageUri(event), redirect_link: redirect, redirect_url: redirect, is_active: true }];
+  }
+  return [];
+};
+
+/**
+ * Customer — current live hero (app getHeroBannerEvent).
+ * GET banners/events/?mode=production&scope=hero; data: null means no live event.
+ */
+export const getHeroBannerEvent = async () => {
+  try {
+    const response = await apiClient('banners/events/?mode=production&scope=hero', { method: 'GET' }, true);
+    if (response?.success === false) return { success: false, data: [], images: [] };
+    const event =
+      response?.data === null ? null : response?.data !== undefined ? response.data : response?.event ?? null;
+    if (event == null || event === false) return { success: true, data: [], images: [] };
+    const banners = normalizeHeroEventToBanners(event).filter(isBannerActive);
+    return { success: true, data: banners, images: banners.map(getBannerImageUri).filter(Boolean), event };
+  } catch {
+    return { success: false, data: [], images: [] };
+  }
+};
+
+/**
+ * Homepage hero: the app's home screen uses the live hero event. When there is no live
+ * event (or the call fails) the web keeps its previous customers/banners home set.
+ */
+export const getHomeHeroBanners = async () => {
+  const hero = await getHeroBannerEvent();
+  if (hero.success && hero.data.length > 0) return hero;
+  return getBanners('home');
+};

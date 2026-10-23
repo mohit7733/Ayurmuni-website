@@ -342,3 +342,17 @@ export function getJoinableAppointment(items = [], windowMinutes = 5) {
 };
 
 
+
+/** Mirrors app hasAlreadyRescheduled: one reschedule allowed per appointment. */
+export const hasAlreadyRescheduled = (source) => {
+  if (source == null) return false;
+  const norm = (v) => String(v || '').trim().toLowerCase();
+  const once = (s) => s === 'rescheduled' || s === 're-scheduled' || s === 're_scheduled';
+  if (typeof source === 'string') return once(norm(source));
+  const root = source?.rawData ?? source;
+  const appt = root?.appointment ?? root;
+  if (once(norm(source?.status ?? appt?.appointment_status ?? root?.appointment_status ?? appt?.status))) return true;
+  const count = Number(appt?.reschedule_count ?? root?.reschedule_count ?? source?.reschedule_count ?? 0);
+  if (Number.isFinite(count) && count >= 1) return true;
+  return [appt?.is_rescheduled, root?.is_rescheduled, appt?.already_rescheduled, root?.already_rescheduled, source?.is_rescheduled].includes(true);
+};

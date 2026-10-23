@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { Search, X } from 'lucide-react';
 import { cx } from './cx';
+import useRecentSearchQueries from '../../hooks/useRecentSearchQueries';
 import '../../design/premium-search.css';
 
 const ROTATE_MS = 2800;
@@ -25,6 +26,7 @@ const isTypingTarget = (el) =>
  * Shared premium search field. Drop-in for the old SearchField (same props), plus:
  * - suggestions: real names already loaded on the page; rotated in the placeholder when empty.
  * - shortcut: '/' focuses the field (ignored while typing elsewhere). Default on.
+ * - includeRecent: put the user's server-side recent searches first in the rotation.
  * - submitLabel: label of the green submit pill. Defaults to 'Search' when onSubmit is given;
  *   pass submitLabel={false} to hide it.
  */
@@ -41,7 +43,9 @@ export default function PremiumSearch({
   suggestions,
   shortcut = true,
   inputRef: externalRef,
+  includeRecent = false,
 }) {
+  const recentQueries = useRecentSearchQueries(includeRecent);
   const id = useId();
   const localRef = useRef(null);
   const inputRef = externalRef || localRef;
@@ -49,8 +53,9 @@ export default function PremiumSearch({
   const [focused, setFocused] = useState(false);
   const [tick, setTick] = useState(0);
 
-  const names = Array.isArray(suggestions)
-    ? [...new Set(suggestions.map((s) => String(s || '').trim()).filter(Boolean))].slice(0, 8)
+  const pool = [...(includeRecent ? recentQueries : []), ...(Array.isArray(suggestions) ? suggestions : [])];
+  const names = pool.length
+    ? [...new Set(pool.map((s) => String(s || '').trim()).filter(Boolean))].slice(0, 8)
     : [];
   const rotating = names.length > 1 && !value && !focused && !reduced;
   const hint = names.length ? names[tick % names.length] : '';

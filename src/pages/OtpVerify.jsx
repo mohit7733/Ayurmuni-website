@@ -1,4 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  completeWelcomePushFlow,
+  loginOneSignalUser,
+  requestNotificationPermission,
+} from '../services/pushNotificationService';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import consultImg from '/images/login/10.webp';
@@ -119,14 +124,6 @@ export default function OtpVerify() {
     }
   };
 
-  const requestWebNotification = async () => {
-    if (!('Notification' in window)) return false;
-    if (Notification.permission === 'granted') return true;
-    if (Notification.permission === 'denied') return false;
-    const result = await Notification.requestPermission();
-    return result === 'granted';
-  };
-
   const recordPolicyAcceptance = async () => {
     try {
       await acceptPolicies({ type: 'all' });
@@ -189,6 +186,8 @@ export default function OtpVerify() {
 
         await markAsGuest();
         showSuccessToast(response?.message || 'OTP verified successfully', 'success');
+        // App STEP 11–12: welcome push only when the user enabled notifications. Never blocks.
+        if (isNotificationEnabled) completeWelcomePushFlow(userId).catch(() => undefined);
         try {
           const profileRes = await ProfileServices.user_profile();
           if (profileRes?.data) {
@@ -223,7 +222,10 @@ export default function OtpVerify() {
 
     if (userId) {
       try {
-        await requestWebNotification();
+        // App: permission after OTP, then OneSignal.login(user_id). Never blocks login.
+        requestNotificationPermission()
+          .then(() => loginOneSignalUser(userId))
+          .catch(() => undefined);
       } catch {
         // Browser notification permission must not block login.
       }
@@ -433,7 +435,7 @@ export default function OtpVerify() {
             <Button
               variant="primary"
               onClick={async () => {
-                const granted = await requestWebNotification();
+                const granted = await requestNotificationPermission();
                 await submitRegisterWithNotificationPreference(Boolean(granted));
               }}
             >

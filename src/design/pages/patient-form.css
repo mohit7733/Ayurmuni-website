@@ -248,3 +248,8 @@
     transition: none;
   }
 }
+
+.patient-form .pf-field-error { display: block; margin-top: 4px; color: #b42318; font-size: 12px; font-weight: 500; }
+.patient-form .pf-form-actions { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; margin-top: 16px; }
+.patient-form .pf-form-actions > button { min-height: 44px; }
+.pf-fix-list { display: grid; gap: 4px; white-space: pre-wrap; font-size: 13px; }

@@ -176,13 +176,14 @@ export default function Doctors() {
     () => ({
       search: submitted || undefined,
       experience: experience || undefined,
-      specialization: specialization || undefined,
-      health_category_id: categoryId || undefined,
+      // App sends only one of disease / category / specialization (in that priority).
       health_disease_id: diseaseId || undefined,
+      health_category_id: !diseaseId ? categoryId || undefined : undefined,
+      specialization: !diseaseId && !categoryId ? specialization || undefined : undefined,
       from_date: dates.from || undefined,
       to_date: dates.to || undefined,
       page: 1,
-      page_size: 40,
+      page_size: 20,
     }),
     [submitted, experience, specialization, categoryId, diseaseId, dates.from, dates.to],
   );

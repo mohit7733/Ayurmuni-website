@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, ShoppingBag, SlidersHorizontal, X } from "lucide-react";
+import { ArrowRight, SlidersHorizontal, X } from "lucide-react";
 import AppShell from "../components/AppShell";
 import ProductCard from "../components/ProductCard";
 import CartAddButton from "../components/CartAddButton";
@@ -14,7 +14,6 @@ import { getServiceCategoryId } from "../home/serviceCategories";
 import useDashboardCategories from "../hooks/useDashboardCategories";
 import useCategoryProducts from "../hooks/useCategoryProducts";
 import useProductCategories from "../hooks/useProductCategories";
-import { useCart } from "../hooks/useCart";
 import { getOrders, normalizeOrdersList } from "../services/orderService";
 import { mapOrdersToRecentProducts } from "../profile/map";
 import {
@@ -41,7 +40,6 @@ import "../design/pages/products.css";
 
 export default function Products() {
   const navigate = useNavigate();
-  const { itemCount } = useCart();
   const { categories: dashboardCategories, loading: homeLoading } =
     useDashboardCategories();
   const productsCategoryId = useMemo(
@@ -247,32 +245,26 @@ export default function Products() {
     );
   };
 
+  const placeBar = showSkeleton ? 'top' : 'all';
+  const searchBar = (
+      <PageBar className="am-page-bar--slot" ref={heroRef} id="st-products-title" title={T.productsTitle}>
+        <SearchField
+          value={search}
+          onChange={setSearch}
+          onSubmit={goSearch}
+          placeholder={T.productsSearch}
+          label={T.productsSearch}
+          includeRecent
+          suggestions={searchSuggestions(productCategories, listProducts)}
+        />
+      </PageBar>
+  );
+
   return (
     <AppShell tab="products">
       <div className="st-page st-page--products">
 
-        <PageBar ref={heroRef} id="st-products-title" title={T.productsTitle}>
-          <SearchField
-            value={search}
-            onChange={setSearch}
-            onSubmit={goSearch}
-            placeholder={T.productsSearch}
-            label={T.productsSearch}
-            suggestions={searchSuggestions(productCategories, listProducts)}
-          />
-          <button
-            type="button"
-            className="pm-pill"
-            onClick={() => navigate("/cart")}
-            aria-label={itemCount ? `${T.cart}, ${itemCount} items` : T.cart}
-          >
-            <span className="pm-pill__icon" aria-hidden>
-              <ShoppingBag size={16} />
-            </span>
-            {T.cart}
-            {itemCount ? <span className="pm-pill__count" aria-hidden>{itemCount}</span> : null}
-          </button>
-        </PageBar>
+        {placeBar === 'top' ? searchBar : null}
 
         {showSkeleton ? (
           <SkeletonGrid
@@ -368,6 +360,7 @@ export default function Products() {
                     </Button>
                   )}
                 </div>
+                {placeBar === 'all' ? searchBar : null}
                 <div className="st-controls__actions">
                   <select
                     value={sortBy}

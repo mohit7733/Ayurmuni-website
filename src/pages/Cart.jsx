@@ -248,8 +248,16 @@ export default function Cart() {
 
   const confirmPrescribedBump = async () => {
     if (!qtyConfirm) return;
-    await syncCartQuantity(qtyConfirm.item, qtyConfirm.nextQty);
+    const { item } = qtyConfirm;
     setQtyConfirm(null);
+    // App confirmPrescribedQtyIncrease: never send a line without variant + cart item ids.
+    const safeVariantId = String(item?.variant_id || "").trim();
+    const safeCartItemId = String(item?.cart_item_id || item?.id || "").trim();
+    if (!safeVariantId || !safeCartItemId) {
+      showSuccessToast("Unable to update this item. Please refresh cart.", "error");
+      return;
+    }
+    await syncCartQuantity(item, qtyConfirm.nextQty);
   };
 
   const goCheckout = () => {

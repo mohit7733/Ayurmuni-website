@@ -49,7 +49,7 @@ export async function apiPostCallEvent(appointmentId, event, sessionId) {
 }
 
 export async function apiEndCall(appointmentId) {
-  await apiClient(`doctors/appointments/${appointmentId}/call/left/`, {
+  await apiClient(`doctors/appointments/${appointmentId}/call/end/`, {
     method: 'POST',
     body: '{}',
   });

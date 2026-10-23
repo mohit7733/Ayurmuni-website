@@ -10,7 +10,6 @@ import { getHealthCategories } from '../services/productService';
 import {
   Button,
   Chip,
-  Disclaimer,
   EmptyState,
   Modal,
   SearchField,
@@ -269,7 +268,8 @@ export default function CategoryProducts() {
               onSubmit={goSearch}
               placeholder={T.searchCollection}
               label={T.searchCollection}
-              suggestions={searchSuggestions(subcategories, topCategories)}
+              includeRecent
+            suggestions={searchSuggestions(subcategories, topCategories)}
             />
             <kbd className="cp-kbd" aria-hidden>/</kbd>
           </div>
@@ -375,8 +375,6 @@ export default function CategoryProducts() {
             </Button>
           </div>
         ) : null}
-
-        <Disclaimer />
       </div>
 
       {/* Filter Modal */}

@@ -1434,7 +1434,8 @@
 }
 @media (max-width: 767px) {
   .site-footer .site-footer-bar { padding-bottom: 6px; }
+  /* Minimal clearance: tab bar (56px + its 8px lift) so it never covers the (c) row. */
   .app-shell:not(.auth-shell):not(.is-logged-out) .site-footer {
-    padding-bottom: calc(var(--am-tabbar-h) + env(safe-area-inset-bottom));
+    padding-bottom: calc(var(--am-tabbar-h) + 8px + env(safe-area-inset-bottom));
   }
 }

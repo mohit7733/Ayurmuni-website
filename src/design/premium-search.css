@@ -265,3 +265,263 @@
 .am-page-bar:has(> .pm-search) { align-items: center; }
 .am-page-bar:has(> .pm-search) { justify-content: center; }
 .am-page-bar:has(> .pm-search) > * { margin-left: 0; margin-right: 0; }
+
+/* Integrated panel header (Products, Medicines, Consult, Yoga, Diet):
+   page title left, premium search, then the page's actions. Sits at the top
+   of the main listing panel; stacks on phones. */
+.am-page-bar.am-page-bar--inset {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--am-space-3, 12px);
+  margin: 0 0 var(--am-space-4, 16px);
+  padding: 8px 8px 8px 16px;
+  border: 1px solid rgba(228, 196, 122, 0.55);
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 253, 247, 0.92), rgba(251, 246, 232, 0.88));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 0 rgba(228, 196, 122, 0.18),
+    0 6px 18px -12px rgba(16, 83, 67, 0.28);
+}
+@media (min-width: 768px) {
+.am-page-bar.am-page-bar--inset > h1.am-sr-only {
+  position: static;
+  flex: 0 1 auto;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  clip: auto;
+  clip-path: none;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--am-primary, #105343);
+  font: 700 1.15rem/1.2 var(--am-font-display, "Satoshi", sans-serif);
+  letter-spacing: -0.01em;
+}
+}
+.am-page-bar.am-page-bar--inset > .pm-search {
+  flex: 1 1 auto;
+  max-width: 560px;
+  height: 44px;
+  margin-left: auto;
+  background: linear-gradient(180deg, #fffdf7, #fff);
+  border-color: rgba(228, 196, 122, 0.7);
+  box-shadow:
+    inset 0 1px 3px rgba(16, 83, 67, 0.08),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+}
+.am-page-bar.am-page-bar--inset > .pm-search:focus-within {
+  border-color: #e4c47a;
+  box-shadow:
+    inset 0 1px 3px rgba(16, 83, 67, 0.08),
+    0 0 0 3px rgba(228, 196, 122, 0.45);
+}
+.am-page-bar.am-page-bar--inset > .pm-search:last-child { margin-right: 0; }
+.am-page-bar.am-page-bar--inset > .am-btn { flex: none; min-height: 44px; }
+
+@media (max-width: 767px) {
+  .am-page-bar.am-page-bar--inset {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: var(--am-space-3, 12px);
+    padding: 10px;
+    border-radius: 22px;
+  }
+  .am-page-bar.am-page-bar--inset > .pm-search { flex-basis: 100%; max-width: none; margin-left: 0; }
+  .am-page-bar.am-page-bar--inset > .am-btn { flex: 1 1 auto; min-width: 0; padding: 0 12px; font-size: 13px; white-space: nowrap; }
+}
+
+/* ---------- T39: compact navbar-green panel bar (Rohit) ----------
+   Same green as the scrolled site header (.site-header.is-elevated:
+   rgb(var(--sh-green)) = 16, 83, 67 / --am-primary #105343). Sized to its
+   content, centred, max ~680px. */
+.am-page-bar.am-page-bar--inset {
+  --ib-green: 16, 83, 67;
+  --ib-gold: #e4c47a;
+  width: fit-content;
+  max-width: min(720px, 100%);
+  margin-left: auto;
+  margin-right: auto;
+  padding: 6px 6px 6px 18px;
+  gap: 10px;
+  border: 1px solid rgba(228, 196, 122, 0.55);
+  background: rgb(var(--ib-green));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 8px 22px -14px rgba(6, 34, 27, 0.55);
+}
+@media (min-width: 768px) {
+  .am-page-bar.am-page-bar--inset > h1.am-sr-only { position: static !important; flex: none; color: #fdfaf3; }
+  .am-page-bar.am-page-bar--inset > .pm-search { min-width: 180px; }
+  .am-page-bar.am-page-bar--inset > .am-btn { padding: 0 14px; }
+}
+.am-page-bar.am-page-bar--inset > .pm-search {
+  flex: 0 1 400px;
+  width: 400px;
+  max-width: 400px;
+  margin-left: 0;
+  background: #fdfaf3;
+  border-color: rgba(228, 196, 122, 0.6);
+  box-shadow: inset 0 1px 3px rgba(6, 34, 27, 0.18);
+}
+.am-page-bar.am-page-bar--inset > .pm-search:focus-within {
+  border-color: var(--ib-gold);
+  box-shadow: inset 0 1px 3px rgba(6, 34, 27, 0.18), 0 0 0 3px rgba(228, 196, 122, 0.6);
+}
+.am-page-bar.am-page-bar--inset .pm-search__icon {
+  color: #105343;
+  background: var(--ib-gold);
+  box-shadow: 0 0 0 2px #fdfaf3, 0 0 0 3px rgba(228, 196, 122, 0.7);
+}
+.am-page-bar.am-page-bar--inset .pm-search__submit {
+  color: #105343;
+  font-weight: 700;
+  background: linear-gradient(180deg, #ecd398, var(--ib-gold));
+  box-shadow: 0 3px 8px -4px rgba(6, 34, 27, 0.5);
+}
+/* Page actions (Consult / Diet) on the green: gold primary, ivory outline otherwise. */
+.am-page-bar.am-page-bar--inset > .am-btn {
+  color: #fdfaf3;
+  background: transparent;
+  border: 1px solid rgba(228, 196, 122, 0.7);
+  box-shadow: none;
+}
+.am-page-bar.am-page-bar--inset > :is(.am-btn--primary, .am-btn--accent) {
+  color: #105343;
+  background: var(--ib-gold);
+  border-color: var(--ib-gold);
+}
+.am-page-bar.am-page-bar--inset > .am-btn:hover:not(:disabled) { filter: brightness(1.08); }
+.am-page-bar.am-page-bar--inset > .am-btn:focus-visible { outline: 2px solid var(--ib-gold); outline-offset: 2px; }
+
+@media (max-width: 767px) {
+  .am-page-bar.am-page-bar--inset {
+    width: auto;
+    max-width: none;
+    padding: 8px;
+    gap: 8px;
+    border-radius: 20px;
+  }
+  .am-page-bar.am-page-bar--inset > .pm-search { flex: 1 1 100%; width: 100%; max-width: none; height: 48px; }
+  .am-page-bar.am-page-bar--inset > .am-btn { min-height: 44px; }
+}
+.am-page-bar.am-page-bar--inset .pm-search__kbd { display: none; }
+.am-page-bar.am-page-bar--inset .pm-search__submit { padding: 0 12px; }
+
+/* ---------- T40: search inside the listing toolbar / section header (Rohit) ----------
+   Navbar-green pill (header green rgb(16,83,67)), ivory field, gold disc + button.
+   Fills the gap between the count and Sort/Filters; same 36px height as those pills. */
+.am-page-bar.am-page-bar--slot {
+  display: flex;
+  flex: 1 1 240px;
+  min-width: 0;
+  max-width: 460px;
+  margin: 0 auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+/* Listing toolbar: sit between the count and Sort/Filters with one even gap,
+   instead of floating in the middle and leaving empty space on both sides. */
+.st-controls > .am-page-bar.am-page-bar--slot {
+  flex: 1 1 auto;
+  max-width: none;
+  margin: 0;
+}
+.am-page-bar--slot > .pm-search {
+  height: 36px;
+  gap: 6px;
+  padding: 0 3px 0 4px;
+  border: 1px solid rgba(216, 204, 180, 0.95);
+  background: #fffdf8;
+  box-shadow: inset 0 1px 2px rgba(16, 83, 67, 0.08);
+}
+.am-page-bar--slot > .pm-search:hover { border-color: rgba(201, 165, 90, 0.8); }
+.am-page-bar--slot > .pm-search:focus-within {
+  border-color: #e4c47a;
+  box-shadow: inset 0 1px 2px rgba(16, 83, 67, 0.08), 0 0 0 3px rgba(228, 196, 122, 0.45);
+  scale: none;
+}
+.am-page-bar--slot .pm-search__icon {
+  width: 26px;
+  height: 26px;
+  color: #fdfaf3;
+  background: #105343;
+  box-shadow: none;
+}
+.am-page-bar--slot .pm-search .pm-search__input {
+  color: #105343;
+  font-size: 0.86rem;
+}
+.am-page-bar--slot .pm-search .pm-search__input::placeholder,
+.am-page-bar--slot .pm-search__ph { color: #7a8a82; font-size: 0.86rem; }
+.am-page-bar--slot .pm-search__kbd { display: none; }
+.am-page-bar--slot .pm-search__clear { width: 24px; height: 24px; }
+.am-page-bar--slot .pm-search__submit {
+  height: 28px;
+  padding: 0 12px;
+  color: #fdfaf3;
+  font-weight: 700;
+  background: #105343;
+  box-shadow: none;
+}
+
+/* Toolbar with search: count | search | sort + filters, one line. */
+.st-controls:has(> .am-page-bar--slot) { flex-wrap: nowrap; gap: 12px; }
+.st-controls--search-only { justify-content: flex-start; }
+.st-controls--search-only > .am-page-bar--slot { margin: 0; }
+
+/* Section-header pages: search sits between the title and the actions. */
+.am-head-tools {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+}
+.am-head-tools > .am-page-bar--slot { margin: 0 0 0 auto; }
+.am-head-tools > .am-btn { flex: none; min-height: 36px; }
+.am-head-tools--top { margin-bottom: 12px; }
+.hm-doctor-head__row:has(> .am-head-tools) .hm-doctor-head__title { flex: none; }
+
+@media (max-width: 767px) {
+  .am-page-bar.am-page-bar--slot { flex: 1 1 100%; max-width: none; width: 100%; order: -1; }
+  .am-page-bar--slot > .pm-search { height: 48px; padding: 0 4px; }
+  .am-page-bar--slot .pm-search__icon,
+  .am-page-bar--slot .pm-search__field,
+  .am-page-bar--slot .pm-search__submit { height: 40px; }
+  .am-page-bar--slot .pm-search__icon { width: 40px; }
+  .am-page-bar--slot .pm-search__clear { width: 36px; height: 36px; }
+  .st-controls:has(> .am-page-bar--slot) { flex-wrap: wrap; flex-direction: row; }
+  .st-controls:has(> .am-page-bar--slot) > .st-controls__info,
+  .st-controls:has(> .am-page-bar--slot) > .st-controls__actions { width: auto; flex: 1 1 auto; }
+  .st-controls:has(> .am-page-bar--slot) > .st-controls__actions { justify-content: flex-end; }
+  .am-head-tools { flex-wrap: wrap; flex-basis: 100%; }
+  .am-head-tools > .am-btn { min-height: 44px; flex: 1 1 auto; }
+}
+@media (max-width: 767px) {
+  .st-page--products .st-controls:has(> .am-page-bar--slot),
+  .st-controls:has(> .am-page-bar--slot) {
+    flex-wrap: wrap;
+    flex-direction: row;
+    align-items: center;
+    row-gap: 10px;
+  }
+  .st-page--products .st-controls:has(> .am-page-bar--slot) > .am-page-bar--slot { flex: 0 0 100%; }
+}
+
+/* Rotating hint shares the "Search" placeholder baseline (all search bars). */
+.pm-search__ph { align-items: baseline; line-height: 1; padding-top: 0; }
+.pm-search__ph { top: 50%; bottom: auto; translate: 0 -50%; }
+.pm-search__ph-lead, .pm-search__ph-hint { line-height: 1; }
+/* Fade only: a vertical slide-in left the hint below the "Search" baseline mid-rotation. */
+@keyframes pm-search-hint-fade { from { opacity: 0; } to { opacity: 1; } }
+.pm-search__ph-hint { animation-name: pm-search-hint-fade; }

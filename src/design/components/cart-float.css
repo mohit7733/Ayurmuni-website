@@ -146,36 +146,31 @@
   }
 }
 
-/* Make room for the bar: page padding and the chat launcher move up. */
+/* No page room is reserved for the floats: the footer's (c) row stays flush to the
+   bottom, and the cart + Ayurchat float on one baseline just above it. */
 @media (max-width: 767px) {
-  body:has(.cart-float) .app-shell:not(.auth-shell):not(.is-logged-out) .app-shell-body {
-    padding-bottom: calc(var(--am-tabbar-h) + var(--am-space-8) + 70px + env(safe-area-inset-bottom));
-  }
-
-  body:has(.cart-float) .app-shell:not(.auth-shell):not(.is-logged-out) .site-footer {
-    padding-bottom: calc(var(--am-tabbar-h) + var(--am-space-5) + 70px + env(safe-area-inset-bottom));
-  }
-
+  /* Same baseline as the cart; the launcher goes icon-only so both fit side by side. */
   body:has(.cart-float) .ci-launch {
-    --ci-launch-bottom: calc(var(--am-tabbar-h) + var(--am-space-2) + 12px + 70px + env(safe-area-inset-bottom));
+    --ci-launch-bottom: calc(var(--am-tabbar-h) + var(--am-space-2) + 10px + env(safe-area-inset-bottom));
+  }
+  body:has(.cart-float) .ci-launch:not(.is-open) .ci-launch__label {
+    display: none;
+  }
+  body:has(.cart-float) .ci-launch:not(.is-open) .ci-launch__btn {
+    width: 50px;
+    padding: 0;
+    justify-content: center;
   }
 }
 
 @media (min-width: 768px) {
+  /* (c) row is ~35px tall; 56px clears it with a ~20px gap. */
   .cart-float {
-    --cf-bottom: 24px;
-  }
-
-  body:has(.cart-float) .app-shell:not(.auth-shell):not(.is-logged-out) .app-shell-body {
-    padding-bottom: 96px;
-  }
-
-  body:has(.cart-float) .site-footer {
-    padding-bottom: 88px;
+    --cf-bottom: 56px;
   }
 
   body:has(.cart-float) .am-diet-toast {
-    bottom: 88px;
+    bottom: 120px;
   }
 }
 

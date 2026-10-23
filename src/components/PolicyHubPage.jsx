@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import AppShell from './AppShell';
 import PageHeader from './PageHeader';
 import PolicyHubList from './PolicyHubList';
-import { getPoliciesList, getRequiredPolicies } from '../services/policyService';
+import { getPoliciesList, getPoliciesForViewer } from '../services/policyService';
 import { getPolicyDoc } from '../utils/policyUtils';
 import { Disclaimer, Skeleton, SkeletonText } from './ui';
 import { STATIC_COPY as T } from '../content/static';
@@ -26,7 +26,7 @@ export default function PolicyHubPage({
     setLoading(true);
     setError(null);
     try {
-      const res = await getRequiredPolicies();
+      const res = await getPoliciesForViewer();
       if (res?.success === false) {
         setError(res?.message || 'Unable to load policies.');
         setPolicies([]);

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Utils } from '../common/utils';
+import ChangeNumberAction from '../components/auth/ChangeNumberAction';
 import { EmailValidator, genderOptions } from '../common/validator';
 import { showSuccessToast } from '../config/key';
 import { persistProfileAndSyncAccess } from '../services/guestAuth';
@@ -472,6 +473,9 @@ export default function Onboarding() {
         >
           {isLoading ? 'Please wait…' : 'Proceed'}
         </button>
+      </div>
+      <div className="onboard-change">
+        <ChangeNumberAction />
       </div>
     </section>
   );

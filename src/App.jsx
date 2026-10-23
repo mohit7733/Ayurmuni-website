@@ -126,6 +126,7 @@ import "./ui.css";
 import "./design/base.css";
 import "./design/components.css";
 import "./design/shell.css";
+import "./design/responsive.css";
 import "./questionnaire/quest.css";
 import "./questionnaire/assessment.css";
 

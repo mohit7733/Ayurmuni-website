@@ -170,55 +170,42 @@ export default function Consult() {
     return () => observer.disconnect();
   }, [hasMore, loadMore, products.length]);
 
+  const placeBar = loading && !concerns.length && !doctors.length ? 'top' : 'doctors';
+  const searchBar = (
+      <PageBar className="am-page-bar--slot" id="cs-hero" title="Consult a doctor">
+        <SearchField
+          value={search}
+          onChange={setSearch}
+          onSubmit={(value) => setDebounced(String(value || '').trim())}
+          placeholder={T.searchPlaceholder}
+          label={T.searchLabel}
+          includeRecent
+        suggestions={searchSuggestions(concerns)}
+        />
+      </PageBar>
+  );
+
+  const headActions = (
+    <>
+        <Button
+        variant="accent"
+        onClick={() => navigate('/consult/doctors')}
+        leadingIcon={<Stethoscope size={16} aria-hidden />}
+      >
+        {T.browseAll}
+      </Button>
+      <Button variant="secondary" onClick={() => navigate('/consult/history')}>
+        {T.history}
+      </Button>
+    </>
+  );
+
   return (
     <AppShell tab="consult">
       <div className="hm-page svc-page">
         <div className="hm-body">
 
-          <PageBar id="cs-hero" title="Consult a doctor">
-            <SearchField
-              value={search}
-              onChange={setSearch}
-              onSubmit={(value) => setDebounced(String(value || '').trim())}
-              placeholder={T.searchPlaceholder}
-              label={T.searchLabel}
-              suggestions={searchSuggestions(concerns)}
-            />
-            <Button
-              variant="accent"
-              onClick={() => navigate('/consult/doctors')}
-              leadingIcon={<Stethoscope size={16} aria-hidden />}
-            >
-              {T.browseAll}
-            </Button>
-            <Button variant="secondary" onClick={() => navigate('/consult/history')}>
-              {T.history}
-            </Button>
-          </PageBar>
-          {filteredHistory.length > 0 ? (
-            <div className="hm-product-row">
-              <section className="hm-section hm-panel svc-rail-section" aria-labelledby="cs-recent-title">
-                <SectionHead
-                  id="cs-recent-title"
-                  title={H.visitedTitle}
-                  description="Consultations you booked recently."
-                  action={<ViewAll label={T.recentTitle} onClick={() => navigate('/consult/history')} />}
-                />
-                <Rail label={H.visitedTitle} className="svc-consult-rail">
-                  {filteredHistory.map((item) => (
-                    <RailItem key={item.consultationId || item.appointmentId || item.id} size="wide">
-                      <ConsultationCard
-                        item={item}
-                        onOpen={openDetails}
-                        onReceipt={(entry) => navigate(`/profile/receipts/${entry.consultationId}`)}
-                        onBook={openSlots}
-                      />
-                    </RailItem>
-                  ))}
-                </Rail>
-              </section>
-            </div>
-          ) : null}
+          {placeBar === 'top' ? <div className="am-head-tools am-head-tools--top">{searchBar}{headActions}</div> : null}
 
           {loading && !concerns.length && !doctors.length ? (
             <SkeletonGrid variant="doctor" count={4} label={T.loadingDoctors} />
@@ -230,7 +217,13 @@ export default function Consult() {
                   eyebrow={T.doctorsEyebrow}
                   title={T.doctorsTitle}
                   description={T.doctorsText}
-                  action={<ViewAll label={T.doctorsTitle} onClick={() => navigate('/consult/doctors')} />}
+                  action={
+                    <div className="am-head-tools">
+                      {placeBar === 'doctors' ? searchBar : null}
+                      {headActions}
+                      <ViewAll label={T.doctorsTitle} onClick={() => navigate('/consult/doctors')} />
+                    </div>
+                  }
                 />
                 {loading && !doctors.length ? (
                   <SkeletonGrid
@@ -269,6 +262,31 @@ export default function Consult() {
                   </ul>
                 )}
               </Reveal>
+
+            {filteredHistory.length > 0 ? (
+              <div className="hm-product-row">
+                <section className="hm-section hm-panel svc-rail-section" aria-labelledby="cs-recent-title">
+                  <SectionHead
+                    id="cs-recent-title"
+                    title={H.visitedTitle}
+                    description="Consultations you booked recently."
+                    action={<ViewAll label={T.recentTitle} onClick={() => navigate('/consult/history')} />}
+                  />
+                  <Rail label={H.visitedTitle} className="svc-consult-rail">
+                    {filteredHistory.map((item) => (
+                      <RailItem key={item.consultationId || item.appointmentId || item.id} size="wide">
+                        <ConsultationCard
+                          item={item}
+                          onOpen={openDetails}
+                          onReceipt={(entry) => navigate(`/profile/receipts/${entry.consultationId}`)}
+                          onBook={openSlots}
+                        />
+                      </RailItem>
+                    ))}
+                  </Rail>
+                </section>
+              </div>
+            ) : null}
 
               {showSuggestedDoctors ? (
                 <Reveal

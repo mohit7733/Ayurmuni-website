@@ -230,3 +230,4 @@
     padding-inline: var(--am-gutter);
   }
 }
+.sx-policy-detail .sx-sticky-footer__inner { display: grid; gap: 6px; }

@@ -2,9 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import * as HomeServices from '../services/homeService';
 import * as ProductServices from '../services/productService';
 import * as ProfileServices from '../services/profileService';
-import { getBanners } from '../services/bannerService';
+import { getHomeHeroBanners } from '../services/bannerService';
 import { isAuthenticated, isGuestUser } from '../services/guestAuth';
-import { getDietPlans } from '../services/dietService';
 import { normalizeDietPlanList } from '../diet/utils';
 import {
   mapCatalogProductItem,
@@ -47,13 +46,100 @@ const safe = async (fn, fallback) => {
   }
 };
 
-const loadSuggestedCatalog = async (kind) => {
-  const res =
-    kind === 'medicines'
-      ? await HomeServices.getSuggestedMedicines()
-      : await HomeServices.getSuggestedProducts();
+// ---- Port of app store/slices/homeSlice.ts loaders (disease-driven rails) ----
+const parseHomeProducts = (res) => {
   if (!res || res.success === false) return [];
   return normalizeApiList(res).map(mapCatalogProductItem).filter(Boolean);
+};
+
+/** app resolveHealthDiseaseIds */
+export const resolveHealthDiseaseIds = (customer) => {
+  if (!customer || typeof customer !== 'object') return [];
+  const fromIds = Array.isArray(customer.health_disease_ids) ? customer.health_disease_ids : [];
+  const fromObjects = Array.isArray(customer.health_diseases) ? customer.health_diseases : [];
+  const ids = [
+    ...fromIds.map((id) => String(id ?? '').trim()),
+    ...fromObjects.map((item) => String(item?.id ?? item?.health_disease_id ?? '').trim()),
+  ].filter(Boolean);
+  return Array.from(new Set(ids));
+};
+
+/** app loadCatalogFallback: getHomeProducts attempts (service + disease, then looser). */
+const loadCatalogFallback = async (kind, categories, healthDiseaseId) => {
+  const serviceCategoryId = getServiceCategoryId(categories, kind === 'medicines' ? 'medicine' : 'products');
+  const attempts = healthDiseaseId
+    ? [
+        { service_category_id: serviceCategoryId, health_disease_id: healthDiseaseId },
+        { health_disease_id: healthDiseaseId },
+      ]
+    : [{ service_category_id: serviceCategoryId }, {}];
+  for (const attempt of attempts) {
+    try {
+      const list = parseHomeProducts(
+        await HomeServices.getHomeProducts({ ...attempt, page: 1, page_size: 12 }),
+      );
+      if (list.length > 0) return list;
+    } catch {
+      // try next attempt
+    }
+  }
+  return [];
+};
+
+/** app loadSuggestedCatalog: disease -> suggested API (+id); none -> unfiltered browse. */
+const loadSuggestedCatalog = async (kind, categories, healthDiseaseId) => {
+  try {
+    if (!healthDiseaseId) return await loadCatalogFallback(kind, categories, null);
+    const opts = { health_disease_id: healthDiseaseId };
+    const suggested = parseHomeProducts(
+      kind === 'medicines'
+        ? await HomeServices.getSuggestedMedicines(opts)
+        : await HomeServices.getSuggestedProducts(opts),
+    );
+    if (suggested.length > 0) return suggested;
+    return await loadCatalogFallback(kind, categories, healthDiseaseId);
+  } catch {
+    return safe(() => loadCatalogFallback(kind, categories, healthDiseaseId), []);
+  }
+};
+
+const parseDoctorList = (res) =>
+  normalizeApiList(res).filter(
+    (item) =>
+      item &&
+      (item.id || item.doctor_id) &&
+      String(item.full_name || item.name || item.doctor_name || '').trim(),
+  );
+
+/** app loadHomeDoctors */
+const loadHomeDoctors = async (healthDiseaseId) => {
+  if (healthDiseaseId) {
+    const suggested = parseDoctorList(
+      await HomeServices.getSuggestedDoctor({ health_disease_id: healthDiseaseId }),
+    );
+    if (suggested.length > 0) return suggested;
+    return parseDoctorList(await HomeServices.getDoctorsBrowse({ health_disease_id: healthDiseaseId }));
+  }
+  return parseDoctorList(await HomeServices.getDoctorsBrowse());
+};
+
+/** app loadDietPlansForHome */
+const loadDietPlansForHome = async (healthDiseaseId) => {
+  const toCards = (r) => normalizeDietPlanList(r).map(mapDietPlanForHome).filter((item) => item.id);
+  try {
+    const res = healthDiseaseId
+      ? await HomeServices.getSuggestedDietPlans({ health_disease_id: healthDiseaseId })
+      : await HomeServices.getDietPlansBrowse();
+    if (res?.success === false) {
+      if (healthDiseaseId) {
+        return toCards(await HomeServices.getDietPlansBrowse({ health_disease_id: healthDiseaseId }));
+      }
+      return [];
+    }
+    return toCards(res);
+  } catch {
+    return [];
+  }
 };
 
 // Recently viewed is per-user: only the discovery endpoint supports it
@@ -160,18 +246,27 @@ export default function useHomeData() {
         .sort((a, b) => a.sequence - b.sequence);
       return list.length ? list : FALLBACK_SERVICE_CATEGORIES;
     });
-    const doctorsPromise = load('doctors', async () => {
-      const res = await HomeServices.getSuggestedDoctor();
-      return normalizeApiList(res).filter(
-        (item) =>
-          item &&
-          (item.id || item.doctor_id) &&
-          String(item.full_name || item.name || item.doctor_name || '').trim(),
-      );
+    // App homeSlice: categories + customer first so disease selection drives rail filters.
+    const customerPromise = fetchCustomerData();
+    const diseasePromise = customerPromise.then(async (customer) => {
+      let source = customer;
+      // App fetches the profile for guest tokens too; only a logged-out visitor has none.
+      if (!source && (await isAuthenticated())) {
+        const res = await safe(() => ProfileServices.user_profile(), null);
+        source = res && res.success !== false ? res.data ?? null : null;
+      }
+      const ids = resolveHealthDiseaseIds(source);
+      return ids.length > 0 ? ids.join(',') : null;
     });
-    const medicinesPromise = load('medicines', () => loadSuggestedCatalog('medicines'));
-    const productsPromise = load('products', () => loadSuggestedCatalog('products'));
-    const bannersPromise = load('banners', () => getBanners('home'));
+    const catsForRails = safe(() => catsPromise, FALLBACK_SERVICE_CATEGORIES);
+    const doctorsPromise = load('doctors', async () => loadHomeDoctors(await diseasePromise));
+    const medicinesPromise = load('medicines', async () =>
+      loadSuggestedCatalog('medicines', await catsForRails, await diseasePromise),
+    );
+    const productsPromise = load('products', async () =>
+      loadSuggestedCatalog('products', await catsForRails, await diseasePromise),
+    );
+    const bannersPromise = load('banners', () => getHomeHeroBanners());
 
     const apply = (promise, setter) =>
       promise.then((value) => {
@@ -209,7 +304,10 @@ export default function useHomeData() {
         safe(
           () =>
             load('yoga', async () => {
-              const res = await HomeServices.getYogaSession();
+              const diseaseId = await diseasePromise;
+              const res = await HomeServices.getYogaSession(
+                diseaseId ? { health_disease_id: diseaseId } : undefined,
+              );
               return normalizeYogaSessionList(res);
             }),
           [],
@@ -220,22 +318,9 @@ export default function useHomeData() {
         safe(
           () =>
             load('diet', async () => {
-              const toCards = (r) =>
-                r && r.success !== false
-                  ? normalizeApiList(r).map(mapDietPlanForHome).filter((item) => item.id)
-                  : [];
               // Diet endpoints need a token: skip logged-out visitors only.
               if (!(await isAuthenticated())) return [];
-              const suggested = toCards(await HomeServices.getSuggestedDietPlans());
-              if (suggested.length) return suggested;
-              // Guests (token, no completed profile) can get 401/403/empty from the
-              // suggestions endpoint; fall back to the same plan list /diet shows.
-              // Still 401/403/empty -> [] and the panel hides.
-              const listRes = await getDietPlans({ page: 1 });
-              if (!listRes || listRes.success === false) return [];
-              return normalizeDietPlanList(listRes)
-                .map(mapDietPlanForHome)
-                .filter((item) => item.id);
+              return loadDietPlansForHome(await diseasePromise);
             }),
           [],
         ),
@@ -268,7 +353,7 @@ export default function useHomeData() {
         ),
         setHealthConcerns,
       ),
-      fetchCustomerData(),
+      customerPromise,
     ]);
     if (!isCancelled()) {
       setRefreshing(false);

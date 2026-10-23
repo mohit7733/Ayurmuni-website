@@ -1,4 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
+import { readAuthenticated } from "../services/guestAuth";
+import GlobalSearch from "../components/search/GlobalSearch";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import ProductCard from "../components/ProductCard";
@@ -14,7 +16,7 @@ import {
   brandOptionsFromProducts,
 } from "../utils/productSearchUtils";
 
-export default function ProductSearch() {
+function CatalogSearch() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const mode = params.get("mode") || "all";
@@ -215,4 +217,13 @@ export default function ProductSearch() {
       </section>
     </AppShell>
   );
+}
+
+/**
+ * Signed-in users (guest or full) get the app's global search (customers/search/ with
+ * server-side recent searches). Logged-out visitors keep the catalog search, since the
+ * search API needs a token.
+ */
+export default function ProductSearch() {
+  return readAuthenticated() ? <GlobalSearch /> : <CatalogSearch />;
 }

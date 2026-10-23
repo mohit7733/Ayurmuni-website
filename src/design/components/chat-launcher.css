@@ -258,7 +258,7 @@
 
 @media (min-width: 768px) {
   .ci-launch {
-    --ci-launch-bottom: 24px;
+    --ci-launch-bottom: 56px; /* same baseline as the cart, above the (c) row */
     right: 24px;
   }
 }

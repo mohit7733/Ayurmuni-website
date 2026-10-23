@@ -19,6 +19,12 @@ const cleanParams = (params = {}) =>
 const doctorsQuery = (params) => {
   const query = new URLSearchParams();
   Object.entries(cleanParams(params)).forEach(([key, value]) => {
+    // App formatExperienceParam: experience is always sent as "N+".
+    if (key === 'experience') {
+      const v = String(value).trim();
+      query.set(key, v.endsWith('+') ? v : `${v}+`);
+      return;
+    }
     query.set(key, String(value));
   });
   return query.toString();

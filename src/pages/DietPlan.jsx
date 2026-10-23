@@ -142,6 +142,15 @@ export default function DietPlan() {
   const runStart = async (options) => {
     const result = await startPlan(planId, options);
     if (result?.conflict) {
+      if (!result.activePlan?.patient_diet_plan_id) {
+        // App DietScreen: no resolvable active id -> guidance toast instead of switch modal.
+        const label = status === 'paused' ? 'Resume' : 'Start';
+        showSuccessToast(
+          `${result.activePlan?.name || 'another diet plan'} is already active. Open that plan, tap Pause, then ${label} this one.`,
+          'error',
+        );
+        return;
+      }
       setConflict({
         activeName: result.activePlan?.name || 'another plan',
         activeId: result.activePlan?.patient_diet_plan_id,

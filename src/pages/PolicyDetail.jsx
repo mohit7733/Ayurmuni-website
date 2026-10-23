@@ -6,9 +6,10 @@ import { showSuccessToast } from "../config/key";
 import {
   acceptPolicies,
   getPoliciesList,
-  getRequiredPolicies,
+  getPoliciesForViewer,
 } from "../services/policyService";
 import { isPolicyAccepted } from "../utils/policyUtils";
+import { readAuthenticated } from "../services/guestAuth";
 import {
   Button,
   Disclaimer,
@@ -25,8 +26,10 @@ export default function PolicyDetail() {
   const location = useLocation();
   const params = location.state || {};
   const policyType = params.policyType;
+  // App publicView: logged-out visitors read the public legal set and never see Accept.
+  const publicView = params.publicView === true || !readAuthenticated();
   const requireAccept =
-    params.requireAccept === true || params.agreed === false;
+    !publicView && (params.requireAccept === true || params.agreed === false);
 
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(false);
@@ -47,7 +50,7 @@ export default function PolicyDetail() {
   const load = useCallback(async () => {
     try {
       setError(null);
-      const res = await getRequiredPolicies(policyType);
+      const res = await getPoliciesForViewer(policyType);
       if (res?.success === false) {
         setError(res?.message || "Unable to load this policy right now.");
         setPolicy(null);
@@ -165,6 +168,14 @@ export default function PolicyDetail() {
                   onClick={handleAccept}
                 >
                   {accepting ? T.policyWait : T.policyAccept}
+                </Button>
+                <Button
+                  variant="ghost"
+                  block
+                  disabled={accepting}
+                  onClick={() => showSuccessToast('You need to accept to continue', 'error')}
+                >
+                  Disagree
                 </Button>
               </div>
             </div>

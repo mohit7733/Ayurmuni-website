@@ -5,6 +5,7 @@ import PageHeader from "../components/PageHeader";
 import {
   buildVideoCallNavParams,
   canModifyAppointment,
+  hasAlreadyRescheduled,
   formatAppointmentDateFull,
   formatAppointmentTimeLabel,
   formatDoctorDisplayName,
@@ -461,7 +462,16 @@ export default function Appointments() {
                         <button
                           type="button"
                           className="ghost"
-                          onClick={() => openDetails(item, "reschedule")}
+                          onClick={() => {
+                            if (hasAlreadyRescheduled(item)) {
+                              showSuccessToast(
+                                "This appointment was already rescheduled once. You can only cancel it.",
+                                "error",
+                              );
+                              return;
+                            }
+                            openDetails(item, "reschedule");
+                          }}
                         >
                           {status === "reschedule"
                             ? "Request change"

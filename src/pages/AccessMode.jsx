@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { logoutOneSignalUser } from '../services/pushNotificationService';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Leaf, Package, Phone, ShieldCheck, Stethoscope, UserRound } from 'lucide-react';
 import leaf1Img from '/images/leaf1.png';
@@ -77,7 +78,8 @@ export default function AccessMode() {
       } catch {
         // Session storage still has to clear.
       }
-      await Utils.clearAllData();
+      logoutOneSignalUser();
+    await Utils.clearAllData();
       navigate('/welcome', { replace: true });
     } finally {
       setLoading(null);

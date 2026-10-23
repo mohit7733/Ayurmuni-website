@@ -346,3 +346,4 @@
     transition: none;
   }
 }
+.onboard-change { max-width: 480px; margin: 8px auto 24px; padding-inline: 16px; }
