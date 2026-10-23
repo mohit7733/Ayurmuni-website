@@ -574,7 +574,6 @@
   .st-page {
     gap: var(--am-space-5);
     padding-bottom: var(--am-space-3);
-    margin-bottom: -50px;
   }
 
   .st-section-header {

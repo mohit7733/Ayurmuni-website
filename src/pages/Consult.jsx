@@ -387,7 +387,7 @@ export default function Consult() {
             />
           ) : (
             <ul className="am-doctor-grid">
-              {filteredDoctors.slice(0, 6).map((item) => (
+              {filteredDoctors.slice(0, 4).map((item) => (
                 <li key={getDoctorId(item) || item.full_name}>
                   <DoctorCard item={item} />
                 </li>

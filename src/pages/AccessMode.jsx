@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   Flower2,
@@ -7,19 +7,19 @@ import {
   Phone,
   ShoppingBag,
   Stethoscope,
-} from 'lucide-react';
-import leaf1Img from '/images/leaf1.png';
-import logoImg from '/greenlogo.png';
-import { Utils } from '../common/utils';
-import { useLocation as useDeliveryLocation } from '../context/LocationContext';
+} from "lucide-react";
+import leaf1Img from "/images/leaf1.png";
+import logoImg from "/greenlogo.png";
+import { Utils } from "../common/utils";
+import { useLocation as useDeliveryLocation } from "../context/LocationContext";
 import {
   isProfileComplete,
   markAsGuest,
   resolveAccessLikeProfile,
-} from '../services/guestAuth';
-import { Badge, Button, Modal } from '../components/ui';
-import { AUTH_COPY as T } from '../content/auth';
-import '../design/pages/auth.css';
+} from "../services/guestAuth";
+import { Badge, Button, Modal } from "../components/ui";
+import { AUTH_COPY as T } from "../content/auth";
+import "../design/pages/auth.css";
 
 const SHOWCASE_ICONS = [Flower2, Stethoscope, ShoppingBag, Heart];
 
@@ -36,11 +36,11 @@ export default function AccessMode() {
       let leaving = false;
       try {
         const { isComplete, profile } = await resolveAccessLikeProfile();
-        const cached = (await Utils.getData('_USER_INFO')) || profile;
+        const cached = (await Utils.getData("_USER_INFO")) || profile;
         if (cancelled) return;
         if (isComplete || isProfileComplete(cached)) {
           leaving = true;
-          navigate('/home', { replace: true });
+          navigate("/home", { replace: true });
           return;
         }
       } catch {
@@ -56,9 +56,9 @@ export default function AccessMode() {
 
   const skipToHome = async () => {
     try {
-      setLoading('skip');
+      setLoading("skip");
       await markAsGuest();
-      navigate('/home', { replace: true });
+      navigate("/home", { replace: true });
     } finally {
       setLoading(null);
     }
@@ -66,9 +66,9 @@ export default function AccessMode() {
 
   const startOnboarding = async () => {
     try {
-      setLoading('onboard');
+      setLoading("onboard");
       await markAsGuest();
-      navigate('/onboarding');
+      navigate("/onboarding");
     } finally {
       setLoading(null);
     }
@@ -76,7 +76,7 @@ export default function AccessMode() {
 
   const confirmSignOut = async () => {
     try {
-      setLoading('signout');
+      setLoading("signout");
       setSignOutOpen(false);
       try {
         await clearLocationSession();
@@ -84,7 +84,7 @@ export default function AccessMode() {
         // Session storage still has to clear.
       }
       await Utils.clearAllData();
-      navigate('/welcome', { replace: true });
+      navigate("/welcome", { replace: true });
     } finally {
       setLoading(null);
     }
@@ -92,7 +92,11 @@ export default function AccessMode() {
 
   if (checking) {
     return (
-      <section className="au-page au-access" aria-busy="true" aria-label="Checking your profile">
+      <section
+        className="au-page au-access"
+        aria-busy="true"
+        aria-label="Checking your profile"
+      >
         <div className="au-access__card au-access__card--boot">
           <div className="au-access__boot">
             <p>Checking your profile…</p>
@@ -110,8 +114,13 @@ export default function AccessMode() {
           <div className="au-access__hero-inner">
             <div className="au-access__top">
               <Badge tone="success">{T.accessVerified}</Badge>
-              <Button variant="ghost" size="sm" disabled={!!loading} onClick={skipToHome}>
-                {loading === 'skip' ? '…' : T.accessSkip}
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={!!loading}
+                onClick={skipToHome}
+              >
+                {loading === "skip" ? "…" : T.accessSkip}
               </Button>
             </div>
 
@@ -125,11 +134,7 @@ export default function AccessMode() {
               </div>
             </div>
 
-            <h1>
-              Your wellness,
-              <br />
-              tuned to you
-            </h1>
+            <h1>Your wellness, tuned to you</h1>
             <p>{T.accessText}</p>
           </div>
         </div>
@@ -172,7 +177,7 @@ export default function AccessMode() {
               <p>{T.setupSubtitle}</p>
             </div>
             <span aria-hidden>
-              {loading === 'onboard' ? '…' : <ArrowRight size={20} />}
+              {loading === "onboard" ? "…" : <ArrowRight size={20} />}
             </span>
           </button>
 
@@ -180,8 +185,10 @@ export default function AccessMode() {
             variant="ghost"
             block
             disabled={!!loading}
-            loading={loading === 'signout'}
-            leadingIcon={loading === 'signout' ? null : <Phone size={15} aria-hidden />}
+            loading={loading === "signout"}
+            leadingIcon={
+              loading === "signout" ? null : <Phone size={15} aria-hidden />
+            }
             onClick={() => setSignOutOpen(true)}
           >
             {T.changeNumber}
@@ -198,10 +205,18 @@ export default function AccessMode() {
         description={T.changeNumberText}
         footer={
           <>
-            <Button variant="primary" onClick={confirmSignOut} disabled={!!loading}>
+            <Button
+              variant="primary"
+              onClick={confirmSignOut}
+              disabled={!!loading}
+            >
               {T.changeSignOut}
             </Button>
-            <Button variant="secondary" onClick={() => setSignOutOpen(false)} disabled={!!loading}>
+            <Button
+              variant="secondary"
+              onClick={() => setSignOutOpen(false)}
+              disabled={!!loading}
+            >
               {T.changeStay}
             </Button>
           </>

@@ -731,7 +731,6 @@ html:has(.pd-page) {
 
 @media (max-width: 630px) {
   .pd-page {
-    margin-bottom: -180px;
     padding-bottom: 0;
   }
 }

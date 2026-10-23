@@ -1395,6 +1395,23 @@
   width: 100%;
 }
 
+@media (max-width: 639px) {
+  .au-access__hero-inner h1 {
+    padding-bottom: 3px;
+  }
+  .au-access__label {
+    padding-top: 10px;
+    padding-bottom: 3px;
+  }
+  .au-access__trust {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+  .au-access__setup {
+    margin-bottom: 10px;
+  }
+}
+
 .au-access__top {
   display: flex;
   align-items: center;

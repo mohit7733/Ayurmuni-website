@@ -994,12 +994,6 @@
   }
 }
 
-@media (max-width: 630px) {
-  .pf-page {
-    margin-bottom: -80px;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .pf-hub .pf-explore__card,
   .pf-hub .pf-menu__row,

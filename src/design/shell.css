@@ -719,14 +719,15 @@
 
 @media (max-width: 767px) {
   .app-shell:not(.auth-shell):not(.is-logged-out) .app-shell-body {
-    padding-bottom: calc(
-      var(--am-tabbar-h) + var(--am-space-8) + env(safe-area-inset-bottom)
-    );
+    /* Keep tab-bar clearance at the end of the document, not between the
+       page content and the footer. */
+    padding-bottom: 0;
   }
 
   .app-shell:not(.auth-shell):not(.is-logged-out) .site-footer {
+    margin-top: var(--am-space-4);
     padding-bottom: calc(
-      var(--am-tabbar-h) + var(--am-space-5) + env(safe-area-inset-bottom)
+      var(--am-tabbar-h) + 20px + env(safe-area-inset-bottom)
     );
   }
 }
@@ -741,7 +742,7 @@
 .site-footer {
   position: relative;
   overflow: hidden;
-  margin-top: auto;
+  margin-top: 0;
   background:
     radial-gradient(
       70% 90% at 100% 0%,
