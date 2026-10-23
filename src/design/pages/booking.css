@@ -1006,6 +1006,176 @@
   }
 }
 
+@media (max-width: 600px) {
+  .bk-slots-page {
+    gap: 12px;
+    padding: 12px var(--am-gutter)
+      calc(20px + var(--am-tabbar-h) + env(safe-area-inset-bottom));
+    margin-bottom: -70px;
+  }
+
+  .bk-slots-page > .am-page-header {
+    gap: 8px;
+  }
+
+  .bk-slots-page > .am-page-header .am-page-header__title {
+    font-size: 21px;
+    line-height: 1.2;
+  }
+
+  .bk-slots-page > .am-page-header .am-page-header__subtitle {
+    font-size: 13px;
+  }
+
+  .bk-slots-page > .am-page-header .am-page-header__actions .am-btn {
+    min-height: 36px;
+    padding-inline: 9px;
+    font-size: 11px;
+  }
+
+  .bk-slots-page .am-step-indicator {
+    font-size: 11px;
+  }
+
+  .bk-slots-page .bk-layout,
+  .bk-slots-page .bk-main,
+  .bk-slots-page .bk-aside {
+    gap: 10px;
+  }
+
+  .bk-slots-page .bk-card,
+  .bk-slots-page .bk-doctor {
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .bk-slots-page .bk-card {
+    gap: 10px;
+  }
+
+  .bk-slots-page .bk-card__head {
+    padding-bottom: 8px;
+  }
+
+  .bk-slots-page .bk-card__head h2 {
+    font-size: 15px;
+    line-height: 1.3;
+  }
+
+  .bk-slots-page .bk-month__label {
+    min-width: 68px;
+    font-size: 11px;
+  }
+
+  .bk-slots-page .bk-dates {
+    gap: 6px;
+    padding: 4px 1px 8px;
+    scroll-padding-inline: 1px;
+  }
+
+  .bk-slots-page .bk-date {
+    min-width: 50px;
+    min-height: 60px;
+    flex-basis: 50px;
+    gap: 4px;
+    border-radius: 11px;
+  }
+
+  .bk-slots-page .bk-date small {
+    font-size: 10px;
+  }
+
+  .bk-slots-page .bk-date strong {
+    font-size: 15px;
+  }
+
+  .bk-slots-page .bk-slot-group {
+    gap: 7px;
+  }
+
+  .bk-slots-page .bk-slot-group h3 {
+    font-size: 12px;
+  }
+
+  .bk-slots-page .bk-slot-grid {
+    gap: 7px;
+  }
+
+  .bk-slots-page .bk-slot {
+    min-height: 40px;
+    padding: 6px 7px;
+    border-radius: 10px;
+    font-size: 11px;
+  }
+
+  .bk-slots-page .bk-doctor {
+    gap: 10px;
+  }
+
+  .bk-slots-page .bk-doctor__photo {
+    flex-basis: 46px;
+    width: 46px;
+    height: 46px;
+  }
+
+  .bk-slots-page .bk-doctor__copy {
+    gap: 3px;
+  }
+
+  .bk-slots-page .bk-doctor__copy > strong {
+    font-size: 13px;
+    line-height: 1.3;
+  }
+
+  .bk-slots-page .bk-doctor__copy p,
+  .bk-slots-page .bk-doctor__copy small {
+    font-size: 11px;
+    line-height: 1.35;
+  }
+
+  .bk-slots-page .bk-record {
+    gap: 8px;
+    padding: 9px;
+  }
+
+  .bk-slots-page .bk-record__copy strong {
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .bk-slots-page .bk-upload-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .bk-slots-page .bk-upload {
+    justify-content: center;
+    min-width: 0;
+    min-height: 40px;
+    padding-inline: 7px;
+    font-size: 11px;
+  }
+
+  .bk-slots-page .bk-aside__cta .am-btn {
+    min-height: 46px;
+  }
+}
+
+@media (max-width: 360px) {
+  .bk-slots-page .bk-dates {
+    gap: 4px;
+  }
+
+  .bk-slots-page .bk-date {
+    min-width: 46px;
+    flex-basis: 46px;
+  }
+
+  .bk-slots-page .bk-slot-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 /* Consultation payment */
 .bk-pay-page {
   display: flex;
@@ -1232,7 +1402,10 @@
   .bk-pay-page {
     gap: var(--am-space-3);
     padding: var(--am-space-3) var(--am-gutter)
-      calc(var(--am-space-4) + var(--am-tabbar-h, 0px) + env(safe-area-inset-bottom));
+      calc(
+        var(--am-space-4) + var(--am-tabbar-h, 0px) +
+          env(safe-area-inset-bottom)
+      );
   }
 
   .bk-pay-page > .am-page-header,
@@ -1339,6 +1512,193 @@
     flex-basis: 48px;
     width: 48px;
     height: 48px;
+  }
+}
+
+@media (max-width: 600px) {
+  .bk-pay-page {
+    gap: 12px;
+    padding: 12px var(--am-gutter)
+      calc(20px + var(--am-tabbar-h, 0px) + env(safe-area-inset-bottom));
+    margin-bottom: -60px;
+  }
+
+  .bk-pay-page > .am-page-header {
+    gap: 8px;
+  }
+
+  .bk-pay-page > .am-page-header .am-page-header__title {
+    font-size: 21px;
+    line-height: 1.2;
+  }
+
+  .bk-pay-page > .am-page-header .am-page-header__subtitle {
+    font-size: 13px;
+  }
+
+  .bk-pay-page .am-step-indicator {
+    font-size: 11px;
+  }
+
+  .bk-pay-page .bk-layout,
+  .bk-pay-page .bk-main,
+  .bk-pay-page .bk-aside {
+    gap: 10px;
+  }
+
+  .bk-pay-page .bk-card,
+  .bk-pay-page .bk-doctor {
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .bk-pay-page .bk-card {
+    gap: 10px;
+  }
+
+  .bk-pay-page .bk-card__head {
+    padding-bottom: 7px;
+  }
+
+  .bk-pay-page .bk-card__head h2 {
+    font-size: 15px;
+    line-height: 1.3;
+  }
+
+  .bk-pay-page .bk-doctor {
+    align-items: center;
+    gap: 10px;
+  }
+
+  .bk-pay-page .bk-doctor__photo {
+    flex-basis: 46px;
+    width: 46px;
+    height: 46px;
+    font-size: 16px;
+  }
+
+  .bk-pay-page .bk-doctor__copy {
+    gap: 3px;
+  }
+
+  .bk-pay-page .bk-doctor__copy > strong {
+    font-size: 14px;
+    line-height: 1.3;
+  }
+
+  .bk-pay-page .bk-doctor__copy p,
+  .bk-pay-page .bk-doctor__copy small {
+    font-size: 11px;
+    line-height: 1.35;
+  }
+
+  .bk-pay-page .bk-payment-hero {
+    gap: 6px;
+  }
+
+  .bk-pay-page .bk-payment-hero__head {
+    gap: 8px;
+  }
+
+  .bk-pay-page .bk-payment-hero__head strong {
+    font-size: 18px;
+  }
+
+  .bk-pay-page .bk-payment-hero p {
+    margin: 0;
+    font-size: 11px;
+  }
+
+  .bk-pay-page .bk-bill {
+    gap: 8px;
+  }
+
+  .bk-pay-page .bk-bill__row dt,
+  .bk-pay-page .bk-bill__row dd {
+    font-size: 12px;
+  }
+
+  .bk-pay-page .bk-bill__row.is-total {
+    padding-top: 10px;
+  }
+
+  .bk-pay-page .bk-bill__row.is-total dd {
+    font-size: 16px;
+  }
+
+  .bk-pay-page .coupon-card-head {
+    align-items: center;
+    gap: 8px;
+  }
+
+  .bk-pay-page .coupon-input-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 6px;
+  }
+
+  .bk-pay-page .coupon-input-row input {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    padding: 9px 10px;
+    font-size: 12px;
+  }
+
+  .bk-pay-page .coupon-input-row .cta,
+  .bk-pay-page .coupon-input-row .ghost {
+    height: 40px;
+    padding-inline: 9px;
+    font-size: 12px;
+  }
+
+  .bk-pay-page .coupon-preview {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px 8px;
+    padding: 9px 10px;
+    font-size: 12px;
+  }
+
+  .bk-pay-page .coupon-preview strong {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .bk-pay-page .coupon-preview span {
+    text-align: right;
+  }
+
+  .bk-pay-page .coupon-preview small {
+    grid-column: 1 / -1;
+  }
+
+  .bk-pay-page .bk-aside__cta .am-btn {
+    min-height: 46px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 380px) {
+  .bk-pay-page .coupon-input-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .bk-pay-page .coupon-input-row input {
+    grid-column: 1 / -1;
+  }
+
+  .bk-pay-page .coupon-input-row .ghost,
+  .bk-pay-page .coupon-input-row .cta {
+    width: 100%;
+  }
+
+  .bk-pay-page .coupon-preview {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .bk-pay-page .coupon-preview span {
+    text-align: left;
   }
 }
 
@@ -1729,11 +2089,20 @@
   }
 }
 
+@media (max-width: 639px) {
+  .bk-confirm-page {
+    margin-bottom: -50px;
+  }
+}
+
 @media (max-width: 767px) {
   .bk-confirm-page {
     gap: var(--am-space-3);
     padding: var(--am-space-3) var(--am-gutter)
-      calc(var(--am-space-4) + var(--am-tabbar-h, 0px) + env(safe-area-inset-bottom));
+      calc(
+        var(--am-space-4) + var(--am-tabbar-h, 0px) +
+          env(safe-area-inset-bottom)
+      );
   }
 
   .bk-confirm-page > .am-step-indicator {
@@ -2125,6 +2494,12 @@
   .bk-calendar-page .bk-calendar-aside {
     position: sticky;
     top: calc(var(--am-header-h) + var(--am-space-4));
+  }
+}
+
+@media (max-width: 639px) {
+  .bk-calendar-page {
+    margin-bottom: -50px;
   }
 }
 

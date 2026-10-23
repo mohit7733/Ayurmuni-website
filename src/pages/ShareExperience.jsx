@@ -197,7 +197,7 @@ export default function ShareExperience() {
   };
 
   return (
-    <AppShell tab="profile">
+    <AppShell tab="profile" hideFooter>
       <section className="catalog-page review-page">
         <header className="catalog-head">
           <button type="button" className="text-back" onClick={() => navigate(-1)}>
@@ -225,6 +225,7 @@ export default function ShareExperience() {
                 className={star <= rating ? 'on' : ''}
                 onClick={() => setRating(star)}
                 aria-label={`${star} star`}
+                aria-pressed={star === rating}
               >
                 ★
               </button>

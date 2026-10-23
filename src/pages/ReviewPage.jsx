@@ -10,6 +10,7 @@ import {
   isReviewVideoUrl,
   normalizeReviewsForDisplay,
 } from "../utils/reviewUtils";
+import "../design/pages/reviews.css";
 
 const FILTERS = [
   { key: "all", label: "All" },
@@ -89,12 +90,13 @@ export default function ReviewPage() {
               : "What patients are saying"
           }
         />
-        <div className="home-rail subcat-rail">
+        <div className="home-rail subcat-rail reviews-page__filters" role="group" aria-label="Filter reviews">
           {FILTERS.map((item) => (
             <button
               key={item.key}
               type="button"
               className={`chip ${filter === item.key ? "on" : ""}`}
+              aria-pressed={filter === item.key}
               onClick={() => setFilter(item.key)}
             >
               {item.label}
@@ -102,9 +104,9 @@ export default function ReviewPage() {
           ))}
         </div>
         {loading && reviews.length === 0 ? (
-          <p className="muted">Loading reviews…</p>
+          <p className="muted reviews-page__status" role="status">Loading reviews…</p>
         ) : visible.length === 0 ? (
-          <p className="empty-copy">No reviews yet</p>
+          <p className="empty-copy reviews-page__status">No reviews yet</p>
         ) : (
           <div className="reviews-page__grid">
             {visible.map((item, index) => (
@@ -114,9 +116,9 @@ export default function ReviewPage() {
               >
                 <header>
                   <strong>{item.patient_name || "Patient"}</strong>
-                  <span>{item.rating ? `${item.rating}★` : ""}</span>
+                  <span className="review-card__rating">{item.rating ? `${item.rating}★` : ""}</span>
                 </header>
-                <p>{item.comment || item.review || item.message || ""}</p>
+                <p className="review-card__comment">{item.comment || item.review || item.message || ""}</p>
                 {item.image_urls?.length ? (
                   <div className="review-media-grid">
                     {item.image_urls.map((url, mediaIndex) =>

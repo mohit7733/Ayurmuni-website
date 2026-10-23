@@ -1061,6 +1061,149 @@
   }
 }
 
+@media (max-width: 600px) {
+  .dp-page {
+    gap: 12px;
+    padding: 12px var(--am-gutter) calc(20px + env(safe-area-inset-bottom));
+  }
+
+  .dp-page > .am-page-header {
+    gap: 8px;
+  }
+
+  .dp-page > .am-page-header .am-page-header__row {
+    gap: 6px;
+  }
+
+  .dp-page > .am-page-header .am-page-header__copy {
+    min-width: 0;
+  }
+
+  .dp-page > .am-page-header .am-page-header__subtitle {
+    font-size: 12px;
+  }
+
+  .dp-layout,
+  .dp-main,
+  .dp-aside {
+    gap: 10px;
+  }
+
+  .dp-hero,
+  .dp-card {
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .dp-hero {
+    gap: 12px;
+  }
+
+  .dp-hero__top {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .dp-photo {
+    flex-basis: 56px;
+    width: 56px;
+    height: 56px;
+  }
+
+  .dp-hero__id h1 {
+    font-size: 19px;
+  }
+
+  .dp-hero__rating .am-rating {
+    font-size: 12px;
+  }
+
+  .dp-hero__meta {
+    gap: 5px;
+  }
+
+  .dp-hero__meta li {
+    min-height: 26px;
+    padding: 4px 7px;
+    font-size: 10px;
+  }
+
+  .dp-stats li {
+    padding: 8px 4px;
+  }
+
+  .dp-stats strong {
+    font-size: 13px;
+  }
+
+  .dp-stats span {
+    font-size: 9px;
+  }
+
+  .dp-card__head h2 {
+    font-size: 14px;
+    line-height: 1.3;
+  }
+
+  .dp-card__head .am-btn {
+    min-height: 34px;
+    padding-inline: 8px;
+    font-size: 11px;
+  }
+
+  .dp-chip-row {
+    gap: 5px;
+  }
+
+  .dp-chip {
+    min-height: 28px;
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+
+  .dp-social {
+    gap: 6px;
+  }
+
+  .dp-social .am-btn {
+    min-height: 34px;
+    padding-inline: 9px;
+    font-size: 11px;
+  }
+
+  .dp-reviews {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .dp-fee {
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .dp-fee__value {
+    font-size: 21px;
+  }
+
+  .dp-avail {
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .dp-avail strong {
+    font-size: 13px;
+  }
+
+  .dp-avail p {
+    font-size: 11px;
+    line-height: 1.4;
+  }
+
+  .dp-aside__actions .am-btn {
+    min-height: 40px;
+  }
+}
+
 :where(.dp-about__toggle, .dp-chip, .dp-avail):focus-visible {
   outline: 2px solid var(--am-primary);
   outline-offset: 2px;

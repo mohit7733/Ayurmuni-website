@@ -1,8 +1,19 @@
 import { useEffect, useRef } from 'react';
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
+import {
+  Camera,
+  CameraOff,
+  Mic,
+  MicOff,
+  Minimize2,
+  PhoneOff,
+  SwitchCamera,
+  Volume2,
+} from 'lucide-react';
 import AgoraVideoTile from '../components/AgoraVideoTile';
 import { useVideoCall } from '../context/VideoCallContext';
 import { requireAuth } from '../services/guestAuth';
+import '../design/pages/video-call.css';
 
 export default function VideoCall() {
   const { appointmentId } = useParams();
@@ -101,12 +112,13 @@ export default function VideoCall() {
           <button
             type="button"
             className="video-icon-btn"
+            aria-label="Minimize call"
             onClick={() => {
               minimizeCall();
               navigate('/profile/appointments', { replace: true });
             }}
           >
-            PiP
+            <Minimize2 size={18} aria-hidden="true" />
           </button>
         ) : null}
       </header>
@@ -162,20 +174,40 @@ export default function VideoCall() {
       </div>
 
       <div className="video-controls">
-        <button type="button" className={isMuted ? 'on' : ''} onClick={toggleMute}>
-          {isMuted ? 'Unmute' : 'Mute'}
+        <button
+          type="button"
+          className={isMuted ? 'on' : ''}
+          onClick={toggleMute}
+          aria-label={isMuted ? 'Unmute microphone' : 'Mute microphone'}
+        >
+          {isMuted ? <MicOff size={20} aria-hidden="true" /> : <Mic size={20} aria-hidden="true" />}
+          <span>{isMuted ? 'Unmute' : 'Mute'}</span>
         </button>
-        <button type="button" className={!isCameraOn ? 'on' : ''} onClick={toggleCamera}>
-          {isCameraOn ? 'Cam off' : 'Cam on'}
+        <button
+          type="button"
+          className={!isCameraOn ? 'on' : ''}
+          onClick={toggleCamera}
+          aria-label={isCameraOn ? 'Turn camera off' : 'Turn camera on'}
+        >
+          {isCameraOn ? <Camera size={20} aria-hidden="true" /> : <CameraOff size={20} aria-hidden="true" />}
+          <span>{isCameraOn ? 'Camera' : 'Camera off'}</span>
         </button>
-        <button type="button" className="end" onClick={leaveCallAndGoToAppointments}>
-          End
+        <button type="button" className="end" onClick={leaveCallAndGoToAppointments} aria-label="End call">
+          <PhoneOff size={20} aria-hidden="true" />
+          <span>End</span>
         </button>
-        <button type="button" className={isSpeakerOn ? 'on' : ''} onClick={toggleSpeaker}>
-          {isSpeakerOn ? 'Speaker' : 'Earpiece'}
+        <button
+          type="button"
+          className={isSpeakerOn ? 'on' : ''}
+          onClick={toggleSpeaker}
+          aria-label={isSpeakerOn ? 'Switch to earpiece' : 'Switch to speaker'}
+        >
+          <Volume2 size={20} aria-hidden="true" />
+          <span>{isSpeakerOn ? 'Speaker' : 'Earpiece'}</span>
         </button>
-        <button type="button" onClick={flipCamera}>
-          Flip
+        <button type="button" onClick={flipCamera} aria-label="Flip camera">
+          <SwitchCamera size={20} aria-hidden="true" />
+          <span>Flip</span>
         </button>
       </div>
     </div>

@@ -70,7 +70,11 @@
   border: 1px solid color-mix(in srgb, var(--am-primary) 14%, var(--am-line));
   border-radius: var(--am-radius-xl);
   background:
-    radial-gradient(circle at 18% 0, color-mix(in srgb, var(--am-accent) 13%, transparent), transparent 42%),
+    radial-gradient(
+      circle at 18% 0,
+      color-mix(in srgb, var(--am-accent) 13%, transparent),
+      transparent 42%
+    ),
     color-mix(in srgb, var(--am-primary-soft) 62%, transparent);
 }
 
@@ -91,7 +95,8 @@
 
 .notif-page .notif-filter-set--types {
   padding-left: var(--am-space-4);
-  border-left: 1px solid color-mix(in srgb, var(--am-primary) 24%, var(--am-line));
+  border-left: 1px solid
+    color-mix(in srgb, var(--am-primary) 24%, var(--am-line));
 }
 
 .notif-page .notif-filter-set__label {
@@ -99,7 +104,7 @@
   color: var(--am-primary);
   font-size: 10px;
   font-weight: var(--am-weight-bold);
-  letter-spacing: .12em;
+  letter-spacing: 0.12em;
 }
 
 .notif-page .notif-filter-group {
@@ -335,8 +340,13 @@
 }
 
 @keyframes notif-pulse {
-  0%, 100% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--am-primary) 22%, transparent); }
-  50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--am-primary) 10%, transparent); }
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--am-primary) 22%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--am-primary) 10%, transparent);
+  }
 }
 
 .notif-page .notif-state {
@@ -417,9 +427,10 @@
 }
 
 @media (max-width: 640px) {
-  .notif-page.catalog-page {
-    width: 100%;
-    padding: var(--am-space-5) var(--am-gutter) var(--am-space-8);
+  /* Let short states occupy the space between the sticky header and footer. */
+  .app-shell-body:has(.notif-page) {
+    display: flex;
+    flex-direction: column;
   }
 
   .notif-page .catalog-head {
@@ -519,6 +530,10 @@
 
   .notif-page .notif-row .checkout-item {
     gap: var(--am-space-3);
+  }
+
+  .notif-page .notif-state {
+    flex: 1 0 240px;
   }
 }
 

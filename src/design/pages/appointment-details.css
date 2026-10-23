@@ -1,0 +1,211 @@
+@media (max-width: 640px) {
+  .appoint-detail-page.catalog-page {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 12px var(--am-gutter) calc(8px + env(safe-area-inset-bottom));
+  }
+
+  .appoint-detail-page > .am-page-header {
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .appoint-detail-page > .am-page-header .am-page-header__row {
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .appoint-detail-page > .am-page-header .am-page-header__copy {
+    min-width: 0;
+  }
+
+  .appoint-detail-page > .am-page-header .am-page-header__title {
+    font-size: 20px;
+    line-height: 1.2;
+  }
+
+  .appoint-detail-page > .am-page-header .am-page-header__subtitle {
+    margin-top: 3px;
+    font-size: 12px;
+  }
+
+  .appoint-detail-page > .am-page-header .am-page-header__actions {
+    flex: 0 0 auto;
+    gap: 6px;
+  }
+
+  .appoint-detail-page > .am-page-header .am-page-header__actions > .am-btn,
+  .appoint-detail-page > .am-page-header .am-page-header__actions > .ghost {
+    min-height: 36px;
+    padding-inline: 9px;
+    font-size: 11px;
+  }
+
+  .appoint-detail-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .appoint-detail-page .confirm-status {
+    align-self: flex-start;
+    margin: 0;
+    padding: 5px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    line-height: 1.2;
+  }
+
+  .appoint-detail-page .appoint-hero {
+    gap: 10px;
+    margin: 0;
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .appoint-detail-page .appoint-hero .doctor-photo {
+    flex: 0 0 48px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+  }
+
+  .appoint-detail-page .appoint-hero h2 {
+    font-size: 15px;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+
+  .appoint-detail-page .appoint-hero p {
+    margin: 3px 0 0;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+
+  .appoint-detail-page .appoint-meta {
+    gap: 8px;
+    margin: 0;
+  }
+
+  .appoint-detail-page .appoint-meta .confirm-meta-chip {
+    min-width: 0;
+    padding: 10px;
+    border-radius: 12px;
+  }
+
+  .appoint-detail-page .appoint-meta .confirm-meta-chip small {
+    font-size: 10px;
+  }
+
+  .appoint-detail-page .appoint-meta .confirm-meta-chip strong {
+    font-size: 12px;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
+  .appoint-detail-page .checkout-card {
+    margin: 0;
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .appoint-detail-page .checkout-card h3 {
+    margin: 0 0 8px;
+    font-size: 15px;
+    line-height: 1.3;
+  }
+
+  .appoint-detail-page .txn-detail-row {
+    gap: 8px;
+    padding: 8px 0;
+    font-size: 12px;
+  }
+
+  .appoint-detail-page .txn-detail-row span {
+    flex: 0 1 42%;
+    min-width: 0;
+    font-size: 11px;
+  }
+
+  .appoint-detail-page .txn-detail-row strong {
+    flex: 1 1 58%;
+    min-width: 0;
+    font-size: 12px;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+
+  .appoint-detail-page .appoint-concern p,
+  .appoint-detail-page .appoint-review p {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+
+  .appoint-detail-page .appoint-hero-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+    margin: 0;
+  }
+
+  .appoint-detail-page .appoint-hero-actions > button {
+    min-width: 0;
+    min-height: 40px;
+    padding: 8px;
+    font-size: 11px;
+  }
+
+  .appoint-detail-page .appoint-link {
+    min-height: 56px;
+    padding: 10px 12px;
+    border-radius: 12px;
+  }
+
+  .appoint-detail-page .appoint-link p {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .appoint-detail-page .appoint-link small {
+    margin-top: 3px;
+    font-size: 10px;
+    line-height: 1.35;
+  }
+
+  .appoint-detail-page .checkout-sticky {
+    position: static;
+    display: flex;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .appoint-detail-page .checkout-sticky .ghost,
+  .appoint-detail-page .checkout-sticky .cta {
+    min-height: 42px;
+    padding-inline: 8px;
+    border-radius: 11px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 380px) {
+  .appoint-detail-page > .am-page-header .am-page-header__actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .appoint-detail-page .appoint-hero-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .appoint-detail-page .appoint-meta {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

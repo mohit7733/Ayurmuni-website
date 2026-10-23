@@ -10,6 +10,7 @@ import { requireAuth } from '../services/guestAuth';
 import { chatService } from '../services/chatService';
 import { getAppointmentDetail } from '../services/consultService';
 import AppShell from '../components/AppShell';
+import '../design/pages/chat.css';
 
 let globalInputSendLock = false;
 const CHAT_META_KEY = 'ayurmuni_chat_meta';
@@ -243,7 +244,7 @@ export default function Chat() {
   }
 
   return (
-    <AppShell tab="profile">
+    <AppShell tab="profile" hideFooter>
       <div className="chat-page">
         <header className="chat-header">
           <button

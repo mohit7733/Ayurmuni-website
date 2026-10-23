@@ -40,6 +40,7 @@ import {
 import { consultationHasPrescription } from '../utils/prescriptionDetailUtils';
 import { formatAppointmentId } from '../utils/formatDisplayId';
 import { getAppointmentShareMessage } from '../helper/shareMessage';
+import '../design/pages/appointment-details.css';
 
 const CANCEL_REASONS = [
   'Scheduling conflict',

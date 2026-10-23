@@ -729,6 +729,317 @@
   }
 }
 
+@media (max-width: 640px) {
+  .mentor-profile.catalog-page {
+    box-sizing: border-box;
+    width: 100%;
+    gap: 12px;
+    padding: 12px var(--am-gutter)
+      calc(20px + var(--am-tabbar-h, 0px) + env(safe-area-inset-bottom));
+    margin-bottom: -50px;
+  }
+
+  .mentor-profile__head {
+    align-items: flex-start;
+    gap: 10px;
+    padding: 0;
+  }
+
+  .mentor-profile__head .text-back {
+    min-height: 36px;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .mentor-profile__eyebrow {
+    font-size: 9px;
+    letter-spacing: 0.08em;
+  }
+
+  .mentor-profile__head h1 {
+    font-size: 21px;
+    line-height: 1.2;
+  }
+
+  .mentor-profile__head p {
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .mentor-profile .mentor-hero {
+    gap: 12px;
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .mentor-hero__main {
+    align-items: center;
+    gap: 10px;
+  }
+
+  .mentor-profile .mentor-avatar {
+    flex-basis: 56px;
+    width: 56px;
+    height: 56px;
+    border-width: 3px;
+    font-size: 24px;
+  }
+
+  .mentor-profile .mentor-badge {
+    margin-bottom: 4px;
+    padding: 3px 7px;
+    font-size: 9px;
+  }
+
+  .mentor-profile .mentor-hero h2 {
+    font-size: 18px;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+  }
+
+  .mentor-hero__specialty {
+    margin-top: 3px;
+    font-size: 11px;
+    line-height: 1.35;
+  }
+
+  .mentor-profile .variant-row {
+    gap: 5px;
+    margin-top: 7px;
+  }
+
+  .mentor-profile .variant-row .chip {
+    min-height: 25px;
+    padding-inline: 8px;
+    font-size: 10px;
+  }
+
+  .mentor-hero__rating {
+    gap: 4px;
+    margin-top: 7px;
+  }
+
+  .mentor-hero__rating svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .mentor-hero__rating strong,
+  .mentor-hero__rating span {
+    font-size: 11px;
+  }
+
+  .mentor-profile .mentor-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .mentor-profile .mentor-stats > div {
+    gap: 3px;
+    padding: 9px 10px;
+  }
+
+  .mentor-profile .mentor-stats strong {
+    font-size: 16px;
+  }
+
+  .mentor-profile .mentor-stats small {
+    font-size: 10px;
+    line-height: 1.3;
+  }
+
+  .mentor-profile .mentor-quote {
+    gap: 8px;
+    padding-top: 10px;
+  }
+
+  .mentor-profile .mentor-quote svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .mentor-profile .mentor-quote p {
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .mentor-profile .mentor-quote cite {
+    font-size: 10px;
+    line-height: 1.4;
+  }
+
+  .mentor-profile__content {
+    gap: 10px;
+  }
+
+  .mentor-profile .mentor-profile__card {
+    padding: 13px;
+    border-radius: 14px;
+  }
+
+  .mentor-profile__section-heading {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    align-items: center;
+    column-gap: 9px;
+    row-gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .mentor-profile__section-heading > div {
+    min-width: 0;
+  }
+
+  .mentor-profile__section-heading h3 {
+    overflow-wrap: anywhere;
+  }
+
+  .mentor-profile__section-heading .mentor-profile__review-summary {
+    grid-column: 2;
+    justify-self: start;
+    margin: 0;
+  }
+
+  .mentor-profile__icon {
+    flex-basis: 34px;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+  }
+
+  .mentor-profile__icon svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .mentor-profile__section-heading h3 {
+    margin-top: 2px;
+    font-size: 15px;
+    line-height: 1.25;
+  }
+
+  .mentor-profile__philosophy {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .mentor-profile .mentor-creds {
+    gap: 7px;
+    margin-top: 10px;
+  }
+
+  .mentor-profile .mentor-cred {
+    grid-template-columns: 30px minmax(0, 1fr);
+    column-gap: 9px;
+    padding: 9px;
+  }
+
+  .mentor-cred__icon {
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
+  }
+
+  .mentor-profile .mentor-cred strong {
+    font-size: 12px;
+  }
+
+  .mentor-profile .mentor-cred small {
+    font-size: 10px;
+    line-height: 1.35;
+  }
+
+  .mentor-profile .mentor-profile__session-list .menu-row {
+    min-height: 54px;
+    padding: 9px 10px;
+  }
+
+  .mentor-profile__session-info strong {
+    font-size: 12px;
+  }
+
+  .mentor-profile__session-info small {
+    font-size: 10px;
+  }
+
+  .mentor-profile__schedule {
+    min-height: 40px;
+    margin-top: 8px;
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .mentor-profile__review-summary {
+    gap: 3px;
+    padding-left: 0;
+    font-size: 10px;
+  }
+
+  .mentor-profile__head > div {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .mentor-profile .mentor-stats > div {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .mentor-profile .mentor-cred {
+    text-align: left;
+  }
+
+  .mentor-profile .mentor-profile__session-list .menu-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-align: left;
+  }
+
+  .mentor-profile__session-info {
+    flex: 1;
+    min-width: 0;
+    align-items: flex-start;
+  }
+
+  .mentor-profile__session-info strong {
+    overflow-wrap: anywhere;
+    text-align: left;
+  }
+
+  .mentor-profile .mentor-review {
+    padding: 11px;
+  }
+
+  .mentor-review__avatar {
+    flex-basis: 32px;
+    width: 32px;
+    height: 32px;
+  }
+
+  .mentor-profile .mentor-review__top strong {
+    font-size: 12px;
+  }
+
+  .mentor-profile .mentor-review__top small {
+    font-size: 10px;
+  }
+
+  .mentor-profile .mentor-review > p {
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .mentor-profile__cta {
+    min-height: 46px;
+    padding-inline: 14px;
+    border-radius: 14px;
+    font-size: 14px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .mentor-profile *,
   .mentor-profile *::before,

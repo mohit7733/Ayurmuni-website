@@ -3023,7 +3023,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 220px;
+  flex: 0 1 auto;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #101a17;
 }
 
 .review-gallery-viewer {
@@ -3032,6 +3036,9 @@
   align-items: center;
   justify-content: center;
   width: 100%;
+  min-width: 0;
+  min-height: 0;
+  gap: 0;
 }
 
 .review-gallery-modal img,
@@ -3039,8 +3046,8 @@
   display: block;
   width: auto;
   height: auto;
-  max-width: 100%;
-  max-height: min(72dvh, 760px);
+  max-width: min(100%, 100vw);
+  max-height: min(84dvh, 900px);
   object-fit: contain;
 }
 
@@ -3053,6 +3060,7 @@
   justify-content: center;
   width: 40px;
   height: 40px;
+  padding: 0;
   transform: translateY(-50%);
   border: 0;
   border-radius: 50%;
@@ -3074,9 +3082,98 @@
   outline-offset: 2px;
 }
 
+.review-gallery-viewer__nav:hover {
+  background: var(--am-primary);
+}
+
 @media (min-width: 640px) {
   .review-gallery-modal.am-modal__panel {
     max-width: min(92vw, 1100px);
+    width: auto;
+    padding: 0;
+    overflow: hidden;
+    border-radius: 12px;
+    background: #101a17;
+  }
+}
+
+@media (max-width: 639px) {
+  .review-gallery-modal.am-modal__panel:has(.am-modal__header) {
+    width: auto;
+    max-width: calc(100vw - 20px);
+  }
+
+  .review-gallery-modal.am-modal__panel {
+    width: auto;
+    max-width: calc(100vw - 20px);
+    max-height: 92dvh;
+    margin: auto;
+    padding: 0;
+    overflow: hidden;
+    border-radius: 12px;
+    background: #101a17;
+  }
+
+  .review-gallery-modal .am-modal__header {
+    position: absolute;
+    z-index: 2;
+    top: 4px;
+    right: 4px;
+    padding: 0;
+  }
+
+  .review-gallery-modal .am-modal__titles {
+    display: none;
+  }
+
+  .review-gallery-modal .am-modal__close {
+    width: 36px;
+    height: 36px;
+    margin: 0;
+    border-radius: 50%;
+    background: rgb(16 26 23 / 72%);
+    color: #fff;
+  }
+
+  .review-gallery-modal .am-modal__body {
+    min-height: 0;
+    padding: 0;
+  }
+
+  .review-gallery-viewer {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr) 36px;
+    gap: 0;
+    width: min(100vw - 20px, 600px);
+    min-height: 0;
+  }
+
+  .review-gallery-modal img,
+  .review-gallery-modal video {
+    grid-column: 2;
+    width: 100%;
+    max-width: 100%;
+    max-height: 88dvh;
+  }
+
+  .review-gallery-viewer__nav {
+    position: static;
+    transform: none;
+    width: 36px;
+    height: 36px;
+    background: rgb(16 26 23 / 72%);
+    color: #fff;
+    box-shadow: none;
+  }
+
+  .review-gallery-viewer__nav:first-child {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .review-gallery-viewer__nav:last-child {
+    grid-column: 3;
+    grid-row: 1;
   }
 }
 

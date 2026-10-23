@@ -16,7 +16,11 @@
   border: 1px solid color-mix(in srgb, var(--am-primary) 16%, transparent);
   border-radius: var(--am-radius-xl);
   background:
-    radial-gradient(circle at 96% 0, color-mix(in srgb, var(--am-accent) 20%, transparent), transparent 34%),
+    radial-gradient(
+      circle at 96% 0,
+      color-mix(in srgb, var(--am-accent) 20%, transparent),
+      transparent 34%
+    ),
     linear-gradient(120deg, var(--am-primary-soft), var(--am-surface));
 }
 
@@ -58,7 +62,9 @@
 
 .loc-search:focus-within {
   border-color: var(--am-primary);
-  box-shadow: var(--am-focus-ring), 0 8px 20px rgba(13, 97, 78, 0.1);
+  box-shadow:
+    var(--am-focus-ring),
+    0 8px 20px rgba(13, 97, 78, 0.1);
 }
 
 .loc-search > span {
@@ -99,7 +105,9 @@
 }
 
 @keyframes loc-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Suggestions */
@@ -114,7 +122,8 @@
 .loc-suggestions .privacy-row {
   gap: var(--am-space-3);
   padding: var(--am-space-3) var(--am-space-4);
-  transition: background var(--am-dur-fast) var(--am-ease-standard),
+  transition:
+    background var(--am-dur-fast) var(--am-ease-standard),
     padding-left var(--am-dur-fast) var(--am-ease-out);
 }
 
@@ -242,9 +251,14 @@
   padding: var(--am-space-4) var(--am-space-5);
   border: 1.5px solid var(--am-line-strong);
   border-radius: var(--am-radius-xl);
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--am-primary) 5%, var(--am-surface)), var(--am-surface) 70%);
-  box-shadow: 0 2px 12px rgba(10, 40, 32, 0.05), inset 0 1px 0 rgba(255,255,255,0.8);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--am-primary) 5%, var(--am-surface)),
+    var(--am-surface) 70%
+  );
+  box-shadow:
+    0 2px 12px rgba(10, 40, 32, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
   transition: border-color var(--am-dur-fast) var(--am-ease-standard);
 }
 
@@ -302,30 +316,139 @@
   font-size: var(--am-text-base);
   letter-spacing: 0.01em;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
     0 4px 16px rgba(13, 97, 78, 0.28);
 }
 
 .loc-page > .cta:hover:not(:disabled) {
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
     0 10px 28px rgba(13, 97, 78, 0.36);
 }
 
 /* Mobile */
 @media (max-width: 640px) {
   .loc-page.catalog-page {
+    box-sizing: border-box;
     width: 100%;
-    padding: var(--am-space-4) var(--am-gutter) var(--am-space-8);
+    padding: 12px var(--am-gutter)
+      calc(20px + var(--am-tabbar-h, 0px) + env(safe-area-inset-bottom));
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: -50px;
   }
 
   .loc-page .catalog-head {
-    padding: var(--am-space-4) var(--am-space-5);
-    margin-bottom: var(--am-space-4);
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+    margin-bottom: 0;
+    border-radius: 14px;
+  }
+
+  .loc-page .catalog-head h1 {
+    font-size: 21px;
+    line-height: 1.2;
+  }
+
+  .loc-page .catalog-head p {
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .loc-search {
+    height: 44px;
+    gap: 8px;
+    margin: 0;
+    padding-inline: 12px;
+  }
+
+  .loc-search > span {
+    width: 26px;
+    height: 26px;
+    font-size: 12px;
+  }
+
+  .loc-search input {
+    font-size: 13px;
+  }
+
+  .loc-page .map-picker-wrap {
+    border-radius: 14px;
   }
 
   .loc-page .map-picker {
-    height: 240px;
+    height: clamp(200px, 55vw, 240px);
+  }
+
+  .loc-gps {
+    min-height: 42px;
+    margin-top: 0;
+    font-size: 13px;
+  }
+
+  .loc-hint {
+    margin-top: -4px;
+    font-size: 11px;
+  }
+
+  .loc-error {
+    margin-top: 0;
+    padding: 9px 11px;
+    font-size: 11px;
+  }
+
+  .loc-suggestions.privacy-card {
+    margin: 0;
+    border-radius: 14px;
+  }
+
+  .loc-suggestions .privacy-row {
+    min-height: 48px;
+    padding: 9px 12px;
+  }
+
+  .loc-address {
+    gap: 7px;
+    margin: 0;
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .loc-address strong {
+    font-size: 13px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  .loc-address small {
+    font-size: 11px;
+  }
+
+  .loc-page > .cta {
+    min-height: 46px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 380px) {
+  .loc-page.catalog-page {
+    gap: 8px;
+    padding-top: 10px;
+  }
+
+  .loc-page .catalog-head {
+    padding: 10px;
+  }
+
+  .loc-page .catalog-head h1 {
+    font-size: 19px;
+  }
+
+  .loc-page .map-picker {
+    height: 190px;
   }
 }
 

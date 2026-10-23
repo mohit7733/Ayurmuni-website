@@ -184,12 +184,13 @@ export default function Payments() {
           <span className="payments-mark" aria-hidden>₹</span>
         </header>
 
-        <div className="home-rail subcat-rail payments-source" role="tablist" aria-label="Payment source">
+        <div className="home-rail subcat-rail payments-source" role="group" aria-label="Payment source">
           {SOURCE_TABS.map((tab) => (
             <button
               key={tab.key}
               type="button"
               className={`chip ${source === tab.key ? 'on' : ''}`}
+              aria-pressed={source === tab.key}
               onClick={() => setSource(tab.key)}
             >
               {tab.label}
@@ -205,6 +206,7 @@ export default function Payments() {
           <button
             type="button"
             className={`chip ${datePreset !== 'all' ? 'on' : ''}`}
+            aria-pressed={datePreset !== 'all'}
             onClick={openDateSheet}
           >
             {dateChipLabel}
@@ -214,6 +216,7 @@ export default function Payments() {
               key={chip.key}
               type="button"
               className={`chip ${entry === chip.key ? 'on' : ''}`}
+              aria-pressed={entry === chip.key}
               onClick={() => setEntry(chip.key)}
             >
               {chip.label}

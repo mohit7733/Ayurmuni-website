@@ -284,7 +284,7 @@ export default function CategoryDoctor() {
 
   return (
     <AppShell tab="consult">
-      <div className="cs-page">
+      <div className="cs-page cs-category-page">
         <PageHeader title={categoryName} subtitle={T.concernSubtitle} eyebrow={T.concernsEyebrow}>
           <SearchField
             value={search}
@@ -381,6 +381,11 @@ export default function CategoryDoctor() {
                 ))}
               </Rail>
             )}
+            {dietPlans.length > 0 ? (
+              <div className="cs-category-page__diet-viewall">
+                <ViewAll onClick={() => navigate(`/diet?view=all&${catalogQuery}`)} />
+              </div>
+            ) : null}
           </section>
         ) : null}
 

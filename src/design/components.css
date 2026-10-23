@@ -1768,7 +1768,6 @@
   display: flex;
   gap: var(--am-space-4);
   margin: 0 calc(var(--am-gutter) * -1);
-  padding: var(--am-space-2) var(--am-gutter) var(--am-space-4);
   overflow-x: auto;
   list-style: none;
   scroll-snap-type: x mandatory;
@@ -2871,5 +2870,11 @@
   .am-tile:hover .am-tile__img,
   .am-banner:hover .am-banner__slide img {
     transform: none !important;
+  }
+}
+
+@media (max-width: 639px) {
+  .am-page-header__subtitle {
+    margin-bottom: 10px;
   }
 }

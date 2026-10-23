@@ -591,6 +591,188 @@
   }
 }
 
+/* Health concern category page responsive refinements */
+@media (max-width: 639px) {
+  .cs-category-page {
+    gap: 20px;
+    padding: 14px var(--am-gutter) calc(24px + env(safe-area-inset-bottom));
+  }
+
+  .cs-category-page > .am-page-header {
+    gap: 10px;
+  }
+
+  .cs-category-page > .am-page-header .am-page-header__row {
+    gap: 6px;
+  }
+
+  .cs-category-page > .am-page-header .am-page-header__title {
+    font-size: clamp(22px, 6vw, 28px);
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+  }
+
+  .cs-category-page > .am-page-header .am-page-header__subtitle {
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .cs-category-page > .am-page-header .am-page-header__extra,
+  .cs-category-page > .am-page-header .am-search {
+    width: 100%;
+    max-width: none;
+  }
+
+  .cs-category-page .cs-about {
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .cs-category-page .cs-about__icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .cs-category-page .cs-about p {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .cs-category-page .cs-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .cs-category-page #cs-cd-diet {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .cs-category-page
+    #cs-cd-diet
+    > .am-section-header
+    .am-section-header__action {
+    display: none;
+  }
+
+  .cs-category-page__diet-viewall {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    align-self: center;
+    margin-top: 0;
+  }
+
+  .cs-category-page .cs-section .am-section-header {
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .cs-category-page .cs-section .am-section-header__title {
+    font-size: 17px;
+    line-height: 1.3;
+  }
+
+  .cs-category-page .cs-section .am-section-header__description {
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .cs-category-page .cs-section .am-section-header__action .am-btn {
+    display: none;
+  }
+
+  .cs-category-page .cs-conditions {
+    gap: 8px;
+  }
+
+  .cs-category-page .cs-chip-row {
+    gap: 7px;
+    margin-inline: calc(var(--am-gutter) * -1);
+    padding: 2px var(--am-gutter) 6px;
+    scroll-snap-type: x proximity;
+  }
+
+  .cs-category-page .cs-chip-row > * {
+    scroll-snap-align: start;
+  }
+
+  .cs-category-page .cs-chip-row .am-chip {
+    min-height: 36px;
+    padding-inline: 11px;
+    font-size: 12px;
+  }
+
+  .cs-category-page .am-doctor-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .cs-category-page .am-doctor-card {
+    gap: 10px;
+    padding: 13px;
+    border-radius: 14px;
+  }
+
+  .cs-category-page .am-doctor-card__photo {
+    width: 46px;
+    height: 46px;
+  }
+
+  .cs-category-page .am-doctor-card__name {
+    font-size: 14px;
+  }
+
+  .cs-category-page .am-doctor-card__spec {
+    font-size: 12px;
+  }
+
+  .cs-category-page .am-doctor-card__meta {
+    gap: 6px 12px;
+    font-size: 11px;
+  }
+
+  .cs-category-page .am-doctor-card__foot {
+    padding-top: 10px;
+  }
+
+  .cs-category-page .am-doctor-card__fee strong {
+    font-size: 14px;
+  }
+
+  .cs-category-page .am-product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .cs-category-page .cs-more .am-btn {
+    min-height: 42px;
+  }
+
+  .cs-category-page .cs-foot {
+    gap: 10px;
+  }
+}
+
+@media (min-width: 640px) {
+  .cs-category-page__diet-viewall {
+    display: none;
+  }
+}
+
+@media (max-width: 360px) {
+  .cs-category-page .am-product-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cs-category-page .cs-section .am-section-header {
+    flex-wrap: wrap;
+  }
+}
+
 @media (min-width: 1400px) {
   .cs-doctors-page .cs-browse {
     grid-template-columns: 260px minmax(0, 1fr);

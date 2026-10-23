@@ -33,10 +33,9 @@ export default function ReviewGallery() {
       <Modal
         open
         onClose={closeGallery}
-        title="Review media"
-        description={images.length ? `${index + 1} of ${images.length}` : undefined}
         size="lg"
         className="review-gallery-modal"
+        hideClose={false}
       >
         {current ? (
           <div className="review-gallery-viewer">

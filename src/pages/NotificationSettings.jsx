@@ -227,15 +227,12 @@ export default function NotificationSettings() {
                   onClick={() => togglePreference(type.id)}
                   disabled={saving}
                   className={`ns-toggle ${isEnabled ? 'ns-toggle--on' : ''}`}
-                  aria-label={`Toggle ${type.label}`}
+                  aria-label={`${isEnabled ? 'Disable' : 'Enable'} ${type.label}`}
                   role="switch"
                   aria-checked={isEnabled}
                 >
                   <span className="ns-toggle-track">
                     <span className="ns-toggle-thumb" />
-                  </span>
-                  <span className="ns-toggle-label" aria-hidden="true">
-                    {isEnabled ? 'On' : 'Off'}
                   </span>
                 </button>
               </div>

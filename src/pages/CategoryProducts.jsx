@@ -197,7 +197,7 @@ export default function CategoryProducts() {
 
   return (
     <AppShell tab="products">
-      <div className="st-page">
+      <div className="st-page st-category-page">
         <PageHeader title={title} subtitle={T.browseCatalog}>
           <SearchField
             value={search}
