@@ -11,10 +11,11 @@ import { apiClient } from './apiClient';
  * Config needed (nothing is invented here):
  * - VITE_ONESIGNAL_APP_ID: the OneSignal app id with the Web platform enabled for this site's origin.
  * - public/OneSignalSDKWorker.js served from the site root (added).
- * Without VITE_ONESIGNAL_APP_ID every call here is a safe no-op and the welcome API is skipped,
- * matching the app, which only calls it once the device is subscribed.
+ * VITE_ONESIGNAL_APP_ID overrides DEFAULT_APP_ID below.
  */
-const APP_ID = String(import.meta.env.VITE_ONESIGNAL_APP_ID || '').trim();
+// Public client id (same as the app's ONE_SIGNAL_APP_ID); env overrides, default keeps Vercel builds working.
+const DEFAULT_APP_ID = '5c79696d-81e8-46a7-922d-b0b08eef4e57';
+const APP_ID = String(import.meta.env.VITE_ONESIGNAL_APP_ID || DEFAULT_APP_ID).trim();
 const SDK_URL = 'https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js';
 
 let sdkPromise = null;
@@ -33,7 +34,9 @@ export const initializeOneSignal = () => {
       try {
         await OneSignal.init({ appId: APP_ID, serviceWorkerPath: '/OneSignalSDKWorker.js', allowLocalhostAsSecureOrigin: true });
         resolve(OneSignal);
-      } catch {
+      } catch (error) {
+        // e.g. "Can only be used on: <origin>" when the dashboard's Web site URL doesn't match.
+        console.warn('[push] OneSignal init failed:', error?.message || error);
         resolve(null);
       }
     });
@@ -178,8 +181,9 @@ export const setPushOptIn = async (enabled) => {
   }
 };
 
-/** app: logoutOneSignalUser — on sign-out. Never loads the SDK just to log out. */
+/** app: logoutOneSignalUser — on sign-out. Loads the SDK if needed, since the External ID
+ * persists in the browser across reloads. */
 export const logoutOneSignalUser = () => {
-  if (!sdkPromise) return;
-  sdkPromise.then((OneSignal) => OneSignal?.logout?.()).catch(() => undefined);
+  if (!isPushConfigured()) return;
+  initializeOneSignal().then((OneSignal) => OneSignal?.logout?.()).catch(() => undefined);
 };
