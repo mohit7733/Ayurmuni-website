@@ -19,7 +19,8 @@ import {
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import DiseaseSelectionModal from '../components/DiseaseSelectionModal';
-import LabHomeBanner from '../components/LabHomeBanner';
+// TEMP hidden per Rohit — Health Lab section commented out below
+// import LabHomeBanner from '../components/LabHomeBanner';
 import { Utils } from '../common/utils';
 import { getBannerImageUri, resolveImageUrl } from '../home/catalog';
 import useBrands from '../hooks/useBrands';
@@ -29,11 +30,24 @@ import {
   resolveServiceCategoryKey,
 } from '../home/serviceCategories';
 import useHomeData from '../hooks/useHomeData';
+import { getDoctors } from '../services/consultService';
+import { isAuthenticated, isGuestUser, requireAuth } from '../services/guestAuth';
+import {
+  doctorDisplayName,
+  doctorExperience,
+  doctorFeeLabel,
+  doctorImage,
+  doctorQualification,
+  doctorRating,
+  getDoctorId,
+  normalizeDoctorList,
+  resolveDoctorSpecializations,
+} from '../consult/doctors';
 import DoctorTable from '../components/DoctorTable';
 import DummyOfferCard from '../components/DummyOfferCard';
 import ProductCard from '../components/ProductCard';
 import HomeJoinAppointments from '../components/HomeJoinAppointments';
-import { requireAuth } from '../services/guestAuth';
+
 import useRecentVisitedDoctors from '../hooks/useRecentVisitedDoctors';
 import useUpcomingAppointments from '../hooks/useUpcomingAppointments';
 import BannerCarousel from '../components/BannerCarousel';
@@ -52,7 +66,8 @@ import {
   ConcernCarousel,
 } from '../components/ui';
 import { HOME_COPY as T } from '../content/home';
-import { DUMMY_CONSULT_PACKAGES, DUMMY_LAB_TESTS, DUMMY_PANCHAKARMA } from '../data/homeDummySections';
+// TEMP hidden per Rohit — DUMMY_LAB_TESTS, DUMMY_PANCHAKARMA unused while Lab/Panchakarma are hidden
+import { DUMMY_CONSULT_PACKAGES } from '../data/homeDummySections';
 import '../design/pages/home.css';
 import '../design/pages/dummy-offers.css';
 import '../design/pages/orange-lab.css';
@@ -221,6 +236,80 @@ function shortLabel(value) {
   return text;
 }
 
+const OUR_DOCTORS_LIMIT = 10;
+
+/** "Our doctors" rail — customers/doctors/ (auth required; hidden for guests, empty or failed responses). */
+function useOurDoctors(enabled) {
+  const [items, setItems] = useState([]);
+  useEffect(() => {
+    if (!enabled) return undefined;
+    let alive = true;
+    (async () => {
+      if (!(await isAuthenticated()) || (await isGuestUser())) return;
+      const res = await getDoctors({ page: 1, page_size: OUR_DOCTORS_LIMIT });
+      if (!alive || !res || res.success === false) return;
+      const list = normalizeDoctorList(res, { approvedOnly: true }).filter((d) => getDoctorId(d));
+      setItems(list.slice(0, OUR_DOCTORS_LIMIT));
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [enabled]);
+  return items;
+}
+
+function OurDoctorCard({ item, index, onOpen }) {
+  const name = doctorDisplayName(item);
+  const image = doctorImage(item);
+  const qualification = doctorQualification(item);
+  const specs = resolveDoctorSpecializations(item).slice(0, 2).join(', ');
+  const experience = doctorExperience(item);
+  const rating = doctorRating(item);
+  const fee = doctorFeeLabel(item);
+
+  return (
+    <article className="hm-odoc" style={{ '--hm-odoc-i': Math.min(index, 6) }}>
+      <div className="hm-odoc__top">
+        <span className="hm-odoc__photo">
+          {image ? (
+            <img src={image} alt="" loading="lazy" decoding="async" width="64" height="64" />
+          ) : (
+            <span aria-hidden>{name.charAt(0)}</span>
+          )}
+        </span>
+        <div className="hm-odoc__id">
+          <h3 className="hm-odoc__name">{name}</h3>
+          {qualification ? <p className="hm-odoc__qual">{qualification}</p> : null}
+          {specs && specs !== qualification ? <p className="hm-odoc__spec">{specs}</p> : null}
+        </div>
+      </div>
+      {experience || rating ? (
+        <ul className="hm-odoc__meta">
+          {experience ? <li>{experience}</li> : null}
+          {rating ? (
+            <li>
+              <span aria-hidden>★</span> {rating}
+            </li>
+          ) : null}
+        </ul>
+      ) : null}
+      <div className="hm-odoc__foot">
+        {fee ? (
+          <p className="hm-odoc__fee">
+            <strong>{fee}</strong> <span>/ consult</span>
+          </p>
+        ) : (
+          <span />
+        )}
+        <button type="button" className="hm-odoc__cta am-stretched" onClick={onOpen}>
+          Consult
+          <ArrowRight size={14} aria-hidden />
+        </button>
+      </div>
+    </article>
+  );
+}
+
 function YogaSessionCard({ item, onClick }) {
   const level = shortLabel(item.difficulty);
   const duration = shortLabel(item.duration);
@@ -322,6 +411,7 @@ export default function Home() {
   const secondaryReady = !loading;
   const { doctors: visitedDoctors, loading: loadingVisitedDoctors } =
     useRecentVisitedDoctors(secondaryReady);
+  const ourDoctors = useOurDoctors(secondaryReady);
   const { appointments: upcomingAppointments, loading: loadingAppointments } =
     useUpcomingAppointments(8, secondaryReady);
   const { preview: activeDiet } = useActiveDietHome(secondaryReady);
@@ -685,6 +775,31 @@ export default function Home() {
             </Reveal>
           ) : null}
 
+          {ourDoctors.length > 0 ? (
+            <Reveal as="section" className="hm-section hm-panel hm-odocs" aria-labelledby="hm-odocs-title">
+              <SectionHeader
+                id="hm-odocs-title"
+                title="Our doctors"
+                description="Certified Ayurvedic experts, ready to consult."
+                action={<ViewAll label="Our doctors" onClick={() => navigate('/consult/doctors')} />}
+              />
+              <Rail label="Our doctors">
+                {ourDoctors.map((item, index) => {
+                  const id = getDoctorId(item);
+                  return (
+                    <RailItem key={id}>
+                      <OurDoctorCard
+                        item={item}
+                        index={index}
+                        onOpen={() => navigate(`/consult/doctors/${id}`)}
+                      />
+                    </RailItem>
+                  );
+                })}
+              </Rail>
+            </Reveal>
+          ) : null}
+
           {brands.length > 0 ? (
             <Reveal as="section" className="hm-section hm-panel hm-brands-panel" aria-labelledby="hm-brands-title">
               <SectionHeader
@@ -880,6 +995,7 @@ export default function Home() {
             </Rail>
           </Reveal>
 
+          {/* TEMP hidden per Rohit — Health Lab (Home collection) + Panchakarma (Classical therapies) sections
           <Reveal as="section" className="hm-section hm-panel hm-lab" aria-labelledby="hm-lab-title">
             <SectionHeader
               id="hm-lab-title"
@@ -917,7 +1033,7 @@ export default function Home() {
                 </RailItem>
               ))}
             </Rail>
-          </Reveal>
+          </Reveal> */}
 
           {!loading && !hasAnyContent ? (
             <EmptyState
