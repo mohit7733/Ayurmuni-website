@@ -8,6 +8,9 @@ import {
 } from "react-router-dom";
 import { setNavigate } from "./navigation/nav";
 import ToastHost from "./components/ToastHost";
+import { Utils } from "./common/utils";
+import { getAccessLevel } from "./services/guestAuth";
+import { syncPushForSession } from "./services/pushNotificationService";
 import Splash from "./pages/Splash";
 import Welcome from "./pages/Welcome";
 import Login from "./pages/Login";
@@ -173,6 +176,25 @@ const PrakritiProfilePage = withAuthChrome(PrakritiProfile, {
 });
 const CompleteDetailsPage = withAuthChrome(CompleteDetails);
 
+// Push for already-logged-in users (they never went through OTP after push shipped).
+function PushSessionSync() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      if ((await getAccessLevel()) !== 'full' || !alive) return;
+      const userId = await Utils.getData('_USER_ID');
+      const info = await Utils.getData('_USER_INFO');
+      if (!userId || info?.is_notification_enabled === false) return;
+      syncPushForSession(userId);
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [pathname]);
+  return null;
+}
+
 function NavBinder() {
   const navigate = useNavigate();
   useEffect(() => {
@@ -215,6 +237,7 @@ export default function App() {
             <NavBinder />
             <ScrollToTop />
             <ToastHost />
+            <PushSessionSync />
             <FloatingVideoOverlay />
             <NetworkGuard>
               <RouteErrorBoundary>

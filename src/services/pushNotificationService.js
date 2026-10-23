@@ -19,6 +19,8 @@ const APP_ID = String(import.meta.env.VITE_ONESIGNAL_APP_ID || DEFAULT_APP_ID).t
 const SDK_URL = 'https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js';
 
 let sdkPromise = null;
+const PROMPT_DECLINED_KEY = 'ayurmuni__PUSH_PROMPT_DECLINED';
+let sessionSyncedFor = null;
 
 export const isPushConfigured = () => Boolean(APP_ID) && typeof window !== 'undefined' && 'Notification' in window;
 
@@ -169,10 +171,14 @@ export const completeWelcomePushFlow = async (userId) => {
 };
 
 /** Settings push toggle (app: pushSubscription.optIn / optOut). */
-export const setPushOptIn = async (enabled) => {
+export const setPushOptIn = async (enabled, userId) => {
   const OneSignal = await initializeOneSignal();
   if (!OneSignal) return false;
   try {
+    if (enabled && userId) {
+      localStorage.removeItem(PROMPT_DECLINED_KEY);
+      await loginOneSignalUser(userId);
+    }
     if (enabled) await OneSignal.User.PushSubscription.optIn();
     else await OneSignal.User.PushSubscription.optOut();
     return true;
@@ -184,6 +190,35 @@ export const setPushOptIn = async (enabled) => {
 /** app: logoutOneSignalUser — on sign-out. Loads the SDK if needed, since the External ID
  * persists in the browser across reloads. */
 export const logoutOneSignalUser = () => {
+  sessionSyncedFor = null;
   if (!isPushConfigured()) return;
   initializeOneSignal().then((OneSignal) => OneSignal?.logout?.()).catch(() => undefined);
+};
+
+/**
+ * Logged-in session sync (users who logged in before push existed never subscribed):
+ * init OneSignal, ask once when permission is 'default' (a decline is remembered, no nagging),
+ * and when granted: login(String(user_id)) — same External ID format as the app — then optIn.
+ * Callers pass only full (non-guest) users with notifications not disabled.
+ */
+export const syncPushForSession = async (userId) => {
+  if (!userId || !isPushConfigured()) return null;
+  const id = String(userId);
+  if (sessionSyncedFor === id) return null;
+  sessionSyncedFor = id;
+  const OneSignal = await initializeOneSignal();
+  if (!OneSignal) return null;
+  try {
+    let granted = Boolean(OneSignal.Notifications.permission);
+    if (!granted && Notification.permission === 'default' && !localStorage.getItem(PROMPT_DECLINED_KEY)) {
+      await OneSignal.Notifications.requestPermission();
+      granted = Boolean(OneSignal.Notifications.permission);
+      if (!granted) localStorage.setItem(PROMPT_DECLINED_KEY, '1');
+    }
+    if (!granted) return { granted: false };
+    return { granted: true, ...(await loginOneSignalUser(id)) };
+  } catch (error) {
+    console.warn('[push] session sync failed:', error?.message || error);
+    return null;
+  }
 };

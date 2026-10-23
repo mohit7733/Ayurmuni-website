@@ -58,7 +58,7 @@ export default function Settings() {
           showSuccessToast('Notification permission is required', 'error');
           return;
         }
-        await setPushOptIn(true);
+        await setPushOptIn(true, await Utils.getData('_USER_ID'));
         await persistNotificationPreference(true);
       } else {
         await setPushOptIn(false);
