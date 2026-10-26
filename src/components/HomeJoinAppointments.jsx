@@ -1,56 +1,81 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, CalendarClock, Stethoscope, Video } from 'lucide-react';
+import { ArrowRight, Video } from 'lucide-react';
 import {
   buildVideoCallNavParams,
+  formatAppointmentDayShort,
+  formatAppointmentTimeLabel,
   formatDoctorDisplayName,
   getJoinableAppointment,
+  isAppointmentInPast,
+  sortAppointmentsByDateTime,
 } from '../consult/appointmentUtils';
-import { formatSlotTime } from '../consult/doctors';
 import { requireAuth } from '../services/guestAuth';
-import Button from './ui/Button';
-import { SkeletonCard } from './ui/Skeleton';
+import './home-upcoming.css';
 
-const formatDay = (value) => {
-  if (!value) return '';
-  const date = new Date(`${String(value).slice(0, 10)}T00:00:00`);
-  if (Number.isNaN(date.getTime())) return String(value);
-  return date.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+const statusLabel = (status) => {
+  const raw = String(status || '').replace(/_/g, ' ').trim();
+  return raw ? raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase() : '';
 };
 
+const initialsOf = (name) =>
+  String(name || '')
+    .replace(/^(dr|prof)\.?\s*/gi, '')
+    .replace(/\(.*?\)/g, '')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join('') || 'Dr';
+
+/** "in 3 hrs" / "in 25 min" / "Tomorrow" / "in 4 days"; '' when the start can't be parsed. */
+const relativeStart = (item) => {
+  const date = String(item?.date || '').slice(0, 10);
+  const time = String(item?.time || '00:00').slice(0, 8);
+  const start = new Date(`${date}T${time.length === 5 ? `${time}:00` : time}`);
+  if (!date || Number.isNaN(start.getTime())) return '';
+  const mins = Math.round((start.getTime() - Date.now()) / 60000);
+  if (mins <= 0) return 'Now';
+  if (mins < 60) return `in ${mins} min`;
+  if (mins < 24 * 60) {
+    const hrs = Math.round(mins / 60);
+    return `in ${hrs} hr${hrs > 1 ? 's' : ''}`;
+  }
+  const days = Math.round(mins / (24 * 60));
+  return days === 1 ? 'Tomorrow' : `in ${days} days`;
+};
+
+/**
+ * Mirrors app HomeJoinAppointmentsSection: confirmed, not past, sorted by start;
+ * Join banner inside the 5-min pre-start window until end; horizontal rail of the rest.
+ */
 export default function HomeJoinAppointments({ appointments, loading }) {
   const navigate = useNavigate();
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
-    const timer = setInterval(() => setTick((value) => value + 1), 60_000);
+    const timer = setInterval(() => setTick((value) => value + 1), 30_000);
     return () => clearInterval(timer);
   }, []);
 
-  const confirmed = useMemo(
+  const upcoming = useMemo(
     () =>
-      (appointments || []).filter(
-        (item) => String(item?.status || '').toLowerCase() === 'confirmed',
+      sortAppointmentsByDateTime(
+        (appointments || []).filter(
+          (item) =>
+            String(item?.status || '').trim().toLowerCase() === 'confirmed' && !isAppointmentInPast(item),
+        ),
       ),
-    [appointments],
+    // tick drops appointments whose end time passed while Home stays open
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [appointments, tick],
   );
 
   const joinable = useMemo(
-    () => getJoinableAppointment(confirmed, 5),
-    // tick re-checks the join window
+    () => getJoinableAppointment(upcoming, 5),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [confirmed, tick],
+    [upcoming, tick],
   );
-
-  const list = useMemo(() => {
-    if (!joinable) return confirmed;
-    const joinId = joinable.item.consultationId || joinable.item.id;
-    return confirmed.filter(
-      (item) => (item.consultationId || item.id) !== joinId,
-    );
-  }, [confirmed, joinable]);
-
-  if (!joinable && !loading && list.length === 0) return null;
 
   const openAppointments = async () => {
     if (await requireAuth('Please login to view appointments')) {
@@ -70,66 +95,86 @@ export default function HomeJoinAppointments({ appointments, loading }) {
     navigate(`/profile/video/${params.appointmentId}`, { state: params });
   };
 
+  const next = joinable?.item || upcoming[0] || null;
+  const more = Math.max(0, upcoming.length - 1);
+  const openNext = () => {
+    const id = next?.appointmentId || next?.consultationId;
+    if (id) navigate(`/profile/appointments/${id}`);
+  };
+
+  if (loading && !next) {
+    return (
+      <section className="am-diet-active hm-appt is-loading" aria-busy="true" aria-label="Upcoming appointment">
+        <span className="hm-appt__skel hm-appt__skel--media" />
+        <span className="hm-appt__skel hm-appt__skel--body" />
+        <span className="hm-appt__skel hm-appt__skel--strip" />
+      </section>
+    );
+  }
+  if (!next) return null;
+
+  const name = formatDoctorDisplayName(next.doctorName);
+  const sub = next.specialty || next.therapies || next.concern || 'Ayurvedic consultation';
+  const live = Boolean(joinable?.isLive);
+  const soon = Boolean(joinable && !joinable.isLive);
+  const when = soon ? `in ${joinable.minutesLeft} min` : live ? 'Live now' : relativeStart(next);
+  const timeRange = [
+    formatAppointmentTimeLabel(next.time),
+    next.endTime ? formatAppointmentTimeLabel(next.endTime) : '',
+  ]
+    .filter(Boolean)
+    .join(' – ');
+
   return (
-    <section className="hm-appts" aria-labelledby="hm-appts-title">
-      <div className="hm-appts__head">
-        <h2 id="hm-appts-title">Upcoming appointments</h2>
-        {!loading && confirmed.length > 1 ? (
-          <Button variant="ghost" size="sm" onClick={openAppointments} trailingIcon={<ArrowRight size={16} aria-hidden />}>
-            View all
-          </Button>
-        ) : null}
+    <section
+      className={`am-diet-active hm-appt${live ? ' is-live' : ''}`}
+      aria-labelledby="hm-appt-title"
+    >
+      <div className="am-diet-active__media hm-appt__media" aria-hidden>
+        {next.image ? <img src={next.image} alt="" loading="lazy" /> : <span>{initialsOf(name)}</span>}
       </div>
-      {loading ? (
-        <div aria-busy="true">
-          <SkeletonCard variant="doctor" />
+      <div className="am-diet-active__body">
+        <p className="am-diet-active__eyebrow">
+          <span className="am-diet-active__dot" aria-hidden />
+          {live ? 'Your consultation is live' : 'Your upcoming appointment'}
+        </p>
+        <h2 id="hm-appt-title" className="am-diet-active__title">{name}</h2>
+        <p className="am-diet-active__sub">{sub}</p>
+      </div>
+      {next.status ? <span className="hm-appt__status">{statusLabel(next.status)}</span> : null}
+
+      <dl className="hm-appt__strip">
+        <div>
+          <dt>Date</dt>
+          <dd>{formatAppointmentDayShort(next.date) || '—'}</dd>
         </div>
-      ) : (
-        <>
-          {joinable ? (
-            <div className={`hm-join ${joinable.isLive ? 'is-live' : ''}`}>
-              <span className="hm-join__icon" aria-hidden>
-                <Video size={20} />
-              </span>
-              <div className="hm-join__copy">
-                <strong>{joinable.isLive ? 'Your consultation is live' : 'Starting soon'}</strong>
-                <p>
-                  {formatDoctorDisplayName(joinable.item.doctorName)}
-                  {joinable.item.time ? ` · ${formatSlotTime(joinable.item.time)}` : ''}
-                </p>
-              </div>
-              <Button variant={joinable.isLive ? 'accent' : 'secondary'} size="sm" onClick={joinCall}>
-                {joinable.isLive ? 'Join call' : `In ${joinable.minutesLeft} min`}
-              </Button>
-            </div>
-          ) : null}
-          {list.length > 0 ? (
-            <ul className="hm-appts__list">
-              {list.map((item) => (
-                <li key={item.id || item.appointmentId} className="hm-appt">
-                  <span className="hm-appt__img" aria-hidden>
-                    {item.image ? <img src={item.image} alt="" loading="lazy" /> : <Stethoscope size={18} />}
-                  </span>
-                  <div className="hm-appt__copy">
-                    <button
-                      type="button"
-                      className="am-stretched hm-appt__name"
-                      onClick={() => navigate(`/profile/appointments/${item.appointmentId || item.id}`)}
-                    >
-                      {formatDoctorDisplayName(item.doctorName)}
-                    </button>
-                    <p>
-                      <CalendarClock size={14} aria-hidden />
-                      {formatDay(item.date)}
-                      {item.time ? ` · ${formatSlotTime(item.time)}` : ''}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-        </>
-      )}
+        <div>
+          <dt>Time</dt>
+          <dd>{timeRange || '—'}</dd>
+        </div>
+        {when ? (
+          <div>
+            <dt>Starts</dt>
+            <dd>{when}</dd>
+          </div>
+        ) : null}
+      </dl>
+
+      <div className="hm-appt__actions">
+        {joinable ? (
+          <button type="button" className="am-diet-active__cta hm-appt__cta" onClick={joinCall}>
+            <Video size={16} aria-hidden />
+            {live ? 'Join call' : `Join in ${joinable.minutesLeft} min`}
+          </button>
+        ) : (
+          <button type="button" className="am-diet-active__cta hm-appt__cta" onClick={openNext}>
+            View appointment <ArrowRight size={16} aria-hidden />
+          </button>
+        )}
+        <button type="button" className="hm-appt__link" onClick={openAppointments}>
+          {more > 0 ? `+${more} more` : 'View all'}
+        </button>
+      </div>
     </section>
   );
 }

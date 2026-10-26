@@ -31,6 +31,7 @@ import {
   bookingStatusLabel,
 } from '../content/booking';
 import '../design/pages/booking.css';
+import { nameInitial } from '../utils/initials';
 
 const pick = (...values) => {
   for (const value of values) {
@@ -280,7 +281,7 @@ export default function BookingConfirm() {
                   {booking.doctorImage ? (
                     <img src={booking.doctorImage} alt="" />
                   ) : (
-                    <span>{booking.doctorName.charAt(0)}</span>
+                    <span>{nameInitial(booking.doctorName)}</span>
                   )}
                 </span>
                 <div className="bk-doctor__copy">
@@ -362,7 +363,7 @@ export default function BookingConfirm() {
               {booking.doctorImage ? (
                 <img src={booking.doctorImage} alt="" />
               ) : (
-                <span>{booking.doctorName.charAt(0)}</span>
+                <span>{nameInitial(booking.doctorName)}</span>
               )}
             </span>
             <div className="bk-doctor__copy">

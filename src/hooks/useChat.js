@@ -2,7 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { chatService } from '../services/chatService';
 import { WebSocketService } from '../chat/websocketService';
 import {
+  chatPolicyErrorReason,
   getChatDisabledReason,
+  isChatPolicyError,
   isChatSendEnabled,
   shouldSuppressChatError,
 } from '../chat/chatAccessUtils';
@@ -142,7 +144,15 @@ export function useChat(
           return {
             ...prev,
             messages: withRelatedHistory(nextMessages),
-            chatAccess: data.chat_access ?? prev.chatAccess,
+            chatAccess: data.chat_access
+              ? {
+                  ...data.chat_access,
+                  // keep the server's send-rejection reason while it still says closed
+                  ...(data.chat_access.can_send === false && prev.chatAccess?.closed_reason
+                    ? { closed_reason: prev.chatAccess.closed_reason }
+                    : {}),
+                }
+              : prev.chatAccess,
             followUpActive: data.chat_access?.follow_up_active ?? prev.followUpActive,
             activePhase: data.chat_access?.active_phase ?? prev.activePhase,
             isLoading: false,
@@ -302,6 +312,17 @@ export function useChat(
           ...prev,
           messages: prev.messages.filter((m) => m.id !== tempId),
         }));
+        if (isChatPolicyError(error)) {
+          // e.g. doctor_followup_policy_violation (400) / chat_closed (409): close the composer
+          // with the server's own message + errors.chat detail.
+          const reason = chatPolicyErrorReason(error);
+          setState((prev) => ({
+            ...prev,
+            chatAccess: { ...(prev.chatAccess ?? { can_read: true }), can_send: false, closed_reason: reason },
+          }));
+          showTransientError(reason);
+          return;
+        }
         if (error?.httpStatus === 403) {
           setState((prev) => ({
             ...prev,
@@ -373,6 +394,16 @@ export function useChat(
         setState((prev) => ({
           ...prev,
           messages: appendOrReplaceMessage(prev.messages, data.message),
+        }));
+      });
+      ws.on('error', (data) => {
+        // Socket chat.error with a send-gate code: close the composer the same way as REST.
+        if (!mountedRef.current || !isChatPolicyError(data)) return;
+        const reason = chatPolicyErrorReason(data);
+        setState((prev) => ({
+          ...prev,
+          messages: prev.messages.filter((m) => !String(m.id || '').startsWith('temp-')),
+          chatAccess: { ...(prev.chatAccess ?? { can_read: true }), can_send: false, closed_reason: reason },
         }));
       });
       ws.on('read', (data) => {

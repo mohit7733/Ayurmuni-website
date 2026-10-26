@@ -11,6 +11,7 @@ import {
   getDoctorId,
 } from '../consult/doctors';
 import Rating from './ui/Rating';
+import { nameInitial } from '../utils/initials';
 
 export default function RecentDoctorCard({ item, fallbackRole = 'Ayurvedic doctor' }) {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ export default function RecentDoctorCard({ item, fallbackRole = 'Ayurvedic docto
         {image ? (
           <img src={image} alt="" loading="lazy" decoding="async" width="64" height="64" />
         ) : (
-          <span aria-hidden>{name.charAt(0)}</span>
+          <span aria-hidden>{nameInitial(name)}</span>
         )}
       </div>
       <div className="am-recent-card__body">

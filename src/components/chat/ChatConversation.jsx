@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { CircleCheck, Clock } from 'lucide-react';
+import { ArrowLeft, Check, CheckCheck, Clock, Download, Loader2, Lock, Paperclip, SendHorizontal, X } from 'lucide-react';
+import './chat-conversation.css';
 import { formatMessageTime } from '../../chat/dateFormatter';
 import { getChatDisabledReason, shouldSuppressChatError } from '../../chat/chatAccessUtils';
 import { dedupeMessages, isTempMessage } from '../../chat/messageUtils';
@@ -183,6 +184,24 @@ export default function ChatConversation({
     el.scrollTop = el.scrollHeight;
   }, [visibleMessages, isLoading]);
 
+  // App multiline TextInput grows with content (capped by CSS max-height).
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+  }, [text]);
+
+  // Lightbox: Esc closes (web equivalent of the app's back gesture).
+  useEffect(() => {
+    if (!lightbox) return undefined;
+    const onKey = (event) => {
+      if (event.key === 'Escape') setLightbox('');
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [lightbox]);
+
   useEffect(
     () => () => {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -252,11 +271,11 @@ export default function ChatConversation({
   };
 
   return (
-    <div className={`chat-page${embedded ? ' is-embedded' : ''}`}>
+    <div className={`chat-page chat-lux${embedded ? ' is-embedded' : ''}`}>
       <header className="chat-header">
         {onBack ? (
           <button type="button" className="chat-back" onClick={onBack} aria-label="Back">
-            ←
+            <ArrowLeft size={20} strokeWidth={2.2} aria-hidden />
           </button>
         ) : null}
         <div className="chat-avatar-wrap">
@@ -289,15 +308,35 @@ export default function ChatConversation({
             const showDate = !prev || formatChatDay(item.created_at) !== formatChatDay(prev.created_at);
             const isOwn = item.sender_role === participantRole;
             const pending = isTempMessage(item);
+            const next = visibleMessages[index + 1];
+            const groupStart = showDate || prev?.sender_role !== item.sender_role;
+            const groupEnd =
+              !next ||
+              next.sender_role !== item.sender_role ||
+              formatChatDay(next.created_at) !== formatChatDay(item.created_at);
             return (
-              <div key={`${item.id}-${index}`}>
+              <div
+                key={`${item.id}-${index}`}
+                className={`chat-row ${isOwn ? 'own' : 'other'}${groupStart ? ' g-start' : ''}${groupEnd ? ' g-end' : ''}`}
+              >
                 {showDate ? (
                   <div className="chat-date">
                     <span>{formatChatDay(item.created_at)}</span>
                   </div>
                 ) : null}
+                {!isOwn ? (
+                  <span className="chat-row-avatar" aria-hidden>
+                    {groupEnd ? (
+                      headerAvatar ? (
+                        <img src={headerAvatar} alt="" />
+                      ) : (
+                        String(item.sender_name || headerTitle || '?').charAt(0).toUpperCase()
+                      )
+                    ) : null}
+                  </span>
+                ) : null}
                 <article className={`chat-bubble ${isOwn ? 'own' : 'other'}`}>
-                  {!isOwn ? <em>{item.sender_name || 'Unknown'}</em> : null}
+                  {!isOwn && groupStart ? <em>{item.sender_name || 'Unknown'}</em> : null}
                   <div>
                     {item.text ? <p>{item.text}</p> : null}
                     {(item.attachments || []).map((attachment, idx) =>
@@ -318,7 +357,7 @@ export default function ChatConversation({
                           rel="noreferrer"
                           className="chat-file"
                         >
-                          📎 {attachment.file_name || 'Download'}
+                          <Download size={14} aria-hidden /> {attachment.file_name || 'Download'}
                         </a>
                       ),
                     )}
@@ -333,11 +372,11 @@ export default function ChatConversation({
                         {pending ? (
                           <Clock size={14} strokeWidth={2.2} aria-hidden />
                         ) : (
-                          <CircleCheck
-                            size={item.is_seen ? 16 : 15}
-                            strokeWidth={item.is_seen ? 2.4 : 2.2}
-                            aria-hidden
-                          />
+                          item.is_seen ? (
+                            <CheckCheck size={16} strokeWidth={2.4} aria-hidden />
+                          ) : (
+                            <Check size={15} strokeWidth={2.2} aria-hidden />
+                          )
                         )}
                       </b>
                     ) : null}
@@ -349,9 +388,19 @@ export default function ChatConversation({
         )}
       </div>
 
-      {!isChatEnabled && disabledReason ? <p className="chat-disabled">{disabledReason}</p> : null}
+      {!isChatEnabled ? (
+        <div className="chat-closed" role="status">
+          <span className="chat-closed-icon">
+            <Lock size={16} strokeWidth={2.3} aria-hidden />
+          </span>
+          <div>
+            <strong>This consultation chat is closed</strong>
+            <small>{disabledReason || 'You can still read the conversation history.'}</small>
+          </div>
+        </div>
+      ) : null}
 
-      <div className="chat-composer">
+      <div className={`chat-composer${isChatEnabled ? '' : ' is-closed'}`}>
         {previewUrl ? (
           <div className="chat-preview">
             <img src={previewUrl} alt="" />
@@ -368,7 +417,7 @@ export default function ChatConversation({
             onClick={() => fileRef.current?.click()}
             aria-label="Attach image"
           >
-            📎
+            <Paperclip size={19} strokeWidth={2.1} aria-hidden />
           </button>
           <input ref={fileRef} type="file" accept="image/*" hidden onChange={handlePickImage} />
           <textarea
@@ -385,8 +434,9 @@ export default function ChatConversation({
             className="chat-send"
             disabled={!hasContent || !canInteract}
             onClick={handleSend}
+            aria-label="Send message"
           >
-            {isSending ? '…' : '➤'}
+            {isSending ? <Loader2 size={18} className="chat-spin" aria-hidden /> : <SendHorizontal size={19} strokeWidth={2.2} aria-hidden />}
           </button>
         </div>
       </div>
@@ -401,11 +451,17 @@ export default function ChatConversation({
       ) : null}
 
       {lightbox ? (
-        <div className="chat-lightbox" role="dialog" onClick={() => setLightbox('')}>
+        <div className="chat-lightbox" role="dialog" aria-modal="true" aria-label="Image preview" onClick={() => setLightbox('')}>
           <img src={lightbox} alt="" />
-          <button type="button" onClick={() => setLightbox('')}>
-            Close
-          </button>
+          <div className="chat-lightbox-actions" onClick={(event) => event.stopPropagation()}>
+            {/* App opens attachments with Linking.openURL — same file, new tab / download. */}
+            <a href={lightbox} target="_blank" rel="noreferrer" download>
+              <Download size={16} aria-hidden /> Open original
+            </a>
+            <button type="button" onClick={() => setLightbox('')} aria-label="Close image">
+              <X size={18} aria-hidden />
+            </button>
+          </div>
         </div>
       ) : null}
     </div>

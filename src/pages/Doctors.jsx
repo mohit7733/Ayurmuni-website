@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { RefreshCw, SearchX, SlidersHorizontal, X } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, RefreshCw, SearchX, SlidersHorizontal, X } from 'lucide-react';
 import AppShell from '../components/AppShell';
-import SuggestedDoctorCard from '../components/SuggestedDoctorCard';
-import PageHeader from '../components/PageHeader';
+import DoctorListCard from '../components/DoctorListCard';
 import { getDoctors } from '../services/consultService';
 import { getHealthCategories } from '../services/productService';
 import { mapProductCategory, normalizeApiList } from '../home/catalog';
@@ -21,6 +20,7 @@ import {
 } from '../components/ui';
 import { CONSULT_COPY as T } from '../content/consult';
 import '../design/pages/consult.css';
+import '../design/pages/doctors-list.css';
 
 const EXPERIENCE = [
   { label: 'Any experience', value: '' },
@@ -150,6 +150,7 @@ export default function Doctors() {
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const navigate = useNavigate();
   const [failed, setFailed] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
@@ -248,33 +249,26 @@ export default function Doctors() {
 
   return (
     <AppShell tab="consult">
-      <div className="cs-page cs-doctors-page">
-        <PageHeader
-          title={title}
-          subtitle={T.listSubtitle}
-          backTo="/consult"
-          actions={
-            <Button
-              variant="ghost"
-              size="sm"
-              loading={refreshing}
-              disabled={loading}
-              onClick={() => loadDoctors(true)}
-              leadingIcon={<RefreshCw size={16} aria-hidden />}
-            >
-              {refreshing ? T.refreshing : T.refresh}
-            </Button>
-          }
-        >
-          <SearchField
-            value={search}
-            onChange={setSearch}
-            onSubmit={(value) => setSubmitted(String(value || '').trim())}
-            placeholder={T.listSearch}
-            label={T.listSearch}
-            suggestions={searchSuggestions(specialities)}
-          />
-        </PageHeader>
+      <div className="cs-page cs-doctors-page dl-page">
+        <header className="dl-head">
+          <button type="button" className="dl-head__back" onClick={() => navigate('/consult')} aria-label="Back to consult">
+            <ArrowLeft size={18} aria-hidden />
+          </button>
+          <div className="dl-head__copy">
+            <h1 className="dl-head__title">{title}</h1>
+            <p className="dl-head__desc">{T.listSubtitle}</p>
+          </div>
+          <button
+            type="button"
+            className="dl-head__refresh"
+            onClick={() => loadDoctors(true)}
+            disabled={loading || refreshing}
+            aria-label={refreshing ? T.refreshing : T.refresh}
+            title={T.refresh}
+          >
+            <RefreshCw size={16} aria-hidden className={refreshing ? 'is-spinning' : undefined} />
+          </button>
+        </header>
 
         <div className="cs-browse">
           <aside className="cs-filters" aria-label={T.filtersLabel}>
@@ -294,6 +288,16 @@ export default function Doctors() {
               <p className="cs-count" role="status">
                 {loading ? T.loadingDoctors : failed ? '' : T.resultCount(doctors.length)}
               </p>
+              <div className="am-page-bar am-page-bar--slot dl-bar">
+                <SearchField
+                  value={search}
+                  onChange={setSearch}
+                  onSubmit={(value) => setSubmitted(String(value || '').trim())}
+                  placeholder={T.listSearch}
+                  label={T.listSearch}
+                  suggestions={searchSuggestions(specialities)}
+                />
+              </div>
               <Button
                 variant="secondary"
                 size="sm"
@@ -356,10 +360,10 @@ export default function Doctors() {
                 }
               />
             ) : (
-              <ul className="am-doctor-grid am-doctor-grid--premium">
+              <ul className="dl-grid">
                 {doctors.map((item) => (
                   <li key={getDoctorId(item) || item.full_name}>
-                    <SuggestedDoctorCard item={item} />
+                    <DoctorListCard item={item} />
                   </li>
                 ))}
               </ul>

@@ -333,7 +333,8 @@ export default function Checkout() {
           coupon_code: appliedCoupon?.code,
         }),
       );
-      if (!result?.success && !isOrderSuccessful(result)) {
+      // Same as the app: prepaid place-order must return success: true.
+      if (!isOrderSuccessful(result) || result?.success === false || !(result?.success === true || result?.success === "true" || result?.success === 1)) {
         const failMsg = failMessage(result, 'Order failed');
         if (handleCouponFailure(failMsg)) return;
         setOrderError(failMsg);

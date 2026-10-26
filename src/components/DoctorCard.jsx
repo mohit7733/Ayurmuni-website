@@ -11,6 +11,7 @@ import {
   resolveLanguages,
 } from '../consult/doctors';
 import Rating from './ui/Rating';
+import { nameInitial } from '../utils/initials';
 
 export default function DoctorCard({ item }) {
   const navigate = useNavigate();
@@ -32,7 +33,7 @@ export default function DoctorCard({ item }) {
           {image ? (
             <img src={image} alt={name} loading="lazy" decoding="async" width="72" height="72" />
           ) : (
-            <span aria-hidden>{name.charAt(0)}</span>
+            <span aria-hidden>{nameInitial(name)}</span>
           )}
           {verified ? (
             <span className="am-doctor-card__verified" title="Verified doctor">

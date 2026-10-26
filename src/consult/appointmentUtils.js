@@ -302,9 +302,33 @@ export const buildAppointmentStartEnd = (dateStr, startTime, endTime) => {
   return { start, end };
 };
 
-const ENDED_CALL_STATUSES = new Set(['completed', 'ended', 'cancelled', 'canceled']);
+// App ENDED_CALL_STATUSES (utils/appointmentUtils.ts) — exact list.
+const ENDED_CALL_STATUSES = new Set([
+  'ended',
+  'left',
+  'completed',
+  'cancelled',
+  'canceled',
+  'no_show',
+  'missed',
+  'rejected',
+]);
+
+/** Short local day label ("Mon, 26 Oct") — parses YYYY-MM-DD / DD-MM-YYYY / ISO without UTC shift. */
+export const formatAppointmentDayShort = (dateStr) => {
+  const parts = parseLocalDateParts(dateStr);
+  if (!parts) return dateStr ? String(dateStr) : '';
+  const date = new Date(parts.year, parts.month - 1, parts.day);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const diff = Math.round((date.getTime() - today.getTime()) / 86400000);
+  if (diff === 0) return 'Today';
+  if (diff === 1) return 'Tomorrow';
+  return date.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+};
 
 export function getJoinableAppointment(items = [], windowMinutes = 5) {
+  // Exact port of app getJoinableAppointment (utils/appointmentUtils.ts).
   const now = Date.now();
   const windowMs = windowMinutes * 60 * 1000;
 
@@ -312,30 +336,27 @@ export function getJoinableAppointment(items = [], windowMinutes = 5) {
     const callStatus = String(item?.call_status || '').toLowerCase().trim();
     if (ENDED_CALL_STATUSES.has(callStatus)) continue;
 
-    const start = parseAppointmentStart(item.date, item.time);
+    const start = parseAppointmentStart(item?.date, item?.time);
     if (!start) continue;
 
-    const end = item.endTime ? parseAppointmentStart(item.date, item.endTime) : null;
+    const end = item?.endTime ? parseAppointmentStart(item.date, item.endTime) : null;
     const validEnd = end && end.getTime() > start.getTime() ? end : null;
-    if (validEnd && now >= validEnd.getTime()) continue;
+    // Without a usable end_time, the slot ends 15 min after start.
+    const endMs = validEnd ? validEnd.getTime() : start.getTime() + 15 * 60 * 1000;
+    if (now >= endMs) continue;
+
+    const msUntilStart = start.getTime() - now;
+    if (msUntilStart > windowMs) continue;
 
     if (callStatus === 'in_progress') {
       return { item, minutesLeft: 0, isLive: true };
     }
 
-    const msUntilStart = start.getTime() - now;
-    const withinPreWindow = msUntilStart >= 0 && msUntilStart <= windowMs;
-    const afterStartBeforeEnd =
-      msUntilStart < 0 &&
-      (validEnd ? now < validEnd.getTime() : msUntilStart >= -15 * 60 * 1000);
-
-    if (withinPreWindow || afterStartBeforeEnd) {
-      return {
-        item,
-        minutesLeft: Math.max(0, Math.ceil(msUntilStart / 60000)),
-        isLive: msUntilStart <= 0 || callStatus === 'in_progress',
-      };
-    }
+    return {
+      item,
+      minutesLeft: Math.max(0, Math.ceil(msUntilStart / 60000)),
+      isLive: msUntilStart <= 0,
+    };
   }
 
   return null;
@@ -356,3 +377,10 @@ export const hasAlreadyRescheduled = (source) => {
   if (Number.isFinite(count) && count >= 1) return true;
   return [appt?.is_rescheduled, root?.is_rescheduled, appt?.already_rescheduled, root?.already_rescheduled, source?.is_rescheduled].includes(true);
 };
+
+/** Mirrors app sortAppointmentsByDateTime: earliest start first. */
+export function sortAppointmentsByDateTime(items = []) {
+  const startOf = (item) =>
+    parseAppointmentStart(item?.date, item?.time)?.getTime() ?? new Date(item?.date || 0).getTime();
+  return [...items].sort((a, b) => startOf(a) - startOf(b));
+}

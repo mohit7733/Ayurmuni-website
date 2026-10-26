@@ -45,9 +45,12 @@ import {
   resolveDoctorSpecializations,
 } from '../consult/doctors';
 import DoctorTable from '../components/DoctorTable';
+import VisitedDoctorList from '../components/VisitedDoctorList';
+import '../components/visited-doctors.css';
 import DummyOfferCard from '../components/DummyOfferCard';
 import ProductCard from '../components/ProductCard';
 import HomeJoinAppointments from '../components/HomeJoinAppointments';
+import '../design/pages/home-pair.css';
 
 import useRecentVisitedDoctors from '../hooks/useRecentVisitedDoctors';
 import useUpcomingAppointments from '../hooks/useUpcomingAppointments';
@@ -431,7 +434,7 @@ export default function Home() {
     useRecentVisitedDoctors(secondaryReady);
   const ourDoctors = useOurDoctors(secondaryReady);
   const { appointments: upcomingAppointments, loading: loadingAppointments } =
-    useUpcomingAppointments(8, secondaryReady);
+    useUpcomingAppointments(50, secondaryReady);
   const { preview: activeDiet } = useActiveDietHome(secondaryReady);
   const { brands } = useBrands();
 
@@ -608,9 +611,9 @@ export default function Home() {
     (loadingVisitedDoctors && visitedDoctors.length === 0) || visitedDoctors.length > 0;
   const showSuggestedDoctors = (loading && !doctors.length) || doctors.length > 0;
   const splitDoctorRow = showVisitedDoctors && showSuggestedDoctors;
-  const doctorCardLimit = splitDoctorRow ? 3 : 6;
-  const recentDoctors = visitedDoctors.slice(0, doctorCardLimit);
-  const suggestedDoctors = doctors.slice(0, doctorCardLimit);
+  // Rohit: homepage shows max 2 visited and 3 suggested doctors; View all opens the full list.
+  const recentDoctors = visitedDoctors.slice(0, 2);
+  const suggestedDoctors = doctors.slice(0, 3);
   const featuredProducts = sections.featured || [];
   const recentProducts = sections.recently_viewed || [];
 
@@ -743,7 +746,11 @@ export default function Home() {
             <CategoryRow items={serviceList} renderItem={renderServiceItem} />
           </section>
 
-          <ActiveDietCard plan={activeDiet} />
+          {/* Upcoming appointment + active diet plan share one row (stacks on mobile). */}
+          <div className="hm-pair">
+            <HomeJoinAppointments appointments={upcomingAppointments} loading={loadingAppointments} />
+            <ActiveDietCard plan={activeDiet} />
+          </div>
           <ActiveDietToast plan={activeDiet} />
 
           {loading || bannerItems.length ? (
@@ -759,12 +766,6 @@ export default function Home() {
               />
             </div>
           </div>
-          ) : null}
-
-          {loadingAppointments || upcomingAppointments?.length ? (
-            <div className="hm-plan">
-              <HomeJoinAppointments appointments={upcomingAppointments} loading={loadingAppointments} />
-            </div>
           ) : null}
 
           {healthConcerns.length > 0 ? (
@@ -852,6 +853,7 @@ export default function Home() {
             </Reveal>
           ) : null}
 
+
           {showVisitedDoctors || showSuggestedDoctors ? (
             <div className={splitDoctorRow ? 'hm-doctor-row hm-doctor-row--split' : 'hm-doctor-row'}>
               {loadingVisitedDoctors && visitedDoctors.length === 0 ? (
@@ -866,7 +868,7 @@ export default function Home() {
               ) : null}
 
               {visitedDoctors.length > 0 ? (
-                <Reveal as="section" className="hm-section" aria-labelledby="hm-visited-title">
+                <Reveal as="section" className="hm-section hm-visited" aria-labelledby="hm-visited-title">
                   <DoctorRailHeader
                     id="hm-visited-title"
                     title={T.visitedTitle}
@@ -874,7 +876,7 @@ export default function Home() {
                     reserveEyebrow={splitDoctorRow}
                     onViewAll={() => navigate('/consult')}
                   />
-                  <DoctorTable
+                  <VisitedDoctorList
                     items={recentDoctors}
                     label={T.visitedTitle}
                     fallbackSpeciality={T.ayurvedicDoctor}
@@ -964,7 +966,7 @@ export default function Home() {
                       <ViewAll label={T.yogaTitle} onClick={() => navigate('/yoga')} />
                     ) : null}
                   </div>
-                  <Rail label={T.yogaTitle} auto>
+                  <Rail label={T.yogaTitle} auto interval={3000} motionOverride className="hm-yoga-rail">
                     {yogaSessions.map((item) => (
                       <RailItem key={item.id}>
                         <YogaSessionCard
@@ -989,7 +991,7 @@ export default function Home() {
                     <ViewAll label={T.dietTitle} onClick={() => navigate('/diet?view=all')} />
                   </div>
                   <Rail label={T.dietTitle} auto>
-                    {dietProducts.map((item) => (
+                    {dietProducts.filter((d, i, all) => all.findIndex((x) => x.id === d.id) === i).map((item) => (
                       <RailItem key={item.id}>
                         <DietPlanCard
                           item={item}

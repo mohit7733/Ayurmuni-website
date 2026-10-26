@@ -45,6 +45,8 @@ import {
   StepIndicator,
 } from "../components/ui";
 import { BOOKING_COPY as T } from "../content/booking";
+import { extractRazorpayCheckout } from "../payment/razorpay";
+import { nameInitial } from '../utils/initials';
 import "../design/pages/booking.css";
 
 const loadRazorpay = () =>
@@ -325,25 +327,20 @@ export default function ConsultPay() {
         }
       }
       const payable = consultPayableRupees(payment, feeBreakdown.total);
-      const key = String(
-        payment.razorpay_key || payment.key || payment.key_id || "",
-      ).trim();
-      const orderId = String(
-        payment.razorpay_order_id ||
-          payment.razorpayOrderId ||
-          payment.rzp_order_id ||
-          "",
-      ).trim();
+      // Look for key / order id anywhere in the response (nested shapes too);
+      // falls back to VITE_RAZORPAY_KEY_ID for the key.
+      // Use the merged payload (retry may issue a fresh order), like the app.
+      const { key, orderId } = extractRazorpayCheckout(payment);
       const amount = toRazorpayPaise(
         payment.amount ?? payment?.summary?.total_payable_amount,
         payable,
       );
       if (!key || !orderId) {
-        if (payable <= 0 || isApiSuccess(paymentResponse)) {
-          finish(paymentResponse);
-          return;
-        }
-        showSuccessToast("Payment details missing. Please try again.", "error");
+        // Like the app: never confirm without Razorpay + verify-payment.
+        showSuccessToast(
+          "Payment gateway could not be started (missing Razorpay order). Please try again.",
+          "error",
+        );
         return;
       }
       const Razorpay = await loadRazorpay();
@@ -371,7 +368,7 @@ export default function ConsultPay() {
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
               });
-              if (verify?.success === false) {
+              if (!isApiSuccess(verify)) {
                 showSuccessToast(
                   verify?.message || "Payment verification failed",
                   "error",
@@ -393,6 +390,12 @@ export default function ConsultPay() {
               resolve();
             },
           },
+        });
+        rzp.on?.("payment.failed", (resp) => {
+          showSuccessToast(
+            resp?.error?.description || "Payment failed. Please try again.",
+            "error",
+          );
         });
         rzp.open();
       });
@@ -469,7 +472,7 @@ export default function ConsultPay() {
                 {image ? (
                   <img src={image} alt="" />
                 ) : (
-                  <span>{name.charAt(0)}</span>
+                  <span>{nameInitial(name)}</span>
                 )}
               </span>
               <div className="bk-doctor__copy">
