@@ -51,8 +51,26 @@ const isFollowUpWindowEnded = (followUp) => {
   return followUpDay < startOfDay(new Date());
 };
 
+/** Backend send-gate codes (communication/services/chat_service.py send_consultation_chat_message). */
+export const CHAT_POLICY_ERROR_CODES = ['doctor_followup_policy_violation', 'chat_closed'];
+
+export const isChatPolicyError = (error) => CHAT_POLICY_ERROR_CODES.includes(error?.code);
+
+/** "message — errors.chat[0]" from a policy error body. */
+export const chatPolicyErrorReason = (error) => {
+  const detail = error?.errors?.chat;
+  const first = Array.isArray(detail) ? detail.find(Boolean) : typeof detail === 'string' ? detail : '';
+  return [error?.message, first].filter(Boolean).join(' ');
+};
+
 export function isChatSendEnabled(access, appointmentDate, fallback) {
   if (!access && !fallback) return false;
+
+  // Server is authoritative: chat_access.can_send === (resolve_active_chat_phase != None),
+  // the exact check the send endpoint enforces (live call, post-consult window from
+  // call_ended_at + policy days, follow-up only if policy follow_up_extends_chat, package chat).
+  // Local date heuristics only apply before chat_access has loaded.
+  if (typeof access?.can_send === 'boolean') return access.can_send;
 
   const mergedFollowUp = {
     schedule: access?.follow_up?.schedule ?? fallback?.follow_up?.schedule,
@@ -100,6 +118,16 @@ export function isChatVisibleForAppointment(appointment) {
 
 export function getChatDisabledReason(access, appointmentDate, fallback) {
   if (isChatSendEnabled(access, appointmentDate, fallback)) return '';
+  if (access?.closed_reason) return access.closed_reason;
+  if (access?.can_send === false && access?.follow_up_active === true) {
+    return 'Post-consultation chat is not available. Follow-up chat is not active under the doctor follow-up policy — you can still read previous messages';
+  }
+  if (access?.can_send === false && normalize(access?.appointment_status) === 'cancelled') {
+    return 'This appointment was cancelled — you can still read previous messages';
+  }
+  if (access?.can_send === false && !access?.follow_up?.date && !access?.follow_up?.schedule) {
+    return 'Post-consultation chat window has closed — you can still read previous messages';
+  }
   const followUp = {
     schedule: access?.follow_up?.schedule ?? fallback?.follow_up?.schedule,
     date: access?.follow_up?.date ?? fallback?.follow_up?.date ?? null,

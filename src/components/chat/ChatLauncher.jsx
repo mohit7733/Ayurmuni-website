@@ -14,6 +14,7 @@ import '../../design/components/chat-launcher.css';
 
 const HIDDEN_EXACT = ['/'];
 const HIDDEN_PREFIXES = [
+  '/profile/chat', // T128: keep floating buttons off the doctor chat (covers /profile/chats too)
   '/welcome',
   '/login',
   '/otp',
@@ -32,6 +33,7 @@ const HIDDEN_PREFIXES = [
 ];
 // Pages with a sticky bottom action bar on phones.
 const MOBILE_HIDDEN_PREFIXES = [
+  '/consult/doctors', // T131: keep AyurChat off the doctor cards' buttons on phones
   '/cart',
   '/checkout',
   '/products/',
@@ -61,7 +63,8 @@ export default function ChatLauncher() {
     HIDDEN_EXACT.includes(pathname) ||
     matchesPrefix(pathname, HIDDEN_PREFIXES) ||
     (viewMode === 'minimized' && !!callParams);
-  const hideOnMobile = matchesPrefix(pathname, MOBILE_HIDDEN_PREFIXES);
+  // T134: /diet listing (exact) also hides AyurChat on phones so it never covers the plan cards' CTAs
+  const hideOnMobile = matchesPrefix(pathname, MOBILE_HIDDEN_PREFIXES) || pathname === '/diet' || pathname === '/packages'; // T140: also /packages
 
   const { threads, loading, updateThreadMessages, markThreadRead } = useChatInbox({
     enabled: !hidden,

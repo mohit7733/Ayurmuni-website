@@ -9,6 +9,7 @@ import '../design/components/cart-float.css';
 
 const HIDDEN_EXACT = ['/'];
 const HIDDEN_PREFIXES = [
+  '/profile/chat', // T128: keep floating buttons off the doctor chat (covers /profile/chats too)
   '/welcome',
   '/login',
   '/otp',

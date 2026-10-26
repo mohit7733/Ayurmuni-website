@@ -1,0 +1,87 @@
+/* Home · Upcoming Appointments (mirrors app HomeJoinAppointmentsSection) */
+.hm-upc { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.hm-upc__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 36px; }
+.hm-upc__head h2 {
+  margin: 0; font-family: var(--am-font-display); font-size: clamp(1.05rem, 0.95rem + 0.45vw, 1.3rem);
+  font-weight: 600; letter-spacing: -0.01em; color: var(--am-text);
+}
+
+.hm-upc-join {
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+  border: 1px solid rgba(228, 196, 122, 0.7); border-radius: 14px;
+  background: linear-gradient(135deg, #fffdf8, #f7f0dd);
+}
+.hm-upc-join.is-live {
+  border-color: rgba(228, 196, 122, 0.55); color: #fffdf8;
+  background: radial-gradient(60% 140% at 100% 0%, rgba(228, 196, 122, 0.25), transparent 60%), linear-gradient(120deg, #105343, #0b3b30);
+}
+.hm-upc-join__icon {
+  position: relative; flex: none; display: grid; place-items: center; width: 36px; height: 36px;
+  border-radius: 50%; background: #105343; color: #e4c47a;
+}
+.hm-upc-join.is-live .hm-upc-join__icon { background: #fffdf8; color: #105343; }
+.hm-upc-join.is-live .hm-upc-join__icon::after {
+  content: ''; position: absolute; inset: -4px; border: 2px solid #e4c47a; border-radius: 50%;
+  animation: hm-pulse 1.6s ease-out infinite;
+}
+.hm-upc-join__copy { flex: 1 1 auto; min-width: 0; }
+.hm-upc-join__copy strong { display: block; font-size: 14px; font-weight: 700; }
+.hm-upc-join__copy p { margin: 2px 0 0; font-size: 12.5px; opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hm-upc-join .am-btn { flex: none; min-height: 40px; }
+
+.hm-upc__rail {
+  display: grid; grid-auto-flow: column; grid-auto-columns: minmax(260px, 300px); gap: 10px;
+  margin: 0; padding: 2px 2px 4px; list-style: none; overflow-x: auto; scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.hm-upc__rail::-webkit-scrollbar { display: none; }
+.hm-upc-card {
+  position: relative; display: flex; align-items: center; gap: 12px; min-height: 88px; padding: 12px;
+  border: 1px solid rgba(216, 204, 180, 0.9); border-radius: 14px; background: #fffdf8;
+  box-shadow: 0 6px 16px -14px rgba(16, 83, 67, 0.5); scroll-snap-align: start;
+  transition: border-color 200ms ease, transform 200ms ease;
+}
+.hm-upc-card:hover { border-color: #e4c47a; transform: translateY(-1px); }
+.hm-upc-card:focus-within { outline: 2px solid #105343; outline-offset: 2px; }
+.hm-upc-card.is-skeleton { background: linear-gradient(90deg, #f5f1e7, #fbf8f0, #f5f1e7); }
+.hm-upc-card__img {
+  flex: none; display: grid; place-items: center; width: 48px; height: 48px; overflow: hidden;
+  border-radius: 50%; background: #105343; color: #e4c47a; box-shadow: 0 0 0 2px #fffdf8, 0 0 0 3px #e4c47a;
+}
+.hm-upc-card__img img { width: 100%; height: 100%; object-fit: cover; }
+.hm-upc-card__body { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; min-width: 0; }
+.hm-upc-card__name {
+  max-width: 100%; padding: 0; border: 0; background: none; color: #17302a; font: inherit;
+  font-size: 14px; font-weight: 700; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer;
+}
+.hm-upc-card__name:focus-visible { outline: none; }
+.hm-upc-card__meta { display: flex; flex-wrap: nowrap; gap: 5px; }
+.hm-upc-card__meta span {
+  display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border-radius: 999px;
+  background: rgba(16, 83, 67, 0.07); color: #105343; font-size: 11.5px; font-weight: 600; white-space: nowrap;
+}
+.hm-upc-card__status {
+  height: 20px; padding: 0 8px; border-radius: 999px; background: #e6f4ec; color: #1b7a4a;
+  font-size: 11px; font-weight: 700; line-height: 20px;
+}
+/* Desktop: no hidden-scrollbar rail (mouse users could not reach clipped cards) — wrap into a grid. */
+@media (min-width: 768px) {
+  .hm-upc__rail {
+    grid-auto-flow: row; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); grid-auto-columns: auto;
+    overflow: visible; scroll-snap-type: none;
+  }
+}
+.hm-upc-card__meta { flex-wrap: wrap; }
+@media (max-width: 430px) {
+  .hm-upc__rail { grid-auto-columns: minmax(250px, 88%); }
+  .hm-upc-join { flex-wrap: wrap; }
+  .hm-upc-join .am-btn { flex: 1 1 100%; }
+  .hm-upc-card { gap: 10px; padding: 10px; }
+  .hm-upc-card__img { width: 40px; height: 40px; }
+  .hm-upc-card__meta span { padding: 0 6px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hm-upc-card { transition: none; }
+  .hm-upc-card:hover { transform: none; }
+  .hm-upc-join.is-live .hm-upc-join__icon::after { animation: none; }
+}

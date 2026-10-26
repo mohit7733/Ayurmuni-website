@@ -57,6 +57,8 @@ import {
   StepIndicator,
 } from "../components/ui";
 import { BOOKING_COPY as T } from "../content/booking";
+import { extractRazorpayCheckout } from "../payment/razorpay";
+import { nameInitial } from '../utils/initials';
 import "../design/pages/booking.css";
 
 const isApiSuccess = (response) =>
@@ -494,7 +496,7 @@ export default function ConsultPay() {
                 {image ? (
                   <img src={image} alt="" />
                 ) : (
-                  <span>{name.charAt(0)}</span>
+                  <span>{nameInitial(name)}</span>
                 )}
               </span>
               <div className="bk-doctor__copy">

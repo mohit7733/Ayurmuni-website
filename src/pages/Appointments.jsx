@@ -83,6 +83,25 @@ const formatStatusLabel = (status) => {
   return raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
 };
 
+// Backend may mark an appointment "confirmed" before payment is captured.
+// Never show Confirmed for an unpaid booking.
+const PAYMENT_PENDING_RE = /^(pending|created|initiated|unpaid|failed|payment_pending|attempted)$/;
+const paymentPendingOf = (item) => {
+  const raw = item?.raw ?? item ?? {};
+  const appt = raw?.appointment || {};
+  const value = String(
+    raw?.payment_status ??
+      raw?.payment?.status ??
+      raw?.payment?.payment_status ??
+      appt?.payment_status ??
+      appt?.payment?.status ??
+      (raw?.is_paid === false || appt?.is_paid === false ? "unpaid" : ""),
+  )
+    .trim()
+    .toLowerCase();
+  return PAYMENT_PENDING_RE.test(value);
+};
+
 const itemHasPrescription = (item) => {
   if (item?.hasPrescription) return true;
   const raw = item?.raw ?? item;
@@ -374,8 +393,11 @@ export default function Appointments() {
         ) : (
           <div className="appoint-list">
             {visible.map((item) => {
+              const paymentPending = paymentPendingOf(item);
               const status = String(item.status || "").toLowerCase();
-              const statusStyle = STATUS_STYLE[status] || {
+              const statusStyle = (paymentPending
+                ? STATUS_STYLE.pending
+                : STATUS_STYLE[status]) || {
                 background: "#f3f4f6",
                 color: "#64748b",
               };
@@ -431,7 +453,9 @@ export default function Appointments() {
                               color: statusStyle.color,
                             }}
                           >
-                            {formatStatusLabel(status)}
+                            {paymentPending
+                              ? "Payment pending"
+                              : formatStatusLabel(status)}
                           </em>
                         ) : null}
                       </div>

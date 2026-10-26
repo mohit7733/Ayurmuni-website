@@ -35,6 +35,7 @@ import {
   bookingStatusLabel,
 } from '../content/booking';
 import '../design/pages/booking.css';
+import { nameInitial } from '../utils/initials';
 
 const CALENDAR_OPTIONS = [
   {
@@ -211,7 +212,7 @@ export default function AddCalendar() {
                   {display.doctorImage ? (
                     <img src={display.doctorImage} alt="" />
                   ) : (
-                    <span>{display.doctorName.charAt(0)}</span>
+                    <span>{nameInitial(display.doctorName)}</span>
                   )}
                 </span>
                 <div className="bk-doctor__copy">

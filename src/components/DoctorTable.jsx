@@ -18,6 +18,7 @@ import { showSuccessToast } from '../config/key';
 import { requireAuth } from '../services/guestAuth';
 import { toggleFavDoctor } from '../services/consultService';
 import FavButton from './ui/FavButton';
+import { nameInitial } from '../utils/initials';
 
 function DoctorTableRow({ item, fallbackSpeciality }) {
   const navigate = useNavigate();
@@ -67,7 +68,7 @@ function DoctorTableRow({ item, fallbackSpeciality }) {
             <img className="hm-doc-table__photo" src={image} alt="" loading="lazy" decoding="async" />
           ) : (
             <span className="hm-doc-table__photo hm-doc-table__photo--fallback" aria-hidden>
-              {name.charAt(0) || 'A'}
+              {nameInitial(name)}
             </span>
           )}
           <div className="hm-doc-table__id">

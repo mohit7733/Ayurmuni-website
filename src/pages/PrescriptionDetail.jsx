@@ -67,6 +67,7 @@ import {
   saveBrowserFile,
 } from '../utils/prescriptionDetailUtils';
 import { useCart } from '../hooks/useCart';
+import { nameInitial } from '../utils/initials';
 
 const capitalize = (value) => {
   const text = String(value || '');
@@ -498,7 +499,7 @@ export default function PrescriptionDetail() {
                   disabled={!doctorId}
                 >
                   <span className="dx-person__avatar" aria-hidden>
-                    {doctorPhoto ? <img src={doctorPhoto} alt="" /> : String(doctorName || 'D').replace(/^dr\.?\s*/i, '').charAt(0)}
+                    {doctorPhoto ? <img src={doctorPhoto} alt="" /> : nameInitial(doctorName, 'D')}
                   </span>
                   <span className="dx-doc__brand">
                     <strong id="rx-title">{doctorName}</strong>

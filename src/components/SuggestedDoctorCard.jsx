@@ -19,6 +19,7 @@ import { showSuccessToast } from '../config/key';
 import { requireAuth } from '../services/guestAuth';
 import { toggleFavDoctor } from '../services/consultService';
 import FavButton from './ui/FavButton';
+import { nameInitial } from '../utils/initials';
 
 export default function SuggestedDoctorCard({ item, fallbackSpeciality = 'Ayurveda' }) {
   const navigate = useNavigate();
@@ -67,7 +68,7 @@ export default function SuggestedDoctorCard({ item, fallbackSpeciality = 'Ayurve
           <img src={image} alt="" loading="lazy" decoding="async" />
         ) : (
           <span className="am-flip-doc__fallback" aria-hidden>
-            {name.charAt(0) || 'A'}
+            {nameInitial(name)}
           </span>
         )}
         <div className="am-flip-doc__shade" aria-hidden />

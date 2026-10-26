@@ -57,6 +57,7 @@ import {
 import { BOOKING_COPY as T } from '../content/booking';
 import '../design/pages/booking.css';
 import '../design/pages/booking-premium.css';
+import { nameInitial } from '../utils/initials';
 
 const DAYPART_ICONS = { Morning: Sunrise, Afternoon: Sun, Evening: Moon };
 
@@ -287,7 +288,7 @@ export default function DoctorSlot() {
 
           <div className="bkp-hero__body">
             <span className="bkp-hero__photo" aria-hidden>
-              {image ? <img src={image} alt="" /> : <span>{name.replace(/^dr\.?\s*/i, '').charAt(0)}</span>}
+              {image ? <img src={image} alt="" /> : <span>{nameInitial(name)}</span>}
             </span>
             <div className="bkp-hero__copy">
               <p className="bkp-eyebrow">{T.slotEyebrow}</p>
@@ -434,7 +435,7 @@ export default function DoctorSlot() {
             <section className="bkp-summary" aria-labelledby="bkp-summary-title">
               <div className="bkp-summary__head">
                 <span className="bkp-summary__photo" aria-hidden>
-                  {image ? <img src={image} alt="" /> : <span>{name.replace(/^dr\.?\s*/i, '').charAt(0)}</span>}
+                  {image ? <img src={image} alt="" /> : <span>{nameInitial(name)}</span>}
                 </span>
                 <div>
                   <p className="bkp-eyebrow" id="bkp-summary-title">

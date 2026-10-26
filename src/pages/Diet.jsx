@@ -4,7 +4,9 @@ import { ArrowRight, Calendar, Leaf, Salad } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import { ActiveDietCard } from '../components/ActiveDietPlan';
 import dietCoverImg from '/images/login/14.webp';
-import { DietPlanCard, SectionHead, ViewAll } from '../components/ServiceHome';
+import { SectionHead, ViewAll } from '../components/ServiceHome';
+import DietListCard from '../components/DietListCard';
+import '../design/pages/diet-list.css';
 import { formatRupee, mapProductCategory, normalizeApiList } from '../home/catalog';
 import { getServiceCategoryId } from '../home/serviceCategories';
 import useDashboardCategories from '../hooks/useDashboardCategories';
@@ -79,15 +81,6 @@ const STATUS_TABS = [
   { key: 'active', label: 'Active' },
   { key: 'inactive', label: 'Inactive' },
 ];
-
-const statusLabel = (plan) => {
-  const status = getDietListStatus(plan);
-  if (status === 'active') return 'Active';
-  if (status === 'paused') return 'Paused';
-  if (status === 'completed') return 'Completed';
-  if (status === 'stopped') return 'Stopped';
-  return 'Not started';
-};
 
 const durationLabel = (plan) => {
   if (plan?.duration) return String(plan.duration);
@@ -301,7 +294,7 @@ export default function Diet() {
         <div className="hm-body">
 
 
-          <section className="hm-well hm-well--nourish" aria-labelledby="dt-list-title">
+          <section className="hm-well hm-well--nourish dlp-list" aria-labelledby="dt-list-title">
             <SectionHead
               id="dt-list-title"
               title={listTitle}
@@ -361,7 +354,7 @@ export default function Diet() {
                 }
               />
             ) : (
-              <ul className="svc-meal-grid">
+              <ul className="svc-meal-grid dlp-grid">
                 {visible.map((item) => {
                   const price =
                     item.is_paid === false || Number(item.price) === 0
@@ -369,18 +362,17 @@ export default function Diet() {
                       : formatRupee(item.price);
                   const duration = durationLabel(item);
                   const rating = getDietPlanRatingLabel(item);
-                  const meta = [duration, price, rating].filter(Boolean).join(' · ');
                   return (
                     <li key={item.id}>
-                      <DietPlanCard
-                        item={{
-                          title: item.title || item.name,
-                          thumbnail_url: getDietPlanCoverUrl(item) || dietCoverImg,
-                          season: statusLabel(item),
-                          short_description: item.short_description,
-                          prakriti: [item.prakriti, meta].filter(Boolean).join(' · '),
-                        }}
-                        onClick={() => navigate(`/diet/${item.id}`, { state: { item } })}
+                      <DietListCard
+                        title={item.title || item.name}
+                        image={getDietPlanCoverUrl(item) || dietCoverImg}
+                        status={getDietListStatus(item) || 'none'}
+                        prakriti={item.prakriti}
+                        duration={duration}
+                        price={price}
+                        rating={rating}
+                        onOpen={() => navigate(`/diet/${item.id}`, { state: { item } })}
                       />
                     </li>
                   );

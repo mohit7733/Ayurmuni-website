@@ -1,0 +1,179 @@
+/* T129 — Visited Doctors (app parity), premium compact cards */
+.hm-doctor-row--split:has(> .hm-visited) { align-items: stretch; }
+.hm-visited .hm-doctor-head { margin-bottom: 10px; }
+.hm-visited .vd-wrap { flex: 1 1 auto; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+
+.vd-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.vd-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px 12px;
+  padding: 10px 10px 10px 12px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fffdf8, #fbf6ea);
+  border: 1px solid rgba(228, 196, 122, 0.55);
+  box-shadow: 0 1px 2px rgba(16, 83, 67, 0.05);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.vd-card:hover { border-color: #d9b45e; box-shadow: 0 6px 16px -10px rgba(16, 83, 67, 0.35); }
+.vd-card__main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+.vd-card__ring {
+  position: relative;
+  flex: 0 0 52px;
+  width: 52px;
+  height: 52px;
+  padding: 2px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f3dc9f, #c9a24e 55%, #e4c47a);
+}
+.vd-card__ring img,
+.vd-card__initial {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #fffdf8;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  background: #105343;
+  color: #e4c47a;
+  font: 700 18px 'Gilroy', 'Satoshi', sans-serif;
+}
+.vd-card__dot {
+  position: absolute;
+  right: 1px;
+  bottom: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #2fbf71;
+  border: 2px solid #fffdf8;
+}
+.vd-card__id { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.vd-card__name { display: flex; align-items: center; gap: 5px; min-width: 0; color: #105343; }
+.vd-card__name strong {
+  font: 700 15px/1.25 'Gilroy', 'Satoshi', sans-serif;
+  color: #17302a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.vd-card__name svg { flex: 0 0 auto; }
+.vd-card__cred {
+  font-size: 12.5px;
+  color: #6c7c76;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.vd-card__chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 3px; }
+.vd-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: rgba(16, 83, 67, 0.07);
+  color: #105343;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.vd-chip--rating { background: rgba(228, 196, 122, 0.22); color: #7a5a14; }
+.vd-chip--rating svg { color: #d4a236; }
+.vd-chip--rating em { font-style: normal; font-weight: 500; opacity: 0.8; }
+.vd-chip--new { background: #105343; color: #e4c47a; letter-spacing: 0.03em; }
+
+.vd-card__foot { display: contents; }
+.vd-card__visit {
+  grid-column: 1;
+  grid-row: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding-top: 7px;
+  border-top: 1px dashed rgba(201, 162, 78, 0.45);
+  font-size: 12px;
+  color: #4d625b;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.vd-card__visit { position: relative; }
+.vd-card__visit svg { color: #c9a24e; flex: 0 0 auto; }
+.vd-card__visit em { font-style: normal; color: #8a9a94; font-weight: 500; }
+.vd-card__actions { grid-column: 2; grid-row: 1 / span 2; display: flex; align-items: center; gap: 8px; }
+.vd-card .vd-card__fav { width: 44px; height: 44px; flex: 0 0 44px; }
+.vd-card__book {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: #105343;
+  color: #fff;
+  font: 700 13.5px 'Gilroy', 'Satoshi', sans-serif;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(228, 196, 122, 0.35);
+  transition: background 0.2s;
+}
+.vd-card__book svg { color: #e4c47a; }
+.vd-card__book:hover { background: #0c4235; }
+
+
+/* phones: stacked cards, actions on their own row */
+@media (max-width: 600px) {
+  .vd-card { grid-template-columns: minmax(0, 1fr); padding: 10px; }
+  .vd-card__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed rgba(201, 162, 78, 0.45);
+  }
+  .vd-card__visit { padding-top: 0; border-top: 0; min-width: 0; font-size: 11.5px; }
+  .vd-card__actions { gap: 6px; flex: 0 0 auto; }
+  .vd-card__book { padding: 0 14px; }
+  .vd-card__ring { flex-basis: 48px; width: 48px; height: 48px; }
+}
+@media (max-width: 430px) {
+  .vd-card__visit-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .vd-card__visit em { display: none; }
+}
+@media (max-width: 360px) {
+  .vd-card__book { padding: 0 12px; }
+  .vd-card__book svg { display: none; }
+  .vd-card__actions { gap: 4px; }
+  .vd-card__foot { gap: 4px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vd-card, .vd-card__book { transition: none; }
+}
+
+/* T135: 2 visited vs 3 suggested — side-by-side panels share one height, visited cards fill it (no empty gap) */
+@media (min-width: 768px) {
+  .hm-doctor-row--split { align-items: stretch; }
+  .hm-doctor-row--split > .hm-visited .vd-list { flex: 1 1 auto; grid-auto-rows: 1fr; }
+  .hm-doctor-row--split > .hm-visited .vd-card { height: 100%; align-content: center; }
+}
