@@ -125,6 +125,7 @@ export default function ProductSearchFilterBar({
         open={sheet != null}
         onClose={closeSheet}
         title={sheetTitle}
+        className={cx('product-search-filter-modal', sheet && `is-${sheet}`)}
         size="sm"
         footer={
           sheet === 'brand' ? (
@@ -149,17 +150,21 @@ export default function ProductSearchFilterBar({
         }
       >
         {sheet === 'sort'
-          ? PRODUCT_SORT_OPTIONS.map((option) => (
-              <OptionRow
-                key={option.key}
-                label={option.label}
-                selected={sortBy === option.key}
-                onClick={() => {
-                  onSortChange(option.key);
-                  closeSheet();
-                }}
-              />
-            ))
+          ? (
+              <div className="st-filter-sort-options">
+                {PRODUCT_SORT_OPTIONS.map((option) => (
+                  <OptionRow
+                    key={option.key}
+                    label={option.label}
+                    selected={sortBy === option.key}
+                    onClick={() => {
+                      onSortChange(option.key);
+                      closeSheet();
+                    }}
+                  />
+                ))}
+              </div>
+            )
           : null}
 
         {sheet === 'brand' ? (
@@ -186,8 +191,9 @@ export default function ProductSearchFilterBar({
           </div>
         ) : null}
 
-        {sheet === 'price'
-          ? PRICE_RANGE_OPTIONS.map((option) => (
+        {sheet === 'price' ? (
+          <div className="st-filter-price-options">
+            {PRICE_RANGE_OPTIONS.map((option) => (
               <OptionRow
                 key={option.key}
                 label={option.label}
@@ -197,8 +203,9 @@ export default function ProductSearchFilterBar({
                   closeSheet();
                 }}
               />
-            ))
-          : null}
+            ))}
+          </div>
+        ) : null}
       </Modal>
     </>
   );

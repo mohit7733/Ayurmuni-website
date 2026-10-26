@@ -14,6 +14,7 @@ import {
   isPrescriptionApproved,
   normalizePrescriptionRequestList,
 } from '../services/prescriptionService';
+import '../design/pages/prescription-upload.css';
 
 const TIPS = [
   { title: 'Bright lighting', desc: 'Well-lit paper, no harsh shadows.' },
@@ -165,7 +166,7 @@ export default function PrescriptionUpload() {
           </div>
         ) : null}
 
-        <div className="checkout-card">
+        <div className="checkout-card rx-tips-card">
           <h3>Photo tips</h3>
           {TIPS.map((item) => (
             <p key={item.title}>

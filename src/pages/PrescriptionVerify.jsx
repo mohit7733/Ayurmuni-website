@@ -15,6 +15,7 @@ import {
   isPrescriptionPending,
   isPrescriptionRejected,
 } from '../services/prescriptionService';
+import '../design/pages/prescription-verify.css';
 
 export default function PrescriptionVerify() {
   const navigate = useNavigate();
@@ -116,7 +117,7 @@ export default function PrescriptionVerify() {
   if (!files.length && !request) {
     return (
       <AppShell tab="medicines">
-        <section className="catalog-page">
+        <section className="catalog-page rx-verify-empty">
           <p className="empty-copy">No prescription file selected</p>
           <button type="button" className="cta" onClick={() => navigate('/medicines/prescription')}>
             Upload again
@@ -173,7 +174,7 @@ export default function PrescriptionVerify() {
             </button>
           </>
         ) : (
-          <div className="checkout-card">
+          <div className="checkout-card rx-status-card">
             <h3>{getStatusLabel(request)}</h3>
             {pending ? <p>A pharmacist usually reviews this within 12–24 hours.</p> : null}
             {approved ? <p>Approved. You can add this medicine to cart from the product page.</p> : null}

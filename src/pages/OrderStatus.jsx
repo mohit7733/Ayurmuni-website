@@ -9,6 +9,7 @@ import {
   isPrescriptionApproved,
   mapPrescribedItem,
 } from '../services/prescriptionService';
+import '../design/pages/order-status-rx.css';
 
 const RX_STATUS_KEY = 'ayurmuni_rx_status';
 
@@ -111,13 +112,13 @@ export default function OrderStatus() {
         </div>
 
         {notes ? (
-          <div className="checkout-card">
+          <div className="checkout-card rx-order-card">
             <p className="muted">Notes</p>
             <p>{notes}</p>
           </div>
         ) : null}
 
-        <div className="checkout-card">
+        <div className="checkout-card rx-order-card rx-order-items">
           <div className="receipt-price">
             <span>
               <small>Request ID</small>

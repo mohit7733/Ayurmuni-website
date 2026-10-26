@@ -13,6 +13,7 @@ import {
   applyProductFilters,
   brandOptionsFromProducts,
 } from "../utils/productSearchUtils";
+import "../design/pages/store.css";
 
 export default function ProductSearch() {
   const navigate = useNavigate();
