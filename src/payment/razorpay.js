@@ -1,3 +1,5 @@
+// ON HOLD. Product checkout and consultation pay use Cashfree (src/payment/cashfree.js).
+// Kept so Razorpay can be switched back without rebuilding the loader.
 // Razorpay helpers: on-demand script loading (cached, timeout, retry) and
 // tolerant extraction of key / order id from backend order responses.
 

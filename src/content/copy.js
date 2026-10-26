@@ -9,7 +9,7 @@ export const COPY = {
     'This is not a substitute for professional medical advice, diagnosis or treatment. Always consult a qualified doctor about any health condition. In an emergency, call 112.',
   trust: [
     { id: 'doctors', title: 'Verified doctors', text: 'Qualified BAMS & MD Ayurveda practitioners' },
-    { id: 'secure', title: 'Secure payments', text: 'Encrypted checkout via Razorpay' },
+    { id: 'secure', title: 'Secure payments', text: 'Encrypted checkout via Cashfree' },
     { id: 'authentic', title: 'Authentic products', text: 'Sourced from trusted Ayurvedic brands' },
     { id: 'private', title: 'Private & confidential', text: 'Your health records stay with you' },
   ],

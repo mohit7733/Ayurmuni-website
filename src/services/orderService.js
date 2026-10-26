@@ -44,7 +44,7 @@ export const buildOrderPayload = ({
     {
       delivery_address_id,
       payment_type: isCod ? 'cod' : 'prepaid',
-      ...(isCod ? { payment_method: 'cash' } : {}),
+      ...(isCod ? { payment_method: 'cash' } : { payment_gateway: 'cashfree' }),
       shipping_method,
       shipping_charges: Number(shipping_charges) || 0,
       cod_charges: isCod ? Number(cod_charges) || 0 : 0,

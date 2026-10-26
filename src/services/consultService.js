@@ -139,6 +139,12 @@ export const verifyConsultationPayment = async (data) =>
     body: JSON.stringify(data),
   });
 
+/** GET payments/customer/consultation/payment/<uuid>/ — includes gateway ids after the Cashfree webhook. */
+export const getConsultationPayment = async (paymentId) =>
+  apiClient(`payments/customer/consultation/payment/${encodeURIComponent(String(paymentId))}/`, {
+    method: 'GET',
+  });
+
 export const getMedicalReceipt = async (consultationId) =>
   apiClient(
     `customers/doctors/consultation-receipt/?consultation_id=${encodeURIComponent(

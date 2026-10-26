@@ -22,12 +22,12 @@ import {
   doctorQualification,
   formatSlotTime,
   resolveDoctorSpecializations,
-  toRazorpayPaise,
 } from "../consult/doctors";
 import { formatDoctorDisplayName } from "../consult/appointmentUtils";
 import {
   createConsultationPayment,
   getConsultationFeeQuote,
+  getConsultationPayment,
   retryConsultationPayment,
   verifyConsultationPayment,
 } from "../services/consultService";
@@ -39,6 +39,18 @@ import {
 import { requireAuth } from "../services/guestAuth";
 import { showSuccessToast } from "../config/key";
 import {
+  buildCashfreeVerifyPayload,
+  clearCashfreePending,
+  enrichCashfreeVerifyPayload,
+  extractCashfreeCheckout,
+  isCashfreePaymentVerified,
+  isRecordUuid,
+  openCashfreeCheckout,
+  preloadCashfree,
+  saveCashfreePending,
+  shouldVerifyCashfreePayment,
+} from "../payment/cashfree";
+import {
   Button,
   Disclaimer,
   EmptyState,
@@ -46,19 +58,6 @@ import {
 } from "../components/ui";
 import { BOOKING_COPY as T } from "../content/booking";
 import "../design/pages/booking.css";
-
-const loadRazorpay = () =>
-  new Promise((resolve, reject) => {
-    if (window.Razorpay) {
-      resolve(window.Razorpay);
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.onload = () => resolve(window.Razorpay);
-    script.onerror = () => reject(new Error("Unable to load Razorpay"));
-    document.body.appendChild(script);
-  });
 
 const isApiSuccess = (response) =>
   response?.success === true ||
@@ -233,7 +232,12 @@ export default function ConsultPay() {
     quotedCouponCode,
   ]);
 
+  useEffect(() => {
+    preloadCashfree();
+  }, []);
+
   const finish = (result) => {
+    clearCashfreePending();
     clearPending(slot.id);
     sessionStorage.removeItem(CONSULT_PAY_KEY);
     const paid = result?.data || result || {};
@@ -325,77 +329,98 @@ export default function ConsultPay() {
         }
       }
       const payable = consultPayableRupees(payment, feeBreakdown.total);
-      const key = String(
-        payment.razorpay_key || payment.key || payment.key_id || "",
-      ).trim();
-      const orderId = String(
-        payment.razorpay_order_id ||
-          payment.razorpayOrderId ||
-          payment.rzp_order_id ||
-          "",
-      ).trim();
-      const amount = toRazorpayPaise(
-        payment.amount ?? payment?.summary?.total_payable_amount,
-        payable,
-      );
-      if (!key || !orderId) {
-        if (payable <= 0 || isApiSuccess(paymentResponse)) {
+      const checkout = extractCashfreeCheckout({
+        ...paymentResponse,
+        data: { ...(paymentResponse?.data || {}), ...payment },
+      });
+      if (!checkout.paymentId && payment.payment_id) {
+        checkout.paymentId = String(payment.payment_id);
+      }
+      if (!checkout.sessionId) {
+        if (payable <= 0) {
           finish(paymentResponse);
           return;
         }
         showSuccessToast("Payment details missing. Please try again.", "error");
         return;
       }
-      const Razorpay = await loadRazorpay();
-      await new Promise((resolve) => {
-        const rzp = new Razorpay({
-          key,
-          amount,
-          currency: payment.currency || "INR",
-          name: "Ayurmuni",
-          description: `Consult ${doctorDisplayName(doctor)}`,
-          order_id: orderId,
-          prefill: {
-            name: patientName(activePatient),
-            contact: String(
-              activePatient?.phone_number || activePatient?.phone || "",
-            ).replace(/\D/g, ""),
+      saveCashfreePending({
+        kind: "consultation",
+        paymentId: checkout.paymentId,
+        orderId: checkout.orderId,
+        gatewayPaymentId: checkout.gatewayPaymentId,
+        signature: checkout.signature,
+        sessionId: checkout.sessionId,
+        confirmBase: {
+          doctor_name: doctorDisplayName(doctor),
+          doctor_image: doctorImage(doctor),
+          date: booking.date,
+          start_time: slot.start_time,
+          end_time: slot.end_time,
+          concern: booking.concern,
+          doctor,
+          slot,
+          patient: {
+            patient_name: patientName(activePatient),
+            phone_number: activePatient?.phone_number || activePatient?.phone,
           },
-          theme: { color: "#0D614E" },
-          handler: async (response) => {
-            setVerifying(true);
-            try {
-              const verify = await verifyConsultationPayment({
-                payment_id: payment.payment_id,
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-              });
-              if (verify?.success === false) {
-                showSuccessToast(
-                  verify?.message || "Payment verification failed",
-                  "error",
-                );
-              } else {
-                finish(verify?.data ? verify : paymentResponse);
-              }
-            } finally {
-              setVerifying(false);
-              resolve();
-            }
-          },
-          modal: {
-            ondismiss: () => {
-              showSuccessToast(
-                "Payment cancelled. You can try again anytime.",
-                "error",
-              );
-              resolve();
-            },
-          },
-        });
-        rzp.open();
+          patient_name: patientName(activePatient),
+          amount: payable,
+          consultation_mode: "Video consultation",
+          hospital_name: doctor?.hospital_name || doctor?.clinic_name,
+          doctor_specialization: resolveDoctorSpecializations(doctor),
+          appointment_status: "CONFIRMED",
+        },
       });
+      const cfResult = await openCashfreeCheckout({
+        sessionId: checkout.sessionId,
+        mode: checkout.mode,
+        paymentId: checkout.paymentId,
+      });
+      if (cfResult?.redirect) return;
+      if (!shouldVerifyCashfreePayment(cfResult)) {
+        clearCashfreePending();
+        showSuccessToast(
+          "Payment cancelled. You can try again anytime.",
+          "error",
+        );
+        return;
+      }
+      setVerifying(true);
+      try {
+        let payload = buildCashfreeVerifyPayload(checkout, cfResult);
+        if (!payload.gateway_payment_id && isRecordUuid(checkout.paymentId)) {
+          payload = await enrichCashfreeVerifyPayload(payload, [
+            () => getConsultationPayment(checkout.paymentId),
+          ]);
+        }
+        if (!payload.gateway_payment_id) {
+          showSuccessToast(
+            "Cashfree has not returned the payment id yet. Wait a few seconds, then confirm the booking again.",
+            "error",
+          );
+          return;
+        }
+        const verify = await verifyConsultationPayment(payload);
+        if (isCashfreePaymentVerified(verify)) {
+          finish(verify?.data ? verify : paymentResponse);
+        } else if (cfResult?.paymentDetails) {
+          showSuccessToast(
+            verify?.message || "Payment verification failed",
+            "error",
+          );
+        } else {
+          clearCashfreePending();
+          showSuccessToast(
+            cfResult?.error?.message ||
+              verify?.message ||
+              "Payment cancelled. You can try again anytime.",
+            "error",
+          );
+        }
+      } finally {
+        setVerifying(false);
+      }
     } catch (error) {
       showSuccessToast(error?.message || "Unable to start payment", "error");
     } finally {

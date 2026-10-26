@@ -1,6 +1,6 @@
 # Ayurmuni Website
 
-React 19 + Vite single-page app for Ayurmuni (consultations, medicines, products, diet, yoga). The backend API lives at `https://ayurmuni.aimantra.info/`.
+React 19 + Vite single-page app for Ayurmuni (consultations, medicines, products, diet, yoga). The backend API lives at `https://scarce-derby-voice.ngrok-free.dev/`.
 
 ## Local development
 
@@ -12,7 +12,7 @@ npm run lint
 
 ## Configuration
 
-The API base URL is read at build time from `VITE_API_BASE` (defaults to `https://ayurmuni.aimantra.info/`). The chat WebSocket uses the same host over `wss://`. To point a build at another backend, copy `.env.example` to `.env.production` and edit it before building.
+The API base URL is read at build time from `VITE_API_BASE` (defaults to `https://scarce-derby-voice.ngrok-free.dev/`). The chat WebSocket uses the same host over `wss://`. To point a build at another backend, copy `.env.example` to `.env.production` and edit it before building. Online payments use Cashfree (`VITE_CASHFREE_MODE=sandbox` or `production`).
 
 ## Production build
 
@@ -34,5 +34,5 @@ Upload the **contents** of `dist/` to the server. Every deep link (for example `
 
 - **HTTPS is required.** Browsers only allow camera/microphone (video consultations) and geolocation on HTTPS.
 - **CORS:** the browser calls the API directly, so the backend must allow your production domain as an origin (REST and the `/ws` WebSocket).
-- **Razorpay:** add the production domain in the Razorpay dashboard if domain whitelisting is enabled.
+- **Cashfree:** whitelist this site's domain in the Cashfree dashboard, and set `VITE_CASHFREE_MODE` to `sandbox` or `production` so it matches the orders the backend creates. Razorpay checkout is on hold.
 - After each deploy, users with an old tab open are reloaded onto the new build automatically when they navigate.

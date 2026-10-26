@@ -15,7 +15,7 @@ export const CHECKOUT_COPY = {
   cod: 'Cash on delivery',
   codHint: 'Pay when delivered',
   codUnavailable: 'Not available',
-  onlineHint: 'Instant confirmation · Secure Razorpay checkout',
+  onlineHint: 'Instant confirmation · Secure Cashfree checkout',
   billTitle: 'Bill details',
   hide: 'Hide',
   show: 'Show',
