@@ -1,8 +1,24 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Clock, Flower2, Gauge, ListOrdered, NotebookPen, Play, UserRound } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import ShareButton from '../components/ShareButton';
-import yogaPosterImg from '/images/login/8.png';
+import { Button } from '../components/ui';
+import {
+  ActionStack,
+  DetailCard,
+  DetailEmpty,
+  DetailHero,
+  DetailLayout,
+  DetailPage,
+  DetailSkeleton,
+  DetailTop,
+  InfoGrid,
+  MetaChip,
+  PersonCard,
+  Steps,
+} from '../components/detail/Detail';
+import yogaPosterImg from '/images/login/8.webp';
 import { getYogaSessionDetail } from '../services/yogaService';
 import {
   getYogaInstructor,
@@ -12,6 +28,14 @@ import {
   resolveYogaThumbnailUri,
   resolveYogaVideoUri,
 } from '../yoga/utils';
+
+const formatDuration = (value) => {
+  const text = String(value ?? '').trim();
+  if (!text || /^0+(\.0+)?$/.test(text)) return '';
+  return /^\d+$/.test(text) ? `${text} min` : text;
+};
+
+const capitalize = (value) => (value ? value.charAt(0).toUpperCase() + value.slice(1) : '');
 
 export default function YogaSession() {
   const navigate = useNavigate();
@@ -60,135 +84,184 @@ export default function YogaSession() {
   );
   const breakdown = useMemo(() => getYogaSessionBreakdown(session), [session]);
   const instructor = useMemo(() => getYogaInstructor(session), [session]);
-  const difficulty = String(
-    session?.difficulty || session?.level || session?.production_level || '',
-  ).trim();
-  const durationLabel = String(session?.duration || session?.duration_minutes || '').trim();
+  const difficulty = capitalize(
+    String(session?.difficulty || session?.level || session?.production_level || '').trim(),
+  );
+  const durationLabel = formatDuration(session?.duration || session?.duration_minutes);
   const notes = String(
     session?.notes || session?.instruction || session?.instructions || '',
   ).trim();
+  const title = session?.title || session?.name || 'Yoga session';
+  const rawDescription = String(session?.short_description || session?.description || '').trim();
+  const description =
+    rawDescription && rawDescription.toLowerCase() !== difficulty.toLowerCase()
+      ? rawDescription
+      : 'A guided practice for breath, strength and calm. Move at your own pace and pause whenever you need.';
 
-  const onPickStep = (index, startSeconds) => {
-    setActiveIndex(index);
+  const playFrom = (startSeconds) => {
     const video = videoRef.current;
-    if (video && Number.isFinite(startSeconds)) {
-      video.currentTime = Math.max(0, startSeconds);
-      video.play().catch(() => {});
-    }
+    if (!video) return;
+    if (Number.isFinite(startSeconds)) video.currentTime = Math.max(0, startSeconds);
+    video.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    video.play().catch(() => {});
+  };
+
+  const onPickStep = (item, index) => {
+    setActiveIndex(index);
+    playFrom(item.startSeconds);
   };
 
   return (
     <AppShell tab="home">
-      <section className="catalog-page yoga-session-page">
-        <header className="catalog-head">
-          <div>
-            <button type="button" className="text-back" onClick={() => navigate(-1)}>
-              ← Back
-            </button>
-            <h1>Yoga Session</h1>
-            <p>Guided practice</p>
-          </div>
-          {session ? (
-            <ShareButton
-              title={`${session.title || session.name || 'Yoga session'} - Ayurmuni`}
-              text={session.short_description || session.description || 'A guided yoga session on Ayurmuni.'}
-              url={`${window.location.origin}/yoga/${session.id || sessionId}`}
-              variant="soft"
-              size="sm"
-            />
-          ) : null}
-        </header>
+      <DetailPage>
+        <DetailTop
+          backTo="/yoga"
+          backLabel="Yoga"
+          actions={
+            session ? (
+              <ShareButton
+                title={`${title} - Ayurmuni`}
+                text={description || 'A guided yoga session on Ayurmuni.'}
+                url={`${window.location.origin}/yoga/${session.id || sessionId}`}
+                variant="soft"
+                size="sm"
+              />
+            ) : null
+          }
+        />
 
         {loading && !session ? (
-          <p className="muted">Loading session…</p>
+          <DetailSkeleton label="Loading session" />
         ) : !session ? (
-          <div className="empty-copy">
-            <strong>Session unavailable</strong>
-            <p>This yoga session could not be loaded.</p>
-          </div>
+          <DetailEmpty
+            icon={Flower2}
+            title="Session unavailable"
+            text="This yoga session could not be loaded. It may have been removed."
+            action={<Button onClick={() => navigate('/yoga')}>Browse sessions</Button>}
+          />
         ) : (
           <>
-            <div className="yoga-player">
-              {videoUri ? (
-                <video
-                  ref={videoRef}
-                  src={videoUri}
-                  poster={posterUri}
-                  controls
-                  playsInline
-                  preload="metadata"
-                />
-              ) : (
-                <img src={posterUri} alt="" />
-              )}
-            </div>
-
-            <div className="yoga-badges">
-              {difficulty ? <span className="yoga-badge level">{difficulty.toUpperCase()}</span> : null}
-              {durationLabel ? <span className="yoga-badge">{durationLabel}</span> : null}
-            </div>
-
-            <h2 className="yoga-title">{session.title || session.name || 'Yoga Session'}</h2>
-            {session.short_description || session.description ? (
-              <p className="yoga-subtitle">{session.short_description || session.description}</p>
-            ) : null}
-
-            {notes ? (
-              <div className="yoga-notes">
-                <strong>Notes</strong>
-                <p>{notes}</p>
-              </div>
-            ) : null}
-
-            <h3 className="yoga-section">Session Breakdown</h3>
-            {!breakdown.length ? (
-              <p className="muted">
-                Pose-by-pose timing will appear here when this session includes a breakdown.
-              </p>
-            ) : (
-              <ol className="yoga-steps">
-                {breakdown.map((item, index) => (
-                  <li key={item.id}>
-                    <button
-                      type="button"
-                      className={index === activeIndex ? 'on' : ''}
-                      onClick={() => onPickStep(index, item.startSeconds)}
-                    >
-                      <span className="yoga-step-num">{index + 1}</span>
-                      <span className="yoga-step-copy">
-                        <strong>{item.title}</strong>
-                        <small>{item.time}</small>
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ol>
-            )}
-
-            {instructor ? (
-              <button
-                type="button"
-                className="yoga-mentor"
-                onClick={() => navigate('/mentor/consult')}
-              >
-                {instructor.imageUri ? (
-                  <img src={instructor.imageUri} alt="" />
+            <DetailHero
+              titleId="yoga-title"
+              mediaClassName={videoUri ? 'dx-hero__media--video' : undefined}
+              media={
+                videoUri ? (
+                  <video
+                    ref={videoRef}
+                    src={videoUri}
+                    poster={posterUri}
+                    controls
+                    playsInline
+                    preload="metadata"
+                  />
                 ) : (
-                  <span className="yoga-mentor-fallback">🧘</span>
-                )}
-                <div>
-                  <strong>{instructor.name}</strong>
-                  <small>{instructor.subtitle || 'Yoga Mentor'}</small>
-                  <p>
-                    {instructor.description ||
-                      'Guided alignment and breathwork for a complete session.'}
+                  <img src={posterUri} alt="" />
+                )
+              }
+              eyebrow="Guided yoga"
+              title={title}
+              lede={description}
+              chips={
+                <>
+                  {difficulty ? (
+                    <MetaChip icon={Gauge} tone="gold">
+                      {difficulty}
+                    </MetaChip>
+                  ) : null}
+                  {durationLabel ? <MetaChip icon={Clock}>{durationLabel}</MetaChip> : null}
+                  {breakdown.length ? (
+                    <MetaChip icon={ListOrdered}>
+                      {breakdown.length} {breakdown.length === 1 ? 'pose' : 'poses'}
+                    </MetaChip>
+                  ) : null}
+                </>
+              }
+            >
+              <div className="dx-actions dx-actions--row">
+                {videoUri ? (
+                  <Button
+                    variant="primary"
+                    leadingIcon={<Play size={16} aria-hidden />}
+                    onClick={() => playFrom(breakdown[activeIndex]?.startSeconds)}
+                  >
+                    Start session
+                  </Button>
+                ) : null}
+                <Button variant="secondary" onClick={() => navigate('/mentor/consult')}>
+                  Talk to a mentor
+                </Button>
+              </div>
+            </DetailHero>
+
+            <DetailLayout
+              aside={
+                <>
+                  <DetailCard id="yoga-about" title="At a glance" icon={Flower2}>
+                    <InfoGrid
+                      columns={2}
+                      items={[
+                        { label: 'Level', value: difficulty },
+                        { label: 'Duration', value: durationLabel },
+                        { label: 'Poses', value: breakdown.length || '' },
+                        { label: 'Format', value: videoUri ? 'Guided video' : 'Self-paced' },
+                      ]}
+                    />
+                  </DetailCard>
+                  {instructor ? (
+                    <DetailCard id="yoga-mentor" title="Your mentor" icon={UserRound}>
+                      <PersonCard
+                        image={instructor.imageUri}
+                        name={instructor.name}
+                        role={instructor.subtitle || 'Yoga mentor'}
+                        onClick={() => navigate('/mentor/consult')}
+                      />
+                      <p className="dx-prose">
+                        {instructor.description ||
+                          'Guided alignment and breathwork for a complete session.'}
+                      </p>
+                    </DetailCard>
+                  ) : null}
+                  <ActionStack>
+                    <Button variant="secondary" onClick={() => navigate('/yoga')}>
+                      More yoga sessions
+                    </Button>
+                  </ActionStack>
+                </>
+              }
+            >
+              {notes ? (
+                <DetailCard id="yoga-notes" title="Before you begin" icon={NotebookPen} tone="accent">
+                  <p className="dx-prose">{notes}</p>
+                </DetailCard>
+              ) : null}
+
+              <DetailCard
+                id="yoga-breakdown"
+                title="Session breakdown"
+                icon={ListOrdered}
+                meta={breakdown.length ? 'Tap a pose to jump to it' : undefined}
+              >
+                {breakdown.length ? (
+                  <Steps
+                    items={breakdown.map((item) => ({
+                      id: item.id,
+                      title: item.title,
+                      meta: item.time,
+                      startSeconds: item.startSeconds,
+                    }))}
+                    activeIndex={activeIndex}
+                    onPick={videoUri ? onPickStep : undefined}
+                  />
+                ) : (
+                  <p className="dx-prose">
+                    Pose-by-pose timing will appear here when this session includes a breakdown.
                   </p>
-                </div>
-              </button>
-            ) : null}
+                )}
+              </DetailCard>
+            </DetailLayout>
           </>
         )}
-      </section>
+      </DetailPage>
     </AppShell>
   );
 }

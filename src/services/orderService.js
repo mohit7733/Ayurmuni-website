@@ -12,6 +12,50 @@ export const getOrderFeeQuote = async (payload) => {
   });
 };
 
+/* App utils/orderPayload.ts — exact COD / prepaid order bodies. */
+const getCartItemId = (item) => {
+  const id = item?.cart_item_id ?? item?.id ?? null;
+  if (id == null || String(id).trim() === '') return null;
+  return String(id);
+};
+export const buildCartItemIds = (items = []) => items.map(getCartItemId).filter(Boolean);
+export const buildGiftWrapItemIds = (items = []) =>
+  items
+    .filter((item) => Boolean(item?.gift_wrap || item?.is_gift_wrap))
+    .map(getCartItemId)
+    .filter(Boolean);
+const withCouponFields = (payload, couponCode) => {
+  const code = String(couponCode || '').trim().toUpperCase();
+  if (code) payload.coupon_code = code;
+  return payload;
+};
+export const buildOrderPayload = ({
+  mode,
+  delivery_address_id,
+  cartItems,
+  shipping_charges = 0,
+  cod_charges = 0,
+  shipping_method = 'STD',
+  prepaid_amount = 0,
+  coupon_code,
+}) => {
+  const isCod = mode === 'cod';
+  return withCouponFields(
+    {
+      delivery_address_id,
+      payment_type: isCod ? 'cod' : 'prepaid',
+      ...(isCod ? { payment_method: 'cash' } : {}),
+      shipping_method,
+      shipping_charges: Number(shipping_charges) || 0,
+      cod_charges: isCod ? Number(cod_charges) || 0 : 0,
+      prepaid_amount: Math.max(0, Math.round(Number(prepaid_amount) || 0)),
+      cart_item_ids: buildCartItemIds(cartItems),
+      gift_wrap_item_ids: buildGiftWrapItemIds(cartItems),
+    },
+    coupon_code,
+  );
+};
+
 export const placeOrder = async (data) =>
   apiClient('order/', {
     method: 'POST',

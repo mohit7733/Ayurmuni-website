@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   getProducts,
   hasMoreProductPages,
   PRODUCT_PAGE_SIZE,
-} from '../services/productService';
-import { mapCatalogProductItem, normalizeApiList } from '../home/catalog';
+} from "../services/productService";
+import { mapCatalogProductItem, normalizeApiList } from "../home/catalog";
 
 const toQuery = (filter, page, pageSize) => {
   const query = { page_size: pageSize, page };
@@ -13,19 +13,23 @@ const toQuery = (filter, page, pageSize) => {
     return query;
   }
   [
-    'id',
-    'product_subcategory_id',
-    'health_category_id',
-    'health_disease_id',
-    'brand_name_id',
-    'service_category_id',
+    "id",
+    "product_subcategory_id",
+    "health_category_id",
+    "health_disease_id",
+    "brand_name_id",
+    "service_category_id",
   ].forEach((key) => {
     if (filter[key]) query[key] = filter[key];
   });
   return query;
 };
 
-export default function useCategoryProducts(filter, fallbackProducts = [], options = {}) {
+export default function useCategoryProducts(
+  filter,
+  fallbackProducts = [],
+  options = {},
+) {
   const enabled = options.enabled !== false;
   const pageSize = options.pageSize ?? PRODUCT_PAGE_SIZE;
   const [products, setProducts] = useState([]);
@@ -42,13 +46,13 @@ export default function useCategoryProducts(filter, fallbackProducts = [], optio
   const filterKey = useMemo(
     () =>
       JSON.stringify({
-        id: filter.id ?? '',
-        product_subcategory_id: filter.product_subcategory_id ?? '',
-        health_category_id: filter.health_category_id ?? '',
-        health_disease_id: filter.health_disease_id ?? '',
-        brand_name_id: filter.brand_name_id ?? '',
-        service_category_id: filter.service_category_id ?? '',
-        search: filter.search ?? '',
+        id: filter.id ?? "",
+        product_subcategory_id: filter.product_subcategory_id ?? "",
+        health_category_id: filter.health_category_id ?? "",
+        health_disease_id: filter.health_disease_id ?? "",
+        brand_name_id: filter.brand_name_id ?? "",
+        service_category_id: filter.service_category_id ?? "",
+        search: filter.search ?? "",
         pageSize,
       }),
     [
@@ -86,12 +90,12 @@ export default function useCategoryProducts(filter, fallbackProducts = [], optio
         const searchOnly = Boolean(parsed.search?.trim());
         const hasFilter = Boolean(
           searchOnly ||
-            parsed.id ||
-            parsed.product_subcategory_id ||
-            parsed.health_category_id ||
-            parsed.health_disease_id ||
-            parsed.brand_name_id ||
-            parsed.service_category_id,
+          parsed.id ||
+          parsed.product_subcategory_id ||
+          parsed.health_category_id ||
+          parsed.health_disease_id ||
+          parsed.brand_name_id ||
+          parsed.service_category_id,
         );
 
         const response = await getProducts(toQuery(parsed, pageNumber, size));
@@ -107,10 +111,12 @@ export default function useCategoryProducts(filter, fallbackProducts = [], optio
         if (apiResults.length > 0) {
           setProducts((prev) => {
             if (!append) return apiResults;
-            const seen = new Set(prev.map((p) => String(p.variant_id ?? p.id ?? '')));
+            const seen = new Set(
+              prev.map((p) => String(p.variant_id ?? p.id ?? "")),
+            );
             const merged = [...prev];
             apiResults.forEach((item) => {
-              const key = String(item.variant_id ?? item.id ?? '');
+              const key = String(item.variant_id ?? item.id ?? "");
               if (!key || seen.has(key)) return;
               seen.add(key);
               merged.push(item);
@@ -118,7 +124,9 @@ export default function useCategoryProducts(filter, fallbackProducts = [], optio
             return merged;
           });
         } else if (!append) {
-          const fallback = Array.isArray(fallbackRef.current) ? fallbackRef.current : [];
+          const fallback = Array.isArray(fallbackRef.current)
+            ? fallbackRef.current
+            : [];
           const serviceOnly =
             Boolean(parsed.service_category_id) &&
             !searchOnly &&
@@ -138,10 +146,20 @@ export default function useCategoryProducts(filter, fallbackProducts = [], optio
         }
       } catch {
         if (reqId !== requestIdRef.current) return;
+
         if (!append) {
-          const fallback = Array.isArray(fallbackRef.current) ? fallbackRef.current : [];
-          setProducts(fallback.length ? fallback : []);
+          const fallback = Array.isArray(fallbackRef.current)
+            ? fallbackRef.current
+            : [];
+
+          const parsed = JSON.parse(filterKey);
+          const isSearching = Boolean(parsed.search?.trim());
+
+          // Never show unfiltered fallback items for a failed search.
+          setProducts(isSearching ? [] : fallback);
+          productsLengthRef.current = isSearching ? 0 : fallback.length;
         }
+
         setHasMore(false);
       } finally {
         if (reqId === requestIdRef.current) {
@@ -157,12 +175,29 @@ export default function useCategoryProducts(filter, fallbackProducts = [], optio
 
   useEffect(() => {
     if (!enabled) {
+      requestIdRef.current += 1;
       setLoading(true);
+      setLoadingMore(false);
+      loadingLockRef.current = false;
       return;
     }
+
+    // Reset results and pagination for every new filter/query.
+    setProducts([]);
+    productsLengthRef.current = 0;
     setPage(1);
     setHasMore(true);
+    setLoading(true);
+    setLoadingMore(false);
+    setRefreshing(false);
+    loadingLockRef.current = false;
+
     fetchPage(1);
+
+    // Invalidate any request belonging to the previous query.
+    return () => {
+      requestIdRef.current += 1;
+    };
   }, [fetchPage, enabled]);
 
   const refresh = useCallback(() => {
@@ -173,7 +208,14 @@ export default function useCategoryProducts(filter, fallbackProducts = [], optio
   }, [enabled, fetchPage]);
 
   const loadMore = useCallback(() => {
-    if (!enabled || loading || loadingMore || refreshing || !hasMore || loadingLockRef.current) {
+    if (
+      !enabled ||
+      loading ||
+      loadingMore ||
+      refreshing ||
+      !hasMore ||
+      loadingLockRef.current
+    ) {
       return;
     }
     loadingLockRef.current = true;

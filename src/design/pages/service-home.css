@@ -1,0 +1,325 @@
+@import './home.css';
+
+/* Service landings share the homepage hero, panels, and cards. */
+.svc-page {
+  background: var(--am-bg);
+}
+
+.svc-page .hm-dash {
+  width: 100%;
+  min-width: 0;
+  overflow: visible;
+}
+
+.svc-page .hm-dash__main {
+  overflow: visible;
+}
+
+.svc-page .hm-dash .am-banner {
+  width: 100%;
+  max-width: none;
+}
+
+@media (max-width: 639px) {
+  .svc-page .hm-hero__inner {
+    --hm-hero-pad-y: 22px;
+    padding-bottom: 18px;
+  }
+
+  .svc-page .hm-dash {
+    margin-top: 2px;
+  }
+}
+
+.svc-page .hm-hero__title {
+  max-width: 14ch;
+}
+
+@media (min-width: 1024px) {
+  .svc-page .hm-hero__inner {
+    grid-template-columns: minmax(0, 720px);
+  }
+}
+
+.svc-page .svc-search {
+  width: min(100%, 480px);
+}
+
+/* Service heroes order search → CTAs → trust, which the home spacing rules don't cover. */
+.svc-page .hm-hero__lede + .svc-search { margin-top: 24px; }
+.svc-page .svc-search + .hm-hero__ctas { margin-top: 16px; }
+.svc-page .hm-hero__ctas + .hm-hero__trust,
+.svc-page .svc-search + .hm-hero__trust { margin-top: 22px; }
+
+@media (max-width: 639px) {
+  .svc-page .hm-hero__lede + .svc-search { margin-top: 20px; }
+  .svc-page .svc-search + .hm-hero__ctas { margin-top: 14px; }
+  .svc-page .hm-hero__ctas + .hm-hero__trust,
+  .svc-page .svc-search + .hm-hero__trust { margin-top: 18px; }
+}
+
+.svc-page .svc-search .am-search {
+  height: 48px;
+  border: 1px solid rgba(228, 196, 122, 0.45);
+  border-radius: var(--am-radius-pill);
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(8, 30, 24, 0.24);
+}
+
+.svc-page .hm-hero__ctas .am-btn {
+  flex: 0 1 auto;
+}
+
+.svc-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.svc-consult-rail .am-rail__item--wide {
+  flex-basis: min(88%, 340px);
+}
+
+@media (min-width: 1024px) {
+  .svc-consult-rail .am-rail__item--wide {
+    flex-basis: 340px;
+  }
+}
+
+/* Horizontal rails on consult — scroll cleanly; avoid panel overflow clip */
+.svc-page .hm-panel.svc-rail-section,
+.svc-page .hm-products.svc-rail-section {
+  overflow: visible;
+}
+
+.svc-page .hm-products .am-rail {
+  --hm-rail-gap: var(--am-space-4);
+  gap: var(--hm-rail-gap);
+  margin: 0 calc(var(--am-gutter) * -1);
+  padding: var(--am-space-2) var(--am-gutter) var(--am-space-4);
+  scroll-padding-inline: var(--am-gutter);
+}
+
+.svc-page .hm-products .am-rail__item--product {
+  flex: 0 0 min(46%, 200px);
+}
+
+@media (min-width: 1024px) {
+  .svc-page .hm-products .am-rail {
+    margin: 0;
+    padding-inline: 0;
+    scroll-padding-inline: 0;
+  }
+
+  .svc-page .hm-products .am-rail__item--product {
+    flex-basis: 210px;
+  }
+}
+
+.hm-concerns-panel .am-tile.is-on .am-tile__img {
+  outline: 2px solid var(--am-brand-green, var(--am-accent));
+  outline-offset: 2px;
+}
+
+.hm-concerns-panel .am-tile.is-on .am-tile__label {
+  color: var(--am-brand-green, var(--am-accent));
+  font-weight: 700;
+}
+
+.svc-catalog {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.svc-catalog > li > * {
+  height: 100%;
+}
+
+@media (min-width: 640px) {
+  .svc-catalog {
+    grid-template-columns: repeat(auto-fill, minmax(172px, 1fr));
+  }
+}
+
+.svc-pose-grid,
+.svc-meal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 768px) {
+  .svc-pose-grid,
+  .svc-meal-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .svc-pose-grid,
+  .svc-meal-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.svc-chips {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding: 0 0 2px;
+  overflow-x: auto;
+}
+
+.svc-page .hm-well .svc-pose-grid,
+.svc-page .hm-well .svc-meal-grid {
+  padding-bottom: 12px;
+}
+
+.svc-more {
+  display: flex;
+  justify-content: center;
+  min-height: 28px;
+  margin-top: 8px;
+  color: var(--am-text-muted);
+  font-size: var(--am-text-sm);
+}
+
+/* Diet plan filters — app DietScreen dropdowns (Prakriti, Disease, Paid, Duration, Calories, Sort) */
+.dt-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+  margin: 4px 0 10px;
+}
+.dt-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 44px;
+  padding: 4px 10px;
+  border: 1px solid rgba(16, 83, 67, 0.16);
+  border-radius: 12px;
+  background: #fffdf8;
+}
+.dt-filter.is-active {
+  border-color: #105343;
+  box-shadow: inset 0 0 0 1px #105343;
+}
+.dt-filter-label {
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: rgba(16, 83, 67, 0.7);
+}
+.dt-filter select {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: #105343;
+  padding: 0;
+  min-height: 22px;
+  cursor: pointer;
+}
+.dt-filter select:focus-visible {
+  outline: 2px solid #e4c47a;
+  outline-offset: 2px;
+}
+
+/* === PREMIUM DIET FILTER BAR (start) === */
+.dt-filters {
+  grid-template-columns: repeat(auto-fill, minmax(156px, 1fr));
+  gap: 10px;
+  margin: 8px 0 14px;
+  padding: 12px;
+  border: 1px solid rgba(201, 165, 90, 0.28);
+  border-radius: 20px;
+  background:
+    radial-gradient(120% 140% at 100% 0, rgba(236, 209, 143, 0.22), transparent 55%),
+    linear-gradient(135deg, rgba(255, 253, 248, 0.92), rgba(243, 239, 228, 0.78));
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 1px 2px rgba(16, 83, 67, 0.06),
+    0 12px 28px -18px rgba(16, 83, 67, 0.35);
+}
+.dt-filter {
+  position: relative;
+  gap: 3px;
+  min-height: 54px;
+  padding: 8px 34px 8px 14px;
+  border: 1px solid rgba(16, 83, 67, 0.12);
+  border-radius: 14px;
+  background: #fffdf8;
+  box-shadow: 0 1px 2px rgba(16, 83, 67, 0.05);
+  cursor: pointer;
+  transition: border-color 180ms ease, box-shadow 220ms ease, transform 220ms cubic-bezier(0.22, 1, 0.36, 1), background 180ms ease;
+}
+.dt-filter::after {
+  content: '';
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-right: 1.75px solid #a07f3c;
+  border-bottom: 1.75px solid #a07f3c;
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+  transition: border-color 180ms ease;
+}
+.dt-filter:hover {
+  border-color: rgba(201, 165, 90, 0.7);
+  box-shadow: 0 8px 18px -12px rgba(16, 83, 67, 0.45);
+  transform: translateY(-1px);
+}
+.dt-filter:focus-within {
+  border-color: #c9a55a;
+  box-shadow: 0 0 0 3px rgba(236, 209, 143, 0.45);
+}
+.dt-filter.is-active {
+  border-color: #105343;
+  background: linear-gradient(140deg, #105343, #0b3f33);
+  box-shadow: 0 10px 22px -12px rgba(16, 83, 67, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+.dt-filter.is-active::after { border-color: #ecd18f; }
+.dt-filter-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #a07f3c;
+}
+.dt-filter.is-active .dt-filter-label { color: #ecd18f; }
+.dt-filter select {
+  width: 100%;
+  font-family: var(--am-font-display, inherit);
+  font-size: 14.5px;
+  color: #105343;
+  text-overflow: ellipsis;
+}
+.dt-filter.is-active select { color: #fbf6ea; }
+.dt-filter select option { color: #1d2b26; background: #fffdf8; }
+.dt-filter select:focus-visible { outline: none; }
+@media (max-width: 640px) {
+  .dt-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 8px;
+    border-radius: 16px;
+  }
+  .dt-filter { min-height: 50px; padding: 6px 30px 6px 12px; border-radius: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dt-filter, .dt-filter::after { transition: none; }
+  .dt-filter:hover { transform: none; }
+}
+/* === PREMIUM DIET FILTER BAR (end) === */

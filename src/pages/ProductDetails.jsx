@@ -1,8 +1,27 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FileText, Heart, Leaf, Minus, Plus, ShoppingBag, Star } from 'lucide-react';
+import {
+  ArrowLeft,
+  Banknote,
+  Check,
+  ChevronDown,
+  CircleCheck,
+  FileText,
+  Flame,
+  Leaf,
+  Minus,
+  Package,
+  Plus,
+  RotateCcw,
+  Shield,
+  ShoppingBag,
+  ShoppingCart,
+  Star,
+  Truck,
+  Zap,
+} from 'lucide-react';
 import AppShell from '../components/AppShell';
-import PageHeader from '../components/PageHeader';
+import AutoScrollRail from '../components/AutoScrollRail';
 import ProductDiscoveryRails from '../components/ProductDiscoveryRails';
 import ReviewSubmitModal from '../components/ReviewSubmitModal';
 import ShareButton from '../components/ShareButton';
@@ -10,15 +29,21 @@ import { formatRupee, resolveImageUrl } from '../home/catalog';
 import { useCart } from '../hooks/useCart';
 import {
   getAddQtyBlockMessage,
+  getProductStockDisplay,
+  getProductStockQty,
   isPrescriptionRequired,
+  isProductLowStock,
   isProductOutOfStock,
+  LOW_STOCK_THRESHOLD,
 } from '../product/stock';
+import { extractAPlusBlocks, splitHighlightLines } from '../product/detailContent';
 import {
   getProductByVariant,
   getReviews,
   toggleWishlistProduct,
 } from '../services/productService';
 import { requireAuth } from '../services/guestAuth';
+import { findReviewableProductOrder } from '../services/reviewService';
 import { showPrescriptionRequired } from '../services/prescriptionGate';
 import { showSuccessToast } from '../config/key';
 import {
@@ -27,12 +52,9 @@ import {
   normalizeReviewsForDisplay,
 } from '../utils/reviewUtils';
 import {
-  Badge,
   Button,
-  Chip,
-  Disclaimer,
   EmptyState,
-  IconButton,
+  FavButton,
   Modal,
   ReviewCard,
   SectionHeader,
@@ -41,6 +63,9 @@ import {
 } from '../components/ui';
 import { PRODUCT_DETAIL_COPY as T } from '../content/productDetail';
 import '../design/pages/product-detail.css';
+import '../design/brand.css';
+import '../design/product-card-home.css';
+import '../design/pages/product-detail-brand.css';
 
 const galleryFromProduct = (product, variant) => {
   const urls = [];
@@ -70,8 +95,13 @@ export default function ProductDetails() {
   const [qty, setQty] = useState(1);
   const [wish, setWish] = useState(false);
   const [imageIndex, setImageIndex] = useState(0);
-  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewTarget, setReviewTarget] = useState(null);
+  const [reviewLookupBusy, setReviewLookupBusy] = useState(false);
   const [zoomOpen, setZoomOpen] = useState(false);
+  const [descExpanded, setDescExpanded] = useState(false);
+  const [expandedDetail, setExpandedDetail] = useState('');
+  const [wishBusy, setWishBusy] = useState(false);
+  const [pendingCta, setPendingCta] = useState(null);
 
   useEffect(() => {
     let alive = true;
@@ -130,18 +160,128 @@ export default function ProductDetails() {
   const images = galleryFromProduct(product, active);
   const needsRx = isPrescriptionRequired(active) || isPrescriptionRequired(product);
   const out = isProductOutOfStock(active);
+  const lowStock = isProductLowStock(active);
+  const stockDisplay = getProductStockDisplay(active);
+  const stockQty = getProductStockQty(active);
+  const maxQty = stockQty == null || stockQty <= 0 ? null : stockQty;
   const displayName = product?.name || active?.name || 'Product';
-  const packLabel = active?.size || active?.title || active?.weightage || '';
+  const packParts = [active?.title, active?.size].filter(Boolean);
+  const weightLabel = [active?.weightage, active?.physical_state].filter(Boolean).join(' ');
+  const sizeText = packParts.join(' · ');
+  const packLabel =
+    weightLabel && sizeText && !sizeText.toLowerCase().includes(String(active?.weightage).toLowerCase())
+      ? `${sizeText} ${weightLabel}`
+      : sizeText || weightLabel;
   const price = formatRupee(active?.selling_price ?? active?.price ?? product?.selling_price);
-  const mrp =
-    Number(active?.mrp) > Number(active?.selling_price || 0) ? formatRupee(active?.mrp) : '';
+  const selling = Number(active?.selling_price ?? active?.price ?? product?.selling_price) || 0;
+  const mrpNumber = Number(active?.mrp) || 0;
+  const mrp = mrpNumber > selling ? formatRupee(active?.mrp) : '';
+  const saveAmount = Math.max(0, mrpNumber - selling);
   const discount =
-    Number(active?.mrp) > Number(active?.selling_price || 0)
-      ? Math.round(((active.mrp - active.selling_price) / active.mrp) * 100)
-      : 0;
+    mrpNumber > selling ? Math.round(((mrpNumber - selling) / mrpNumber) * 100) : 0;
+  const totalPrice = selling * Math.max(1, Number(qty) || 1);
+  const textOf = (value) => (typeof value === 'string' ? value.trim() : '');
+  const shortDescription = textOf(product?.short_description);
+  const fullDescription = textOf(product?.full_description || product?.description);
+  const highlightLines = splitHighlightLines(
+    product?.benifits || product?.benefits || product?.highlights,
+  );
+  const aboutPreview =
+    fullDescription.length > 140 && !descExpanded
+      ? `${fullDescription.slice(0, 140).trim()}…`
+      : fullDescription;
+  const aPlusBlocks = extractAPlusBlocks(product);
+  const brandName = textOf(product?.brand_name);
+  const ratingValue = Number(
+    active?.avg_rating ?? active?.rating ?? product?.avg_rating ?? product?.rating ?? product?.average_rating,
+  );
+  const ratingCount = Number(product?.review_count ?? product?.reviews_count ?? reviews.length);
+  const categoryLabel = textOf(product?.category_name || product?.category?.name);
+  const bestDealVariantId = useMemo(() => {
+    if (variants.length < 2) return null;
+    let bestId = null;
+    let bestDisc = 0;
+    variants.forEach((item) => {
+      const mrpValue = Number(item?.mrp) || 0;
+      const sell = Number(item?.selling_price ?? item?.price) || 0;
+      const disc =
+        Number(item?.discount) ||
+        (mrpValue > sell ? Math.round(((mrpValue - sell) / mrpValue) * 100) : 0);
+      if (disc > bestDisc) {
+        bestDisc = disc;
+        bestId = String(item?.id ?? item?.variant_id);
+      }
+    });
+    return bestDisc > 0 ? bestId : null;
+  }, [variants]);
+  const specItems = [
+    { label: 'Brand', value: brandName },
+    { label: 'Pack size', value: [active?.size || active?.title, active?.weightage].filter(Boolean).join(' ') },
+    { label: 'Manufacturer', value: textOf(product?.manufacturer) },
+    { label: 'Origin', value: textOf(product?.origin) },
+    { label: 'Treatment', value: textOf(product?.treatment_type) },
+    { label: 'Dosage', value: textOf(product?.dosages) },
+  ].filter((item) => item.value);
+  const detailLinks = [
+    { key: 'description', label: T.productDescription, preview: fullDescription, text: fullDescription },
+    {
+      key: 'benefits',
+      label: T.benefits,
+      preview: textOf(product?.benifits || product?.benefits),
+      text: textOf(product?.benifits || product?.benefits),
+    },
+    {
+      key: 'composition',
+      label: T.composition,
+      preview: textOf(product?.compositions || product?.ingredients),
+      text: textOf(product?.compositions || product?.ingredients),
+    },
+    {
+      key: 'howToUse',
+      label: T.howToUse,
+      preview: textOf(product?.how_to_use || product?.usage),
+      text: textOf(product?.how_to_use || product?.usage),
+    },
+    {
+      key: 'safety',
+      label: T.safety,
+      preview: textOf(product?.safety_information),
+      text: textOf(product?.safety_information),
+    },
+  ].filter((item) => item.text);
+  const returnLabel = active?.returnable_days
+    ? `${active.returnable_days}D return`
+    : active?.is_returnable
+      ? T.easyReturns
+      : T.nonReturnable;
+  const goBack = () => {
+    if (window.history.length > 1) navigate(-1);
+    else navigate('/products');
+  };
   const discoveryProductId = String(
     product?.product_id ?? product?.id ?? active?.product_id ?? '',
   ).trim();
+
+  const openReviewModal = async () => {
+    if (!(await requireAuth('Please login to write a review'))) return;
+    setReviewLookupBusy(true);
+    try {
+      const match = await findReviewableProductOrder([cartVariantId, variantId]);
+      if (!match) {
+        showSuccessToast('You can review this product once your order for it is delivered', 'error');
+        return;
+      }
+      if (match.alreadyReviewed) {
+        showSuccessToast('You have already reviewed this product', 'error');
+        return;
+      }
+      setReviewTarget(match);
+    } catch {
+      showSuccessToast('Could not check your orders. Please try again.', 'error');
+    } finally {
+      setReviewLookupBusy(false);
+    }
+  };
 
   useEffect(() => {
     setWish(Boolean(active?.is_wishlist_item ?? product?.is_wishlist_item));
@@ -149,8 +289,22 @@ export default function ProductDetails() {
     setImageIndex(0);
   }, [cartVariantId, product, cartQty, active?.is_wishlist_item]);
 
+  const increaseQty = () => {
+    setQty((current) => {
+      const next = current + 1;
+      const block = getAddQtyBlockMessage(active, next);
+      if (block) {
+        showSuccessToast(block, 'error');
+        return current;
+      }
+      if (maxQty == null) return next;
+      return Math.min(next, maxQty);
+    });
+  };
+
   const addToCart = async (goToCart = false) => {
     if (!(await requireAuth('Please login to add items to cart'))) return;
+    if (!cartVariantId) return;
     const addQty = Math.max(1, Number(qty) || 1);
     const block = getAddQtyBlockMessage(active, addQty);
     if (block) {
@@ -164,7 +318,9 @@ export default function ProductDetails() {
       });
       return;
     }
+    setPendingCta(goToCart ? 'buy' : 'add');
     const ok = await syncCartQuantity({ ...active, variant_id: cartVariantId }, addQty);
+    setPendingCta(null);
     if (!ok) {
       showSuccessToast('Try again to add into cart', 'error');
       return;
@@ -173,15 +329,32 @@ export default function ProductDetails() {
   };
 
   const toggleWish = async () => {
+    if (wishBusy) return;
     if (!(await requireAuth('Please login to save wishlist items'))) return;
-    if (!cartVariantId) return;
-    const res = await toggleWishlistProduct(cartVariantId);
-    if (res?.success === false) {
-      showSuccessToast(res?.message || 'Unable to update wishlist', 'error');
+    if (!cartVariantId) {
+      showSuccessToast('Product variant unavailable', 'error');
       return;
     }
-    setWish((prev) => !prev);
+    const previous = wish;
+    setWish(!previous);
+    setWishBusy(true);
+    try {
+      const res = await toggleWishlistProduct(cartVariantId);
+      if (res?.success === false) throw new Error(res?.message || 'Wishlist update failed');
+      setSelected((prev) => (prev ? { ...prev, is_wishlist_item: !previous } : prev));
+      showSuccessToast(previous ? 'Removed from wishlist' : 'Added to wishlist', 'success');
+    } catch (error) {
+      setWish(previous);
+      showSuccessToast(error?.message || 'Unable to update wishlist', 'error');
+    } finally {
+      setWishBusy(false);
+    }
   };
+
+  const ctaBusy = adding || pendingCta != null;
+  const addBusy = pendingCta === 'add' || (adding && pendingCta !== 'buy');
+  const buyBusy = pendingCta === 'buy';
+  const atMax = maxQty != null && qty >= maxQty;
 
   const cartAction = (
     <Button
@@ -195,37 +368,53 @@ export default function ProductDetails() {
     </Button>
   );
 
-  const renderBuyActions = (block = false) => {
+  const renderBuyActions = () => {
     if (needsRx) {
       return (
-        <Button
-          variant="primary"
-          block={block}
-          disabled={out}
-          leadingIcon={<FileText size={18} aria-hidden />}
-          onClick={() => addToCart(false)}
-        >
-          {T.uploadRx}
-        </Button>
+        <div className="pd-buy">
+          <Button
+            variant="primary"
+            disabled={out || ctaBusy}
+            loading={addBusy}
+            onClick={() => addToCart(false)}
+            leadingIcon={<FileText size={16} aria-hidden />}
+          >
+            {T.uploadRx}
+          </Button>
+        </div>
       );
     }
     return (
-      <>
-        <Button variant="secondary" block={block} disabled={out || adding} onClick={() => addToCart(false)}>
-          {adding ? T.adding : T.addToCart}
+      <div className="pd-buy">
+        <Button
+          variant="secondary"
+          disabled={out || ctaBusy}
+          loading={addBusy}
+          onClick={() => addToCart(false)}
+          leadingIcon={<ShoppingCart size={16} aria-hidden />}
+        >
+          {out ? T.soldOut : T.addToCart}
         </Button>
-        <Button variant="primary" block={block} disabled={out || adding} onClick={() => addToCart(true)}>
-          {T.buyNow}
+        <Button
+          variant="primary"
+          disabled={(cartQty <= 0 && out) || ctaBusy}
+          loading={buyBusy}
+          onClick={() => addToCart(true)}
+        >
+          {cartQty > 0 ? T.goToCart : T.buyNow}
         </Button>
-      </>
+      </div>
     );
   };
 
   if (loading) {
     return (
       <AppShell tab="products">
-        <section className="pd-page" aria-busy="true" aria-label={T.loading}>
-          <PageHeader title={T.title} actions={cartAction} />
+        <section className="pd-page pd-page--brand" aria-busy="true" aria-label={T.loading}>
+          <div className="pd-topbar">
+            <span />
+            {cartAction}
+          </div>
           <div className="pd-skel">
             <Skeleton className="pd-skel-gallery" />
             <SkeletonText lines={4} />
@@ -238,8 +427,14 @@ export default function ProductDetails() {
   if (!product && !active) {
     return (
       <AppShell tab="products">
-        <section className="pd-page">
-          <PageHeader title={T.notFoundTitle} backTo="/products" actions={cartAction} />
+        <section className="pd-page pd-page--brand">
+          <div className="pd-topbar">
+            <button type="button" className="am-back" onClick={() => navigate('/products')}>
+              <ArrowLeft size={16} aria-hidden />
+              {T.backToStore}
+            </button>
+            {cartAction}
+          </div>
           <EmptyState
             title={T.notFoundTitle}
             description={T.notFoundText}
@@ -256,8 +451,23 @@ export default function ProductDetails() {
 
   return (
     <AppShell tab="products">
-      <section className="pd-page">
-        <PageHeader title={displayName} subtitle={packLabel || undefined} actions={cartAction} />
+      <section className="pd-page pd-page--brand">
+        <div className="pd-topbar">
+          <button type="button" className="am-back" onClick={goBack}>
+            <ArrowLeft size={16} aria-hidden />
+            Back
+          </button>
+          <div className="pd-topbar__actions">
+            <ShareButton
+              title={`${displayName} - Ayurmuni`}
+              text={`${displayName}${packLabel ? ` (${packLabel})` : ''} — ${price} on Ayurmuni`}
+              url={window.location.href}
+              variant="soft"
+              showModal={true}
+            />
+            {cartAction}
+          </div>
+        </div>
 
         <div className="pd-layout">
           <div className="pd-gallery">
@@ -277,14 +487,20 @@ export default function ProductDetails() {
                 </span>
               )}
               <div className="pd-gallery__badges">
-                {out ? <Badge tone="neutral">{T.outOfStock}</Badge> : null}
+                {discount > 0 ? <span className="pd-badge">{discount}% off</span> : null}
                 {needsRx ? (
-                  <Badge tone="warning" icon={<FileText size={14} aria-hidden />}>
-                    {T.prescriptionRequired}
-                  </Badge>
+                  <span className="pd-badge pd-badge--rx">
+                    <FileText size={12} aria-hidden /> Rx
+                  </span>
                 ) : null}
-                {discount > 0 ? <Badge tone="success">{discount}% off</Badge> : null}
               </div>
+              <FavButton
+                corner
+                on={wish}
+                label={wish ? T.savedWishlist : T.saveWishlist}
+                disabled={wishBusy}
+                onClick={toggleWish}
+              />
             </div>
             {images.length > 1 ? (
               <div className="pd-thumbs" role="tablist" aria-label="Product images">
@@ -305,159 +521,347 @@ export default function ProductDetails() {
             ) : null}
           </div>
 
-          <div className="pd-aside">
-            <div className="pd-main">
-              <div className="pd-head">
-                <IconButton
-                  label={wish ? T.savedWishlist : T.saveWishlist}
-                  variant="soft"
-                  pressed={wish}
-                  onClick={toggleWish}
-                >
-                  <Heart size={20} aria-hidden fill={wish ? 'currentColor' : 'none'} />
-                </IconButton>
-                <ShareButton
-                  title={`${displayName} - Ayurmuni`}
-                  text={`Check out this amazing product on Ayurmuni!`}
-                  url={window.location.href}
-                  variant="soft"
-                  showModal={true}
-                />
-              </div>
+          <div className="pd-aside pd-info">
+            <div className="pd-info__top">
+              <p className="pd-info__eyebrow">{brandName || categoryLabel || 'Ayurmuni'}</p>
+            </div>
 
+            <h1 className="pd-title">{displayName}</h1>
+            {ratingValue > 0 || packLabel || (brandName && categoryLabel) ? (
+              <p className="pd-meta">
+                {ratingValue > 0 ? (
+                  <span className="pd-meta__rating">
+                    <Star size={14} aria-hidden fill="currentColor" />
+                    {ratingValue.toFixed(1)}
+                    {ratingCount > 0 ? (
+                      <span className="pd-meta__count">
+                        ({ratingCount} {ratingCount === 1 ? 'rating' : 'ratings'})
+                      </span>
+                    ) : null}
+                  </span>
+                ) : null}
+                {packLabel ? <span className="pd-meta__pack">{packLabel}</span> : null}
+                {brandName && categoryLabel ? <span className="pd-meta__pack">{categoryLabel}</span> : null}
+              </p>
+            ) : null}
+            {shortDescription ? <p className="pd-short">{shortDescription}</p> : null}
+
+            <div>
               <p className="pd-price">
                 <strong>{price}</strong>
-                {mrp ? <s>{mrp}</s> : null}
-                {discount > 0 ? <Badge tone="success">{discount}% off</Badge> : null}
-                <span className="pd-price__note">{T.perUnit}</span>
+                {mrp ? (
+                  <s>
+                    <span>MRP </span>
+                    {mrp}
+                  </s>
+                ) : null}
+                {discount > 0 ? <em>{discount}% off</em> : null}
               </p>
+              <p className="pd-price__note">{T.perUnit}</p>
+              {lowStock && stockDisplay.qty ? (
+                <p className="pd-hurry">
+                  <Flame size={14} aria-hidden />
+                  Hurry! Only {stockDisplay.qty} left at this price
+                </p>
+              ) : (
+                <p className={`pd-stock pd-stock--${stockDisplay.tone}`}>
+                  <span className="pd-stock__dot" aria-hidden />
+                  {stockDisplay.label}
+                </p>
+              )}
+            </div>
 
-              {variants.length > 1 ? (
-                <div className="pd-variants" role="group" aria-label={T.pack}>
+            {saveAmount > 0 ? (
+              <p className="pd-save">
+                <span className="pd-save__icon">
+                  <Zap size={13} aria-hidden />
+                </span>
+                {T.youSave} {formatRupee(saveAmount)} {T.onThisPack}
+              </p>
+            ) : null}
+
+            <p className="pd-delivery">
+              <span className="pd-delivery__icon">
+                <Truck size={14} aria-hidden />
+              </span>
+              <span>
+                {T.deliveryLead} <strong>{T.deliveryStrong}</strong>
+              </span>
+            </p>
+
+            {variants.length > 0 ? (
+              <div className="pd-field">
+                <div className="pd-field__row">
+                  <span className="pd-field__label">{variants.length > 1 ? T.selectPack : T.pack}</span>
+                  {cartQty > 0 ? (
+                    <span className="pd-incart">
+                      {cartQty} {T.inCart}
+                    </span>
+                  ) : null}
+                </div>
+                <div className="pd-packs" role="listbox" aria-label={T.selectPack}>
                   {variants.map((item) => {
                     const id = String(item.id ?? item.variant_id);
                     const on = id === cartVariantId;
+                    const isBest = bestDealVariantId === id;
+                    const image = resolveImageUrl(item) || images[0];
+                    const itemWeight = [item?.weightage, item?.physical_state].filter(Boolean).join(' ');
+                    const itemSize = String(item?.size || item?.title || T.pack).trim();
+                    const showWeight =
+                      itemWeight && !itemSize.toLowerCase().includes(String(item?.weightage || '').toLowerCase());
                     return (
-                      <Chip key={id} selected={on} onClick={() => setSelected(item)}>
-                        {item.title || item.size || item.weightage || T.pack}
-                      </Chip>
+                      <button
+                        key={id}
+                        type="button"
+                        role="option"
+                        aria-selected={on}
+                        className={`pd-pack${on ? ' is-on' : ''}`}
+                        onClick={() => setSelected(item)}
+                      >
+                        {isBest ? <span className="pd-pack__best">{T.bestDeal}</span> : null}
+                        {on ? (
+                          <span className="pd-pack__check" aria-hidden>
+                            <Check size={12} />
+                          </span>
+                        ) : null}
+                        <span className="pd-pack__img">
+                          {image ? <img src={image} alt="" /> : <Package size={22} aria-hidden />}
+                        </span>
+                        <span className="pd-pack__size">
+                          {itemSize}
+                          {showWeight ? ` ${itemWeight}` : ''}
+                        </span>
+                        <span className="pd-pack__price">
+                          {formatRupee(item?.selling_price ?? item?.price)}
+                        </span>
+                      </button>
                     );
                   })}
                 </div>
-              ) : null}
-
-              <div className="pd-qty">
-                <span className="pd-qty__label">{T.quantity}</span>
-                <div className="am-stepper" role="group" aria-label={T.quantity}>
-                  <button
-                    type="button"
-                    aria-label={T.decreaseQty}
-                    disabled={qty <= 1}
-                    onClick={() => setQty((q) => Math.max(1, q - 1))}
-                  >
-                    <Minus size={18} aria-hidden />
-                  </button>
-                  <span aria-live="polite">{qty}</span>
-                  <button type="button" aria-label={T.increaseQty} onClick={() => setQty((q) => q + 1)}>
-                    <Plus size={18} aria-hidden />
-                  </button>
-                </div>
               </div>
+            ) : null}
 
-              {product?.description ? (
-                <div className="pd-card">
-                  <h2>{T.description}</h2>
-                  <p>{product.description}</p>
-                </div>
-              ) : null}
-
-              {product?.benefits ? (
-                <div className="pd-card">
-                  <h2>{T.benefits}</h2>
-                  <p>{product.benefits}</p>
-                </div>
-              ) : null}
-
-              <section className="pd-reviews" aria-labelledby="pd-reviews-title">
-                <SectionHeader
-                  id="pd-reviews-title"
-                  title={T.reviews}
-                  action={
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={async () => {
-                          if (!(await requireAuth('Please login to write a review'))) return;
-                          setShowReviewModal(true);
-                        }}
-                        leadingIcon={<Star size={16} />}
-                      >
-                        Write Review
-                      </Button>
-                      {reviews.length > 0 && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            navigate('/reviews', {
-                              state: {
-                                entityType: 'product',
-                                variantId,
-                                reviews,
-                              },
-                            })
-                          }
-                        >
-                          {T.viewAllReviews}
-                        </Button>
-                      )}
-                    </div>
-                  }
-                />
-                {reviews.length > 0 ? (
-                  reviews.slice(0, 5).map((item, index) => {
-                    const media = (item.image_urls || []).map((url) => ({
-                      url,
-                      type: isReviewVideoUrl(url) ? 'video' : 'image',
-                    }));
-                    return (
-                      <ReviewCard
-                        key={item.id || index}
-                        name={item.patient_name || 'Patient'}
-                        rating={item.rating}
-                        text={item.comment || item.review || item.message || ''}
-                        media={media}
-                        onMediaClick={(mediaIndex) =>
-                          navigate('/reviews/gallery', {
-                            state: { images: item.image_urls, selectedIndex: mediaIndex },
-                          })
-                        }
-                      />
-                    );
-                  })
-                ) : (
-                  <EmptyState compact title={T.noReviews} description={T.noReviewsText} />
-                )}
-              </section>
-
-              <Disclaimer />
+            <div className="pd-purchase">
+              <div className={`am-stepper${out ? ' is-off' : ''}`} role="group" aria-label={T.quantity}>
+                <button
+                  type="button"
+                  aria-label={T.decreaseQty}
+                  disabled={out || qty <= 1}
+                  onClick={() => setQty((current) => (current > 1 ? current - 1 : 1))}
+                >
+                  <Minus size={14} aria-hidden />
+                </button>
+                <span aria-live="polite">{qty}</span>
+                <button
+                  type="button"
+                  aria-label={T.increaseQty}
+                  disabled={out || atMax}
+                  onClick={increaseQty}
+                >
+                  <Plus size={14} aria-hidden />
+                </button>
+              </div>
+              {renderBuyActions()}
             </div>
+            {maxQty != null && maxQty > 0 && maxQty <= LOW_STOCK_THRESHOLD && qty >= maxQty ? (
+              <p className="pd-qty-note">
+                {maxQty === 1 ? T.onlyOne : `Only ${maxQty} items available.`}
+              </p>
+            ) : null}
 
-            <aside className="pd-buy" aria-label="Purchase options">
-              <p className="pd-buy__price">{price}</p>
-              {renderBuyActions(true)}
-            </aside>
+            <ul className="pd-trust" aria-label={T.trustLabel}>
+              <li>
+                <Truck size={18} aria-hidden />
+                <span>{active?.is_free_shipping ? T.freeDelivery : T.fastDelivery}</span>
+              </li>
+              <li>
+                <Banknote size={18} aria-hidden />
+                <span>{active?.pay_on_delivery ? T.cod : T.onlinePay}</span>
+              </li>
+              <li>
+                {active?.is_returnable || active?.returnable_days ? (
+                  <RotateCcw size={18} aria-hidden />
+                ) : (
+                  <Shield size={18} aria-hidden />
+                )}
+                <span>{returnLabel}</span>
+              </li>
+            </ul>
           </div>
         </div>
 
+        {highlightLines.length || fullDescription ? (
+          <section className="pd-details" aria-label={T.about}>
+            {highlightLines.length ? (
+              <div>
+                <h2 className="pd-details__title">{T.highlights}</h2>
+                <ul className="pd-highlights pd-highlights--grid">
+                  {highlightLines.map((line) => (
+                    <li key={line}>
+                      <CircleCheck size={16} aria-hidden />
+                      <span>{line}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            {fullDescription ? (
+              <div>
+                <h2 className="pd-details__title">{T.about}</h2>
+                <p className="pd-about">{aboutPreview}</p>
+                {fullDescription.length > 140 ? (
+                  <button type="button" className="pd-more" onClick={() => setDescExpanded((open) => !open)}>
+                    {descExpanded ? T.showLess : T.readMore}
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
+          </section>
+        ) : null}
+
+        {aPlusBlocks.length ? (
+          <section className="pd-details" aria-label={T.fromBrand}>
+            <h2 className="pd-details__title">{T.fromBrand}</h2>
+            <div className="pd-aplus">
+              {aPlusBlocks.map((block) => (
+                <article key={block.id} className="pd-aplus__block">
+                  {block.imageUri ? <img src={block.imageUri} alt={block.title || ''} /> : null}
+                  {block.title ? <h3>{block.title}</h3> : null}
+                  {block.body ? <p>{block.body}</p> : null}
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {specItems.length || detailLinks.length ? (
+          <section className="pd-details" aria-label={T.details}>
+            <h2 className="pd-details__title">{T.details}</h2>
+            <p className="pd-details__sub">
+              {specItems.length
+                ? `${specItems.length} ${T.specifications}`
+                : T.detailsFallback}
+            </p>
+            {specItems.length ? (
+              <dl className="pd-specs">
+                {specItems.map((item) => (
+                  <div key={item.label}>
+                    <dt>{item.label}</dt>
+                    <dd>{item.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            ) : null}
+            {detailLinks.length ? (
+              <div className="pd-accordion">
+                {detailLinks.map((link) => {
+                  const open = expandedDetail === link.key;
+                  return (
+                    <div key={link.key} className={`pd-accordion__item${open ? ' is-open' : ''}`}>
+                      <button
+                        type="button"
+                        className="pd-accordion__btn"
+                        aria-expanded={open}
+                        onClick={() => setExpandedDetail(open ? '' : link.key)}
+                      >
+                        <span>
+                          <strong>{link.label}</strong>
+                          {!open ? <em>{link.preview}</em> : null}
+                        </span>
+                        <ChevronDown size={16} aria-hidden />
+                      </button>
+                      {open ? <p>{link.text}</p> : null}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : null}
+          </section>
+        ) : null}
+
+        <section className="pd-reviews" aria-labelledby="pd-reviews-title">
+          <SectionHeader
+            id="pd-reviews-title"
+            title={T.reviews}
+            action={
+              <div className="pd-review-actions">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={openReviewModal}
+                  loading={reviewLookupBusy}
+                  leadingIcon={<Star size={16} />}
+                >
+                  Write Review
+                </Button>
+                {reviews.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      navigate('/reviews', {
+                        state: {
+                          entityType: 'product',
+                          variantId,
+                          reviews,
+                        },
+                      })
+                    }
+                  >
+                    {T.viewAllReviews}
+                  </Button>
+                )}
+              </div>
+            }
+          />
+          {reviews.length > 0 ? (
+            <AutoScrollRail
+              label="Product reviews"
+              className="pd-auto-rail"
+              trackClassName="pd-review-list"
+              itemClassName="pd-review-item"
+            >
+              {reviews.slice(0, 5).map((item, index) => {
+                const media = (item.image_urls || []).map((url) => ({
+                  url,
+                  type: isReviewVideoUrl(url) ? 'video' : 'image',
+                }));
+                return (
+                  <ReviewCard
+                    key={item.id || index}
+                    name={item.patient_name || 'Patient'}
+                    rating={item.rating}
+                    text={item.comment || item.review || item.message || ''}
+                    media={media}
+                    onMediaClick={(mediaIndex) =>
+                      navigate('/reviews/gallery', {
+                        state: { images: item.image_urls, selectedIndex: mediaIndex },
+                      })
+                    }
+                  />
+                );
+              })}
+            </AutoScrollRail>
+          ) : (
+            <EmptyState compact title={T.noReviews} description={T.noReviewsText} />
+          )}
+        </section>
+
         <ProductDiscoveryRails productId={discoveryProductId} excludeVariantId={cartVariantId} />
 
-        {!out ? (
-          <div className="pd-sticky">
-            {renderBuyActions()}
+        <div className="pd-sticky">
+          <div className="pd-sticky__price">
+            <strong>{formatRupee(totalPrice)}</strong>
+            <span>
+              {cartQty > 0
+                ? `${cartQty} ${T.inCart}`
+                : saveAmount > 0
+                  ? `Save ${formatRupee(saveAmount * Math.max(1, qty))}`
+                  : T.total}
+            </span>
           </div>
-        ) : null}
+          {renderBuyActions()}
+        </div>
       </section>
 
       <Modal open={zoomOpen} onClose={() => setZoomOpen(false)} title={displayName} size="lg">
@@ -468,11 +872,11 @@ export default function ProductDetails() {
 
       {/* Review Submit Modal */}
       <ReviewSubmitModal
-        open={showReviewModal}
-        onClose={() => setShowReviewModal(false)}
+        open={Boolean(reviewTarget)}
+        onClose={() => setReviewTarget(null)}
         product={{
-          product_id: product?.product_id || product?.id,
-          variant_id: variantId,
+          variant_id: reviewTarget?.variantId,
+          order_id: reviewTarget?.orderId,
           name: product?.name,
           image: selected?.cover_image || selected?.image_url || product?.cover_image,
           size: selected?.size,
@@ -482,8 +886,8 @@ export default function ProductDetails() {
           try {
             const reviewRes = await getReviews({ entity_type: 'product', variant_id: variantId });
             setReviews(normalizeReviewsForDisplay(extractReviewsList(reviewRes)));
-          } catch (error) {
-            console.error('Failed to refresh reviews:', error);
+          } catch {
+            /* keep the existing list */
           }
         }}
       />

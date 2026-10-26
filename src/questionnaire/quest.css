@@ -1,0 +1,2232 @@
+.quest {
+  --quest-accent: var(--am-green-600);
+  --quest-accent-soft: var(--am-green-50);
+  --quest-border: rgba(10, 47, 39, 0.1);
+  position: relative;
+  isolation: isolate;
+  gap: var(--am-space-4);
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: clamp(var(--am-space-4), 4vw, var(--am-space-8)) var(--am-gutter)
+    var(--am-space-8);
+  background:
+    radial-gradient(ellipse at 16% 0%, rgba(228, 196, 122, 0.24), transparent 38%),
+    linear-gradient(145deg, #f8f5ed 0%, #f0eee5 100%);
+}
+
+.quest::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0 0 auto;
+  height: 240px;
+  background: linear-gradient(135deg, #0a2f27, #155b47);
+  content: "";
+}
+
+.quest.medical {
+  --quest-accent: #0d7a6f;
+  --quest-accent-soft: #e9f5f2;
+  background:
+    radial-gradient(ellipse at 16% 0%, rgba(75, 169, 151, 0.24), transparent 38%),
+    linear-gradient(145deg, #f3f8f6 0%, #e8f1ee 100%);
+}
+
+.quest.medical::before {
+  background: linear-gradient(135deg, #073f3c, #0d7a6f);
+}
+
+.quest-top,
+.quest-hud,
+.quest > .track,
+.quest-stage,
+.quest-foot {
+  width: min(100%, 1040px);
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.quest-top {
+  min-height: 58px;
+  gap: var(--am-space-3);
+  color: #fff;
+}
+
+.quest-top > button {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.quest-top > button:hover {
+  border-color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: none;
+}
+
+.quest-top > div {
+  flex: 1;
+}
+
+.quest-top strong {
+  font-size: var(--am-text-base);
+  letter-spacing: 0.01em;
+}
+
+.quest-top small {
+  margin-top: 2px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: var(--am-text-xs);
+}
+
+.xp-badge {
+  padding: 8px 12px;
+  border: 1px solid rgba(245, 233, 200, 0.3);
+  background: rgba(201, 151, 47, 0.22);
+  color: #fff4d7;
+  font-variant-numeric: tabular-nums;
+}
+
+.quest-hud {
+  justify-content: flex-start;
+  gap: var(--am-space-2);
+  min-height: 36px;
+  margin: var(--am-space-1) auto 0;
+}
+
+.quest-hud .pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 5px 11px;
+  border: 1px solid var(--quest-border);
+  background: rgba(255, 255, 255, 0.94);
+  font-size: var(--am-text-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.quest-hud .pill.lead {
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
+}
+
+.quest.medical .quest-hud .pill {
+  color: var(--quest-accent);
+}
+
+.quest-hud .streak {
+  min-height: 28px;
+  padding: 5px 10px;
+  font-weight: var(--am-weight-bold);
+}
+
+.quest > .track {
+  margin-bottom: 0;
+  color: var(--am-text-on-dark);
+  font-size: var(--am-text-2xs);
+  letter-spacing: 0.08em;
+}
+
+.track-bar {
+  height: 7px;
+  margin-top: var(--am-space-2);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.track-bar i {
+  border-radius: inherit;
+  background-image: linear-gradient(90deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.28));
+  box-shadow: 0 0 14px color-mix(in srgb, var(--quest-accent) 42%, transparent);
+  transition: width 500ms var(--am-ease-out);
+}
+
+.quest-stage {
+  flex: 1;
+  padding: clamp(var(--am-space-5), 4vw, var(--am-space-8));
+  border: 1px solid var(--quest-border);
+  border-radius: var(--am-radius-2xl);
+  background: var(--am-surface);
+  box-shadow: 0 16px 48px rgba(10, 47, 39, 0.09);
+  animation: quest-step-in 240ms var(--am-ease-out) both;
+}
+
+.quest.medical .quest-stage {
+  border-color: rgba(13, 122, 111, 0.16);
+}
+
+.level-badge {
+  margin-bottom: var(--am-space-3);
+  padding: 6px 11px;
+  font-size: var(--am-text-2xs);
+  letter-spacing: 0.07em;
+}
+
+.quest-stage h2 {
+  max-width: 44ch;
+  margin: 0 0 var(--am-space-5);
+  color: var(--am-text);
+  font-size: clamp(1.35rem, 1rem + 1vw, 1.8rem);
+  font-weight: var(--am-weight-bold);
+  letter-spacing: -0.02em;
+  line-height: var(--am-leading-tight);
+}
+
+.multi-hint {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  margin: calc(var(--am-space-3) * -1) 0 var(--am-space-4);
+  padding: 5px 10px;
+  border-radius: var(--am-radius-pill);
+  background: var(--quest-accent-soft);
+  color: var(--quest-accent);
+  font-size: var(--am-text-xs);
+  font-weight: var(--am-weight-medium);
+}
+
+.quest-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--am-space-3);
+}
+
+.quest-opt {
+  position: relative;
+  min-height: 68px;
+  gap: var(--am-space-3);
+  padding: var(--am-space-3);
+  border: 1px solid var(--am-line);
+  border-radius: var(--am-radius-lg);
+  background: #fff;
+  box-shadow: var(--am-shadow-xs);
+  transition:
+    background-color var(--am-dur-fast) var(--am-ease-standard),
+    border-color var(--am-dur-fast) var(--am-ease-standard),
+    box-shadow var(--am-dur-base) var(--am-ease-standard),
+    transform var(--am-dur-fast) var(--am-ease-out);
+}
+
+.quest-opt:hover {
+  border-color: var(--quest-accent);
+  background: var(--quest-accent-soft);
+  box-shadow: var(--am-shadow-sm);
+  transform: translateY(-1px);
+}
+
+.quest-opt:focus-visible,
+.quest-top > button:focus-visible,
+.quest-foot button:focus-visible,
+.quest-stage .cta:focus-visible {
+  outline: 3px solid var(--am-gold-500);
+  outline-offset: 3px;
+}
+
+.quest-opt.on {
+  background: var(--quest-accent-soft);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--quest-accent) 14%, transparent);
+}
+
+.quest-opt .opt-num {
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: var(--am-text-muted);
+  font-size: var(--am-text-xs);
+}
+
+.quest-opt.on .opt-num {
+  color: #fff;
+}
+
+.quest-opt img {
+  flex: 0 0 52px;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--am-radius-md);
+}
+
+.opt-copy {
+  gap: 3px;
+  min-width: 0;
+}
+
+.opt-copy strong {
+  color: var(--am-text);
+  font-size: var(--am-text-sm);
+  line-height: var(--am-leading-snug);
+}
+
+.opt-copy small {
+  color: var(--am-text-muted);
+  font-size: var(--am-text-xs);
+  line-height: var(--am-leading-normal);
+}
+
+.opt-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--quest-accent);
+  color: #fff;
+  font-size: var(--am-text-xs);
+  font-weight: var(--am-weight-bold);
+}
+
+.quest-stage textarea {
+  min-height: 150px;
+  padding: var(--am-space-4);
+  border-color: var(--am-line-strong);
+  background: var(--am-surface-muted);
+  font: inherit;
+  line-height: var(--am-leading-normal);
+  resize: vertical;
+}
+
+.quest-stage textarea:focus,
+.unit-row input:focus {
+  border-color: var(--quest-accent);
+  outline: 3px solid color-mix(in srgb, var(--quest-accent) 18%, transparent);
+}
+
+.quest-stage .cta {
+  width: auto;
+  min-width: 180px;
+  min-height: 48px;
+  margin-top: var(--am-space-5);
+  border-radius: var(--am-radius-md);
+  background: var(--quest-accent);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--quest-accent) 20%, transparent);
+  transition:
+    background-color var(--am-dur-fast) var(--am-ease-standard),
+    box-shadow var(--am-dur-base) var(--am-ease-standard),
+    transform var(--am-dur-fast) var(--am-ease-out);
+}
+
+.quest-stage .cta:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--quest-accent) 88%, #000);
+  box-shadow: 0 9px 20px color-mix(in srgb, var(--quest-accent) 26%, transparent);
+}
+
+.quest-foot {
+  min-height: 46px;
+  margin-top: 0;
+  color: var(--am-text-muted);
+  font-size: var(--am-text-xs);
+}
+
+.quest-foot > button,
+.quest-foot > div > button {
+  min-height: 40px;
+  padding: 0 var(--am-space-3);
+  border-radius: var(--am-radius-md);
+  color: var(--am-text-muted);
+  font-size: var(--am-text-xs);
+  font-weight: var(--am-weight-semibold);
+  transition:
+    background-color var(--am-dur-fast) var(--am-ease-standard),
+    color var(--am-dur-fast) var(--am-ease-standard);
+}
+
+.quest-foot > button:hover,
+.quest-foot > div > button:not(.exit):hover {
+  background: rgba(255, 255, 255, 0.75);
+  color: var(--am-text);
+}
+
+.quest-foot > div {
+  display: flex;
+  align-items: center;
+  gap: var(--am-space-2);
+}
+
+.quest-foot .exit {
+  min-height: 40px;
+  padding: 0 var(--am-space-4);
+  border: 1px solid var(--quest-border);
+  border-radius: var(--am-radius-md);
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--am-text-soft);
+}
+
+.quest-foot .exit:hover {
+  border-color: var(--am-danger);
+  background: var(--am-danger-soft);
+  color: var(--am-danger);
+}
+
+.basic-info {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--am-space-4);
+}
+
+.basic-info label {
+  margin: 0;
+  color: var(--am-text-soft);
+  font-size: var(--am-text-sm);
+  font-weight: var(--am-weight-semibold);
+}
+
+.unit-row input {
+  min-width: 0;
+  background: var(--am-surface-muted);
+}
+
+.unit-row > span {
+  color: var(--am-text-muted);
+  font-size: var(--am-text-xs);
+  font-weight: var(--am-weight-semibold);
+}
+
+.bmi-card {
+  grid-column: 1 / -1;
+  border: 1px solid var(--quest-border);
+  border-radius: var(--am-radius-lg);
+}
+
+.quest > .quest-loader {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 680px);
+  min-height: 180px;
+  margin: auto;
+  padding: var(--am-space-8);
+  border: 1px solid var(--quest-border);
+  border-radius: var(--am-radius-2xl);
+  background: var(--am-surface);
+  box-shadow: 0 16px 48px rgba(10, 47, 39, 0.09);
+}
+
+.quest > .quest-loader p {
+  max-width: 52ch;
+  color: var(--am-text-soft);
+  line-height: var(--am-leading-normal);
+}
+
+.quest > .quest-loader .cta {
+  width: auto;
+  min-width: 140px;
+  margin-top: var(--am-space-3);
+}
+
+@media (max-width: 680px) {
+  .quest {
+    gap: var(--am-space-3);
+    padding: var(--am-space-3) var(--am-gutter) var(--am-space-5);
+  }
+
+  .quest::before {
+    height: 210px;
+  }
+
+  .quest-top {
+    min-height: 52px;
+  }
+
+  .quest-top > button {
+    flex-basis: 38px;
+    width: 38px;
+    height: 38px;
+  }
+
+  .quest-top strong {
+    font-size: var(--am-text-sm);
+  }
+
+  .xp-badge {
+    padding: 7px 9px;
+    font-size: var(--am-text-2xs);
+  }
+
+  .quest-hud {
+    gap: 7px;
+  }
+
+  .quest-hud .pill {
+    min-height: 28px;
+    padding: 4px 9px;
+    font-size: var(--am-text-2xs);
+  }
+
+  .quest > .track {
+    margin-top: 0;
+  }
+
+  .quest-stage {
+    padding: var(--am-space-5) var(--am-space-4);
+    border-radius: var(--am-radius-xl);
+  }
+
+  .quest-stage h2 {
+    margin-bottom: var(--am-space-4);
+    font-size: var(--am-text-xl);
+  }
+
+  .quest-options {
+    grid-template-columns: 1fr;
+    gap: var(--am-space-2);
+  }
+
+  .quest-opt {
+    min-height: 62px;
+  }
+
+  .quest-stage .cta {
+    width: 100%;
+  }
+
+  .quest-foot {
+    gap: var(--am-space-2);
+  }
+
+  .quest-foot > div {
+    gap: 2px;
+  }
+
+  .quest-foot > button,
+  .quest-foot > div > button {
+    padding-inline: var(--am-space-2);
+  }
+
+  .quest-foot .exit {
+    padding-inline: var(--am-space-3);
+  }
+
+  .basic-info {
+    grid-template-columns: 1fr;
+    gap: var(--am-space-3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quest *,
+  .quest *::before,
+  .quest *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+@keyframes quest-step-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Prakriti questionnaire alignment */
+.quest.prakriti {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--am-space-4);
+  padding-inline: max(var(--am-gutter), calc((100% - 1120px) / 2));
+}
+
+.quest.prakriti .quest-top,
+.quest.prakriti .quest-hud,
+.quest.prakriti > .track,
+.quest.prakriti .quest-stage,
+.quest.prakriti .quest-foot {
+  width: 100%;
+  max-width: 960px;
+  margin-inline: auto;
+}
+
+.quest.prakriti .quest-top {
+  flex: 0 0 auto;
+}
+
+.quest.prakriti .quest-top > div {
+  min-width: 0;
+}
+
+.quest.prakriti .quest-top strong,
+.quest.prakriti .quest-top small {
+  display: block;
+}
+
+.quest.prakriti .quest-hud {
+  flex-wrap: wrap;
+  padding-inline: 2px;
+}
+
+.quest.prakriti > .track {
+  flex: 0 0 auto;
+  margin-block: 0 var(--am-space-1);
+}
+
+.quest.prakriti .quest-stage {
+  flex: 0 0 auto;
+  min-height: 340px;
+  padding: clamp(var(--am-space-6), 4vw, var(--am-space-10));
+}
+
+.quest.prakriti .quest-stage h2 {
+  max-width: 58ch;
+  margin-bottom: var(--am-space-6);
+  text-wrap: pretty;
+}
+
+.quest.prakriti .quest-options {
+  align-items: stretch;
+  gap: var(--am-space-4);
+}
+
+.quest.prakriti .quest-opt {
+  min-width: 0;
+  min-height: 76px;
+  padding: var(--am-space-4);
+}
+
+.quest.prakriti .opt-copy {
+  flex: 1;
+}
+
+.quest.prakriti .quest-foot {
+  flex: 0 0 auto;
+  min-height: 50px;
+}
+
+@media (min-width: 1200px) {
+  .quest.prakriti .quest-stage {
+    min-height: 380px;
+  }
+}
+
+@media (max-width: 680px) {
+  .quest.prakriti {
+    gap: var(--am-space-3);
+    padding-inline: var(--am-gutter);
+  }
+
+  .quest.prakriti .quest-stage {
+    min-height: 0;
+    padding: var(--am-space-5) var(--am-space-4);
+  }
+
+  .quest.prakriti .quest-stage h2 {
+    margin-bottom: var(--am-space-4);
+  }
+
+  .quest.prakriti .quest-opt {
+    min-height: 62px;
+    padding: var(--am-space-3);
+  }
+
+  .quest.prakriti .quest-foot {
+    flex-wrap: wrap;
+  }
+}
+
+/* Medical questionnaire alignment */
+.quest.medical {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--am-space-4);
+  padding-inline: max(var(--am-gutter), calc((100% - 1120px) / 2));
+  --quest-border: rgba(13, 122, 111, 0.16);
+}
+
+.quest.medical .quest-top,
+.quest.medical .quest-hud,
+.quest.medical > .track,
+.quest.medical .quest-stage,
+.quest.medical .quest-foot {
+  width: 100%;
+  max-width: 960px;
+  margin-inline: auto;
+}
+
+.quest.medical .quest-top {
+  flex: 0 0 auto;
+}
+
+.quest.medical .quest-top > div {
+  min-width: 0;
+}
+
+.quest.medical .quest-top strong,
+.quest.medical .quest-top small {
+  display: block;
+}
+
+.quest.medical .xp-badge {
+  border-color: rgba(208, 237, 231, 0.32);
+  background: rgba(135, 209, 194, 0.17);
+  color: #e5fbf5;
+}
+
+.quest.medical .quest-hud {
+  flex-wrap: wrap;
+  padding-inline: 2px;
+}
+
+.quest.medical .quest-hud .pill {
+  border-color: rgba(13, 122, 111, 0.14);
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.quest.medical > .track {
+  flex: 0 0 auto;
+  margin-block: 0 var(--am-space-1);
+}
+
+.quest.medical .track-bar {
+  overflow: hidden;
+  border-radius: var(--am-radius-pill);
+}
+
+.quest.medical .track-bar i {
+  background-image: linear-gradient(90deg, #0d7a6f, #53b39e);
+}
+
+.quest.medical .quest-stage {
+  flex: 0 0 auto;
+  min-height: 340px;
+  padding: clamp(var(--am-space-6), 4vw, var(--am-space-10));
+  border-top: 3px solid var(--quest-accent);
+  box-shadow: 0 18px 48px rgba(7, 63, 60, 0.1);
+}
+
+.quest.medical .level-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border-radius: var(--am-radius-pill);
+}
+
+.quest.medical .quest-stage h2 {
+  max-width: 58ch;
+  margin-bottom: var(--am-space-6);
+  text-wrap: pretty;
+}
+
+.quest.medical .quest-options {
+  align-items: stretch;
+  gap: var(--am-space-4);
+}
+
+.quest.medical .quest-opt {
+  min-width: 0;
+  min-height: 76px;
+  padding: var(--am-space-4);
+}
+
+.quest.medical .opt-copy {
+  flex: 1;
+}
+
+.quest.medical .quest-opt:hover {
+  border-color: var(--quest-accent);
+  background: var(--quest-accent-soft);
+}
+
+.quest.medical .quest-opt.on {
+  border-color: var(--quest-accent);
+  background: var(--quest-accent-soft);
+}
+
+.quest.medical .quest-opt:focus-visible,
+.quest.medical .quest-stage .cta:focus-visible {
+  outline-color: var(--quest-accent);
+}
+
+.quest.medical .quest-foot {
+  flex: 0 0 auto;
+  min-height: 50px;
+}
+
+.quest.medical .quest-foot .exit {
+  border-color: var(--quest-border);
+}
+
+.quest.medical .quest-foot .exit:hover {
+  border-color: var(--am-danger);
+}
+
+.quest.medical .basic-info {
+  align-items: start;
+  gap: var(--am-space-5);
+}
+
+.quest.medical .basic-info label {
+  display: grid;
+  gap: var(--am-space-2);
+}
+
+.quest.medical .bmi-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--am-space-1);
+  padding: var(--am-space-4);
+}
+
+@media (min-width: 1200px) {
+  .quest.medical .quest-stage {
+    min-height: 380px;
+  }
+}
+
+@media (max-width: 900px) {
+  .quest.medical .quest-options {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .quest.medical {
+    gap: var(--am-space-3);
+    padding-inline: var(--am-gutter);
+  }
+
+  .quest.medical .quest-stage {
+    min-height: 0;
+    padding: var(--am-space-5) var(--am-space-4);
+  }
+
+  .quest.medical .quest-stage h2 {
+    margin-bottom: var(--am-space-4);
+  }
+
+  .quest.medical .quest-opt {
+    min-height: 62px;
+    padding: var(--am-space-3);
+  }
+
+  .quest.medical .quest-foot {
+    flex-wrap: wrap;
+  }
+}
+
+.auth-shell--assessment .quest {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.auth-shell--assessment .quest-top,
+.auth-shell--assessment .quest-hud,
+.auth-shell--assessment .quest > .track,
+.auth-shell--assessment .quest-foot {
+  flex: 0 0 auto;
+}
+
+.auth-shell--assessment .quest-stage,
+.auth-shell--assessment .quest.medical .quest-stage,
+.auth-shell--assessment .quest.prakriti .quest-stage {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.auth-shell--assessment .quest-stage textarea {
+  min-height: 100px;
+  max-height: 24vh;
+  resize: vertical;
+}
+
+@media (max-height: 760px) {
+  .auth-shell--assessment .quest {
+    gap: var(--am-space-2);
+    padding-top: var(--am-space-2);
+    padding-bottom: var(--am-space-2);
+  }
+
+  .auth-shell--assessment .quest-hud {
+    min-height: 30px;
+  }
+
+  .auth-shell--assessment .quest-stage,
+  .auth-shell--assessment .quest.medical .quest-stage {
+    padding: var(--am-space-4);
+  }
+
+  .auth-shell--assessment .quest-stage h2 {
+    margin-bottom: var(--am-space-3);
+  }
+
+  .auth-shell--assessment .quest-options,
+  .auth-shell--assessment .quest.medical .quest-options {
+    gap: var(--am-space-2);
+  }
+
+  .auth-shell--assessment .quest-opt,
+  .auth-shell--assessment .quest.medical .quest-opt {
+    min-height: 52px;
+    padding: var(--am-space-2) var(--am-space-3);
+  }
+
+  .auth-shell--assessment .quest-stage .cta {
+    min-height: 42px;
+    margin-top: var(--am-space-3);
+  }
+}
+
+@media (max-width: 680px) {
+  .auth-shell--assessment .quest {
+    gap: var(--am-space-2);
+    padding: var(--am-space-2) var(--am-gutter) var(--am-space-2);
+  }
+
+  .auth-shell--assessment .quest-top {
+    min-height: 44px;
+  }
+
+  .auth-shell--assessment .quest-hud {
+    min-height: 28px;
+  }
+
+  .auth-shell--assessment .quest-stage,
+  .auth-shell--assessment .quest.medical .quest-stage {
+    padding: var(--am-space-3);
+  }
+
+  .auth-shell--assessment .quest-stage h2 {
+    margin-bottom: var(--am-space-3);
+    font-size: var(--am-text-lg);
+  }
+
+  .auth-shell--assessment .quest-options,
+  .auth-shell--assessment .quest.medical .quest-options {
+    gap: var(--am-space-2);
+  }
+
+  .auth-shell--assessment .quest-opt,
+  .auth-shell--assessment .quest.medical .quest-opt {
+    min-height: 48px;
+    padding: var(--am-space-2);
+  }
+
+  .auth-shell--assessment .quest-foot,
+  .auth-shell--assessment .quest.medical .quest-foot {
+    min-height: 38px;
+  }
+
+  .auth-shell--assessment .quest-foot > button,
+  .auth-shell--assessment .quest-foot > div > button {
+    min-height: 34px;
+  }
+}
+
+/* ==========================================================================
+   T124: unified premium question UI (prakriti + medical). Every question
+   uses the same option card: fixed row height, aligned number / check,
+   clean wrapping. Green #105343, gold hairlines, ivory surfaces.
+   Specificity is raised with section.quest.quest so it wins over older blocks.
+   ========================================================================== */
+section.quest.quest {
+  --q-green: #105343;
+  --q-gold: #e4c47a;
+  --q-ivory: #fffdf8;
+  --q-line: rgba(16, 83, 67, 0.14);
+  gap: 12px;
+  font-family: var(--am-font-body, "Gilroy", sans-serif);
+}
+
+section.quest.quest > .track .track-bar {
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 253, 248, 0.18);
+}
+
+section.quest.quest > .track .track-bar i {
+  background: linear-gradient(90deg, var(--q-gold), #f3dfa6);
+  background-image: linear-gradient(90deg, var(--q-gold), #f3dfa6);
+  transition: width 320ms var(--am-ease-out, ease);
+}
+
+section.quest.quest .quest-stage {
+  flex: 0 0 auto;
+  min-height: 0;
+  padding: 22px 26px 24px;
+  border: 1px solid rgba(228, 196, 122, 0.45);
+  border-top: 2px solid var(--q-gold);
+  border-radius: 18px;
+  background: var(--q-ivory);
+  box-shadow: 0 14px 36px rgba(10, 47, 39, 0.08);
+}
+
+section.quest.quest .level-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 0;
+  margin: 0 0 8px;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  color: #a4842f;
+  font-family: var(--am-font-display, "Satoshi", sans-serif);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+section.quest.quest .quest-stage h2 {
+  max-width: 60ch;
+  margin: 0 0 4px;
+  color: var(--q-green);
+  font-family: var(--am-font-display, "Satoshi", sans-serif);
+  font-size: clamp(1.15rem, 0.95rem + 0.8vw, 1.5rem);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+
+section.quest.quest .multi-hint {
+  display: block;
+  min-height: 0;
+  margin: 0 0 14px;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  color: #5d6f69;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+section.quest.quest .quest-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 10px;
+}
+
+section.quest.quest .quest-opt {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) 22px;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  min-height: 60px;
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--q-line);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: none;
+  color: var(--q-green);
+  text-align: left;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+section.quest.quest .quest-opt.has-img {
+  grid-template-columns: 26px 44px minmax(0, 1fr) 22px;
+}
+
+section.quest.quest .quest-opt:hover {
+  border-color: var(--q-gold);
+  background: #fffaf0;
+  box-shadow: 0 4px 14px rgba(16, 83, 67, 0.06);
+}
+
+section.quest.quest .quest-opt.on {
+  border-color: var(--q-green);
+  background: rgba(16, 83, 67, 0.05);
+  box-shadow: inset 0 0 0 1px var(--q-green);
+}
+
+section.quest.quest .quest-opt:focus-visible {
+  outline: 2px solid var(--q-gold);
+  outline-offset: 2px;
+}
+
+section.quest.quest .quest-opt .opt-num {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  margin: 0;
+  border: 1px solid rgba(228, 196, 122, 0.7);
+  border-radius: 50%;
+  background: var(--q-ivory);
+  color: var(--q-green);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+section.quest.quest .quest-opt.on .opt-num {
+  border-color: var(--q-green);
+  background: var(--q-green);
+  color: var(--q-ivory);
+}
+
+section.quest.quest .quest-opt img {
+  width: 40px;
+  height: 40px;
+  margin: 0;
+  border-radius: 10px;
+  background: var(--q-ivory);
+  object-fit: contain;
+}
+
+section.quest.quest .opt-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+section.quest.quest .opt-copy strong {
+  color: var(--q-green);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+section.quest.quest .opt-copy small {
+  color: #5d6f69;
+  font-size: 12.5px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+section.quest.quest .opt-check {
+  position: static;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--q-line);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--q-green);
+  transform: none;
+}
+
+section.quest.quest .quest-opt.on .opt-check {
+  border-color: var(--q-gold);
+  background: var(--q-gold);
+}
+
+section.quest.quest .quest-stage .cta {
+  min-height: 44px;
+  margin-top: 14px;
+  padding: 0 22px;
+  border-radius: 12px;
+  background: var(--q-green);
+  color: var(--q-ivory);
+  font-weight: 700;
+  box-shadow: none;
+}
+
+section.quest.quest .quest-stage .cta:disabled {
+  background: rgba(16, 83, 67, 0.35);
+}
+
+section.quest.quest .quest-foot {
+  min-height: 0;
+}
+
+section.quest.quest .quest-foot > button,
+section.quest.quest .quest-foot > div > button {
+  min-height: 44px;
+}
+
+@media (max-width: 720px) {
+  section.quest.quest .quest-options {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 680px) {
+  section.quest.quest .quest-stage {
+    padding: 16px 14px 18px;
+    scrollbar-gutter: auto;
+  }
+
+  section.quest.quest .quest-opt {
+    gap: 10px;
+    min-height: 56px;
+    padding: 8px 12px;
+  }
+
+  section.quest.quest .opt-copy strong {
+    font-size: 14.5px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  section.quest.quest .quest-opt,
+  section.quest.quest > .track .track-bar i {
+    transition: none;
+  }
+}
+
+/* T124: in the fixed-height assessment shell the card hugs its content
+   (no empty ivory slab) but can still shrink and scroll on short screens. */
+.auth-shell--assessment section.quest.quest .quest-stage,
+section.quest.quest .quest-stage {
+  flex: 0 1 auto;
+  scrollbar-gutter: auto;
+}
+
+section.quest.quest .quest-opt.has-img img {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  object-position: top;
+}
+
+/* ==========================================================================
+   T125: game journey layer (sound toggle, level map, milestones, motion,
+   completion celebration). Shared by prakriti and medical modes.
+   ========================================================================== */
+section.quest.quest .quest-top {
+  gap: 10px;
+}
+
+section.quest.quest .quest-mute {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-left: auto;
+  border: 1px solid rgba(228, 196, 122, 0.45);
+  border-radius: 50%;
+  background: rgba(255, 253, 248, 0.08);
+  color: var(--q-gold);
+  cursor: pointer;
+}
+
+section.quest.quest .quest-mute[aria-pressed="false"] {
+  color: rgba(255, 253, 248, 0.6);
+}
+
+section.quest.quest .quest-mute:focus-visible {
+  outline: 2px solid var(--q-gold);
+  outline-offset: 2px;
+}
+
+section.quest.quest .xp-badge {
+  border-color: rgba(228, 196, 122, 0.55);
+  background: rgba(228, 196, 122, 0.16);
+  color: #f6e4b4;
+  animation: q-pop 420ms var(--am-ease-out, ease) both;
+}
+
+section.quest.quest .quest-hud .pill.pulse {
+  animation: q-pill-pulse 520ms ease both;
+}
+
+section.quest.quest > .track {
+  display: grid;
+  gap: 8px;
+}
+
+section.quest.quest .track-head {
+  display: flex;
+  justify-content: space-between;
+  color: rgba(255, 253, 248, 0.92);
+  font-family: var(--am-font-display, "Satoshi", sans-serif);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+section.quest.quest .track-head span:last-child {
+  color: var(--q-gold);
+}
+
+section.quest.quest > .track .track-bar i {
+  position: relative;
+  overflow: hidden;
+  transition: width 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+section.quest.quest > .track .track-bar i::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+  content: "";
+  animation: q-shimmer 1.8s ease-in-out infinite;
+}
+
+/* Level map: one node per level, joined by a path. */
+section.quest.quest .quest-map {
+  display: flex;
+  align-items: center;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+section.quest.quest .quest-map li {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+section.quest.quest .quest-map li + li::before {
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  right: 50%;
+  width: 100%;
+  height: 2px;
+  background: rgba(255, 253, 248, 0.18);
+  content: "";
+  transform: translateY(-50%);
+}
+
+section.quest.quest .quest-map li.done + li::before,
+section.quest.quest .quest-map li.done::before {
+  background: var(--q-gold);
+}
+
+section.quest.quest .quest-map span {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid rgba(255, 253, 248, 0.35);
+  border-radius: 50%;
+  background: #0f4a3c;
+  color: var(--q-green);
+  transition:
+    background-color 300ms ease,
+    border-color 300ms ease,
+    transform 300ms ease;
+}
+
+section.quest.quest .quest-map li.done span {
+  border-color: var(--q-gold);
+  background: var(--q-gold);
+  animation: q-pop 380ms ease both;
+}
+
+section.quest.quest .quest-map li.here span {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--q-gold);
+  background: var(--q-ivory);
+  box-shadow: 0 0 0 0 rgba(228, 196, 122, 0.6);
+  animation: q-here 1.6s ease-out infinite;
+}
+
+section.quest.quest .quest-map.dense span {
+  width: 9px;
+  height: 9px;
+  border-width: 1px;
+}
+
+section.quest.quest .quest-map.dense span svg {
+  display: none;
+}
+
+section.quest.quest .quest-map.dense li.here span {
+  width: 13px;
+  height: 13px;
+}
+
+/* Milestone toast */
+section.quest.quest .quest-milestone {
+  position: fixed;
+  z-index: 60;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100vw - 32px);
+  padding: 10px 16px 10px 10px;
+  border: 1px solid var(--q-gold);
+  border-radius: 999px;
+  background: var(--q-green);
+  box-shadow: 0 14px 34px rgba(10, 47, 39, 0.28);
+  color: var(--q-ivory);
+  font-size: 14px;
+  font-weight: 600;
+  transform: translateX(-50%);
+  animation: q-toast 2.2s ease both;
+}
+
+section.quest.quest .quest-milestone strong {
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  height: 30px;
+  border-radius: 999px;
+  background: var(--q-gold);
+  color: var(--q-green);
+  font-size: 13px;
+}
+
+/* Card slide-in between questions */
+section.quest.quest .quest-stage {
+  animation: q-card-in 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Option press bounce + selection burst */
+section.quest.quest .quest-opt {
+  position: relative;
+  overflow: visible;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 140ms ease;
+}
+
+section.quest.quest .quest-opt:active {
+  transform: scale(0.97);
+}
+
+section.quest.quest .quest-opt.on {
+  animation: q-bounce 360ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+section.quest.quest .quest-opt.on::after {
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  box-shadow: 0 0 0 0 rgba(228, 196, 122, 0.75);
+  content: "";
+  pointer-events: none;
+  animation: q-burst 620ms ease-out both;
+}
+
+section.quest.quest .quest-opt.on .opt-check {
+  animation: q-pop 320ms ease both;
+}
+
+/* Completion celebration */
+.quest-celebrate {
+  position: fixed;
+  z-index: 80;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(10, 47, 39, 0.42);
+  animation: q-fade 240ms ease both;
+}
+
+.quest-confetti {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.quest-confetti i {
+  position: absolute;
+  top: -12px;
+  width: 7px;
+  height: 12px;
+  border-radius: 2px;
+  background: #e4c47a;
+  animation: q-confetti 1.4s cubic-bezier(0.3, 0.6, 0.5, 1) both;
+}
+
+.quest-confetti i.green {
+  background: #fffdf8;
+}
+
+.quest-celebrate__card {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  width: min(320px, 100%);
+  padding: 22px 20px 20px;
+  border: 1px solid #e4c47a;
+  border-top: 3px solid #e4c47a;
+  border-radius: 18px;
+  background: #fffdf8;
+  box-shadow: 0 24px 60px rgba(10, 47, 39, 0.3);
+  text-align: center;
+  animation: q-celebrate-in 520ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.quest-celebrate__badge {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 4px;
+  border-radius: 50%;
+  background: #105343;
+  box-shadow: 0 0 0 4px rgba(228, 196, 122, 0.55);
+  color: #e4c47a;
+}
+
+.quest-celebrate__card strong {
+  color: #105343;
+  font-family: var(--am-font-display, "Satoshi", sans-serif);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.quest-celebrate__card small {
+  color: #5d6f69;
+  font-size: 13px;
+}
+
+@keyframes q-card-in {
+  from { opacity: 0; transform: translateX(28px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes q-bounce {
+  0% { transform: scale(0.96); }
+  60% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+@keyframes q-burst {
+  from { box-shadow: 0 0 0 0 rgba(228, 196, 122, 0.75); }
+  to { box-shadow: 0 0 0 10px rgba(228, 196, 122, 0); }
+}
+
+@keyframes q-pop {
+  0% { transform: scale(0.6); }
+  70% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+@keyframes q-pill-pulse {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.14); box-shadow: 0 0 0 4px rgba(228, 196, 122, 0.45); }
+  100% { transform: scale(1); }
+}
+
+@keyframes q-here {
+  0% { box-shadow: 0 0 0 0 rgba(228, 196, 122, 0.6); }
+  100% { box-shadow: 0 0 0 9px rgba(228, 196, 122, 0); }
+}
+
+@keyframes q-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes q-toast {
+  0% { opacity: 0; transform: translate(-50%, -12px) scale(0.96); }
+  12%, 85% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -8px); }
+}
+
+@keyframes q-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes q-celebrate-in {
+  from { opacity: 0; transform: scale(0.85) translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes q-confetti {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0deg); }
+  100% { opacity: 0.2; transform: translate(var(--drift, 0), 105vh) rotate(calc(var(--rot, 0deg) + 540deg)); }
+}
+
+@media (max-width: 680px) {
+  section.quest.quest .quest-map span {
+    width: 12px;
+    height: 12px;
+  }
+
+  section.quest.quest .quest-map span svg {
+    display: none;
+  }
+
+  section.quest.quest .quest-map li.here span {
+    width: 16px;
+    height: 16px;
+  }
+
+  section.quest.quest .quest-milestone {
+    font-size: 13px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  section.quest.quest .quest-stage,
+  section.quest.quest .quest-opt.on,
+  section.quest.quest .quest-opt.on::after,
+  section.quest.quest .quest-opt.on .opt-check,
+  section.quest.quest .quest-hud .pill.pulse,
+  section.quest.quest .xp-badge,
+  section.quest.quest .quest-map span,
+  section.quest.quest > .track .track-bar i::after,
+  section.quest.quest .quest-milestone,
+  .quest-celebrate,
+  .quest-celebrate__card {
+    animation: none;
+  }
+
+  section.quest.quest .quest-opt:active {
+    transform: none;
+  }
+
+  .quest-confetti {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   T126: luxury stage. Deep green immersive backdrop with mandala linework,
+   gold-foil ivory card, medallion answers, element chips, beaded trail.
+   ========================================================================== */
+section.quest.quest {
+  --q-deep: #0a3a2f;
+  --q-deeper: #062a22;
+  --q-foil: linear-gradient(135deg, #f3dfa8 0%, #e4c47a 30%, #b8913a 55%, #f3dfa8 80%, #c9a24f 100%);
+  position: relative;
+  overflow: hidden;
+  min-height: 100%;
+  background:
+    radial-gradient(60% 45% at 85% 0%, rgba(228, 196, 122, 0.22), transparent 70%),
+    radial-gradient(50% 40% at 0% 100%, rgba(228, 196, 122, 0.12), transparent 70%),
+    linear-gradient(160deg, #105343 0%, var(--q-deep) 55%, var(--q-deeper) 100%);
+}
+
+section.quest.quest::before {
+  display: none;
+}
+
+section.quest.quest > :not(.quest-backdrop, .quest-celebrate, .quest-milestone) {
+  position: relative;
+  z-index: 1;
+}
+
+section.quest.quest > .quest-backdrop {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.quest-backdrop .quest-mandala {
+  position: absolute;
+  width: 520px;
+  height: 520px;
+  color: #e4c47a;
+  opacity: 0.09;
+}
+
+.quest-backdrop .quest-mandala:first-child {
+  top: -170px;
+  right: -150px;
+  animation: q-spin 120s linear infinite;
+}
+
+.quest-backdrop .quest-mandala:last-child {
+  bottom: -220px;
+  left: -200px;
+  width: 460px;
+  height: 460px;
+  opacity: 0.06;
+  animation: q-spin 160s linear infinite reverse;
+}
+
+/* Header */
+section.quest.quest .quest-top strong {
+  color: #fffdf8;
+  font-family: var(--am-font-display, "Satoshi", sans-serif);
+  letter-spacing: -0.01em;
+}
+
+section.quest.quest .quest-top small {
+  color: #e4c47a;
+  letter-spacing: 0.04em;
+}
+
+section.quest.quest .quest-top > button:first-child {
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(228, 196, 122, 0.4);
+  border-radius: 50%;
+  background: rgba(255, 253, 248, 0.06);
+  color: #fffdf8;
+  backdrop-filter: blur(6px);
+}
+
+section.quest.quest .xp-badge {
+  min-height: 34px;
+  padding: 0 14px;
+  border: 0;
+  background: var(--q-foil);
+  box-shadow: 0 6px 18px rgba(184, 145, 58, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  color: #3d2f0c;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+/* Element chips */
+section.quest.quest .quest-hud {
+  gap: 8px;
+}
+
+section.quest.quest .quest-hud .pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 12px 0 5px;
+  border: 1px solid rgba(228, 196, 122, 0.28);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 253, 248, 0.12), rgba(255, 253, 248, 0.04));
+  color: #fffdf8;
+  font-size: 12.5px;
+  font-weight: 600;
+  backdrop-filter: blur(6px);
+}
+
+section.quest.quest.medical .quest-hud .pill {
+  padding-left: 12px;
+}
+
+section.quest.quest .quest-hud .pill b {
+  min-width: 18px;
+  color: #e4c47a;
+  font-weight: 800;
+  text-align: right;
+}
+
+section.quest.quest .quest-hud .pill.lead {
+  border-color: transparent;
+  background: linear-gradient(#0d4537, #0d4537) padding-box, var(--q-foil) border-box;
+  border: 1px solid transparent;
+  box-shadow: 0 0 18px rgba(228, 196, 122, 0.3);
+}
+
+section.quest.quest .pill-ico {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  color: #fffdf8;
+}
+
+section.quest.quest .pill-ico svg {
+  width: 13px;
+  height: 13px;
+}
+
+section.quest.quest .pill-ico.vata { background: linear-gradient(135deg, #7fb3c8, #3e7f99); }
+section.quest.quest .pill-ico.pitta { background: linear-gradient(135deg, #f0a35c, #c2551f); }
+section.quest.quest .pill-ico.kapha { background: linear-gradient(135deg, #7cbf8e, #2f7a4e); }
+
+section.quest.quest .quest-hud .streak {
+  min-height: 32px;
+  padding: 0 11px;
+  border-radius: 999px;
+  background: var(--q-foil);
+  color: #3d2f0c;
+  font-weight: 800;
+}
+
+/* Track + beaded trail */
+section.quest.quest .track-head span:first-child {
+  color: rgba(255, 253, 248, 0.85);
+}
+
+section.quest.quest > .track .track-bar {
+  display: none;
+}
+
+section.quest.quest .quest-map {
+  position: relative;
+  height: 30px;
+  margin: 0;
+}
+
+section.quest.quest .quest-map li + li::before {
+  height: 0;
+  border-top: 2px dotted rgba(228, 196, 122, 0.35);
+  background: none;
+}
+
+section.quest.quest .quest-map li.done + li::before,
+section.quest.quest .quest-map li.done::before {
+  height: 2px;
+  border: 0;
+  background: linear-gradient(90deg, #b8913a, #f3dfa8);
+  box-shadow: 0 0 8px rgba(228, 196, 122, 0.6);
+}
+
+section.quest.quest .quest-map span {
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid rgba(228, 196, 122, 0.5);
+  background: var(--q-deep);
+  color: #3d2f0c;
+}
+
+section.quest.quest .quest-map li.done span {
+  width: 16px;
+  height: 16px;
+  border: 0;
+  background: var(--q-foil);
+  box-shadow: 0 0 10px rgba(228, 196, 122, 0.55);
+}
+
+section.quest.quest .quest-map li.here span {
+  width: 30px;
+  height: 30px;
+  border: 0;
+  background: radial-gradient(circle at 35% 30%, #fffdf8, #f3dfa8 60%, #c9a24f);
+  color: #105343;
+  box-shadow: 0 0 0 3px rgba(228, 196, 122, 0.25), 0 0 22px rgba(228, 196, 122, 0.65);
+}
+
+section.quest.quest .quest-map li.here span svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+}
+
+section.quest.quest .quest-map.dense li.here span {
+  width: 22px;
+  height: 22px;
+}
+
+section.quest.quest .quest-map.dense li.here span svg {
+  display: block;
+  width: 14px;
+  height: 14px;
+}
+
+/* Gold-foil ivory card */
+section.quest.quest .quest-stage {
+  padding: 24px 28px 26px;
+  border: 1.5px solid transparent;
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, #fffefa, #fdf8ec) padding-box,
+    var(--q-foil) border-box;
+  box-shadow:
+    0 2px 0 rgba(255, 255, 255, 0.5) inset,
+    0 30px 60px -20px rgba(0, 0, 0, 0.45),
+    0 12px 24px -12px rgba(6, 42, 34, 0.5),
+    0 0 0 6px rgba(228, 196, 122, 0.06);
+}
+
+section.quest.quest .level-badge {
+  gap: 10px;
+  margin-bottom: 10px;
+  color: #a8822e;
+  letter-spacing: 0.2em;
+}
+
+section.quest.quest .quest-ornament {
+  display: inline-flex;
+  color: #c9a24f;
+}
+
+section.quest.quest .quest-ornament svg {
+  width: 60px;
+  height: 8px;
+}
+
+section.quest.quest .quest-stage h2 {
+  margin-bottom: 6px;
+  color: #0b3b30;
+  font-size: clamp(1.3rem, 1rem + 1.1vw, 1.85rem);
+  font-weight: 800;
+  line-height: 1.18;
+  letter-spacing: -0.028em;
+}
+
+section.quest.quest .multi-hint {
+  margin-bottom: 16px;
+  color: #7a6a43;
+  font-style: italic;
+}
+
+/* Answer cards */
+section.quest.quest .quest-opt {
+  min-height: 64px;
+  padding: 10px 14px 10px 12px;
+  border: 1px solid rgba(184, 145, 58, 0.28);
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff, #fbf6e9);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 2px rgba(16, 83, 67, 0.06),
+    0 6px 14px -8px rgba(16, 83, 67, 0.18);
+}
+
+section.quest.quest .quest-opt:hover {
+  border-color: #e4c47a;
+  background: linear-gradient(180deg, #ffffff, #fbf3dc);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 0 0 3px rgba(228, 196, 122, 0.22),
+    0 12px 24px -10px rgba(16, 83, 67, 0.28);
+  transform: translateY(-2px);
+}
+
+section.quest.quest .quest-opt:active {
+  transform: translateY(0) scale(0.98);
+}
+
+section.quest.quest .quest-opt .opt-num {
+  width: 30px;
+  height: 30px;
+  border: 0;
+  background:
+    radial-gradient(circle at 35% 30%, #fffdf8, #fbf3dc) padding-box,
+    var(--q-foil) border-box;
+  border: 1.5px solid transparent;
+  color: #105343;
+  font-family: var(--am-font-display, "Satoshi", sans-serif);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+section.quest.quest .quest-opt {
+  grid-template-columns: 30px minmax(0, 1fr) 26px;
+}
+
+section.quest.quest .quest-opt.has-img {
+  grid-template-columns: 30px 46px minmax(0, 1fr) 26px;
+}
+
+section.quest.quest .quest-opt.has-img img {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: radial-gradient(circle, #fffdf8, #f3e7c6);
+  box-shadow: inset 0 0 0 1px rgba(184, 145, 58, 0.3);
+}
+
+section.quest.quest .opt-copy strong {
+  color: #0b3b30;
+  font-size: 15.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+section.quest.quest .opt-copy small {
+  color: #6b7a74;
+}
+
+section.quest.quest .opt-check {
+  width: 26px;
+  height: 26px;
+  border: 1.5px solid rgba(184, 145, 58, 0.35);
+  background: transparent;
+}
+
+section.quest.quest .quest-opt.on {
+  border-color: transparent;
+  background:
+    linear-gradient(160deg, #146350, #0b3b30) padding-box,
+    var(--q-foil) border-box;
+  border: 1px solid transparent;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 14px 28px -12px rgba(6, 42, 34, 0.65),
+    0 0 0 3px rgba(228, 196, 122, 0.25);
+}
+
+section.quest.quest .quest-opt.on .opt-copy strong {
+  color: #fffdf8;
+}
+
+section.quest.quest .quest-opt.on .opt-copy small {
+  color: rgba(243, 223, 168, 0.85);
+}
+
+section.quest.quest .quest-opt.on .opt-num {
+  background: var(--q-foil);
+  border-color: transparent;
+  color: #3d2f0c;
+}
+
+section.quest.quest .quest-opt.on .opt-check {
+  border: 0;
+  background: var(--q-foil);
+  box-shadow: 0 0 12px rgba(228, 196, 122, 0.7);
+  color: #0b3b30;
+}
+
+/* Buttons */
+section.quest.quest .quest-stage .cta {
+  position: relative;
+  overflow: hidden;
+  min-height: 48px;
+  padding: 0 26px;
+  border: 1px solid rgba(228, 196, 122, 0.6);
+  border-radius: 14px;
+  background: linear-gradient(160deg, #17684f, #0b3b30);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 12px 24px -10px rgba(6, 42, 34, 0.6);
+  color: #f3dfa8;
+  letter-spacing: 0.02em;
+}
+
+section.quest.quest .quest-stage .cta::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(243, 223, 168, 0.45) 50%, transparent 70%);
+  content: "";
+  transform: translateX(-120%);
+  animation: q-sheen 3.2s ease-in-out infinite;
+}
+
+section.quest.quest .quest-stage .cta:active:not(:disabled) {
+  transform: translateY(1px) scale(0.99);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+section.quest.quest .quest-stage .cta:disabled {
+  border-color: rgba(184, 145, 58, 0.25);
+  background: linear-gradient(160deg, #c9d3cf, #b5c2bd);
+  box-shadow: none;
+  color: #f4f1e6;
+}
+
+section.quest.quest .quest-stage .cta:disabled::after {
+  display: none;
+}
+
+section.quest.quest .quest-foot > button,
+section.quest.quest .quest-foot > div > button {
+  border-radius: 12px;
+  color: rgba(255, 253, 248, 0.85);
+}
+
+section.quest.quest .quest-foot .exit {
+  border: 1px solid rgba(228, 196, 122, 0.45);
+  background: rgba(255, 253, 248, 0.06);
+  color: #f3dfa8;
+}
+
+section.quest.quest .quest-mute {
+  border-color: rgba(228, 196, 122, 0.4);
+}
+
+/* Milestone toast */
+section.quest.quest .quest-milestone {
+  border: 1px solid transparent;
+  background: linear-gradient(160deg, #146350, #0b3b30) padding-box, var(--q-foil) border-box;
+}
+
+section.quest.quest .quest-milestone strong {
+  background: var(--q-foil);
+  color: #3d2f0c;
+}
+
+/* Completion medallion */
+.quest-celebrate {
+  background: radial-gradient(circle at 50% 45%, rgba(10, 58, 47, 0.55), rgba(6, 42, 34, 0.85));
+  backdrop-filter: blur(4px);
+}
+
+.quest-celebrate__card {
+  gap: 4px;
+  width: min(340px, 100%);
+  padding: 26px 22px 22px;
+  border: 1.5px solid transparent;
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, #fffefa, #fbf3dc) padding-box,
+    linear-gradient(135deg, #f3dfa8, #e4c47a 30%, #b8913a 55%, #f3dfa8 80%, #c9a24f) border-box;
+}
+
+.quest-celebrate__badge {
+  position: relative;
+  width: 84px;
+  height: 84px;
+  margin: -64px 0 6px;
+  border-radius: 50%;
+  background: none;
+  box-shadow: none;
+}
+
+.quest-celebrate__rays {
+  position: absolute;
+  inset: -18px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(rgba(228, 196, 122, 0.55) 0 6deg, transparent 6deg 18deg);
+  mask: radial-gradient(circle, transparent 46%, #000 47%, #000 66%, transparent 70%);
+  -webkit-mask: radial-gradient(circle, transparent 46%, #000 47%, #000 66%, transparent 70%);
+  animation: q-spin 14s linear infinite;
+}
+
+.quest-celebrate__medal {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff6d8, #e4c47a 45%, #a8822e 100%);
+  box-shadow:
+    inset 0 0 0 4px rgba(255, 253, 248, 0.5),
+    inset 0 -6px 12px rgba(120, 85, 20, 0.35),
+    0 10px 30px rgba(184, 145, 58, 0.55);
+  color: #105343;
+  animation: q-medal 900ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.quest-celebrate__medal svg {
+  width: 42px;
+  height: 42px;
+}
+
+.quest-celebrate__card .quest-eyebrow {
+  color: #a8822e;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+}
+
+.quest-celebrate__card strong {
+  color: #0b3b30;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+@keyframes q-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes q-sheen {
+  0%, 55% { transform: translateX(-120%); }
+  100% { transform: translateX(120%); }
+}
+
+@keyframes q-medal {
+  0% { opacity: 0; transform: scale(0.3) rotateY(180deg); }
+  100% { opacity: 1; transform: none; }
+}
+
+@media (max-width: 680px) {
+  section.quest.quest .quest-stage {
+    padding: 18px 14px 18px;
+    border-radius: 20px;
+  }
+
+  section.quest.quest .quest-opt {
+    min-height: 58px;
+    padding: 8px 10px;
+  }
+
+  section.quest.quest .quest-opt.has-img {
+    grid-template-columns: 30px 42px minmax(0, 1fr) 26px;
+  }
+
+  section.quest.quest .quest-opt.has-img img {
+    width: 42px;
+    height: 42px;
+  }
+
+  section.quest.quest .quest-map li.here span {
+    width: 26px;
+    height: 26px;
+  }
+
+  section.quest.quest .quest-map li.done span {
+    width: 12px;
+    height: 12px;
+  }
+
+  .quest-backdrop .quest-mandala:first-child {
+    width: 360px;
+    height: 360px;
+    top: -120px;
+    right: -140px;
+  }
+}
+
+@media (max-width: 360px) {
+  section.quest.quest .quest-hud .pill {
+    padding-right: 9px;
+    font-size: 11.5px;
+  }
+
+  section.quest.quest .quest-stage h2 {
+    font-size: 1.2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quest-backdrop .quest-mandala,
+  section.quest.quest .quest-stage .cta::after,
+  .quest-celebrate__rays,
+  .quest-celebrate__medal {
+    animation: none;
+  }
+
+  section.quest.quest .quest-opt:hover {
+    transform: none;
+  }
+}
+
+/* T126 polish */
+section.quest.quest .xp-badge,
+section.quest.quest .quest-hud .streak {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+section.quest.quest .quest-hud {
+  flex-wrap: nowrap;
+}
+
+section.quest.quest .quest-hud .pill.lead {
+  outline: 0;
+  box-shadow: 0 0 18px rgba(228, 196, 122, 0.3);
+}
+
+@media (max-width: 430px) {
+  section.quest.quest .quest-hud {
+    gap: 5px;
+  }
+
+  section.quest.quest .quest-hud .pill {
+    gap: 4px;
+    min-height: 30px;
+    padding: 0 8px 0 4px;
+    font-size: 11.5px;
+  }
+
+  section.quest.quest .quest-hud .pill b {
+    min-width: 0;
+    margin-left: 2px;
+  }
+
+  section.quest.quest .pill-ico {
+    width: 20px;
+    height: 20px;
+  }
+
+  section.quest.quest .quest-hud .streak {
+    min-height: 30px;
+    padding: 0 8px;
+    font-size: 11.5px;
+  }
+}

@@ -49,12 +49,12 @@
   }
 
   .text-back {
-    padding-right: 0;
+    padding-right: var(--am-space-4);
   }
 
   .catalog-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(172px, 1fr));
+    gap: 8px;
   }
 
   .pcard-img {
@@ -1087,10 +1087,6 @@
 }
 
 @media (min-width: 1200px) {
-  .catalog-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
   .home-rail {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }

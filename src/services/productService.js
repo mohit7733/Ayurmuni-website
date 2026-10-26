@@ -19,6 +19,7 @@ export const getProducts = async (params = {}) => {
     'health_category_id',
     'health_disease_id',
     'brand_name_id',
+    'category_id',
     'variant_id',
   ].forEach((key) => appendQueryParam(query, key, params[key]));
   const qs = query.toString();

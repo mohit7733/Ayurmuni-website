@@ -1,200 +1,362 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import AppShell from '../components/AppShell';
-import { formatRupee } from '../home/catalog';
 import {
-  formatTransactionDate,
-  getStatusColor,
-  getStatusDetailLabel,
-  mapTransactionIcon,
-  transactionIconGlyph,
-} from '../profile/transactions';
+  CalendarClock,
+  ChevronRight,
+  CreditCard,
+  HelpCircle,
+  Package,
+  ReceiptText,
+  RotateCcw,
+  Stethoscope,
+  Wallet,
+} from 'lucide-react';
+import AppShell from '../components/AppShell';
+import { Button } from '../components/ui';
+import {
+  ActionStack,
+  DetailCard,
+  DetailEmpty,
+  DetailHero,
+  DetailLayout,
+  DetailPage,
+  DetailSkeleton,
+  DetailTop,
+  InfoGrid,
+  MetaChip,
+  StatusPill,
+  Timeline,
+} from '../components/detail/Detail';
+import { formatRupee } from '../home/catalog';
+import { formatEventType, getStatusDetailLabel } from '../profile/transactions';
+import { getCustomerPaymentHistory } from '../services/orderService';
 import { requireAuth } from '../services/guestAuth';
 
-const DetailRow = ({ label, value }) => {
-  if (value === undefined || value === null || value === '') return null;
-  return (
-    <div className="txn-detail-row">
-      <span>{label}</span>
-      <strong>{String(value)}</strong>
-    </div>
-  );
+const LOOKUP_PAGES = 5;
+
+const when = (value) => {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 };
+
+const words = (value) => {
+  const text = String(value ?? '').replace(/_/g, ' ').trim();
+  return text ? text.charAt(0).toUpperCase() + text.slice(1) : '';
+};
+
+const listOf = (res) => {
+  const data = res?.data;
+  if (Array.isArray(data)) return { list: data, hasNext: false };
+  return { list: Array.isArray(data?.results) ? data.results : [], hasNext: Boolean(data?.next) };
+};
+
+const methodIcon = (txn) => {
+  const method = String(txn?.payment_method ?? '').toLowerCase();
+  if (txn?.entry_type === 'credit') return RotateCcw;
+  if (method.includes('card')) return CreditCard;
+  if (method.includes('upi') || method.includes('wallet') || method.includes('cash')) return Wallet;
+  return ReceiptText;
+};
+
+function buildRefundTimeline(txn) {
+  const paidAt = txn.consultation_payment?.paid_at || txn.order_payment?.paid_at;
+  const refund = txn.refund_request;
+  if (!refund && txn.entry_type !== 'credit') return [];
+  const processed =
+    refund?.gateway_status === 'processed' || txn.event_type === 'refund_processed' || txn.status === 'success';
+  const approved = processed || refund?.admin_status === 'approved';
+  return [
+    { key: 'paid', title: 'Payment received', time: when(paidAt), state: 'done' },
+    { key: 'requested', title: 'Refund requested', time: when(txn.created_at), state: 'done' },
+    {
+      key: 'approved',
+      title: 'Refund approved',
+      text: refund?.admin_status ? words(refund.admin_status) : '',
+      state: approved ? 'done' : 'current',
+    },
+    {
+      key: 'processed',
+      title: 'Refund credited',
+      text: processed ? 'Back to your original payment method' : 'Usually takes 5–7 working days',
+      time: when(refund?.processed_at || txn.consultation_payment?.refunded_at),
+      state: processed ? 'done' : approved ? 'current' : 'pending',
+    },
+  ];
+}
 
 export default function TransactionDetails() {
   const { transactionId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const transaction = location.state?.transaction;
+  const seed = location.state?.transaction || null;
+  const [transaction, setTransaction] = useState(seed);
+  const [loading, setLoading] = useState(!seed);
 
   useEffect(() => {
     requireAuth('Please login to view payments');
   }, []);
 
-  const iconName = useMemo(() => mapTransactionIcon(transaction), [transaction]);
-  const statusColor = getStatusColor(transaction?.status);
-  const orderId = transaction?.order?.id || transaction?.order?.order_id;
+  useEffect(() => {
+    if (seed || !transactionId) {
+      setLoading(false);
+      return undefined;
+    }
+    let alive = true;
+    (async () => {
+      try {
+        for (let page = 1; page <= LOOKUP_PAGES; page += 1) {
+          const { list, hasNext } = listOf(await getCustomerPaymentHistory({ page, page_size: 50 }));
+          const match = list.find((entry) => String(entry?.id) === String(transactionId));
+          if (match) {
+            if (alive) setTransaction(match);
+            break;
+          }
+          if (!hasNext) break;
+        }
+      } catch {
+        /* show empty state */
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [seed, transactionId]);
+
+  const txn = transaction;
+  const isCredit = txn?.entry_type === 'credit';
+  const orderId = txn?.order?.id || txn?.order?.order_id;
+  const appointmentId = txn?.appointment?.id;
+  const statusLabel = !txn
+    ? ''
+    : isCredit && String(txn.status).toLowerCase() === 'success'
+      ? 'Refunded'
+      : getStatusDetailLabel(txn.status);
+  const title = txn?.doctor?.name
+    ? `Dr. ${txn.doctor.name}`
+    : txn?.type === 'order' || txn?.order
+      ? 'Order payment'
+      : 'Consultation payment';
+  const eventLabel = formatEventType(txn?.event_type) || words(txn?.transaction_type) || 'Payment';
+  const MethodIcon = methodIcon(txn);
+  const refundTimeline = txn ? buildRefundTimeline(txn) : [];
+  const consultationPayment = txn?.consultation_payment;
+  const orderPayment = txn?.order_payment;
 
   return (
     <AppShell tab="profile">
-      <section className="catalog-page txn-page">
-        <header className="catalog-head">
-          <button type="button" className="text-back" onClick={() => navigate('/profile/payments')}>
-            ← Back
-          </button>
-          <div>
-            <h1>Transaction Details</h1>
-            <p>{transaction?.reference_code || transactionId}</p>
-          </div>
-        </header>
+      <DetailPage>
+        <DetailTop backTo="/profile/payments" backLabel="Payments" />
 
-        {!transaction ? (
-          <p className="empty-copy">Transaction not found</p>
+        {loading && !txn ? (
+          <DetailSkeleton media={false} label="Loading transaction" />
+        ) : !txn ? (
+          <DetailEmpty
+            icon={ReceiptText}
+            title="Transaction not found"
+            text="We couldn't find this payment. Open it again from your payment history."
+            action={<Button onClick={() => navigate('/profile/payments')}>Payment history</Button>}
+          />
         ) : (
           <>
-            <div className="checkout-card txn-hero">
-              <span className="thumb-fallback txn-icon">{transactionIconGlyph(iconName)}</span>
-              <strong>{formatRupee(transaction.amount ?? 0)}</strong>
-              <span className="txn-pill" style={{ background: `${statusColor}18`, color: statusColor }}>
-                <i style={{ background: statusColor }} />
-                {getStatusDetailLabel(transaction.status)}
-              </span>
-              <small>{transaction.reference_code || transaction.id}</small>
-            </div>
+            <DetailHero
+              variant="band"
+              titleId="txn-title"
+              eyebrow={isCredit ? 'Refund' : 'Payment'}
+              title={title}
+              lede={eventLabel}
+              chips={
+                <>
+                  {txn.payment_method || txn.payment_type ? (
+                    <MetaChip icon={MethodIcon}>
+                      {words(txn.payment_method || txn.payment_type).toUpperCase()}
+                    </MetaChip>
+                  ) : null}
+                  {when(txn.paid_at || txn.created_at) ? (
+                    <MetaChip icon={CalendarClock}>{when(txn.paid_at || txn.created_at)}</MetaChip>
+                  ) : null}
+                </>
+              }
+              aside={
+                <>
+                  <StatusPill status={txn.status}>{statusLabel}</StatusPill>
+                  <div className="dx-figure">
+                    <small>{isCredit ? 'Credited' : 'Amount'}</small>
+                    <strong>
+                      {isCredit ? '+ ' : ''}
+                      {formatRupee(txn.amount ?? 0)}
+                    </strong>
+                  </div>
+                </>
+              }
+            />
 
-            <div className="checkout-card">
-              <h3>Payment Info</h3>
-              <DetailRow label="Reference" value={transaction.reference_code} />
-              <DetailRow
-                label="Type"
-                value={String(transaction.transaction_type ?? '').replace(/_/g, ' ')}
-              />
-              <DetailRow
-                label="Payment Type"
-                value={String(transaction.payment_type ?? '').replace(/_/g, ' ')}
-              />
-              <DetailRow
-                label="Method"
-                value={String(transaction.payment_method ?? '').toUpperCase()}
-              />
-              <DetailRow label="Gateway" value={transaction.gateway} />
-              <DetailRow label="Gateway Ref" value={transaction.gateway_reference} />
-              <DetailRow label="Currency" value={transaction.currency} />
-              <DetailRow label="Paid At" value={formatTransactionDate(transaction.paid_at)} />
-              {transaction.at ? (
-                <DetailRow label="Date" value={formatTransactionDate(transaction.at)} />
+            <DetailLayout
+              aside={
+                <>
+                  <DetailCard id="txn-ref" title="Reference" icon={ReceiptText}>
+                    <InfoGrid
+                      columns={2}
+                      items={[
+                        { label: 'Reference', value: txn.reference_code || txn.id, wide: true },
+                        { label: 'Currency', value: txn.currency },
+                        { label: 'Gateway', value: words(txn.gateway) },
+                      ]}
+                    />
+                  </DetailCard>
+                  <ActionStack>
+                    {orderId ? (
+                      <Button
+                        leadingIcon={<Package size={16} aria-hidden />}
+                        onClick={() => navigate(`/profile/orders/${orderId}`)}
+                      >
+                        View order
+                      </Button>
+                    ) : null}
+                    {appointmentId ? (
+                      <Button
+                        leadingIcon={<Stethoscope size={16} aria-hidden />}
+                        onClick={() => navigate(`/profile/appointments/${appointmentId}`)}
+                      >
+                        View appointment
+                      </Button>
+                    ) : null}
+                    <Button
+                      variant="secondary"
+                      leadingIcon={<HelpCircle size={16} aria-hidden />}
+                      onClick={() => navigate('/profile/faq')}
+                    >
+                      Payment help
+                    </Button>
+                  </ActionStack>
+                </>
+              }
+            >
+              {refundTimeline.length ? (
+                <DetailCard id="txn-refund" title="Refund progress" icon={RotateCcw}>
+                  <Timeline items={refundTimeline} />
+                </DetailCard>
               ) : null}
-              <DetailRow
-                label="Event"
-                value={
-                  transaction.event_type
-                    ? String(transaction.event_type).replace(/_/g, ' ')
-                    : null
-                }
-              />
-              <DetailRow label="Doctor" value={transaction.doctor?.name} />
-              <DetailRow label="Patient" value={transaction.patient?.name} />
-              <DetailRow
-                label="Appointment Date"
-                value={transaction.appointment?.appointment_date}
-              />
-              <DetailRow label="Payment ID" value={transaction.gateway_payment_id} />
-              <DetailRow label="Refund Ref" value={transaction.gateway_refund_id} />
-              <DetailRow label="Note" value={transaction.note} />
-              <DetailRow label="Created At" value={formatTransactionDate(transaction.created_at)} />
-              {transaction.failure_reason ? (
-                <DetailRow label="Failure Reason" value={transaction.failure_reason} />
+
+              <DetailCard id="txn-info" title="Payment details" icon={CreditCard}>
+                <InfoGrid
+                  items={[
+                    { label: 'Type', value: words(txn.transaction_type || txn.type) },
+                    { label: 'Payment type', value: words(txn.payment_type) },
+                    { label: 'Method', value: words(txn.payment_method).toUpperCase() },
+                    { label: 'Event', value: formatEventType(txn.event_type) },
+                    { label: 'Paid on', value: when(txn.paid_at) },
+                    { label: 'Created on', value: when(txn.created_at) },
+                    { label: 'Payment ID', value: txn.gateway_payment_id },
+                    { label: 'Refund ID', value: txn.gateway_refund_id },
+                    { label: 'Gateway ref', value: txn.gateway_reference },
+                    { label: 'Failure reason', value: txn.failure_reason, wide: true },
+                    { label: 'Note', value: txn.note, wide: true },
+                  ]}
+                />
+              </DetailCard>
+
+              {txn.doctor || txn.patient || txn.appointment ? (
+                <DetailCard id="txn-consult" title="Consultation" icon={Stethoscope}>
+                  <InfoGrid
+                    items={[
+                      { label: 'Doctor', value: txn.doctor?.name ? `Dr. ${txn.doctor.name}` : '' },
+                      { label: 'Patient', value: txn.patient?.name },
+                      { label: 'Appointment', value: txn.appointment?.appointment_date },
+                      { label: 'Visit type', value: words(txn.appointment?.consultation_type) },
+                      { label: 'Visit status', value: words(txn.appointment?.status) },
+                    ]}
+                  />
+                  {appointmentId ? (
+                    <button
+                      type="button"
+                      className="dx-link"
+                      onClick={() => navigate(`/profile/appointments/${appointmentId}`)}
+                    >
+                      <span className="dx-link__icon" aria-hidden>
+                        <Stethoscope size={18} />
+                      </span>
+                      <span className="dx-link__copy">
+                        <strong>Open appointment</strong>
+                        <span>Prescription, receipt and chat</span>
+                      </span>
+                      <ChevronRight className="dx-link__chev" size={18} aria-hidden />
+                    </button>
+                  ) : null}
+                </DetailCard>
               ) : null}
-            </div>
 
-            {transaction.order ? (
-              <div className="checkout-card">
-                <h3>Order</h3>
-                <DetailRow label="Order Code" value={transaction.order.order_code} />
-                <DetailRow
-                  label="Order Status"
-                  value={String(transaction.order.order_status ?? '').replace(/_/g, ' ')}
-                />
-                <DetailRow
-                  label="Order Amount"
-                  value={formatRupee(transaction.order.total_amount ?? 0)}
-                />
-                {orderId ? (
-                  <button
-                    type="button"
-                    className="txn-link"
-                    onClick={() => navigate(`/profile/orders/${orderId}`)}
-                  >
-                    View Order Details
-                  </button>
-                ) : null}
-              </div>
-            ) : null}
+              {txn.order ? (
+                <DetailCard id="txn-order" title="Order" icon={Package}>
+                  <InfoGrid
+                    items={[
+                      { label: 'Order code', value: txn.order.order_code },
+                      { label: 'Order status', value: words(txn.order.order_status) },
+                      {
+                        label: 'Order total',
+                        value: txn.order.total_amount != null ? formatRupee(txn.order.total_amount) : '',
+                      },
+                    ]}
+                  />
+                  {orderId ? (
+                    <button
+                      type="button"
+                      className="dx-link"
+                      onClick={() => navigate(`/profile/orders/${orderId}`)}
+                    >
+                      <span className="dx-link__icon" aria-hidden>
+                        <Package size={18} />
+                      </span>
+                      <span className="dx-link__copy">
+                        <strong>View order details</strong>
+                        <span>Items, tracking and invoice</span>
+                      </span>
+                      <ChevronRight className="dx-link__chev" size={18} aria-hidden />
+                    </button>
+                  ) : null}
+                </DetailCard>
+              ) : null}
 
-            {transaction.consultation_payment ? (
-              <div className="checkout-card">
-                <h3>Consultation Payment</h3>
-                <DetailRow
-                  label="Razorpay Order"
-                  value={transaction.consultation_payment.razorpay_order_id}
-                />
-                <DetailRow
-                  label="Razorpay Payment"
-                  value={transaction.consultation_payment.razorpay_payment_id}
-                />
-                <DetailRow label="Status" value={transaction.consultation_payment.status} />
-                <DetailRow
-                  label="Paid At"
-                  value={
-                    transaction.consultation_payment.paid_at
-                      ? formatTransactionDate(transaction.consultation_payment.paid_at)
-                      : null
-                  }
-                />
-                <DetailRow
-                  label="Refunded At"
-                  value={
-                    transaction.consultation_payment.refunded_at
-                      ? formatTransactionDate(transaction.consultation_payment.refunded_at)
-                      : null
-                  }
-                />
-              </div>
-            ) : null}
-
-            {transaction.appointment?.id ? (
-              <button
-                type="button"
-                className="txn-link"
-                onClick={() =>
-                  navigate(`/profile/appointments/${transaction.appointment.id}`)
-                }
-              >
-                View Appointment
-              </button>
-            ) : null}
-
-            {transaction.order_payment ? (
-              <div className="checkout-card">
-                <h3>Payment Record</h3>
-                <DetailRow
-                  label="Razorpay Order"
-                  value={transaction.order_payment.razorpay_order_id}
-                />
-                <DetailRow
-                  label="Razorpay Payment"
-                  value={transaction.order_payment.razorpay_payment_id}
-                />
-                <DetailRow label="Status" value={transaction.order_payment.status} />
-                <DetailRow
-                  label="Paid At"
-                  value={formatTransactionDate(transaction.order_payment.paid_at)}
-                />
-              </div>
-            ) : null}
+              {consultationPayment || orderPayment ? (
+                <DetailCard id="txn-gateway" title="Gateway record" icon={Wallet}>
+                  <InfoGrid
+                    items={[
+                      {
+                        label: 'Gateway order',
+                        value:
+                          consultationPayment?.gateway_order_id ||
+                          consultationPayment?.razorpay_order_id ||
+                          orderPayment?.gateway_order_id ||
+                          orderPayment?.razorpay_order_id,
+                      },
+                      {
+                        label: 'Gateway payment',
+                        value:
+                          consultationPayment?.gateway_payment_id ||
+                          consultationPayment?.razorpay_payment_id ||
+                          orderPayment?.gateway_payment_id ||
+                          orderPayment?.razorpay_payment_id,
+                      },
+                      { label: 'Status', value: words(consultationPayment?.status || orderPayment?.status) },
+                      { label: 'Paid on', value: when(consultationPayment?.paid_at || orderPayment?.paid_at) },
+                      { label: 'Refunded on', value: when(consultationPayment?.refunded_at) },
+                    ]}
+                  />
+                </DetailCard>
+              ) : null}
+            </DetailLayout>
           </>
         )}
-      </section>
+      </DetailPage>
     </AppShell>
   );
 }

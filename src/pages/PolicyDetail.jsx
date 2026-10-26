@@ -1,25 +1,35 @@
-import { useCallback, useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import PolicyContent from '../components/PolicyContent';
-import PageHeader from '../components/PageHeader';
-import { showSuccessToast } from '../config/key';
+import { useCallback, useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import PolicyContent from "../components/PolicyContent";
+import PageHeader from "../components/PageHeader";
+import { showSuccessToast } from "../config/key";
 import {
   acceptPolicies,
   getPoliciesList,
-  getRequiredPolicies,
-} from '../services/policyService';
-import { isPolicyAccepted } from '../utils/policyUtils';
-import { Button, Disclaimer, EmptyState, Skeleton, SkeletonText } from '../components/ui';
-import { STATIC_COPY as T } from '../content/static';
-import '../design/pages/static.css';
+  getPoliciesForViewer,
+} from "../services/policyService";
+import { isPolicyAccepted } from "../utils/policyUtils";
+import { readAuthenticated } from "../services/guestAuth";
+import {
+  Button,
+  Disclaimer,
+  EmptyState,
+  Skeleton,
+  SkeletonText,
+} from "../components/ui";
+import { STATIC_COPY as T } from "../content/static";
+import "../design/pages/static.css";
+import "../design/pages/policy-detail.css";
 
 export default function PolicyDetail() {
   const navigate = useNavigate();
   const location = useLocation();
   const params = location.state || {};
   const policyType = params.policyType;
+  // App publicView: logged-out visitors read the public legal set and never see Accept.
+  const publicView = params.publicView === true || !readAuthenticated();
   const requireAccept =
-    params.requireAccept === true || params.agreed === false;
+    !publicView && (params.requireAccept === true || params.agreed === false);
 
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(false);
@@ -31,18 +41,18 @@ export default function PolicyDetail() {
     params.title ||
     policy?.title ||
     policy?.name ||
-    (policyType === 'terms_of_service'
-      ? 'Terms of Use'
-      : policyType === 'privacy_policy'
-        ? 'Privacy Policy'
-        : 'Legal Policy');
+    (policyType === "terms_of_service"
+      ? "Terms of Use"
+      : policyType === "privacy_policy"
+        ? "Privacy Policy"
+        : "Legal Policy");
 
   const load = useCallback(async () => {
     try {
       setError(null);
-      const res = await getRequiredPolicies(policyType);
+      const res = await getPoliciesForViewer(policyType);
       if (res?.success === false) {
-        setError(res?.message || 'Unable to load this policy right now.');
+        setError(res?.message || "Unable to load this policy right now.");
         setPolicy(null);
         setPolicyEntry(null);
         return;
@@ -51,7 +61,7 @@ export default function PolicyDetail() {
       const entry = list[0];
       const doc = entry?.policy ?? entry ?? null;
       if (!doc) {
-        setError('Unable to load this policy right now.');
+        setError("Unable to load this policy right now.");
         setPolicy(null);
         setPolicyEntry(null);
         return;
@@ -59,7 +69,7 @@ export default function PolicyDetail() {
       setPolicy(doc);
       setPolicyEntry(entry);
     } catch (e) {
-      setError(e?.message || 'Failed to load policy. Please try again.');
+      setError(e?.message || "Failed to load policy. Please try again.");
       setPolicy(null);
     } finally {
       setLoading(false);
@@ -76,10 +86,10 @@ export default function PolicyDetail() {
       return;
     }
     if (requireAccept) {
-      navigate('/access-mode');
+      navigate("/access-mode");
       return;
     }
-    navigate('/onboarding');
+    navigate("/onboarding");
   };
 
   const handleAccept = async () => {
@@ -90,27 +100,38 @@ export default function PolicyDetail() {
       if (type) {
         await acceptPolicies({ policy_type: type });
       } else {
-        await acceptPolicies({ type: 'all' });
+        await acceptPolicies({ type: "all" });
       }
-      showSuccessToast('Policy accepted', 'success');
+      showSuccessToast("Policy accepted", "success");
       if (requireAccept) {
-        navigate('/onboarding');
+        navigate("/onboarding");
       }
     } catch (e) {
-      showSuccessToast(e?.message || 'Unable to accept policy right now', 'error');
+      showSuccessToast(
+        e?.message || "Unable to accept policy right now",
+        "error",
+      );
     } finally {
       setAccepting(false);
     }
   };
 
   return (
-    <section className={`sx-page sx-narrow${requireAccept ? ' has-sticky' : ''}`}>
-      <PageHeader title={headerTitle} onBack={handleBack} />
+    <section
+      className={`sx-page sx-policy-detail${requireAccept ? " has-sticky" : ""}`}
+    >
+      <PageHeader eyebrow="Policy document" onBack={handleBack} />
 
       {loading ? (
         <div aria-busy="true" aria-label={T.policyLoading}>
           <SkeletonText lines={2} />
-          <Skeleton style={{ height: 200, borderRadius: 'var(--am-radius-lg)', marginTop: 16 }} />
+          <Skeleton
+            style={{
+              height: 200,
+              borderRadius: "var(--am-radius-lg)",
+              marginTop: 16,
+            }}
+          />
         </div>
       ) : error ? (
         <EmptyState
@@ -123,7 +144,10 @@ export default function PolicyDetail() {
         />
       ) : (
         <>
-          <div className="sx-policy-banner">
+          <div
+            className="sx-policy-banner sx-policy-detail__banner"
+            style={{ marginTop: "-14px" }}
+          >
             <strong>{policy?.title || headerTitle}</strong>
             {policy?.subtitle ? <p>{policy.subtitle}</p> : null}
             {isPolicyAccepted(policyEntry) ? (
@@ -144,6 +168,14 @@ export default function PolicyDetail() {
                   onClick={handleAccept}
                 >
                   {accepting ? T.policyWait : T.policyAccept}
+                </Button>
+                <Button
+                  variant="ghost"
+                  block
+                  disabled={accepting}
+                  onClick={() => showSuccessToast('You need to accept to continue', 'error')}
+                >
+                  Disagree
                 </Button>
               </div>
             </div>

@@ -11,6 +11,7 @@ import {
 } from '../mentor/data';
 import { requireAuth } from '../services/guestAuth';
 import { showSuccessToast } from '../config/key';
+import '../design/pages/mentor-flow.css';
 
 export default function ConsultMentor() {
   const navigate = useNavigate();
@@ -67,6 +68,7 @@ export default function ConsultMentor() {
             type="button"
             className={`mentor-service ${selectedService === index ? 'on' : ''}`}
             onClick={() => setSelectedService(index)}
+            aria-pressed={selectedService === index}
           >
             <strong>{item.title}</strong>
             <small>{item.desc}</small>
@@ -84,6 +86,7 @@ export default function ConsultMentor() {
               type="button"
               className={`date-chip ${selectedDate === item.fullDate ? 'on' : ''}`}
               onClick={() => setSelectedDate(item.fullDate)}
+              aria-pressed={selectedDate === item.fullDate}
             >
               <small>{item.isToday ? 'Today' : item.day}</small>
               <strong>{item.date}</strong>
@@ -102,6 +105,7 @@ export default function ConsultMentor() {
                   disabled={!slot.available}
                   className={`chip ${selectedTime === slot.time ? 'on' : ''}`}
                   onClick={() => slot.available && setSelectedTime(slot.time)}
+                  aria-pressed={selectedTime === slot.time}
                 >
                   {slot.time}
                 </button>

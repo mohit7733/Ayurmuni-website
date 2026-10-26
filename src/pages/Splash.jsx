@@ -13,7 +13,7 @@ import {
 import { STATIC_COPY as T } from '../content/static';
 import '../design/pages/static.css';
 
-const MIN_SPLASH_MS = 900;
+const MIN_SPLASH_MS = 350;
 
 export default function Splash() {
   const navigate = useNavigate();
@@ -79,6 +79,7 @@ export default function Splash() {
       }
     };
 
+    void import('./Home');
     routeUser();
   }, [navigate]);
 

@@ -14,18 +14,13 @@ const refreshAccessToken = async () => {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        'ngrok-skip-browser-warning': '1',
       },
       body: JSON.stringify({ refresh: refreshToken }),
     });
 
-    let data = null;
-    try {
-      data = await response.json();
-    } catch {
-      data = null;
-    }
-
-    if (!response.ok || !data?.success) {
+    const data = await parseJsonBody(response);
+    if (!data || !response.ok || !data?.success) {
       return null;
     }
 
@@ -39,6 +34,18 @@ const refreshAccessToken = async () => {
     }
 
     return accessToken;
+  } catch {
+    return null;
+  }
+};
+
+const parseJsonBody = async (response) => {
+  try {
+    const rawText = await response.text();
+    const trimmed = rawText.trim();
+    if (!trimmed) return null;
+    if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) return null;
+    return JSON.parse(trimmed);
   } catch {
     return null;
   }
@@ -62,6 +69,7 @@ const makeRequest = (endpoint, options, token) => {
   const isFormData = options?.body instanceof FormData;
   const headers = {
     Accept: 'application/json',
+    'ngrok-skip-browser-warning': '1',
     ...(token && { Authorization: `Bearer ${token}` }),
     ...(!isFormData && { 'Content-Type': 'application/json' }),
     ...(options.headers || {}),
@@ -99,11 +107,13 @@ export const apiClient = async (
       response = await makeRequest(endpoint, options, freshToken);
     }
 
-    let data = null;
-    try {
-      data = await response.json();
-    } catch {
-      data = null;
+    const data = await parseJsonBody(response);
+    if (!data) {
+      return {
+        success: false,
+        status: response.status,
+        message: response.ok ? 'Invalid API response' : 'Something went wrong',
+      };
     }
 
     if (!response.ok) {

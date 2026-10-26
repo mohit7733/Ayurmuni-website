@@ -9,10 +9,25 @@ export function TileGrid({ label, className, children }) {
   );
 }
 
-export default function Tile({ image, icon: Icon = Leaf, label, onClick, className }) {
+export default function Tile({
+  image,
+  icon: Icon = Leaf,
+  label,
+  onClick,
+  className,
+  cutout = false,
+  loopCopy = false,
+}) {
   return (
-    <li>
-      <button type="button" className={cx('am-tile', className)} onClick={onClick}>
+    // Loop copies stay hoverable/clickable (no `inert`) but are hidden from
+    // assistive tech and skipped by keyboard focus.
+    <li aria-hidden={loopCopy || undefined}>
+      <button
+        type="button"
+        className={cx('am-tile', cutout && 'am-tile--cutout', className)}
+        onClick={onClick}
+        tabIndex={loopCopy ? -1 : undefined}
+      >
         <span className="am-tile__img" aria-hidden>
           {image ? <img src={image} alt="" loading="lazy" decoding="async" /> : <Icon size={26} />}
         </span>

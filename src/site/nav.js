@@ -15,6 +15,8 @@ export const FOOTER_COLUMNS = [
       { to: '/medicines', label: 'Medicines' },
       { to: '/cart', label: 'Cart' },
       { to: '/search', label: 'Search' },
+      { to: '/panchakarma', label: 'Panchakarma' },
+      { to: '/mentor', label: 'Mentor' },
     ],
   },
   {
@@ -24,7 +26,8 @@ export const FOOTER_COLUMNS = [
       { to: '/consult/doctors', label: 'All doctors' },
       { to: '/yoga', label: 'Yoga' },
       { to: '/diet', label: 'Diet plans' },
-      { to: '/mentor', label: 'Mentor' },
+      { to: '/packages', label: 'Packages' },
+      // { to: '/labs', label: 'Lab tests' }, // Health Lab disabled per Rohit
     ],
   },
   {

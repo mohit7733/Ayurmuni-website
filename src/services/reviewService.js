@@ -1,5 +1,10 @@
 import { apiClient } from './apiClient';
-import { buildReviewEndpoint } from '../utils/reviewUtils';
+import { extractOrderDetail, getOrderById, getOrders, normalizeOrdersList } from './orderService';
+import {
+  buildReviewEndpoint,
+  isOrderItemRated,
+  resolveOrderItemVariantId,
+} from '../utils/reviewUtils';
 
 export const createReview = async ({
   entityType,
@@ -46,70 +51,35 @@ export const createReview = async ({
   });
 };
 
+const REVIEWABLE_ORDER_STATUSES = ['delivered', 'completed'];
+
 /**
- * Submit a product review with images
- * @param {FormData} formData - FormData containing review data and images
- * @returns {Promise} API response
+ * Product reviews must reference a delivered order containing the variant.
+ * Resolves `{ orderId, variantId, alreadyReviewed }` or null when the user never received it.
  */
-export const submitReview = async (formData) => {
-  try {
-    // Extract data from FormData
-    const productId = formData.get('product_id');
-    const variantId = formData.get('variant_id');
-    const rating = formData.get('rating');
-    const title = formData.get('title');
-    const comment = formData.get('comment');
-    
-    // For now, send as JSON (image upload will need separate endpoint or multipart support)
-    const endpoint = '/reviews/product/';
-    const payload = {
-      product_id: productId,
-      variant_id: variantId,
-      rating: Number(rating),
-      title: title,
-      review: comment,
-      comment: comment,
+export const findReviewableProductOrder = async (variantIds) => {
+  const wanted = new Set((variantIds || []).map((id) => String(id ?? '').trim()).filter(Boolean));
+  if (!wanted.size) return null;
+
+  const orders = normalizeOrdersList(await getOrders({ page_size: 50 })).filter((order) =>
+    REVIEWABLE_ORDER_STATUSES.includes(String(order?.order_status || order?.status || '').toLowerCase()),
+  );
+
+  let reviewedMatch = null;
+  for (const order of orders) {
+    let items = Array.isArray(order?.items) ? order.items : null;
+    if (!items && order?.id) {
+      items = extractOrderDetail(await getOrderById(order.id))?.items || [];
+    }
+    const match = (items || []).find((item) => wanted.has(resolveOrderItemVariantId(item)));
+    if (!match) continue;
+    const result = {
+      orderId: String(order.id),
+      variantId: resolveOrderItemVariantId(match),
+      alreadyReviewed: isOrderItemRated(match),
     };
-
-    return await apiClient(endpoint, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
-  } catch (error) {
-    console.error('Review submission error:', error);
-    return { success: false, message: error.message || 'Failed to submit review' };
+    if (!result.alreadyReviewed) return result;
+    reviewedMatch ??= result;
   }
-};
-
-/**
- * Get reviews for a product
- */
-export const getProductReviews = async (variantId, page = 1, pageSize = 10) => {
-  return apiClient(`/reviews/product/?variant_id=${variantId}&page=${page}&page_size=${pageSize}`);
-};
-
-/**
- * Get user's own reviews
- */
-export const getUserReviews = async () => {
-  return apiClient('/reviews/user/');
-};
-
-/**
- * Update a review
- */
-export const updateReview = async (reviewId, data) => {
-  return apiClient(`/reviews/${reviewId}/`, {
-    method: 'PUT',
-    body: JSON.stringify(data),
-  });
-};
-
-/**
- * Delete a review
- */
-export const deleteReview = async (reviewId) => {
-  return apiClient(`/reviews/${reviewId}/`, {
-    method: 'DELETE',
-  });
+  return reviewedMatch;
 };

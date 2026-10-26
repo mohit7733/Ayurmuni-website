@@ -1,5 +1,11 @@
 import { apiClient } from './apiClient';
-import { applyDoctorFeesToResponse } from '../consult/doctors';
+import {
+  applyDoctorFeesToResponse,
+  getDoctorId,
+  hasMoreDoctorPages,
+  listDoctors,
+  normalizeDoctorList,
+} from '../consult/doctors';
 import { Utils } from '../common/utils';
 import { BaseUrl } from '../config/key';
 
@@ -13,6 +19,12 @@ const cleanParams = (params = {}) =>
 const doctorsQuery = (params) => {
   const query = new URLSearchParams();
   Object.entries(cleanParams(params)).forEach(([key, value]) => {
+    // App formatExperienceParam: experience is always sent as "N+".
+    if (key === 'experience') {
+      const v = String(value).trim();
+      query.set(key, v.endsWith('+') ? v : `${v}+`);
+      return;
+    }
     query.set(key, String(value));
   });
   return query.toString();
@@ -24,6 +36,47 @@ export const getDoctors = async (params = {}) => {
     method: 'GET',
   });
   return applyDoctorFeesToResponse(response);
+};
+
+/** Curated list for home / consult “Suggested doctors” rails only. */
+export const getSuggestedDoctors = async () => {
+  const response = await apiClient('customers/doctors/?suggested=true', { method: 'GET' });
+  return applyDoctorFeesToResponse(response);
+};
+
+export const DOCTOR_LIST_PAGE_SIZE = 40;
+const DOCTOR_LIST_MAX_PAGES = 100;
+
+/** All approved doctors (paginates until the catalog is exhausted). */
+export const getAllApprovedDoctors = async (params = {}) => {
+  const merged = [];
+  const seen = new Set();
+  let page = 1;
+  let hasMore = true;
+
+  while (hasMore && page <= DOCTOR_LIST_MAX_PAGES) {
+    const response = await getDoctors({
+      ...params,
+      page,
+      page_size: DOCTOR_LIST_PAGE_SIZE,
+    });
+    if (response?.success === false) break;
+
+    const batch = normalizeDoctorList(response, { approvedOnly: true });
+    batch.forEach((doctor) => {
+      const id = getDoctorId(doctor);
+      if (!id || seen.has(id)) return;
+      seen.add(id);
+      merged.push(doctor);
+    });
+
+    const rawLength = listDoctors(response).length;
+    hasMore = hasMoreDoctorPages(response, rawLength, DOCTOR_LIST_PAGE_SIZE, page);
+    page += 1;
+    if (!rawLength) hasMore = false;
+  }
+
+  return merged;
 };
 
 export const getTopDoctors = async () => getDoctors();

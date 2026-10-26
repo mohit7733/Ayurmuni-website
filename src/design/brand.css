@@ -1,0 +1,17 @@
+/* ─── Brand layer shared by the homepage and store pages ───
+   Fonts live in tokens.css. Panel tokens mirror the homepage "unified panel" frame. */
+
+:root {
+  --am-brand-green: #105343;
+  --am-brand-green-deep: #0b3b30;
+  --am-brand-gold: #c9a55a;
+  --am-brand-gold-soft: rgba(201, 165, 90, 0.45);
+  --am-panel-border: 1px solid rgba(216, 204, 180, 0.85);
+  --am-panel-radius: 20px;
+  --am-panel-bg: linear-gradient(180deg, #ffffff 0%, #fbf8f2 100%);
+  --am-panel-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 12px 32px rgba(19, 35, 30, 0.06);
+  --am-panel-pad: clamp(14px, 1.8vw, 20px);
+}
+@media (max-width: 639px) {
+  :root { --am-panel-radius: 16px; }
+}

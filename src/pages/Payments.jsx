@@ -6,6 +6,7 @@ import { formatRupee } from '../home/catalog';
 import useCustomerPaymentHistory from '../hooks/useCustomerPaymentHistory';
 import { mapPaymentHistoryEntry, transactionIconGlyph } from '../profile/transactions';
 import { requireAuth } from '../services/guestAuth';
+import '../design/pages/payments.css';
 
 const SOURCE_TABS = [
   { key: 'all', label: 'All' },
@@ -175,13 +176,15 @@ export default function Payments() {
           <button type="button" className="text-back" onClick={() => navigate('/profile')}>
             ← Back
           </button>
-          <div>
+          <div className="payments-heading">
+            <span className="payments-eyebrow">Account activity</span>
             <h1>Payments</h1>
-            <p>Manage Your Transaction</p>
+            <p>Track payments and refunds for consultations and orders.</p>
           </div>
+          <span className="payments-mark" aria-hidden>₹</span>
         </header>
 
-        <div className="home-rail subcat-rail" role="tablist" aria-label="Payment source">
+        <div className="home-rail subcat-rail payments-source" role="tablist" aria-label="Payment source">
           {SOURCE_TABS.map((tab) => (
             <button
               key={tab.key}
@@ -194,7 +197,11 @@ export default function Payments() {
           ))}
         </div>
 
-        <div className="home-rail subcat-rail">
+        <div
+          className="home-rail subcat-rail payments-filters"
+          role="group"
+          aria-label="Payment filters"
+        >
           <button
             type="button"
             className={`chip ${datePreset !== 'all' ? 'on' : ''}`}

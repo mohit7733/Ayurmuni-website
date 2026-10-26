@@ -1,4 +1,15 @@
 import { getDietPlanCoverUrl } from '../diet/utils';
+import { BaseUrl } from '../config/key';
+
+const absolutizeMediaUrl = (value) => {
+  const uri = String(value || '').trim();
+  if (!uri || /example\.com|placeholder/i.test(uri)) return '';
+  if (/^https?:\/\//i.test(uri)) return uri;
+  if (uri.startsWith('//')) return `https:${uri}`;
+  const base = String(BaseUrl.base_url || '').replace(/\/$/, '');
+  if (!base) return uri;
+  return uri.startsWith('/') ? `${base}${uri}` : `${base}/${uri}`;
+};
 
 export const normalizeApiList = (response) => {
   if (response?.success === false) return [];
@@ -164,17 +175,43 @@ export const doctorFeeLabel = (item) => {
   return formatRupee(fee);
 };
 
+const readMediaField = (value) => {
+  if (typeof value === 'string' && value.trim()) return value.trim();
+  if (!value || typeof value !== 'object') return '';
+  return String(
+    value.media_url || value.url || value.image_url || value.file_url || value.path || '',
+  ).trim();
+};
+
 export const getBannerImageUri = (item) => {
-  if (typeof item === 'string' && /^https?:\/\//i.test(item.trim())) return item.trim();
+  if (typeof item === 'string') return absolutizeMediaUrl(item);
+
+  const fromResolve = resolveImageUrl(item);
+  if (fromResolve) return absolutizeMediaUrl(fromResolve);
+
+  const nestedImage = readMediaField(item?.image);
+  const nestedBanner = readMediaField(item?.banner_image);
+  const nestedWeb = readMediaField(item?.web_image);
+  const nestedDesktop = readMediaField(item?.desktop_image);
+  const nestedMobile = readMediaField(item?.mobile_image);
+
   const uri =
     item?.media_url ||
     item?.image_url ||
-    item?.banner_image ||
-    (typeof item?.image === 'string' ? item.image : '') ||
+    item?.banner_url ||
+    item?.app_image ||
+    item?.thumbnail_url ||
+    item?.file_url ||
+    nestedImage ||
+    nestedBanner ||
+    nestedWeb ||
+    nestedDesktop ||
+    nestedMobile ||
     item?.url ||
     item?.cover_image?.media_url ||
+    readMediaField(item?.cover_image) ||
     '';
-  return String(uri || '').trim();
+  return absolutizeMediaUrl(uri);
 };
 
 export const isBannerActive = (item) => {

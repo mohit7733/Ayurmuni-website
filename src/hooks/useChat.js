@@ -2,7 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { chatService } from '../services/chatService';
 import { WebSocketService } from '../chat/websocketService';
 import {
+  chatPolicyErrorReason,
   getChatDisabledReason,
+  isChatPolicyError,
   isChatSendEnabled,
   shouldSuppressChatError,
 } from '../chat/chatAccessUtils';
@@ -15,7 +17,13 @@ const SEND_DEDUPE_MS = 5000;
 let recentOutboundSend = null;
 let sendEnterLocked = false;
 
-export function useChat(appointmentId, role, appointmentDate, appointmentContext) {
+export function useChat(
+  appointmentId,
+  role,
+  appointmentDate,
+  appointmentContext,
+  relatedAppointmentIds = [],
+) {
   const [state, setState] = useState({
     appointmentId,
     messages: [],
@@ -41,6 +49,14 @@ export function useChat(appointmentId, role, appointmentDate, appointmentContext
   appointmentDateRef.current = appointmentDate;
   const appointmentContextRef = useRef(appointmentContext);
   appointmentContextRef.current = appointmentContext;
+  const messagesRef = useRef([]);
+  messagesRef.current = state.messages;
+  const relatedMessagesRef = useRef([]);
+  const relatedKey = [...new Set((relatedAppointmentIds || []).filter((id) => id && id !== appointmentId))]
+    .sort()
+    .join('|');
+  const relatedKeyRef = useRef('');
+  const relatedFlightRef = useRef(null);
 
   const isChatEnabledFlag = isChatSendEnabled(
     state.chatAccess,
@@ -66,9 +82,43 @@ export function useChat(appointmentId, role, appointmentDate, appointmentContext
     return dedupeMessages(next);
   }, []);
 
+  const loadRelatedMessages = useCallback(async () => {
+    if (relatedKeyRef.current === relatedKey) return;
+    if (relatedFlightRef.current?.key === relatedKey) {
+      await relatedFlightRef.current.promise;
+      return;
+    }
+    const ids = relatedKey ? relatedKey.split('|') : [];
+    const promise = (async () => {
+      if (!ids.length) {
+        relatedMessagesRef.current = [];
+        return;
+      }
+      const batches = await Promise.all(ids.map((id) => chatService.getMessages(id).catch(() => null)));
+      relatedMessagesRef.current = batches.flatMap((data, index) =>
+        (data?.messages || []).map((message) => ({
+          ...message,
+          appointment_id: message.appointment_id || ids[index],
+        })),
+      );
+    })();
+    relatedFlightRef.current = { key: relatedKey, promise };
+    try {
+      await promise;
+      relatedKeyRef.current = relatedKey;
+    } finally {
+      if (relatedFlightRef.current?.promise === promise) relatedFlightRef.current = null;
+    }
+  }, [relatedKey]);
+
+  const withRelatedHistory = (messages) =>
+    dedupeMessages([...(relatedMessagesRef.current || []), ...messages]);
+
   const loadMessages = useCallback(
     async (markRead) => {
       if (!mountedRef.current || !appointmentId) return;
+      await loadRelatedMessages();
+      if (!mountedRef.current) return;
       const isFirstLoad = !hasLoadedOnceRef.current;
       if (isFirstLoad) setState((prev) => ({ ...prev, isLoading: true }));
       try {
@@ -93,8 +143,16 @@ export function useChat(appointmentId, role, appointmentDate, appointmentContext
           }
           return {
             ...prev,
-            messages: dedupeMessages(nextMessages),
-            chatAccess: data.chat_access ?? prev.chatAccess,
+            messages: withRelatedHistory(nextMessages),
+            chatAccess: data.chat_access
+              ? {
+                  ...data.chat_access,
+                  // keep the server's send-rejection reason while it still says closed
+                  ...(data.chat_access.can_send === false && prev.chatAccess?.closed_reason
+                    ? { closed_reason: prev.chatAccess.closed_reason }
+                    : {}),
+                }
+              : prev.chatAccess,
             followUpActive: data.chat_access?.follow_up_active ?? prev.followUpActive,
             activePhase: data.chat_access?.active_phase ?? prev.activePhase,
             isLoading: false,
@@ -120,7 +178,7 @@ export function useChat(appointmentId, role, appointmentDate, appointmentContext
         }));
       }
     },
-    [appointmentId],
+    [appointmentId, loadRelatedMessages],
   );
 
   useEffect(() => {
@@ -254,6 +312,17 @@ export function useChat(appointmentId, role, appointmentDate, appointmentContext
           ...prev,
           messages: prev.messages.filter((m) => m.id !== tempId),
         }));
+        if (isChatPolicyError(error)) {
+          // e.g. doctor_followup_policy_violation (400) / chat_closed (409): close the composer
+          // with the server's own message + errors.chat detail.
+          const reason = chatPolicyErrorReason(error);
+          setState((prev) => ({
+            ...prev,
+            chatAccess: { ...(prev.chatAccess ?? { can_read: true }), can_send: false, closed_reason: reason },
+          }));
+          showTransientError(reason);
+          return;
+        }
         if (error?.httpStatus === 403) {
           setState((prev) => ({
             ...prev,
@@ -282,15 +351,33 @@ export function useChat(appointmentId, role, appointmentDate, appointmentContext
   const markAsRead = useCallback(
     async (messageIds) => {
       if (!messageIds || messageIds.length === 0) return;
-      if (wsRef.current?.isConnected()) {
-        wsRef.current.sendRead(messageIds);
-        return;
-      }
-      try {
-        await chatService.getMessages(appointmentId, messageIds.join(','));
-      } catch {
-        // silent
-      }
+      const wanted = new Set(messageIds);
+      const groups = new Map();
+      messagesRef.current.forEach((message) => {
+        if (!wanted.has(message.id)) return;
+        const owner = message.appointment_id || appointmentId;
+        if (!groups.has(owner)) groups.set(owner, []);
+        groups.get(owner).push(message.id);
+      });
+      const known = new Set([...groups.values()].flat());
+      messageIds.forEach((id) => {
+        if (known.has(id)) return;
+        if (!groups.has(appointmentId)) groups.set(appointmentId, []);
+        groups.get(appointmentId).push(id);
+      });
+      await Promise.all(
+        [...groups.entries()].map(async ([ownerId, ids]) => {
+          if (ownerId === appointmentId && wsRef.current?.isConnected()) {
+            wsRef.current.sendRead(ids);
+            return;
+          }
+          try {
+            await chatService.getMessages(ownerId, ids.join(','));
+          } catch {
+            // silent
+          }
+        }),
+      );
     },
     [appointmentId],
   );
@@ -307,6 +394,16 @@ export function useChat(appointmentId, role, appointmentDate, appointmentContext
         setState((prev) => ({
           ...prev,
           messages: appendOrReplaceMessage(prev.messages, data.message),
+        }));
+      });
+      ws.on('error', (data) => {
+        // Socket chat.error with a send-gate code: close the composer the same way as REST.
+        if (!mountedRef.current || !isChatPolicyError(data)) return;
+        const reason = chatPolicyErrorReason(data);
+        setState((prev) => ({
+          ...prev,
+          messages: prev.messages.filter((m) => !String(m.id || '').startsWith('temp-')),
+          chatAccess: { ...(prev.chatAccess ?? { can_read: true }), can_send: false, closed_reason: reason },
         }));
       });
       ws.on('read', (data) => {

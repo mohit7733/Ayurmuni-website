@@ -1,23 +1,33 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FileText, Heart, Leaf, Minus, Plus } from 'lucide-react';
-import { formatRupee, resolveImageUrl } from '../home/catalog';
-import { useCart } from '../hooks/useCart';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { FileText, Leaf, Minus, Plus, Star } from "lucide-react";
+import { formatRupee, resolveImageUrl } from "../home/catalog";
+import { useCart } from "../hooks/useCart";
 import {
   getAddQtyBlockMessage,
+  getProductStockQty,
   isPrescriptionRequired,
   isProductOutOfStock,
-} from '../product/stock';
-import { requireAuth } from '../services/guestAuth';
-import { showPrescriptionRequired } from '../services/prescriptionGate';
-import { showSuccessToast } from '../config/key';
-import { toggleWishlistProduct } from '../services/productService';
-import Badge from './ui/Badge';
+  LOW_STOCK_THRESHOLD,
+} from "../product/stock";
+import { requireAuth } from "../services/guestAuth";
+import { showPrescriptionRequired } from "../services/prescriptionGate";
+import { showSuccessToast } from "../config/key";
+import { toggleWishlistProduct } from "../services/productService";
+import Badge from "./ui/Badge";
+import FavButton from "./ui/FavButton";
+import CartAddButton from "./CartAddButton";
 
-export default function ProductCard({ item, onWishlistChange }) {
+export default function ProductCard({
+  item,
+  onWishlistChange,
+  cartButton = false,
+  layout = "default",
+}) {
+  const app = layout === "app";
   const navigate = useNavigate();
   const { variantQuantities, addingVariantId, syncCartQuantity } = useCart();
-  const variantId = String(item?.variant_id || '');
+  const variantId = String(item?.variant_id || "");
   const cartQty = variantQuantities[variantId] ?? 0;
   const adding = addingVariantId === variantId;
   const image = resolveImageUrl(item);
@@ -25,20 +35,35 @@ export default function ProductCard({ item, onWishlistChange }) {
   const mrp =
     item.mrp && Number(item.mrp) > Number(item.selling_price || 0)
       ? formatRupee(item.mrp)
-      : '';
+      : "";
   const discount =
     item?.mrp > item?.selling_price
       ? Math.round(((item.mrp - item.selling_price) / item.mrp) * 100)
       : 0;
   const out = isProductOutOfStock(item);
   const rx = isPrescriptionRequired(item);
+  const stockQty = getProductStockQty(item);
+  const lowStockNote =
+    app &&
+    !out &&
+    stockQty != null &&
+    stockQty > 0 &&
+    stockQty <= LOW_STOCK_THRESHOLD
+      ? stockQty === 1
+        ? "Only 1 item available."
+        : `Only ${stockQty} items available.`
+      : "";
+  const subtitle =
+    lowStockNote || item?.brand_name || item?.variant_title || "";
+  const rating = item?.avg_rating ?? "0";
   const [wish, setWish] = useState(Boolean(item?.is_wishlist_item));
+  const [wishBusy, setWishBusy] = useState(false);
 
   const updateQty = async (nextQty) => {
-    if (!(await requireAuth('Please login to add items to cart'))) return;
+    if (!(await requireAuth("Please login to add items to cart"))) return;
     const block = getAddQtyBlockMessage(item, nextQty);
     if (block) {
-      showSuccessToast(block, 'error');
+      showSuccessToast(block, "error");
       return;
     }
     if (nextQty > cartQty && isPrescriptionRequired(item)) {
@@ -49,49 +74,74 @@ export default function ProductCard({ item, onWishlistChange }) {
   };
 
   const toggleWish = async (e) => {
+    e.preventDefault();
     e.stopPropagation();
-    if (!(await requireAuth('Please login to save wishlist items'))) return;
+    if (wishBusy) return;
+    if (!(await requireAuth("Please login to save wishlist items"))) return;
     if (!variantId) return;
-    const res = await toggleWishlistProduct(variantId);
-    if (res?.success === false) {
-      showSuccessToast(res?.message || 'Unable to update wishlist', 'error');
-      return;
+    const prev = wish;
+    setWish(!prev);
+    setWishBusy(true);
+    try {
+      const res = await toggleWishlistProduct(variantId);
+      if (res?.success === false) {
+        setWish(prev);
+        showSuccessToast(res?.message || "Unable to update wishlist", "error");
+        return;
+      }
+      onWishlistChange?.(item, !prev);
+    } catch {
+      setWish(prev);
+      showSuccessToast("Unable to update wishlist", "error");
+    } finally {
+      setWishBusy(false);
     }
-    setWish((prev) => !prev);
-    onWishlistChange?.(item, !wish);
   };
 
   return (
-    <article className={`am-product-card ${out ? 'is-out' : ''}`}>
+    <article className={`am-product-card ${app ? "am-product-card--app" : ""} ${out ? "is-out" : ""}`}>
       <div className="am-product-card__media">
         {image ? (
-          <img src={image} alt={item.name || ''} loading="lazy" decoding="async" />
+          <img
+            src={image}
+            alt={item.name || ""}
+            loading="lazy"
+            decoding="async"
+          />
         ) : (
           <span className="am-product-card__placeholder" aria-hidden>
             <Leaf size={32} />
           </span>
         )}
-        <div className="am-product-card__badges">
-          {discount > 0 ? <Badge tone="accent">{discount}% off</Badge> : null}
-          {rx ? (
-            <Badge tone="info" icon={<FileText size={12} aria-hidden />}>
-              Rx
-              <span className="am-sr-only"> — prescription required</span>
-            </Badge>
-          ) : null}
-        </div>
-        {out ? <span className="am-product-card__oos">Out of stock</span> : null}
+        {app && out ? (
+          <span className="am-product-card__corner is-oos">Out of Stock</span>
+        ) : app && discount > 0 ? (
+          <span className="am-product-card__corner">{discount}% OFF</span>
+        ) : (
+          <div className="am-product-card__badges">
+            {discount > 0 ? <Badge tone="accent">{discount}% off</Badge> : null}
+            {rx ? (
+              <Badge tone="info" icon={<FileText size={12} aria-hidden />}>
+                Rx
+                <span className="am-sr-only"> — prescription required</span>
+              </Badge>
+            ) : null}
+          </div>
+        )}
+        {!app && out ? (
+          <span className="am-product-card__oos">Out of stock</span>
+        ) : null}
+        <FavButton
+          corner
+          on={wish}
+          onClick={toggleWish}
+          label={
+            wish
+              ? `Remove ${item.name || "item"} from wishlist`
+              : `Add ${item.name || "item"} to wishlist`
+          }
+        />
       </div>
-
-      <button
-        type="button"
-        className={`am-product-card__wish ${wish ? 'is-on' : ''}`}
-        onClick={toggleWish}
-        aria-pressed={wish}
-        aria-label={wish ? `Remove ${item.name || 'item'} from wishlist` : `Add ${item.name || 'item'} to wishlist`}
-      >
-        <Heart size={18} aria-hidden />
-      </button>
 
       <div className="am-product-card__body">
         <h3 className="am-product-card__name">
@@ -103,24 +153,45 @@ export default function ProductCard({ item, onWishlistChange }) {
             {item.name}
           </button>
         </h3>
+        {app ? (
+          <p className={`am-product-card__sub ${lowStockNote ? "is-low" : ""}`}>
+            {subtitle || "\u00a0"}
+          </p>
+        ) : null}
         <p className="am-product-card__price">
           <strong>{price}</strong>
           {mrp ? (
             <s>
-              <span className="am-sr-only">MRP </span>
+              {app ? null : <span className="am-sr-only">MRP </span>}
+              {app ? "MRP " : null}
               {mrp}
             </s>
+          ) : null}
+          {!app && discount > 0 ? (
+            <span className="am-product-card__off">{discount}% off</span>
+          ) : null}
+          {app ? (
+            <span className="am-product-card__rate">
+              <Star size={11} aria-hidden />
+              {rating || "0"}
+            </span>
           ) : null}
         </p>
       </div>
 
-      <div className="am-product-card__action">
-        {out ? (
+      <div className={`am-product-card__action ${app ? "is-overlay" : ""}`}>
+        {cartButton || app ? (
+          <CartAddButton item={item} compact={app} className={app ? "am-cart-btn--sm" : ""} />
+        ) : out ? (
           <button type="button" className="am-product-card__add" disabled>
             Unavailable
           </button>
         ) : cartQty > 0 ? (
-          <div className="am-stepper" role="group" aria-label={`Quantity of ${item.name || 'item'}`}>
+          <div
+            className="am-stepper"
+            role="group"
+            aria-label={`Quantity of ${item.name || "item"}`}
+          >
             <button
               type="button"
               onClick={() => updateQty(Math.max(0, cartQty - 1))}
@@ -129,7 +200,7 @@ export default function ProductCard({ item, onWishlistChange }) {
             >
               <Minus size={16} aria-hidden />
             </button>
-            <span aria-live="polite">{adding ? '…' : cartQty}</span>
+            <span aria-live="polite">{adding ? "…" : cartQty}</span>
             <button
               type="button"
               onClick={() => updateQty(cartQty + 1)}
@@ -146,7 +217,7 @@ export default function ProductCard({ item, onWishlistChange }) {
             disabled={adding}
             onClick={() => updateQty(1)}
           >
-            {adding ? 'Adding…' : rx ? 'Add (Rx)' : 'Add to cart'}
+            {adding ? "Adding…" : rx ? "Add (Rx)" : "Add to cart"}
           </button>
         )}
       </div>

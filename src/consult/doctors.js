@@ -196,6 +196,11 @@ export const resolveConsultationModes = (doctor) => {
   return [];
 };
 
+export const doctorOffersVideo = (doctor) => {
+  const modes = resolveConsultationModes(doctor);
+  return !modes.length || modes.some((mode) => /video|online|virtual/.test(mode));
+};
+
 export const resolveLanguages = (doctor) =>
   toLabelList(
     doctor?.languages_spoken || doctor?.preferred_languages || doctor?.languages || doctor?.language,
@@ -354,6 +359,91 @@ export const listDoctors = (response) => {
   if (Array.isArray(data)) return data;
   if (Array.isArray(response?.results)) return response.results;
   return [];
+};
+
+const BLOCKED_DOCTOR_STATUSES = new Set([
+  'rejected',
+  'pending',
+  'draft',
+  'inactive',
+  'disabled',
+  'blocked',
+  'suspended',
+]);
+
+const APPROVED_DOCTOR_STATUSES = new Set(['approved', 'active', 'published', 'verified']);
+
+export const isApprovedDoctor = (doctor) => {
+  if (!doctor || typeof doctor !== 'object') return false;
+
+  const status = String(
+    doctor.approval_status ??
+      doctor.profile_status ??
+      doctor.doctor_status ??
+      doctor.verification_status ??
+      doctor.status ??
+      '',
+  )
+    .trim()
+    .toLowerCase();
+
+  if (status) {
+    if (BLOCKED_DOCTOR_STATUSES.has(status)) return false;
+    if (APPROVED_DOCTOR_STATUSES.has(status)) return true;
+  }
+
+  const approved = doctor.is_approved ?? doctor.isApproved ?? doctor.approved;
+  if (approved === false || approved === 'false' || approved === 0 || approved === '0') {
+    return false;
+  }
+  if (approved === true || approved === 'true' || approved === 1 || approved === '1') {
+    return true;
+  }
+
+  const active = doctor.is_active ?? doctor.isActive;
+  if (active === false || active === 'false' || active === 0 || active === '0') {
+    return false;
+  }
+
+  return true;
+};
+
+export const normalizeDoctorList = (response, { approvedOnly = false } = {}) => {
+  let items = listDoctors(response).filter(
+    (item) =>
+      item &&
+      getDoctorId(item) &&
+      String(item.full_name || item.name || item.doctor_name || '').trim(),
+  );
+  if (approvedOnly) items = items.filter(isApprovedDoctor);
+  return items;
+};
+
+export const hasMoreDoctorPages = (response, resultsLength, pageSize, pageLoaded) => {
+  const data = response?.data ?? response;
+  if (Array.isArray(data)) return resultsLength >= pageSize;
+  if (data && typeof data === 'object') {
+    if ('next' in data) return data.next != null && data.next !== '';
+    if (data?.pagination?.next != null) return Boolean(data.pagination.next);
+    if (data?.links?.next != null) return Boolean(data.links.next);
+    const total =
+      typeof data.count === 'number'
+        ? data.count
+        : typeof data.total === 'number'
+          ? data.total
+          : typeof data.total_count === 'number'
+            ? data.total_count
+            : null;
+    const page =
+      pageLoaded ??
+      (typeof data.page === 'number'
+        ? data.page
+        : typeof data.current_page === 'number'
+          ? data.current_page
+          : null);
+    if (total != null && page != null) return page * pageSize < total;
+  }
+  return resultsLength >= pageSize;
 };
 
 export { doctorDisplayName, doctorFeeLabel, formatRupee };

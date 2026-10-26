@@ -4,6 +4,47 @@
  * variables; never hard-code raw values in component or page CSS.
  */
 
+/* Brand faces, same as ayurmuni.com: Satoshi for display, Gilroy for UI text. */
+@font-face {
+  font-family: "Gilroy";
+  src: url("/fonts/Gilroy-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Gilroy";
+  src: url("/fonts/Gilroy-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("/fonts/Satoshi-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("/fonts/Satoshi-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("/fonts/Satoshi-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   /* ---------- Palette ---------- */
   --am-green-50: #f0f6f2;
@@ -17,6 +58,7 @@
   --am-green-800: #0b4136;
   --am-green-900: #0a2f27;
 
+  --am-sand-25: #fefdf9;
   --am-sand-50: #fdfbf6;
   --am-sand-100: #f9f5ec;
   --am-sand-200: #f2ebdc;
@@ -36,9 +78,9 @@
   --am-ink-300: #7b8a83;
 
   /* ---------- Semantic colour ---------- */
-  --am-bg: var(--am-sand-100);
+  --am-bg: #f4f3eb;
   --am-surface: #ffffff;
-  --am-surface-muted: var(--am-sand-50);
+  --am-surface-muted: #faf9f3;
   --am-surface-sunken: var(--am-sand-200);
   --am-surface-inverse: var(--am-green-900);
 
@@ -75,9 +117,11 @@
   --am-info-soft: #e8f1f8;
 
   /* ---------- Typography ---------- */
-  --am-font-display: 'Fraunces', 'Iowan Old Style', Georgia, 'Times New Roman', serif;
-  --am-font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans',
-    'Noto Sans Devanagari', sans-serif;
+  --am-font-display:
+    "Satoshi", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --am-font-body:
+    "Gilroy", system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans",
+    "Noto Sans Devanagari", sans-serif;
 
   --am-text-2xs: 0.6875rem;
   --am-text-xs: 0.75rem;
@@ -128,9 +172,12 @@
 
   /* ---------- Elevation ---------- */
   --am-shadow-xs: 0 1px 2px rgba(19, 35, 30, 0.05);
-  --am-shadow-sm: 0 1px 2px rgba(19, 35, 30, 0.04), 0 2px 8px rgba(19, 35, 30, 0.04);
-  --am-shadow-md: 0 1px 2px rgba(19, 35, 30, 0.04), 0 2px 8px rgba(19, 35, 30, 0.04);
-  --am-shadow-lg: 0 1px 2px rgba(19, 35, 30, 0.04), 0 2px 10px rgba(19, 35, 30, 0.05);
+  --am-shadow-sm:
+    0 1px 2px rgba(19, 35, 30, 0.04), 0 2px 8px rgba(19, 35, 30, 0.04);
+  --am-shadow-md:
+    0 1px 2px rgba(19, 35, 30, 0.04), 0 2px 8px rgba(19, 35, 30, 0.04);
+  --am-shadow-lg:
+    0 1px 2px rgba(19, 35, 30, 0.04), 0 2px 10px rgba(19, 35, 30, 0.05);
   --am-focus-ring: 0 0 0 3px rgba(13, 97, 78, 0.28);
 
   /* ---------- Motion ---------- */
@@ -143,10 +190,10 @@
   --am-ease-in: cubic-bezier(0.4, 0, 1, 1);
 
   /* ---------- Layout ---------- */
-  --am-container: 1240px;
+  --am-container: 100%;
   --am-container-narrow: 760px;
-  --am-gutter: 12px;
-  --am-header-h: 52px;
+  --am-gutter: 16px;
+  --am-header-h: 56px;
   --am-tabbar-h: 56px;
   --am-tap-min: 36px;
   --am-control-h: 36px;
@@ -188,14 +235,14 @@
 
 @media (min-width: 640px) {
   :root {
-    --am-gutter: 16px;
+    --am-gutter: 24px;
   }
 }
 
 @media (min-width: 901px) {
   :root {
-    --am-gutter: 16px;
-    --am-header-h: 56px;
+    --am-gutter: 32px;
+    --am-header-h: 72px;
     --am-text-body: 0.875rem;
     --am-control-h: 36px;
     --type-title: var(--am-text-3xl);
@@ -204,8 +251,16 @@
 
 @media (min-width: 1440px) {
   :root {
-    --am-container: 1320px;
-    --am-gutter: 16px;
-    --am-header-h: 56px;
+    --am-container: 100%;
+    --am-gutter: 40px;
+    --am-header-h: 72px;
+  }
+}
+
+/* Responsive: ≥44px touch targets on phones and tablets (desktop ≥1200px unchanged). */
+@media (max-width: 1199px) {
+  :root {
+    --am-tap-min: 44px;
+    --am-control-h: 44px;
   }
 }

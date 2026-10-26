@@ -31,6 +31,7 @@ import {
   bookingStatusLabel,
 } from '../content/booking';
 import '../design/pages/booking.css';
+import { nameInitial } from '../utils/initials';
 
 const pick = (...values) => {
   for (const value of values) {
@@ -253,7 +254,7 @@ export default function BookingConfirm() {
 
   return (
     <AppShell tab="consult">
-      <div className="bk-page">
+      <div className="bk-page bk-confirm-page">
         <StepIndicator steps={T.steps} current={2} label={T.stepsLabel} />
 
         <section className="bk-success" aria-labelledby="bk-confirm-title">
@@ -272,7 +273,7 @@ export default function BookingConfirm() {
           </div>
         </section>
 
-        <div className="bk-layout">
+        <div className="bk-layout bk-confirm-layout">
           <div className="bk-main">
             <section className="bk-card">
               <div className="bk-doctor">
@@ -280,7 +281,7 @@ export default function BookingConfirm() {
                   {booking.doctorImage ? (
                     <img src={booking.doctorImage} alt="" />
                   ) : (
-                    <span>{booking.doctorName.charAt(0)}</span>
+                    <span>{nameInitial(booking.doctorName)}</span>
                   )}
                 </span>
                 <div className="bk-doctor__copy">
@@ -298,7 +299,7 @@ export default function BookingConfirm() {
             </section>
           </div>
 
-          <aside className="bk-aside">
+          <aside className="bk-aside bk-confirm-aside">
             {booking.patientName || booking.concern || booking.hospitalName ? (
               <section className="bk-card" aria-labelledby="bk-details-title">
                 <div className="bk-card__head">
@@ -349,7 +350,7 @@ export default function BookingConfirm() {
         </div>
       </div>
 
-      <div className="bk-sticky" role="region" aria-label={T.home}>
+      <div className="bk-sticky bk-confirm-sticky" role="region" aria-label={T.home}>
         <Button block onClick={() => navigate('/home', { replace: true })}>
           {T.home}
         </Button>
@@ -362,7 +363,7 @@ export default function BookingConfirm() {
               {booking.doctorImage ? (
                 <img src={booking.doctorImage} alt="" />
               ) : (
-                <span>{booking.doctorName.charAt(0)}</span>
+                <span>{nameInitial(booking.doctorName)}</span>
               )}
             </span>
             <div className="bk-doctor__copy">

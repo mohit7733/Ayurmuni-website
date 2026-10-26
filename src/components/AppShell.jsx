@@ -15,7 +15,7 @@ const TAB_ICONS = {
   consult: Stethoscope,
 };
 
-export default function AppShell({ children, tab = 'home' }) {
+export default function AppShell({ children, tab = 'home', hideFooter = false }) {
   const loggedIn = useLoggedIn();
   const { itemCount } = useCart();
   return (
@@ -27,7 +27,7 @@ export default function AppShell({ children, tab = 'home' }) {
       <main id="main" className="app-shell-body" tabIndex={-1}>
         {children}
       </main>
-      <SiteFooter />
+      {hideFooter ? null : <SiteFooter />}
       {loggedIn ? (
       <nav className="tab-bar" aria-label="Main">
         {TAB_ITEMS.map((item) => {

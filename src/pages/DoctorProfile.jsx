@@ -5,15 +5,30 @@ import {
   BriefcaseMedical,
   CalendarClock,
   ExternalLink,
-  Heart,
+  HeartPulse,
   Languages,
   MapPin,
   RefreshCw,
+  ShieldCheck,
+  Star,
   Stethoscope,
+  UserRound,
   Video,
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
-import PageHeader from '../components/PageHeader';
+import {
+  ActionStack,
+  DetailCard,
+  DetailEmpty,
+  DetailHero,
+  DetailLayout,
+  DetailPage,
+  DetailSkeleton,
+  DetailTop,
+  MetaChip,
+  StatusPill,
+  SummaryRows,
+} from '../components/detail/Detail';
 import ShareButton from '../components/ShareButton';
 import { formatRupee } from '../home/catalog';
 import { getDoctorById, toggleFavDoctor } from '../services/consultService';
@@ -46,16 +61,13 @@ import {
   normalizeReviewsForDisplay,
 } from '../utils/reviewUtils';
 import {
-  Badge,
   Button,
   Disclaimer,
   EmptyState,
   ErrorState,
-  IconButton,
+  FavButton,
   Rating,
   ReviewCard,
-  Skeleton,
-  SkeletonText,
 } from '../components/ui';
 import { DOCTOR_PROFILE_COPY as T } from '../content/doctorProfile';
 import '../design/pages/doctor-profile.css';
@@ -85,24 +97,6 @@ function doctorDisplaySafe(doctor) {
     doctor?.name ||
     [doctor?.first_name, doctor?.last_name].filter(Boolean).join(' ') ||
     'Doctor'
-  );
-}
-
-function ProfileSkeleton() {
-  return (
-    <div className="dp-skel" aria-busy="true">
-      <div className="dp-skel-hero">
-        <Skeleton variant="circle" width={88} height={88} />
-        <div className="dp-skel-hero__copy">
-          <Skeleton width="60%" height={28} />
-          <Skeleton width="40%" />
-          <SkeletonText lines={2} />
-        </div>
-      </div>
-      <Skeleton variant="rect" height={120} />
-      <Skeleton variant="rect" height={160} />
-      <span className="am-sr-only">{T.loading}</span>
-    </div>
   );
 }
 
@@ -222,9 +216,7 @@ export default function DoctorProfile() {
 
   const headerActions = (
     <>
-      <IconButton label={fav ? T.saved : T.save} pressed={fav} onClick={toggleFav}>
-        <Heart size={18} fill={fav ? 'currentColor' : 'none'} aria-hidden />
-      </IconButton>
+      <FavButton on={fav} label={fav ? T.saved : T.save} onClick={toggleFav} />
       <ShareButton
         title={`Dr. ${displayName} - Ayurmuni`}
         text={`Consult with Dr. ${displayName}, ${speciality} on Ayurmuni`}
@@ -247,10 +239,10 @@ export default function DoctorProfile() {
   if (loading) {
     return (
       <AppShell tab="consult">
-        <div className="dp-page">
-          <PageHeader title={T.title} backTo="/consult/doctors" actions={headerActions} />
-          <ProfileSkeleton />
-        </div>
+        <DetailPage>
+          <DetailTop backTo="/consult/doctors" backLabel="Doctors" actions={headerActions} />
+          <DetailSkeleton media={false} label={T.loading} />
+        </DetailPage>
       </AppShell>
     );
   }
@@ -258,21 +250,19 @@ export default function DoctorProfile() {
   if (!doctor) {
     return (
       <AppShell tab="consult">
-        <div className="dp-page">
-          <PageHeader title={T.title} backTo="/consult/doctors" />
+        <DetailPage>
+          <DetailTop backTo="/consult/doctors" backLabel="Doctors" />
           {failed ? (
             <ErrorState title={T.notFoundTitle} description={T.notFoundText} onRetry={() => load(false)} />
           ) : (
-            <EmptyState
-              icon={<Stethoscope size={28} />}
+            <DetailEmpty
+              icon={Stethoscope}
               title={T.notFoundTitle}
-              description={T.notFoundText}
-              action={
-                <Button onClick={() => navigate('/consult/doctors')}>{T.browseAll}</Button>
-              }
+              text={T.notFoundText}
+              action={<Button onClick={() => navigate('/consult/doctors')}>{T.browseAll}</Button>}
             />
           )}
-        </div>
+        </DetailPage>
       </AppShell>
     );
   }
@@ -283,264 +273,235 @@ export default function DoctorProfile() {
   ]
     .filter(Boolean)
     .join(' · ') || T.checkSlots;
-
-  const bookActions = (
-    <>
-      <Button variant="secondary" onClick={openSlip} disabled={!id}>
-        {T.doctorSlip}
-      </Button>
-      <Button
-        variant="accent"
-        onClick={book}
-        disabled={!id}
-        leadingIcon={<CalendarClock size={18} aria-hidden />}
-      >
-        {T.book}
-      </Button>
-    </>
-  );
+  const showQualification =
+    qualification && qualification.trim().toLowerCase() !== speciality.trim().toLowerCase();
 
   return (
     <AppShell tab="consult">
-      <div className="dp-page">
-        <PageHeader
-          title={T.title}
-          subtitle={speciality}
-          backTo="/consult/doctors"
-          actions={headerActions}
-        />
+      <DetailPage className="dp-page--dx">
+        <DetailTop backTo="/consult/doctors" backLabel="Doctors" actions={headerActions} />
 
-        <div className="dp-layout">
-          <div className="dp-main">
-            <section className="dp-hero" aria-labelledby="dp-name">
-              <div className="dp-hero__top">
-                <div className="dp-photo">
-                  <div className="dp-photo__img" aria-hidden={!image}>
-                    {image ? (
-                      <img src={image} alt={displayName} width={112} height={112} />
-                    ) : (
-                      <span>{displayName.charAt(0)}</span>
-                    )}
-                  </div>
-                  {isVerified ? (
-                    <span className="dp-photo__verified" title={T.verified}>
-                      <BadgeCheck size={16} aria-hidden />
-                      <span className="am-sr-only">{T.verified}</span>
-                    </span>
-                  ) : null}
-                </div>
-
-                <div className="dp-hero__id">
-                  {isVerified ? <Badge tone="success">{T.verified}</Badge> : null}
-                  <h1 id="dp-name">{displayName}</h1>
-                  <p className="dp-hero__spec">{speciality}</p>
-                  {qualification ? <p className="dp-hero__qual">{qualification}</p> : null}
-                  <div className="dp-hero__rating">
-                    {ratingValue ? <Rating value={ratingValue} count={reviewCount} size="md" /> : null}
-                  </div>
-                  {(experienceLabel || locationLabel) && (
-                    <ul className="dp-hero__meta">
-                      {experienceLabel ? (
-                        <li>
-                          <BriefcaseMedical size={14} aria-hidden />
-                          {experienceLabel}
-                        </li>
-                      ) : null}
-                      {locationLabel ? (
-                        <li>
-                          <MapPin size={14} aria-hidden />
-                          {locationLabel}
-                        </li>
-                      ) : null}
-                    </ul>
-                  )}
-                </div>
+        <DetailHero
+          variant="band"
+          className="dp-hero--dx"
+          titleId="dp-name"
+          avatar={
+            <>
+              {image ? <img src={image} alt="" /> : displayName.replace(/^dr\.?\s*/i, '').charAt(0)}
+            </>
+          }
+          eyebrow="Ayurveda doctor"
+          title={displayName}
+          lede={showQualification ? `${speciality} · ${qualification}` : speciality}
+          chips={
+            <>
+              {ratingValue ? (
+                <MetaChip icon={Star} tone="gold">
+                  {ratingValue} · {reviewCount} {T.reviews.toLowerCase()}
+                </MetaChip>
+              ) : null}
+              {experienceLabel ? <MetaChip icon={BriefcaseMedical}>{experienceLabel}</MetaChip> : null}
+              {locationLabel ? <MetaChip icon={MapPin}>{locationLabel}</MetaChip> : null}
+              {consultationModes.length > 0 ? <MetaChip icon={Video}>{T.videoConsult}</MetaChip> : null}
+            </>
+          }
+          aside={
+            <>
+              {isVerified ? (
+                <StatusPill tone="success">
+                  <BadgeCheck size={12} aria-hidden /> {T.verified}
+                </StatusPill>
+              ) : null}
+              <div className="dx-figure">
+                <small>{T.consultation}</small>
+                <strong>{feeLabel || T.feeFallback}</strong>
               </div>
-
-              <ul className="dp-stats" aria-label="Doctor highlights">
-                <li>
-                  <strong>{experienceLabel || '—'}</strong>
-                  <span>{T.yearsExp}</span>
-                </li>
-                <li>
-                  <strong>{ratingValue || '—'}</strong>
-                  <span>{T.rating}</span>
-                </li>
-                <li>
-                  <strong>{reviewCount}</strong>
-                  <span>{T.reviews}</span>
-                </li>
-              </ul>
-            </section>
-
-            {about ? (
-              <section className="dp-card" aria-labelledby="dp-about">
-                <div className="dp-card__head">
-                  <h2 id="dp-about">{T.about}</h2>
-                </div>
-                <p className="dp-about">
-                  {aboutText}
-                  {shouldTruncate ? (
-                    <button
-                      type="button"
-                      className="dp-about__toggle"
-                      onClick={() => setShowFullAbout((open) => !open)}
-                      aria-expanded={showFullAbout}
-                    >
-                      {showFullAbout ? T.showLess : T.showMore}
-                    </button>
-                  ) : null}
-                </p>
-              </section>
-            ) : null}
-
-            {specializations.length > 0 ? (
-              <section className="dp-card" aria-labelledby="dp-specs">
-                <div className="dp-card__head">
-                  <h2 id="dp-specs">{T.specializations}</h2>
-                </div>
-                <ChipRow items={specializations} tone="primary" />
-              </section>
-            ) : null}
-
-            {healthDiseases.length > 0 ? (
-              <section className="dp-card" aria-labelledby="dp-treats">
-                <div className="dp-card__head">
-                  <h2 id="dp-treats">{T.treats}</h2>
-                  <span className="dp-card__count">{healthDiseases.length}</span>
-                </div>
-                <ChipRow items={visibleConditions} />
-                {hiddenConditions > 0 ? (
-                  <div className="dp-more">
-                    <Button
-                      variant="link"
-                      size="sm"
-                      onClick={() => setShowAllConditions((open) => !open)}
-                    >
-                      {showAllConditions ? T.showLess : T.moreConditions(hiddenConditions)}
-                    </Button>
-                  </div>
-                ) : null}
-              </section>
-            ) : null}
-
-            {socialAccounts.length > 0 ? (
-              <section className="dp-card" aria-labelledby="dp-social">
-                <div className="dp-card__head">
-                  <h2 id="dp-social">{T.social}</h2>
-                </div>
-                <div className="dp-social">
-                  {socialAccounts.map((item) => (
-                    <Button
-                      key={item.label}
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => openSocial(item.url)}
-                      trailingIcon={<ExternalLink size={14} aria-hidden />}
-                    >
-                      {item.label}
-                    </Button>
-                  ))}
-                </div>
-              </section>
-            ) : null}
-
-            <section className="dp-card" aria-labelledby="dp-reviews">
-              <div className="dp-card__head">
-                <h2 id="dp-reviews">{T.ratingsTitle}</h2>
-                {reviews.length > 0 ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      navigate('/reviews', {
-                        state: {
-                          entityType: 'doctor',
-                          doctorId: id,
-                          reviews,
-                        },
-                      })
-                    }
-                  >
-                    {T.viewAllReviews}
-                  </Button>
-                ) : null}
-              </div>
-              {reviews.length > 0 ? (
-                <div className="dp-reviews">
-                  {reviews.slice(0, 3).map((item, index) => {
-                    const media = (item.image_urls || []).map((url) => ({
-                      url,
-                      type: isReviewVideoUrl(url) ? 'video' : 'image',
-                    }));
-                    return (
-                      <ReviewCard
-                        key={item.id || index}
-                        name={item.patient_name || 'Patient'}
-                        rating={item.rating}
-                        text={item.comment || item.review || item.message || ''}
-                        media={media}
-                        onMediaClick={(mediaIndex) =>
-                          navigate('/reviews/gallery', {
-                            state: { images: item.image_urls, selectedIndex: mediaIndex },
-                          })
-                        }
-                      />
-                    );
-                  })}
-                </div>
-              ) : (
-                <EmptyState compact title={T.noReviews} description={T.noReviewsText} />
-              )}
-            </section>
-
-            <Disclaimer variant="banner" />
+            </>
+          }
+        >
+          <div className="dx-actions dx-actions--row">
+            <Button
+              variant="accent"
+              size="sm"
+              onClick={book}
+              disabled={!id}
+              leadingIcon={<CalendarClock size={16} aria-hidden />}
+            >
+              {T.book}
+            </Button>
+            <Button variant="secondary" size="sm" onClick={openSlip} disabled={!id}>
+              {T.doctorSlip}
+            </Button>
           </div>
+        </DetailHero>
 
-          <aside className="dp-aside" aria-label={T.consultation}>
-            <div className="dp-fee">
-              <div>
-                <p className="dp-fee__label">{T.consultation}</p>
-                <p className="dp-fee__value">{feeLabel || '—'}</p>
-              </div>
-              {consultationModes.length > 0 ? (
-                <div className="dp-fee__mode">
-                  <p className="dp-fee__label">{T.consultVia}</p>
-                  <Badge tone="info" icon={<Video size={12} aria-hidden />}>
-                    {T.videoConsult}
-                  </Badge>
+        <DetailLayout
+          aside={
+            <>
+              <DetailCard id="dp-consult" title={T.consultation} icon={CalendarClock} tone="accent">
+                {showAvailability ? (
+                  <div className={`dp-avail${hasAvailability ? ' is-open' : ''}`}>
+                    <span className="dp-avail__icon" aria-hidden>
+                      <CalendarClock size={18} />
+                    </span>
+                    <div>
+                      <strong>{hasAvailability ? T.available : T.limited}</strong>
+                      <p>{availabilityLine}</p>
+                    </div>
+                  </div>
+                ) : null}
+                <SummaryRows
+                  rows={[
+                    { label: T.consultVia, value: consultationModes.length > 0 ? T.videoConsult : '' },
+                    { label: T.yearsExp, value: experienceLabel },
+                  ]}
+                  total={{ label: 'Consultation fee', value: feeLabel }}
+                />
+                <ActionStack>
+                  <Button onClick={book} disabled={!id} leadingIcon={<CalendarClock size={16} aria-hidden />}>
+                    {T.book}
+                  </Button>
+                  <Button variant="secondary" onClick={openSlip} disabled={!id}>
+                    {T.doctorSlip}
+                  </Button>
+                </ActionStack>
+              </DetailCard>
+
+              {languages.length > 0 ? (
+                <DetailCard id="dp-langs" title={T.languages} icon={Languages}>
+                  <ChipRow items={languages} tone="accent" />
+                </DetailCard>
+              ) : null}
+
+              <p className="dx-note">
+                <ShieldCheck size={14} aria-hidden />
+                Verified BAMS / MD practitioners. Consultations are private and secure.
+              </p>
+            </>
+          }
+        >
+          {about ? (
+            <DetailCard id="dp-about" title={T.about} icon={UserRound}>
+              <p className="dx-prose">
+                {aboutText}
+                {shouldTruncate && !showFullAbout ? '… ' : ' '}
+                {shouldTruncate ? (
+                  <button
+                    type="button"
+                    className="dp-about__toggle"
+                    onClick={() => setShowFullAbout((open) => !open)}
+                    aria-expanded={showFullAbout}
+                  >
+                    {showFullAbout ? T.showLess : T.showMore}
+                  </button>
+                ) : null}
+              </p>
+            </DetailCard>
+          ) : null}
+
+          {healthDiseases.length > 0 ? (
+            <DetailCard id="dp-treats" title={T.treats} icon={HeartPulse} meta={String(healthDiseases.length)}>
+              <ChipRow items={visibleConditions} />
+              {hiddenConditions > 0 ? (
+                <div className="dp-more">
+                  <Button variant="link" size="sm" onClick={() => setShowAllConditions((open) => !open)}>
+                    {showAllConditions ? T.showLess : T.moreConditions(hiddenConditions)}
+                  </Button>
                 </div>
               ) : null}
-            </div>
+            </DetailCard>
+          ) : null}
 
-            {showAvailability ? (
-              <div className={`dp-avail${hasAvailability ? ' is-open' : ''}`}>
-                <span className="dp-avail__icon" aria-hidden>
-                  <CalendarClock size={18} />
-                </span>
+          {specializations.length > 0 ? (
+            <DetailCard id="dp-specs" title={T.specializations} icon={Stethoscope}>
+              <ChipRow items={specializations} tone="primary" />
+            </DetailCard>
+          ) : null}
+
+          {socialAccounts.length > 0 ? (
+            <DetailCard id="dp-social" title={T.social} icon={ExternalLink}>
+              <div className="dp-social">
+                {socialAccounts.map((item) => (
+                  <Button
+                    key={item.label}
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => openSocial(item.url)}
+                    trailingIcon={<ExternalLink size={14} aria-hidden />}
+                  >
+                    {item.label}
+                  </Button>
+                ))}
+              </div>
+            </DetailCard>
+          ) : null}
+
+          <DetailCard
+            id="dp-reviews"
+            title={T.ratingsTitle}
+            icon={Star}
+            action={
+              reviews.length > 0 ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    navigate('/reviews', {
+                      state: {
+                        entityType: 'doctor',
+                        doctorId: id,
+                        reviews,
+                      },
+                    })
+                  }
+                >
+                  {T.viewAllReviews}
+                </Button>
+              ) : null
+            }
+          >
+            {ratingValue ? (
+              <div className="dp-score">
+                <strong>{ratingValue}</strong>
                 <div>
-                  <strong>{hasAvailability ? T.available : T.limited}</strong>
-                  <p>{availabilityLine}</p>
+                  <Rating value={ratingValue} size="md" />
+                  <small>
+                    {reviewCount} {T.reviews.toLowerCase()}
+                  </small>
                 </div>
               </div>
             ) : null}
+            {reviews.length > 0 ? (
+              <div className="dp-reviews">
+                {reviews.slice(0, 3).map((item, index) => {
+                  const media = (item.image_urls || []).map((url) => ({
+                    url,
+                    type: isReviewVideoUrl(url) ? 'video' : 'image',
+                  }));
+                  return (
+                    <ReviewCard
+                      key={item.id || index}
+                      name={item.patient_name || 'Patient'}
+                      rating={item.rating}
+                      text={item.comment || item.review || item.message || ''}
+                      media={media}
+                      onMediaClick={(mediaIndex) =>
+                        navigate('/reviews/gallery', {
+                          state: { images: item.image_urls, selectedIndex: mediaIndex },
+                        })
+                      }
+                    />
+                  );
+                })}
+              </div>
+            ) : (
+              <EmptyState compact title={T.noReviews} description={T.noReviewsText} />
+            )}
+          </DetailCard>
 
-            {languages.length > 0 ? (
-              <section className="dp-card" aria-labelledby="dp-langs">
-                <div className="dp-card__head">
-                  <h2 id="dp-langs" className="dp-card__title-icon">
-                    <Languages size={16} aria-hidden />
-                    {T.languages}
-                  </h2>
-                </div>
-                <ChipRow items={languages} tone="accent" />
-              </section>
-            ) : null}
-
-            <div className="dp-aside__actions">{bookActions}</div>
-          </aside>
-        </div>
-      </div>
+          <Disclaimer variant="banner" />
+        </DetailLayout>
+      </DetailPage>
 
       <div className="dp-sticky" role="region" aria-label={T.book}>
         <div className="dp-sticky__fee">

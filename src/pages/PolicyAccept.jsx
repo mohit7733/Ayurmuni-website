@@ -39,6 +39,7 @@ export default function PolicyAccept() {
     setError(null);
     try {
       const res = await getRequiredPolicies();
+      if (res?.success === false) throw new Error(res?.message || 'Unable to load policies.');
       setPolicies(getPoliciesList(res));
     } catch (e) {
       setError(e?.message || 'Unable to load policies.');
@@ -95,7 +96,9 @@ export default function PolicyAccept() {
     if (accepting) return;
     setAccepting(true);
     try {
-      await acceptPolicies({ type: 'all' });
+      const res = await acceptPolicies({ type: 'all' });
+      // apiClient resolves with success:false instead of throwing; never mark accepted on failure.
+      if (res?.success === false) throw new Error(res?.message || 'Unable to accept policies right now');
       await Utils.storeData('_POLICY_ACCEPTED_CUSTOMER', true);
       showSuccessToast('Policies accepted', 'success');
       continueNext();

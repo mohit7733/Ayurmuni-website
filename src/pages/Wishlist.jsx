@@ -43,7 +43,10 @@ export default function Wishlist() {
         {loading ? (
           <p className="muted">Loading wishlist…</p>
         ) : items.length === 0 ? (
-          <p className="empty-copy">No wishlist items</p>
+          <div className="empty-copy">
+            <strong>Wishlist is Empty</strong>
+            <p>No products added to wishlist yet.</p>
+          </div>
         ) : (
           <div className="catalog-grid">
             {items.map((item) => (

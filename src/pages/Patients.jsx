@@ -12,6 +12,7 @@ import {
   listPatients,
   switchPatient,
 } from '../services/patientService';
+import '../design/pages/patients.css';
 
 const AVATAR_COLORS = ['#CBD5E1', '#BAE6FD', '#BBF7D0', '#FDE68A', '#FBCFE8', '#DDD6FE'];
 
@@ -29,10 +30,15 @@ export default function Patients() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [patientRes, profileRes] = await Promise.all([getPatientList(), user_profile()]);
-    setPatients(listPatients(patientRes));
-    setUser(profileRes?.data || null);
-    setLoading(false);
+    try {
+      const [patientRes, profileRes] = await Promise.all([getPatientList(), user_profile()]);
+      setPatients(listPatients(patientRes));
+      setUser(profileRes?.data || null);
+    } catch {
+      showSuccessToast('Failed to load data', 'error');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -155,13 +161,19 @@ export default function Patients() {
             </div>
 
             <div className="home-section-head">
-              <h2>Patient list</h2>
+              <div>
+                <h2>Patient list</h2>
+                <p>Switch between profiles or manage family members.</p>
+              </div>
+              <span className="patient-count">
+                {patients.length} {patients.length === 1 ? 'family member' : 'family members'}
+              </span>
             </div>
 
             {patients.length === 0 ? (
               <div className="empty-copy">
                 <strong>No patients added</strong>
-                <p>Add your first family member to get started.</p>
+                <p>Add your first patient to get started.</p>
               </div>
             ) : (
               patients.map((item) => {

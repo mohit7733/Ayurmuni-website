@@ -190,12 +190,10 @@ export default function PrescriptionVerify() {
                     ? navigate('/medicines/checkout', {
                         state: { request, notes: notes || request?.notes, approved: true },
                       })
-                    : navigate('/medicines/order-status', {
-                        state: { request, notes: notes || request?.notes },
-                      })
+                    : showSuccessToast('Waiting for prescription approval', 'error')
                 }
               >
-                {approved ? 'Finalize order' : 'Track request'}
+                {approved ? 'Finalize order' : 'Waiting for approval'}
               </button>
             </div>
           </div>

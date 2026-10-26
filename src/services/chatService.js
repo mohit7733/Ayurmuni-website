@@ -69,7 +69,10 @@ const extractSentMessage = (body) => {
 
 const authHeader = async () => {
   const token = await Utils.getData('_TOKEN');
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  return {
+    'ngrok-skip-browser-warning': '1',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
 };
 
 export const chatService = {

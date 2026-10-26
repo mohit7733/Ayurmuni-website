@@ -17,6 +17,7 @@ import {
   isDietPlanAssignmentReviewed,
   markDietPlanAssignmentReviewed,
 } from '../utils/reviewedDietPlans';
+import '../design/pages/share-experience.css';
 
 const MAX_MEDIA = 5;
 
@@ -214,7 +215,7 @@ export default function ShareExperience() {
           {entitySubtitle ? <p>{entitySubtitle}</p> : null}
         </div>
 
-        <div className="checkout-card">
+        <div className="checkout-card review-section review-section--rating">
           <h3>Your rating</h3>
           <div className="review-stars">
             {[1, 2, 3, 4, 5].map((star) => (
@@ -234,7 +235,7 @@ export default function ShareExperience() {
           </p>
         </div>
 
-        <div className="checkout-card">
+        <div className="checkout-card review-section review-section--text">
           <h3>Tell us more</h3>
           <textarea
             className="review-text"
@@ -246,7 +247,7 @@ export default function ShareExperience() {
           <small className="muted">{review.length}/800</small>
         </div>
 
-        <div className="checkout-card">
+        <div className="checkout-card review-section review-section--media">
           <div className="review-media-head">
             <h3>Photos & videos</h3>
             <small>Optional • up to {MAX_MEDIA}</small>

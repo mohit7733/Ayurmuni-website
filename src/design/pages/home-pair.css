@@ -1,0 +1,295 @@
+/* Home: upcoming appointment + active diet plan in one row. */
+.hm-pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+.hm-pair:empty { display: none; }
+.hm-pair > * {
+  min-width: 0;
+  height: 100%;
+  margin: 0 !important;
+  box-sizing: border-box;
+}
+@media (max-width: 760px) {
+  .hm-pair { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .hm-pair > * { height: auto; }
+}
+
+/* ===== Upcoming appointment card: reuses .am-diet-active surface/typography ===== */
+.hm-pair .am-diet-active { height: 100%; align-content: center; }
+.hm-pair .am-diet-active:not(.hm-appt) {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px 14px;
+}
+.hm-pair .am-diet-active:not(.hm-appt) .am-diet-active__progress,
+.hm-pair .am-diet-active:not(.hm-appt) .am-diet-active__next {
+  grid-column: 1 / -1;
+  padding-left: 0;
+  border-left: 0;
+}
+
+.hm-page .am-diet-active.hm-appt {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    'media body status'
+    'strip strip strip'
+    'actions actions actions';
+  align-items: center;
+  gap: 14px 16px;
+  padding: 16px 18px;
+}
+.hm-appt .am-diet-active__media { grid-area: media; }
+.hm-appt .am-diet-active__body { grid-area: body; }
+.hm-appt__media span {
+  font-family: var(--am-font-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #ecd18f;
+}
+.hm-appt.is-live .am-diet-active__eyebrow { color: #17634f; }
+
+.hm-appt__status {
+  grid-area: status;
+  align-self: start;
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(31, 154, 111, 0.3);
+  background: rgba(31, 154, 111, 0.1);
+  color: #17634f;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.hm-appt__strip {
+  grid-area: strip;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 0;
+  margin: 0;
+  padding: 12px 0 0;
+  border-top: 1px solid rgba(201, 165, 90, 0.35);
+}
+.hm-appt__strip > div {
+  min-width: 0;
+  padding: 0 18px;
+  border-left: 1px solid rgba(201, 165, 90, 0.35);
+}
+.hm-appt__strip > div:first-child { padding-left: 0; border-left: 0; }
+.hm-appt__strip dt {
+  margin: 0 0 3px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #a17f3a;
+}
+.hm-appt__strip dd {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #105343;
+  white-space: nowrap;
+}
+
+.hm-appt__actions {
+  grid-area: actions;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.hm-appt__cta {
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+.hm-appt.is-live .hm-appt__cta { background: #a17f3a; }
+.hm-appt.is-live .hm-appt__cta:hover { background: #8a6b2e; }
+.hm-appt__link {
+  padding: 6px 2px;
+  border: 0;
+  background: none;
+  color: #105343;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: rgba(201, 165, 90, 0.7);
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+.hm-appt__link:hover { color: #a17f3a; }
+.hm-appt__link:focus-visible { outline: 2px solid #105343; outline-offset: 2px; border-radius: 6px; }
+
+/* loading skeleton */
+.hm-appt.is-loading { grid-template-areas: 'media body body' 'strip strip strip'; min-height: 170px; }
+.hm-appt__skel {
+  display: block;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #f1ebdc 25%, #faf6ec 50%, #f1ebdc 75%) 0 0 / 200% 100%;
+  animation: hm-appt-shimmer 1.4s linear infinite;
+}
+.hm-appt__skel--media { grid-area: media; width: 64px; height: 64px; border-radius: 16px; }
+.hm-appt__skel--body { grid-area: body; height: 44px; }
+.hm-appt__skel--strip { grid-area: strip; height: 40px; }
+@keyframes hm-appt-shimmer { to { background-position: -200% 0; } }
+
+@media (max-width: 639px) {
+  .hm-page .am-diet-active.hm-appt {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      'media body'
+      'status status'
+      'strip strip'
+      'actions actions';
+    padding: 12px;
+  }
+  .hm-appt__status { justify-self: start; }
+  .hm-appt__strip > div { padding: 0 12px; }
+  .hm-appt__strip dd { font-size: 13px; }
+  .hm-appt__cta { flex: 1 1 auto; justify-content: center; }
+  .hm-pair .am-diet-active:not(.hm-appt) { grid-template-columns: auto minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hm-appt__skel { animation: none; }
+}
+/* ===== Home Yoga sessions: brand-green premium panel ===== */
+.hm-page .hm-wellness .hm-well--move {
+  border: 1px solid rgba(217, 184, 108, 0.55);
+  background:
+    radial-gradient(70% 90% at 100% 0%, rgba(228, 196, 122, 0.2), transparent 60%),
+    radial-gradient(60% 80% at 0% 100%, rgba(47, 138, 108, 0.32), transparent 65%),
+    linear-gradient(150deg, #0d614e 0%, #0b5142 55%, #0b4136 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 2px 6px rgba(11, 65, 54, 0.12),
+    0 18px 40px -18px rgba(11, 65, 54, 0.5);
+}
+/* Header: same layout as Diet (title | subtitle inline, View all right), recoloured. */
+.hm-page .hm-wellness .hm-well--move .hm-well__title { color: #fbf6ea; }
+.hm-page .hm-wellness .hm-well--move .hm-well__text { color: rgba(251, 246, 234, 0.74); }
+.hm-page .hm-wellness .hm-well--move .hm-well__lead .hm-well__text::before { background: rgba(228, 196, 122, 0.6); }
+.hm-page .hm-wellness .hm-well--move .hm-well__head .am-btn {
+  border-color: rgba(228, 196, 122, 0.65);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f3e1b0;
+  box-shadow: none;
+}
+.hm-page .hm-wellness .hm-well--move .hm-well__head .am-btn:hover {
+  border-color: #e4c47a;
+  background: #e4c47a;
+  color: #0b4136;
+}
+
+/* Rail: soft fade on the right edge instead of a hard cut. */
+.hm-page .hm-wellness .hm-well--move .am-rail.hm-yoga-rail {
+  -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 36px), transparent 100%);
+  mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 36px), transparent 100%);
+}
+
+/* Cards on green: gold ring play button, glass level chip. */
+.hm-page .hm-wellness .hm-well--move .hm-pose {
+  border: 1px solid rgba(228, 196, 122, 0.25);
+  box-shadow: 0 12px 24px -14px rgba(0, 0, 0, 0.55);
+}
+.hm-page .hm-wellness .hm-well--move .hm-pose__play {
+  background: rgba(11, 65, 54, 0.55);
+  color: #fbf6ea;
+  box-shadow: 0 0 0 2px rgba(228, 196, 122, 0.85), 0 8px 18px -6px rgba(0, 0, 0, 0.5);
+}
+.hm-page .hm-wellness .hm-well--move .hm-pose__level {
+  border-color: rgba(228, 196, 122, 0.55);
+  background: rgba(11, 65, 54, 0.62);
+  color: #fbf6ea;
+}
+
+/* Equal-height pair: the Yoga panel follows the Diet panel's height; cards fill it. */
+@media (min-width: 1080px) {
+  .hm-page .hm-wellness--pair .hm-well--move .am-rail.hm-yoga-rail { flex: 1 1 auto; min-height: 220px; align-items: stretch; }
+  .hm-page .hm-wellness--pair .hm-well--move .hm-pose__media { flex: 1 1 auto; aspect-ratio: auto; min-height: 0; height: 100%; }
+  .hm-page .hm-wellness--pair .hm-well--move .hm-pose__media img { position: absolute; inset: 0; }
+}
+
+/* ===== T141: compact pair (~112px desktop) — upcoming appointment + active diet ===== */
+.hm-page .hm-pair .am-diet-active { padding: 11px 14px; gap: 6px 12px; border-radius: 18px; align-content: start; }
+.hm-page .hm-pair .am-diet-active__media { width: 44px; height: 44px; border-radius: 12px; }
+.hm-page .hm-pair .am-diet-active__media svg { width: 22px; height: 22px; }
+.hm-page .hm-pair .hm-appt__media span { font-size: 15px; }
+.hm-page .hm-pair .am-diet-active__eyebrow { margin: 0; font-size: 10px; line-height: 1.2; }
+.hm-page .hm-pair .am-diet-active__title { font-size: 15px; line-height: 1.15; }
+.hm-page .hm-pair .am-diet-active__sub { margin: 1px 0 0; font-size: 12px; line-height: 1.25; }
+.hm-page .hm-pair .am-diet-active__cta {
+  position: relative; min-height: 36px; padding: 0 14px; font-size: 12.5px; justify-content: center; box-shadow: none;
+}
+.hm-page .hm-pair .am-diet-active__cta svg { width: 14px; height: 14px; }
+@media (pointer: coarse) {
+  .hm-page .hm-pair .am-diet-active__cta::after,
+  .hm-page .hm-pair .hm-appt__link::after { content: ''; position: absolute; inset: -4px; }
+  .hm-page .hm-pair .hm-appt__link { position: relative; }
+}
+
+/* appointment: header row + one meta/actions row */
+.hm-page .hm-pair .am-diet-active.hm-appt {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: 'media body status' 'strip strip actions';
+  gap: 6px 12px; padding: 12px 14px;
+}
+.hm-page .hm-pair .hm-appt__status { justify-self: end; height: 22px; padding: 0 9px; font-size: 11px; }
+.hm-page .hm-pair .hm-appt__strip {
+  flex-wrap: nowrap; align-items: center; gap: 0; min-width: 0; padding: 6px 0 0; overflow: hidden;
+}
+/* meta reads as one line: Today · 6:01 PM – 6:31 PM · in 4 hrs (dt kept for screen readers) */
+.hm-page .hm-pair .hm-appt__strip > div { display: flex; min-width: 0; padding: 0; border-left: 0; white-space: nowrap; }
+.hm-page .hm-pair .hm-appt__strip > div:nth-child(2) { flex: 0 1 auto; }
+.hm-page .hm-pair .hm-appt__strip > div + div::before { content: '·'; margin: 0 7px; color: #c9a55a; font-weight: 700; }
+.hm-page .hm-pair .hm-appt__strip dt {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+.hm-page .hm-pair .hm-appt__strip dd { font-size: 12.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; }
+.hm-page .hm-pair .hm-appt__strip > div:last-child dd { color: #a17f3a; }
+.hm-page .hm-pair .hm-appt__actions { gap: 10px; justify-content: flex-end; padding-top: 6px; border-top: 1px solid rgba(201, 165, 90, 0.35); }
+.hm-page .hm-pair .hm-appt__link { padding: 4px 0; font-size: 12.5px; white-space: nowrap; }
+.hm-page .hm-pair .hm-appt.is-loading { min-height: 112px; }
+.hm-page .hm-pair .hm-appt__skel--media { width: 44px; height: 44px; border-radius: 12px; }
+.hm-page .hm-pair .hm-appt__skel--strip { height: 28px; }
+
+/* diet: CTA in header row, progress on one line, next meal on one line */
+.hm-page .hm-pair .am-diet-active:not(.hm-appt) {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: 'media body cta' 'prog prog prog' 'next next next';
+  gap: 6px 12px;
+}
+.hm-page .hm-pair .am-diet-active:not(.hm-appt) .am-diet-active__media { grid-area: media; }
+.hm-page .hm-pair .am-diet-active:not(.hm-appt) .am-diet-active__body { grid-area: body; }
+.hm-page .hm-pair .am-diet-active:not(.hm-appt) .am-diet-active__cta { grid-area: cta; }
+.hm-page .hm-pair .am-diet-active:not(.hm-appt) .am-diet-active__progress {
+  grid-area: prog; display: flex; align-items: center; gap: 10px; min-width: 0;
+  padding-top: 6px; border-top: 1px solid rgba(201, 165, 90, 0.35);
+}
+.hm-page .hm-pair .am-diet-active__progress-row { display: contents; font-size: 12px; }
+.hm-page .hm-pair .am-diet-active__progress-row > span { white-space: nowrap; font-size: 12px; color: #4b5a55; }
+.hm-page .hm-pair .am-diet-active__progress-row > span:nth-child(2) { order: 2; font-weight: 600; color: #105343; }
+.hm-page .hm-pair .am-diet-active__bar { order: 1; flex: 1 1 auto; height: 5px; }
+.hm-page .hm-pair .am-diet-active:not(.hm-appt) .am-diet-active__next {
+  grid-area: next; flex-direction: row; align-items: baseline; gap: 6px; min-width: 0; white-space: nowrap;
+}
+.hm-page .hm-pair .am-diet-active__next-label { flex: none; font-size: 11px; }
+.hm-page .hm-pair .am-diet-active__next-meal { min-width: 0; font-size: 12.5px; }
+.hm-page .hm-pair .am-diet-active__next-meal::before { content: '— '; color: #c9a55a; }
+
+@media (max-width: 639px) {
+  .hm-page .hm-pair .am-diet-active.hm-appt { grid-template-areas: 'media body status' 'strip strip strip' 'actions actions actions'; }
+  .hm-page .hm-pair .hm-appt__status { justify-self: end; }
+  .hm-page .hm-pair .hm-appt__cta { flex: 0 0 auto; }
+  .hm-page .hm-pair .am-diet-active:not(.hm-appt) { grid-template-columns: auto minmax(0, 1fr) auto; }
+}
+@media (max-width: 360px) {
+  .hm-page .hm-pair .am-diet-active:not(.hm-appt) { grid-template-areas: 'media body body' 'prog prog prog' 'next next next' 'cta cta cta'; }
+}

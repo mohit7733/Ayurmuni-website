@@ -2,10 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AppShell from '../components/AppShell';
 import ShareButton from '../components/ShareButton';
+import MultipleDoctorSlip from '../components/consult/MultipleDoctorSlip';
 import {
-  ConsultationTimeline,
   MedicineRow,
-  StitchedRegimenList,
   prescriptionPath,
   prescriptionState,
 } from '../components/consult/ConsultationTimeline';
@@ -19,8 +18,6 @@ import {
   getPatientMeta,
   hasPrescribedData,
 } from '../utils/doctorSlipUtils';
-
-const PREVIEW_LIMIT = 3;
 
 const NoteBlock = ({ label, value }) => {
   if (!value) return null;
@@ -123,16 +120,6 @@ export default function DoctorSlip() {
   const prescription = active?.prescription;
   const fee = active?.payment?.consultation_fee ?? active?.payment?.amount;
   const multi = consultations.length > 1;
-  const visibleVisits = consultations.slice(0, PREVIEW_LIMIT);
-  const regimen = consultations.flatMap((item) => item?.prescription?.items || []);
-  const completedPct = Math.min(
-    100,
-    Math.round(
-      (consultations.filter((item) => item.appointment_status === 'completed').length /
-        Math.max(consultations.length, 1)) *
-        100,
-    ),
-  );
 
   const openPrescription = (item, doc) => {
     const path = prescriptionPath(item);
@@ -184,44 +171,17 @@ export default function DoctorSlip() {
             <p>Visits with this doctor will appear here.</p>
           </div>
         ) : multi ? (
-          <>
-            <PatientCard data={consultations[0]} doctor={doctor} />
-            <div className="checkout-card">
-              <small>Your visits</small>
-              <p>
-                {consultations.length} consultation{consultations.length > 1 ? 's' : ''} with this doctor
-              </p>
-              <div className="slip-progress">
-                <i style={{ width: `${completedPct}%` }} />
-              </div>
-            </div>
-            <div className="home-section-head">
-              <h2>Recent consultations</h2>
-              {consultations.length > PREVIEW_LIMIT ? (
-                <button
-                  type="button"
-                  onClick={() =>
-                    navigate(`/consult/doctors/${doctorId}/history`, {
-                      state: { doctorName: doctor?.doctor_name },
-                    })
-                  }
-                >
-                  View all
-                </button>
-              ) : null}
-            </div>
-            <ConsultationTimeline
-              consultations={visibleVisits}
-              doctor={doctor}
-              onPrescription={openPrescription}
-            />
-            {regimen.length > 0 ? (
-              <>
-                <h3 className="yoga-section">Medicines from visits</h3>
-                <StitchedRegimenList items={regimen} />
-              </>
-            ) : null}
-          </>
+          <MultipleDoctorSlip
+            consultations={consultations}
+            doctor={doctor}
+            patient={<PatientCard data={consultations[0]} doctor={doctor} />}
+            onViewAll={() =>
+              navigate(`/consult/doctors/${doctorId}/history`, {
+                state: { doctorName: doctor?.doctor_name },
+              })
+            }
+            onPrescription={openPrescription}
+          />
         ) : (
           <>
             <PatientCard data={active} doctor={doctor} />

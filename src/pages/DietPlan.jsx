@@ -1,7 +1,33 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import {
+  CalendarDays,
+  Check,
+  Flame,
+  Leaf,
+  Lock,
+  Pause,
+  Salad,
+  Square,
+  Star,
+  Stethoscope,
+  Sun,
+} from 'lucide-react';
 import AppShell from '../components/AppShell';
-import dietCoverImg from '/images/login/14.jpg';
+import { Button, Modal } from '../components/ui';
+import {
+  DetailCard,
+  DetailEmpty,
+  DetailHero,
+  DetailLayout,
+  DetailPage,
+  DetailSkeleton,
+  DetailTop,
+  InfoGrid,
+  MetaChip,
+  StatusPill,
+} from '../components/detail/Detail';
+import dietCoverImg from '/images/login/14.webp';
 import { formatRupee } from '../home/catalog';
 import { showSuccessToast } from '../config/key';
 import useDietPlans from '../diet/useDietPlans';
@@ -20,6 +46,9 @@ import {
   hydrateReviewedDietPlans,
   isDietPlanAssignmentReviewed,
 } from '../utils/reviewedDietPlans';
+import '../design/pages/diet-plan.css';
+import '../design/brand.css';
+import '../design/pages/diet-brand.css';
 
 const MACRO = [
   { key: 'carbsPct', label: 'Carbs', color: '#1FA77A' },
@@ -113,6 +142,15 @@ export default function DietPlan() {
   const runStart = async (options) => {
     const result = await startPlan(planId, options);
     if (result?.conflict) {
+      if (!result.activePlan?.patient_diet_plan_id) {
+        // App DietScreen: no resolvable active id -> guidance toast instead of switch modal.
+        const label = status === 'paused' ? 'Resume' : 'Start';
+        showSuccessToast(
+          `${result.activePlan?.name || 'another diet plan'} is already active. Open that plan, tap Pause, then ${label} this one.`,
+          'error',
+        );
+        return;
+      }
       setConflict({
         activeName: result.activePlan?.name || 'another plan',
         activeId: result.activePlan?.patient_diet_plan_id,
@@ -139,218 +177,288 @@ export default function DietPlan() {
     setWaterModal(true);
   };
 
+  const title = plan?.title || plan?.name || 'Diet Plan';
+  const durationLabel = plan?.duration || (plan?.duration_days ? `${plan.duration_days} days` : '');
+  const statusText = status && status !== 'not_started' ? status.replace(/_/g, ' ') : '';
+  const season = plan?.season ? String(plan.season).replace(/^\w/, (c) => c.toUpperCase()) : '';
+
   return (
     <AppShell tab="home">
-      <section className="catalog-page diet-detail">
-        <header className="catalog-head">
-          <div>
-            <button type="button" className="text-back" onClick={() => navigate('/diet')}>
-              ← Back
-            </button>
-            <h1>{plan?.title || plan?.name || 'Diet Plan'}</h1>
-            <p>{[plan?.prakriti, plan?.season, price].filter(Boolean).join(' • ') || 'Personalized meals'}</p>
-          </div>
-        </header>
+      <DetailPage>
+        <DetailTop backTo="/diet" backLabel="Diet plans" />
 
         {loadingDetail && !plan ? (
-          <p className="muted">Loading plan…</p>
+          <DetailSkeleton label="Loading plan" />
         ) : (
           <>
-            <div className="diet-hero">
-              <img src={cover} alt="" />
-            </div>
-            {gallery.length > 1 ? (
-              <div className="gallery-thumbs">
-                {gallery.map((item, index) => (
-                  <button
-                    key={`${item.image_url}-${index}`}
-                    type="button"
-                    className={index === galleryIndex ? 'on' : ''}
-                    onClick={() => setGalleryIndex(index)}
-                  >
-                    <img src={item.image_url} alt="" />
-                  </button>
-                ))}
-              </div>
-            ) : null}
-
-            <div className="yoga-badges">
-              {status !== 'not_started' ? (
-                <span className={`yoga-badge ${status === 'active' ? 'level' : ''}`}>
-                  {status.toUpperCase()}
-                </span>
-              ) : null}
-              {rating ? <span className="yoga-badge">★ {rating}</span> : null}
-              {plan?.duration || plan?.duration_days ? (
-                <span className="yoga-badge">{plan.duration || `${plan.duration_days} days`}</span>
-              ) : null}
-            </div>
-
-            {plan?.short_description ? <p className="yoga-subtitle">{plan.short_description}</p> : null}
-
-            {isStarted ? (
-              <>
-                <div className="diet-nutrition">
-                  <div>
-                    <strong>{Math.round(nutrition.eatenKcal)}</strong>
-                    <small>eaten</small>
-                  </div>
-                  <div>
-                    <strong>{Math.round(nutrition.leftKcal)}</strong>
-                    <small>left</small>
-                  </div>
-                  <div>
-                    <strong>
-                      {nutrition.mealsDone}/{nutrition.mealsTotal}
-                    </strong>
-                    <small>meals</small>
-                  </div>
-                </div>
-                <div className="diet-macros">
-                  {MACRO.map((item) => (
-                    <div key={item.key}>
-                      <span>{item.label}</span>
-                      <b style={{ color: item.color }}>{nutrition[item.key]}%</b>
-                      <i style={{ width: `${nutrition[item.key]}%`, background: item.color }} />
+            <DetailHero
+              titleId="dt-plan-title"
+              media={
+                <>
+                  <img src={cover} alt="" />
+                  {gallery.length > 1 ? (
+                    <div className="dx-thumbs" role="group" aria-label="Plan photos">
+                      {gallery.map((item, index) => (
+                        <button
+                          key={`${item.image_url}-${index}`}
+                          type="button"
+                          aria-pressed={index === galleryIndex}
+                          aria-label={`Show photo ${index + 1}`}
+                          className={index === galleryIndex ? 'is-on' : ''}
+                          onClick={() => setGalleryIndex(index)}
+                        >
+                          <img src={item.image_url} alt="" />
+                        </button>
+                      ))}
                     </div>
-                  ))}
-                </div>
-
-                <WaterLog
-                  waterMl={waterMl}
-                  waterGoalMl={waterGoalMl}
-                  dayLabel={dayLabel}
-                  updating={updatingWater}
-                  onSetIntake={updateWaterIntake}
-                />
-
-                <div className="diet-days">
-                  {planDays.map((day) => (
-                    <button
-                      key={day.dayKey}
-                      type="button"
-                      className={`${day.dayKey === currentDayKey ? 'on' : ''} ${day.isLocked ? 'locked' : ''}`}
-                      disabled={day.isLocked}
-                      onClick={() => selectDay(day.dayKey)}
+                  ) : null}
+                </>
+              }
+              eyebrow="Ayurvedic diet plan"
+              title={title}
+              lede={plan?.short_description}
+              chips={
+                <>
+                  {statusText ? <StatusPill status={status}>{statusText}</StatusPill> : null}
+                  {rating ? (
+                    <MetaChip icon={Star} tone="gold">
+                      {rating}
+                    </MetaChip>
+                  ) : null}
+                  {durationLabel ? <MetaChip icon={CalendarDays}>{durationLabel}</MetaChip> : null}
+                  {season ? <MetaChip icon={Sun}>{season}</MetaChip> : null}
+                  {plan?.prakriti ? <MetaChip icon={Leaf}>{plan.prakriti}</MetaChip> : null}
+                </>
+              }
+            >
+              {price ? <p className="dx-price">{price}</p> : null}
+              <div className="dx-actions dx-actions--row">
+                {isStarted ? null : (
+                  <Button loading={starting} disabled={updatingStatus} onClick={onStart}>
+                    {status === 'paused' ? 'Resume plan' : status === 'completed' ? 'Repeat plan' : 'Start plan'}
+                  </Button>
+                )}
+                <Button
+                  variant="secondary"
+                  leadingIcon={<CalendarDays size={16} aria-hidden />}
+                  onClick={() => navigate(`/diet/${planId}/weekly`, { state: { item: plan, planId } })}
+                >
+                  Weekly planner
+                </Button>
+                {isStarted ? (
+                  <>
+                    <Button
+                      variant="ghost"
+                      leadingIcon={<Pause size={16} aria-hidden />}
+                      disabled={updatingStatus}
+                      onClick={() =>
+                        setConfirm({
+                          title: 'Pause this active plan?',
+                          subtitle: 'Progress is saved. You can resume anytime.',
+                          confirmText: 'Pause plan',
+                          action: 'pause',
+                        })
+                      }
                     >
-                      {day.label}
-                      <small>
-                        {day.mealsDone}/{day.mealsTotal}
-                      </small>
-                    </button>
-                  ))}
-                </div>
-
-                <div className="diet-meals">
-                  {previewMeals.map((meal) => (
-                    <button
-                      key={meal.id}
-                      type="button"
-                      className={`diet-meal ${meal.status === 'done' ? 'done' : ''}`}
-                      onClick={() => navigate(`/diet/${planId}/meals/${meal.id}`, { state: { meal, planId } })}
+                      Pause
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      leadingIcon={<Square size={14} aria-hidden />}
+                      disabled={updatingStatus}
+                      onClick={() =>
+                        setConfirm({
+                          title: 'Stop this run?',
+                          subtitle: 'Stopped plans use Start again instead of Repeat.',
+                          confirmText: 'Stop plan',
+                          action: 'stop',
+                        })
+                      }
                     >
-                      <img src={meal.image || dietCoverImg} alt="" />
+                      Stop
+                    </Button>
+                  </>
+                ) : null}
+                {canRateDiet ? (
+                  <Button variant="ghost" leadingIcon={<Star size={15} aria-hidden />} onClick={openDietReview}>
+                    Rate this diet plan
+                  </Button>
+                ) : null}
+              </div>
+              {!isStarted ? (
+                <p className="dx-note">Start this plan to unlock daily tracking and hydration.</p>
+              ) : null}
+            </DetailHero>
+
+            <DetailLayout
+              aside={
+                <>
+                  <DetailCard id="dt-glance" title="At a glance" icon={Salad}>
+                    <InfoGrid
+                      items={[
+                        { label: 'Duration', value: durationLabel },
+                        { label: 'Season', value: season },
+                        { label: 'Prakriti', value: plan?.prakriti },
+                        { label: 'Price', value: price },
+                        {
+                          label: 'Meals per day',
+                          value: plan?.meals_per_day ?? (previewMeals.length || ''),
+                        },
+                        {
+                          label: 'Water goal',
+                          value: waterGoalMl ? `${(waterGoalMl / 1000).toFixed(1).replace(/\.0$/, '')} L / day` : '',
+                        },
+                      ]}
+                    />
+                  </DetailCard>
+                  <DetailCard id="dt-guide" title="Need personal guidance?" icon={Stethoscope} tone="accent">
+                    <p className="dx-prose">
+                      An Ayurveda doctor can tailor this plan to your prakriti, routine and health goals.
+                    </p>
+                    <Button variant="secondary" onClick={() => navigate('/consult')}>
+                      Consult a doctor
+                    </Button>
+                  </DetailCard>
+                </>
+              }
+            >
+              {isStarted ? (
+                <DetailCard id="dt-progress" title="Today’s progress" icon={Flame}>
+                  <div className="dt-progress">
+                    <div
+                      className="dt-progress__ring"
+                      style={{ '--p': nutrition.mealsTotal ? nutrition.mealsDone / nutrition.mealsTotal : 0 }}
+                    >
+                      <svg viewBox="0 0 44 44" aria-hidden="true">
+                        <circle cx="22" cy="22" r="19" className="track" />
+                        <circle cx="22" cy="22" r="19" className="bar" pathLength="1" />
+                      </svg>
+                      <span>
+                        <strong>
+                          {nutrition.mealsDone}/{nutrition.mealsTotal}
+                        </strong>
+                        <small>meals</small>
+                      </span>
+                    </div>
+                    <div className="dt-progress__stats">
                       <div>
-                        <small>{meal.type}</small>
-                        <strong>{meal.title}</strong>
-                        <p>{meal.kcal ? `${meal.kcal} kcal` : meal.time}</p>
+                        <strong>{Math.round(nutrition.eatenKcal)}</strong>
+                        <small>kcal eaten</small>
                       </div>
-                      <span>{meal.status === 'done' ? 'Done' : 'Open'}</span>
-                    </button>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <>
-                <p className="muted">Start this plan to unlock daily tracking and hydration.</p>
-                {previewMeals.length ? (
-                  <div className="diet-meals">
-                    {previewMeals.map((meal) => (
-                      <button
-                        key={meal.id}
-                        type="button"
-                        className="diet-meal"
-                        onClick={() =>
-                          navigate(`/diet/${planId}/meals/${meal.id}`, { state: { meal, planId } })
-                        }
-                      >
-                        <img src={meal.image || dietCoverImg} alt="" />
-                        <div>
-                          <small>{meal.type}</small>
-                          <strong>{meal.title}</strong>
-                          <p>{meal.kcal ? `${meal.kcal} kcal` : meal.time}</p>
+                      <div>
+                        <strong>{Math.round(nutrition.leftKcal)}</strong>
+                        <small>kcal left</small>
+                      </div>
+                    </div>
+                    <div className="dt-progress__macros">
+                      {MACRO.map((item) => (
+                        <div key={item.key} className="dt-macro">
+                          <span className="dt-macro__label">{item.label}</span>
+                          <b>{nutrition[item.key]}%</b>
+                          <i aria-hidden="true">
+                            <em style={{ width: `${nutrition[item.key]}%`, background: item.color }} />
+                          </i>
                         </div>
-                        <span>View</span>
-                      </button>
-                    ))}
+                      ))}
+                    </div>
+                    <div className="dt-progress__water">
+                      <WaterLog
+                        waterMl={waterMl}
+                        waterGoalMl={waterGoalMl}
+                        dayLabel={dayLabel}
+                        updating={updatingWater}
+                        onSetIntake={updateWaterIntake}
+                      />
+                    </div>
+                  </div>
+                </DetailCard>
+              ) : null}
+
+              <DetailCard
+                id="dt-meals-title"
+                title={isStarted ? (dayLabel ? `${dayLabel} meals` : 'Today’s meals') : 'Meal preview'}
+                icon={Leaf}
+                meta={`${previewMeals.length} ${previewMeals.length === 1 ? 'meal' : 'meals'}`}
+              >
+                {isStarted && planDays.length ? (
+                  <div className="dt-days" role="group" aria-label="Select plan day">
+                    {planDays.map((day) => {
+                      const pct = day.mealsTotal ? day.mealsDone / day.mealsTotal : 0;
+                      return (
+                        <button
+                          key={day.dayKey}
+                          type="button"
+                          aria-pressed={day.dayKey === currentDayKey}
+                          className={[
+                            'dt-day',
+                            day.dayKey === currentDayKey && 'is-on',
+                            day.isLocked && 'is-locked',
+                            pct === 1 && 'is-done',
+                          ]
+                            .filter(Boolean)
+                            .join(' ')}
+                          disabled={day.isLocked}
+                          onClick={() => selectDay(day.dayKey)}
+                        >
+                          <span className="dt-day__label">{day.label}</span>
+                          <span className="dt-day__bar" aria-hidden="true">
+                            <i style={{ width: `${Math.round(pct * 100)}%` }} />
+                          </span>
+                          <small>
+                            {day.isLocked ? <Lock size={11} aria-hidden /> : null}
+                            {day.mealsDone}/{day.mealsTotal}
+                          </small>
+                        </button>
+                      );
+                    })}
                   </div>
                 ) : null}
-              </>
-            )}
 
-            <div className="detail-cta diet-cta">
-              <button
-                type="button"
-                className="ghost"
-                onClick={() =>
-                  navigate(`/diet/${planId}/weekly`, { state: { item: plan, planId } })
-                }
-              >
-                Weekly planner
-              </button>
-              {isStarted ? (
-                <>
-                  <button
-                    type="button"
-                    className="ghost"
-                    disabled={updatingStatus}
-                    onClick={() =>
-                      setConfirm({
-                        title: 'Pause this active plan?',
-                        subtitle: 'Progress is saved. You can resume anytime.',
-                        confirmText: 'Pause plan',
-                        action: 'pause',
-                      })
-                    }
-                  >
-                    Pause
-                  </button>
-                  <button
-                    type="button"
-                    className="ghost"
-                    disabled={updatingStatus}
-                    onClick={() =>
-                      setConfirm({
-                        title: 'Stop this run?',
-                        subtitle: 'Stopped plans use Start again instead of Repeat.',
-                        confirmText: 'Stop plan',
-                        action: 'stop',
-                      })
-                    }
-                  >
-                    Stop
-                  </button>
-                </>
-              ) : (
-                <button type="button" className="cta" disabled={starting || updatingStatus} onClick={onStart}>
-                  {starting
-                    ? 'Starting…'
-                    : status === 'paused'
-                      ? 'Resume plan'
-                      : status === 'completed'
-                        ? 'Repeat plan'
-                        : 'Start plan'}
-                </button>
-              )}
-              {canRateDiet ? (
-                <button type="button" className="ghost" onClick={openDietReview}>
-                  Rate this diet plan
-                </button>
-              ) : null}
-            </div>
+                {previewMeals.length ? (
+                  <ul className="dt-meals">
+                    {previewMeals.map((meal, index) => {
+                      const done = isStarted && meal.status === 'done';
+                      return (
+                        <li key={meal.id} style={{ '--i': index }}>
+                          <button
+                            type="button"
+                            className={`dt-meal${done ? ' is-done' : ''}`}
+                            onClick={() =>
+                              navigate(`/diet/${planId}/meals/${meal.id}`, { state: { meal, planId } })
+                            }
+                          >
+                            <span className="dt-meal__img">
+                              <img src={meal.image || dietCoverImg} alt="" loading="lazy" />
+                            </span>
+                            <span className="dt-meal__body">
+                              <small className="dt-meal__type">
+                                {meal.type}
+                                {meal.time ? <em> · {meal.time}</em> : null}
+                              </small>
+                              <strong>{meal.title}</strong>
+                              {meal.kcal ? <span className="dt-meal__kcal">{meal.kcal} kcal</span> : null}
+                            </span>
+                            <span className={`dt-meal__state${done ? ' is-done' : ''}`}>
+                              {done ? <Check size={14} aria-hidden strokeWidth={2.6} /> : null}
+                              {isStarted ? (done ? 'Done' : 'Open') : 'View'}
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : (
+                  <DetailEmpty
+                    icon={Leaf}
+                    title="No meals yet"
+                    text="Meals for this plan will appear here when available."
+                  />
+                )}
+              </DetailCard>
+            </DetailLayout>
           </>
         )}
-      </section>
+      </DetailPage>
 
       {waterModal ? (
         <WaterGoalStart
@@ -367,63 +475,57 @@ export default function DietPlan() {
         />
       ) : null}
 
-      {confirm ? (
-        <div className="web-modal" role="dialog">
-          <div className="web-modal-card">
-            <h3>{confirm.title}</h3>
-            <p>{confirm.subtitle}</p>
-            <div className="detail-cta">
-              <button type="button" className="ghost" onClick={() => setConfirm(null)}>
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="cta"
-                disabled={updatingStatus}
-                onClick={async () => {
-                  const action = confirm.action;
-                  setConfirm(null);
-                  if (action === 'pause') await pausePlan();
-                  if (action === 'stop') await stopPlan();
-                  if (action === 'repeat') await repeatPlan();
-                }}
-              >
-                {confirm.confirmText}
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <Modal
+        open={Boolean(confirm)}
+        onClose={() => setConfirm(null)}
+        title={confirm?.title}
+        description={confirm?.subtitle}
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setConfirm(null)}>
+              Cancel
+            </Button>
+            <Button
+              loading={updatingStatus}
+              onClick={async () => {
+                const action = confirm?.action;
+                setConfirm(null);
+                if (action === 'pause') await pausePlan();
+                if (action === 'stop') await stopPlan();
+                if (action === 'repeat') await repeatPlan();
+              }}
+            >
+              {confirm?.confirmText}
+            </Button>
+          </>
+        }
+      />
 
-      {conflict ? (
-        <div className="web-modal" role="dialog">
-          <div className="web-modal-card">
-            <h3>Another plan is active</h3>
-            <p>
-              {conflict.activeName} is currently active. Pause it to start this plan.
-            </p>
-            <div className="detail-cta">
-              <button type="button" className="ghost" onClick={() => setConflict(null)}>
-                Keep current
-              </button>
-              <button
-                type="button"
-                className="cta"
-                disabled={updatingStatus}
-                onClick={async () => {
-                  const target = conflict;
-                  setConflict(null);
-                  await pauseActiveAndStart(target.activeId, target.catalogId, {
-                    daily_water_intake_goal: target.waterGoal,
-                  });
-                }}
-              >
-                Pause & start
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <Modal
+        open={Boolean(conflict)}
+        onClose={() => setConflict(null)}
+        title="Another plan is active"
+        description={conflict ? `${conflict.activeName} is currently active. Pause it to start this plan.` : ''}
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setConflict(null)}>
+              Keep current
+            </Button>
+            <Button
+              loading={updatingStatus}
+              onClick={async () => {
+                const target = conflict;
+                setConflict(null);
+                await pauseActiveAndStart(target.activeId, target.catalogId, {
+                  daily_water_intake_goal: target.waterGoal,
+                });
+              }}
+            >
+              Pause & start
+            </Button>
+          </>
+        }
+      />
     </AppShell>
   );
 }

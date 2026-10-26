@@ -5,8 +5,8 @@ import AppShell from '../components/AppShell';
 import DoctorCard from '../components/DoctorCard';
 import PageHeader from '../components/PageHeader';
 import ProductCard from '../components/ProductCard';
-import dietCoverImg from '/images/login/14.jpg';
-import yogaPosterImg from '/images/login/8.png';
+import dietCoverImg from '/images/login/14.webp';
+import yogaPosterImg from '/images/login/8.webp';
 import { mapDietPlanForHome, mapProductCategory, normalizeApiList } from '../home/catalog';
 import { getDoctors } from '../services/consultService';
 import { getDietPlans } from '../services/dietService';
@@ -30,6 +30,7 @@ import {
   RailItem,
   RailSkeleton,
   SearchField,
+  searchSuggestions,
   SectionHeader,
   Skeleton,
   SkeletonGrid,
@@ -291,6 +292,7 @@ export default function CategoryDoctor() {
             onChange={setSearch}
             onSubmit={(value) => setDebounced(String(value || '').trim())}
             placeholder={T.concernSearch}
+            suggestions={searchSuggestions(diseases)}
           />
         </PageHeader>
 

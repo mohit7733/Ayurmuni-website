@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Check } from 'lucide-react';
-import consultImg from '/images/login/10.png';
-import medicineImg from '/images/login/9.png';
-import deliveryImg from '/images/login/delivery.png';
-import dietImg from '/images/login/14.jpg';
-import yogaImg from '/images/login/8.png';
-import login2Img from '/images/login/2.png';
-import login11Img from '/images/login/11.png';
-import login12Img from '/images/login/12.png';
-import login13Img from '/images/login/13.png';
+import consultImg from '/images/login/10.webp';
+import medicineImg from '/images/login/9.webp';
+import deliveryImg from '/images/login/delivery.webp';
+import dietImg from '/images/login/14.webp';
+import yogaImg from '/images/login/8.webp';
+import login2Img from '/images/login/2.webp';
+import login11Img from '/images/login/11.webp';
+import login12Img from '/images/login/12.webp';
+import login13Img from '/images/login/13.webp';
 import logoImg from '/greenlogo.png';
 import { Utils } from '../common/utils';
 import { showSuccessToast } from '../config/key';
@@ -22,7 +22,7 @@ import { AUTH_COPY as T } from '../content/auth';
 import {
   getPoliciesList,
   getPolicyDocument,
-  getRequiredPolicies,
+  getLegalRequiredPolicies,
   normalizePolicyContent,
 } from '../services/policyService';
 import '../design/pages/auth.css';
@@ -78,7 +78,7 @@ export default function Login() {
     setPolicyError(null);
     setPolicyDoc(null);
     try {
-      const res = await getRequiredPolicies(policyType);
+      const res = await getLegalRequiredPolicies(policyType);
       if (res?.success === false) {
         setPolicyError(res?.message || 'Unable to load this policy right now.');
         return;
@@ -186,45 +186,49 @@ export default function Login() {
   };
 
   return (
-    <section className="au-page au-auth">
+    <section className="au-page au-auth au-auth--login">
       <MarqueeCollage columns={COLUMNS} logo={logoImg} hint={T.brandHint} />
       <div className="au-sheet">
         <div className="au-sheet__handle" aria-hidden />
-        <p className="au-kicker">{T.loginKicker}</p>
-        <div>
-          <h2 className="au-headline">{T.headlines[headlineIndex]}</h2>
-          <div className="au-dots" aria-hidden>
-            {T.headlines.map((_, i) => (
-              <i key={i} className={i === headlineIndex ? 'is-on' : ''} />
-            ))}
+        <div className="au-sheet__intro">
+          <p className="au-kicker">{T.loginKicker}</p>
+          <div>
+            <h2 className="au-headline">{T.headlines[headlineIndex]}</h2>
+            <div className="au-dots" aria-hidden>
+              {T.headlines.map((_, i) => (
+                <i key={i} className={i === headlineIndex ? 'is-on' : ''} />
+              ))}
+            </div>
           </div>
         </div>
 
-        <p className="au-label" id="login-phone-label">
-          {T.mobileLabel}
-        </p>
-        <div className={`au-phone${focused ? ' is-focus' : ''}`}>
-          <div className="au-phone__code">
-            <span aria-hidden>IN</span>
-            <span>{T.countryCode}</span>
+        <div className="au-field">
+          <label className="au-label" htmlFor="login-phone">
+            {T.mobileLabel}
+          </label>
+          <div className={`au-phone${focused ? ' is-focus' : ''}`}>
+            <div className="au-phone__code">
+              <span aria-hidden>IN</span>
+              <span>{T.countryCode}</span>
+            </div>
+            <input
+              id="login-phone"
+              type="tel"
+              inputMode="numeric"
+              maxLength={10}
+              placeholder={T.mobilePlaceholder}
+              value={phone}
+              onChange={(e) => onChangePhone(e.target.value)}
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
+              autoComplete="tel"
+            />
+            {phone.length === 10 ? (
+              <span className="au-phone__ok" aria-hidden>
+                <Check size={18} />
+              </span>
+            ) : null}
           </div>
-          <input
-            type="tel"
-            inputMode="numeric"
-            maxLength={10}
-            placeholder={T.mobilePlaceholder}
-            value={phone}
-            aria-labelledby="login-phone-label"
-            onChange={(e) => onChangePhone(e.target.value)}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
-            autoComplete="tel"
-          />
-          {phone.length === 10 ? (
-            <span className="au-phone__ok" aria-hidden>
-              <Check size={18} />
-            </span>
-          ) : null}
         </div>
 
         <label className="au-terms">

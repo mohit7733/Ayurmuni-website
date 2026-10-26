@@ -1,46 +1,75 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Flower2, Play } from 'lucide-react';
 import AppShell from '../components/AppShell';
-import yogaPosterImg from '/images/login/8.png';
+import yogaPosterImg from '/images/login/8.webp';
 import { getYogaSession } from '../services/yogaService';
 import {
   itemMatchesHealthConcern,
   matchesYogaSearch,
   normalizeYogaSessionList,
   resolveYogaThumbnailUri,
-  resolveYogaVideoUri,
 } from '../yoga/utils';
+import { EmptyState, SearchField, searchSuggestions, SkeletonGrid } from '../components/ui';
+import { HOME_COPY as H } from '../content/home';
+import '../design/pages/yoga.css';
 
-function YogaListThumb({ item }) {
-  const videoUri = resolveYogaVideoUri(item);
-  const thumbUri = resolveYogaThumbnailUri(item);
-  const [failed, setFailed] = useState(false);
-  const poster = thumbUri || yogaPosterImg;
+const clip = (value) => {
+  const text = String(value || '').replace(/\s+/g, ' ').trim();
+  return text.length > 28 ? '' : text;
+};
 
-  if (!videoUri || failed) {
-    return (
-      <div className="yoga-thumb">
-        <img src={poster} alt="" />
-        <span className="yoga-play">▶</span>
-      </div>
-    );
-  }
+const sessionTitle = (item) => item.title || item.name || 'Yoga session';
 
+function SessionArt({ item }) {
+  const src = resolveYogaThumbnailUri(item) || yogaPosterImg;
+  return <img src={src} alt="" loading="lazy" decoding="async" />;
+}
+
+function FeatureSession({ item, onOpen }) {
+  const level = clip(item.difficulty);
+  const duration = clip(item.duration);
   return (
-    <div className="yoga-thumb">
-      {thumbUri ? <img src={thumbUri} alt="" className="yoga-thumb-poster" /> : null}
-      <video
-        src={videoUri}
-        poster={thumbUri || undefined}
-        muted
-        loop
-        playsInline
-        autoPlay
-        preload="metadata"
-        onError={() => setFailed(true)}
-      />
-      <span className="yoga-play">▶</span>
-    </div>
+    <article className="yg-feature">
+      <SessionArt item={item} />
+      <div className="yg-feature__shade" aria-hidden />
+      <div className="yg-feature__body">
+        {level ? <span className="yg-chip">{level}</span> : null}
+        <h2>
+          <button type="button" className="am-stretched" onClick={() => onOpen(item)}>
+            {sessionTitle(item)}
+          </button>
+        </h2>
+        <p>{duration || 'Guided practice'}</p>
+      </div>
+      <span className="yg-play" aria-hidden>
+        <Play size={16} fill="currentColor" />
+      </span>
+    </article>
+  );
+}
+
+function SideSession({ item, onOpen }) {
+  const level = clip(item.difficulty);
+  const duration = clip(item.duration);
+  return (
+    <article className="yg-mini">
+      <div className="yg-mini__art">
+        <SessionArt item={item} />
+      </div>
+      <div className="yg-mini__body">
+        {level ? <span className="yg-chip">{level}</span> : null}
+        <h3>
+          <button type="button" className="am-stretched" onClick={() => onOpen(item)}>
+            {sessionTitle(item)}
+          </button>
+        </h3>
+        <p>{duration || 'Guided practice'}</p>
+      </div>
+      <span className="yg-play yg-play--sm" aria-hidden>
+        <Play size={12} fill="currentColor" />
+      </span>
+    </article>
   );
 }
 
@@ -55,7 +84,6 @@ export default function Yoga() {
   const [debounced, setDebounced] = useState('');
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const concernMatch = useMemo(
     () => ({
       healthCategoryId: healthCategoryId || null,
@@ -105,71 +133,71 @@ export default function Yoga() {
 
   return (
     <AppShell tab="home">
-      <section className="catalog-page yoga-page">
-        <header className="catalog-head">
-          <div>
-            <button type="button" className="text-back" onClick={() => navigate(-1)}>
-              ← Back
-            </button>
-            <h1>{categoryName ? `${categoryName} Yoga` : 'Yoga Sessions'}</h1>
-            <p>Practice with guided videos</p>
-          </div>
-        </header>
-
-        <form
-          className="search-form"
-          onSubmit={(e) => {
-            e.preventDefault();
-            setDebounced(search.trim());
-          }}
-        >
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search yoga sessions..."
-          />
-          <button type="submit" className="cta">
-            Search
-          </button>
-        </form>
-
-        {loading && sessions.length === 0 ? (
-          <p className="muted">Loading sessions…</p>
-        ) : filtered.length === 0 ? (
-          <div className="empty-copy">
-            <strong>No yoga sessions</strong>
-            <p>
-              {debounced
-                ? 'Try another search.'
-                : 'Sessions for this concern will appear here when available.'}
-            </p>
-          </div>
-        ) : (
-          <div className="yoga-list">
-            {filtered.map((item) => {
-              const meta = [item.difficulty, item.duration].filter(Boolean).join(' • ');
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  className="yoga-row"
-                  onClick={() => openSession(item)}
-                >
-                  <YogaListThumb item={item} />
-                  <div className="yoga-row-copy">
-                    <strong>{item.title || item.name}</strong>
-                    {meta ? <small>{meta}</small> : null}
-                    {item.short_description ? <p>{item.short_description}</p> : null}
-                  </div>
-                  <span className="yoga-row-icon" aria-hidden>
-                    ▶
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </section>
+      <div className="hm-page svc-page yg-page">
+        <div className="hm-body">
+          <section className="yg-studio" aria-labelledby="yg-list-title">
+            <header className="yg-mast">
+              <div className="yg-mast__copy">
+                <p className="yg-mast__kicker">Practice</p>
+                <h1 id="yg-list-title">
+                  {categoryName ? `${categoryName} yoga` : H.yogaTitle}
+                </h1>
+                <p>
+                  {categoryName
+                    ? `Practices selected for ${categoryName}.`
+                    : 'Guided practices for breath, strength, and calm.'}
+                </p>
+              </div>
+              <SearchField
+                value={search}
+                onChange={setSearch}
+                onSubmit={(value) => setDebounced(String(value || '').trim())}
+                placeholder="Search sessions"
+                label="Search yoga sessions"
+                submitLabel={false}
+                suggestions={searchSuggestions(sessions)}
+              />
+            </header>
+            {loading && sessions.length === 0 ? (
+              <SkeletonGrid count={4} className="yg-stage" label="Loading sessions" />
+            ) : filtered.length === 0 ? (
+              <EmptyState
+                icon={<Flower2 size={28} />}
+                title="No yoga sessions"
+                description={
+                  debounced
+                    ? 'Try another search.'
+                    : 'Sessions for this concern will appear here when available.'
+                }
+              />
+            ) : (
+              <>
+                <div className={`yg-stage${filtered.length === 1 ? ' is-solo' : ''}`}>
+                  <FeatureSession item={filtered[0]} onOpen={openSession} />
+                  {filtered.length > 1 ? (
+                    <ul className="yg-side">
+                      {filtered.slice(1, 4).map((item) => (
+                        <li key={item.id}>
+                          <SideSession item={item} onOpen={openSession} />
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+                {filtered.length > 4 ? (
+                  <ul className="yg-more">
+                    {filtered.slice(4).map((item) => (
+                      <li key={item.id}>
+                        <SideSession item={item} onOpen={openSession} />
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </>
+            )}
+          </section>
+        </div>
+      </div>
     </AppShell>
   );
 }

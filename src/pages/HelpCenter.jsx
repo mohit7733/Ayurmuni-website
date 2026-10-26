@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { HelpCircle, Mail } from 'lucide-react';
+import { ChevronRight, HelpCircle, Mail } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import PageHeader from '../components/PageHeader';
 import { FAQ_CATEGORIES, getFaqList } from '../services/faqService';
@@ -15,6 +15,7 @@ import {
 } from '../components/ui';
 import { STATIC_COPY as T } from '../content/static';
 import '../design/pages/static.css';
+import '../design/pages/help-center.css';
 
 export default function HelpCenter() {
   const navigate = useNavigate();
@@ -47,7 +48,7 @@ export default function HelpCenter() {
 
   return (
     <AppShell tab="profile">
-      <section className="sx-page">
+      <section className="sx-page sx-help-page">
         <PageHeader
           title={T.faqTitle}
           subtitle={T.faqSubtitle}
@@ -73,10 +74,22 @@ export default function HelpCenter() {
           ))}
         </div>
 
+        <div className="sx-help-results-head">
+          <div>
+            <span className="sx-help-eyebrow">Help library</span>
+            <h2>Frequently asked questions</h2>
+          </div>
+          {!loading ? (
+            <span className="sx-help-count">
+              {filtered.length} {filtered.length === 1 ? 'question' : 'questions'}
+            </span>
+          ) : null}
+        </div>
+
         {loading ? (
-          <div aria-busy="true" aria-label={T.faqLoading}>
+          <div className="sx-help-loading" aria-busy="true" aria-label={T.faqLoading}>
             <Skeleton style={{ height: 72, borderRadius: 'var(--am-radius-lg)' }} />
-            <Skeleton style={{ height: 72, borderRadius: 'var(--am-radius-lg)', marginTop: 12 }} />
+            <Skeleton style={{ height: 72, borderRadius: 'var(--am-radius-lg)' }} />
             <SkeletonText lines={2} />
           </div>
         ) : filtered.length === 0 ? (
@@ -94,21 +107,29 @@ export default function HelpCenter() {
                 className="sx-faq-row"
                 onClick={() => navigate(`/profile/faq/${item.id}`, { state: { faq: item } })}
               >
-                <strong>{item.question}</strong>
-                {item.answer ? <p>{String(item.answer).slice(0, 140)}</p> : null}
+                <span className="sx-faq-row__copy">
+                  <strong>{item.question}</strong>
+                  {item.answer ? <p>{String(item.answer).slice(0, 140)}</p> : null}
+                </span>
+                <span className="sx-faq-row__arrow" aria-hidden="true">
+                  <ChevronRight size={18} />
+                </span>
               </button>
             ))}
           </div>
         )}
 
         <div className="sx-help-card">
-          <h2>{T.faqHelpTitle}</h2>
-          <p>{T.faqHelpText}</p>
-          <Button
-            variant="primary"
-            href={T.faqSupportMailto}
-            leadingIcon={<Mail size={18} aria-hidden />}
-          >
+          <div className="sx-help-card__copy">
+            <span className="sx-help-card__icon" aria-hidden="true">
+              <Mail size={20} />
+            </span>
+            <div>
+              <h2>{T.faqHelpTitle}</h2>
+              <p>{T.faqHelpText}</p>
+            </div>
+          </div>
+          <Button variant="primary" href={T.faqSupportMailto} leadingIcon={<Mail size={18} aria-hidden />}>
             {T.faqEmail}
           </Button>
         </div>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
 import { showSuccessToast } from '../config/key';
+import '../design/pages/mentor-flow.css';
 
 const REASONS = ['Wrong size/variant', 'Damaged on arrival', 'Ordered by mistake', 'Other'];
 
@@ -28,7 +29,7 @@ export default function MentorExchange() {
           </div>
         </header>
 
-        <div className="checkout-card">
+        <div className="checkout-card mentor-flow__item">
           <h3>Medicines Order</h3>
           <p>Original: 500mg - 30 Pack</p>
         </div>
@@ -40,6 +41,7 @@ export default function MentorExchange() {
             type="button"
             className={`menu-row ${reason === item ? 'on' : ''}`}
             onClick={() => setReason(item)}
+            aria-pressed={reason === item}
           >
             <span>{item}</span>
             <i className={`loc-radio ${reason === item ? 'on' : ''}`} />
@@ -47,7 +49,7 @@ export default function MentorExchange() {
         ))}
 
         <h3 className="profile-section">2. Select replacement item</h3>
-        <div className="checkout-card">
+        <div className="checkout-card mentor-flow__replacement">
           <h3>Medicines Order</h3>
           <p>Original: 500mg - 30 Pack</p>
           <p className="muted">Available for Exchange</p>

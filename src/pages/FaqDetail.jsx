@@ -1,12 +1,22 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { HelpCircle } from 'lucide-react';
+import { BookOpen, CalendarClock, HelpCircle, ListChecks, Mail, MessageCircle } from 'lucide-react';
 import AppShell from '../components/AppShell';
-import PageHeader from '../components/PageHeader';
 import { FAQ_CATEGORIES, formatFaqUpdatedLabel, getFaqDetail } from '../services/faqService';
-import { Button, Disclaimer, EmptyState, Skeleton, SkeletonText } from '../components/ui';
+import { Button, Disclaimer } from '../components/ui';
+import {
+  ActionStack,
+  DetailCard,
+  DetailEmpty,
+  DetailHero,
+  DetailLayout,
+  DetailPage,
+  DetailSkeleton,
+  DetailTop,
+  MetaChip,
+  Steps,
+} from '../components/detail/Detail';
 import { STATIC_COPY as T } from '../content/static';
-import '../design/pages/static.css';
 
 export default function FaqDetail() {
   const navigate = useNavigate();
@@ -36,60 +46,88 @@ export default function FaqDetail() {
 
   const categoryLabel = useMemo(() => {
     if (!faq?.category) return faq?.category_label || '';
-    const match = FAQ_CATEGORIES.find(
-      (item) => item.key === String(faq.category).toLowerCase(),
-    );
+    const match = FAQ_CATEGORIES.find((item) => item.key === String(faq.category).toLowerCase());
     return match?.title || faq.category_label || String(faq.category);
   }, [faq]);
 
   const steps = Array.isArray(faq?.steps) ? faq.steps : [];
   const image = faq?.image_url || faq?.image || null;
+  const updated = faq ? formatFaqUpdatedLabel(faq) : '';
 
   return (
     <AppShell tab="profile">
-      <section className="sx-page sx-narrow">
-        <PageHeader
-          title={T.faqTitle}
-          subtitle={categoryLabel || T.faqArticle}
-          backTo="/profile/faq"
-        />
+      <DetailPage>
+        <DetailTop backTo="/profile/faq" backLabel={T.faqTitle} />
+
         {loading && !faq ? (
-          <div aria-busy="true" aria-label={T.faqArticleLoading}>
-            <SkeletonText lines={2} />
-            <Skeleton style={{ height: 180, borderRadius: 'var(--am-radius-lg)', marginTop: 16 }} />
-          </div>
+          <DetailSkeleton media={false} label={T.faqArticleLoading} />
         ) : error && !faq ? (
-          <EmptyState
-            icon={<HelpCircle size={28} />}
+          <DetailEmpty
+            icon={HelpCircle}
             title={error}
-            action={
-              <Button variant="primary" onClick={() => navigate('/profile/faq')}>
-                {T.faqTitle}
-              </Button>
-            }
+            text="The article may have moved. Browse all questions instead."
+            action={<Button onClick={() => navigate('/profile/faq')}>{T.faqTitle}</Button>}
           />
         ) : (
-          <article className="sx-article">
-            <h2>{faq.question}</h2>
-            {formatFaqUpdatedLabel(faq) ? (
-              <span className="sx-article__meta">{formatFaqUpdatedLabel(faq)}</span>
-            ) : null}
-            {image ? <img src={image} alt="" loading="lazy" decoding="async" /> : null}
-            <p>{faq.answer}</p>
-            {steps.length > 0 ? (
-              <ol>
-                {steps.map((step, index) => (
-                  <li key={step.id || index}>
-                    <strong>{step.title || `Step ${index + 1}`}</strong>
-                    <p>{step.description || step.body || step.text || ''}</p>
-                  </li>
-                ))}
-              </ol>
-            ) : null}
-          </article>
+          <>
+            <DetailHero
+              titleId="faq-title"
+              eyebrow={categoryLabel || T.faqArticle}
+              title={faq.question}
+              chips={
+                <>
+                  <MetaChip icon={BookOpen}>{T.faqArticle}</MetaChip>
+                  {updated ? <MetaChip icon={CalendarClock} tone="plain">{updated}</MetaChip> : null}
+                  {steps.length ? (
+                    <MetaChip icon={ListChecks} tone="gold">
+                      {steps.length} {steps.length === 1 ? 'step' : 'steps'}
+                    </MetaChip>
+                  ) : null}
+                </>
+              }
+            />
+
+            <DetailLayout
+              aside={
+                <DetailCard id="faq-help" title={T.faqHelpTitle} icon={MessageCircle} tone="accent">
+                  <p className="dx-prose">{T.faqHelpText}</p>
+                  <ActionStack>
+                    <Button href={T.faqSupportMailto} leadingIcon={<Mail size={16} aria-hidden />}>
+                      {T.faqEmail}
+                    </Button>
+                    <Button variant="secondary" onClick={() => navigate('/contact')}>
+                      Contact us
+                    </Button>
+                    <Button variant="ghost" onClick={() => navigate('/profile/faq')}>
+                      All questions
+                    </Button>
+                  </ActionStack>
+                </DetailCard>
+              }
+            >
+              <DetailCard id="faq-answer" title="Answer" icon={HelpCircle}>
+                {image ? <img className="dx-figure-img" src={image} alt="" loading="lazy" decoding="async" /> : null}
+                <p className="dx-prose">{faq.answer}</p>
+              </DetailCard>
+
+              {steps.length ? (
+                <DetailCard id="faq-steps" title="Step by step" icon={ListChecks}>
+                  <div className="dx-steps--solid">
+                    <Steps
+                      items={steps.map((step, index) => ({
+                        id: step.id || index,
+                        title: step.title || `Step ${index + 1}`,
+                        text: step.description || step.body || step.text || '',
+                      }))}
+                    />
+                  </div>
+                </DetailCard>
+              ) : null}
+              <Disclaimer />
+            </DetailLayout>
+          </>
         )}
-        <Disclaimer />
-      </section>
+      </DetailPage>
     </AppShell>
   );
 }

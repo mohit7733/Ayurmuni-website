@@ -17,7 +17,13 @@ import {
 } from '../cart/mapCart';
 import { calculateOrderFees, feeRateLabel, parseFeeQuoteConfig } from '../cart/feeQuote';
 import { toRazorpayPaise } from '../consult/doctors';
-import { getOrderFeeQuote, placeOrder, verifyOrderPayment } from '../services/orderService';
+import {
+  buildCartItemIds,
+  buildOrderPayload,
+  getOrderFeeQuote,
+  placeOrder,
+  verifyOrderPayment,
+} from '../services/orderService';
 import { getAddresses, listAddresses, user_profile } from '../services/profileService';
 import { formatOrderStockError } from '../product/stock';
 import { showSuccessToast } from '../config/key';
@@ -25,19 +31,7 @@ import { requireAuth } from '../services/guestAuth';
 import { Badge, Button, Disclaimer, EmptyState } from '../components/ui';
 import { CHECKOUT_COPY as T } from '../content/checkout';
 import '../design/pages/checkout.css';
-
-const loadRazorpay = () =>
-  new Promise((resolve, reject) => {
-    if (window.Razorpay) {
-      resolve(window.Razorpay);
-      return;
-    }
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.onload = () => resolve(window.Razorpay);
-    script.onerror = () => reject(new Error('Unable to load Razorpay'));
-    document.body.appendChild(script);
-  });
+import { extractRazorpayCheckout, loadRazorpay, preloadRazorpay } from '../payment/razorpay';
 
 const pickPaymentData = (orderResponse) => {
   const data = orderResponse?.data && typeof orderResponse.data === 'object' ? orderResponse.data : {};
@@ -73,6 +67,10 @@ export default function Checkout() {
   const [verifying, setVerifying] = useState(false);
   const [orderError, setOrderError] = useState('');
   const [customer, setCustomer] = useState(null);
+
+  useEffect(() => {
+    preloadRazorpay();
+  }, []);
 
   useEffect(() => {
     const fromState = location.state?.selectedProducts;
@@ -128,7 +126,7 @@ export default function Checkout() {
   }, [location.state?.selectedAddress]);
 
   const cartItemIds = useMemo(
-    () => items.map((item) => String(item.cart_item_id || item.id)).filter(Boolean),
+    () => buildCartItemIds(items),
     [items],
   );
   const subtotal = useMemo(
@@ -285,20 +283,18 @@ export default function Checkout() {
     setPlacing(true);
     setOrderError('');
     try {
-      const result = await placeOrder({
-        delivery_address_id: addressId,
-        payment_type: 'cod',
-        payment_method: 'cash',
-        shipping_method: 'STD',
-        shipping_charges: shipping,
-        cod_charges: codFee,
-        prepaid_amount: total,
-        cart_item_ids: cartItemIds,
-        coupon_code: appliedCoupon?.code,
-        gift_wrap_item_ids: items
-          .filter((item) => item.gift_wrap)
-          .map((item) => item.cart_item_id || item.id),
-      });
+      const result = await placeOrder(
+        buildOrderPayload({
+          mode: 'cod',
+          delivery_address_id: addressId,
+          cartItems: items,
+          shipping_charges: shipping,
+          cod_charges: codFee,
+          shipping_method: 'STD',
+          prepaid_amount: total,
+          coupon_code: appliedCoupon?.code,
+        }),
+      );
       if (isOrderSuccessful(result)) {
         await finishOrder(result);
         return;
@@ -325,20 +321,20 @@ export default function Checkout() {
     setPlacing(true);
     setOrderError('');
     try {
-      const result = await placeOrder({
-        delivery_address_id: addressId,
-        payment_type: 'prepaid',
-        shipping_method: 'STD',
-        shipping_charges: shipping,
-        cod_charges: 0,
-        prepaid_amount: total,
-        cart_item_ids: cartItemIds,
-        coupon_code: appliedCoupon?.code,
-        gift_wrap_item_ids: items
-          .filter((item) => item.gift_wrap)
-          .map((item) => item.cart_item_id || item.id),
-      });
-      if (!result?.success && !isOrderSuccessful(result)) {
+      const result = await placeOrder(
+        buildOrderPayload({
+          mode: 'prepaid',
+          delivery_address_id: addressId,
+          cartItems: items,
+          shipping_charges: shipping,
+          cod_charges: 0,
+          shipping_method: 'STD',
+          prepaid_amount: total,
+          coupon_code: appliedCoupon?.code,
+        }),
+      );
+      // Same as the app: prepaid place-order must return success: true.
+      if (!isOrderSuccessful(result) || result?.success === false || !(result?.success === true || result?.success === "true" || result?.success === 1)) {
         const failMsg = failMessage(result, 'Order failed');
         if (handleCouponFailure(failMsg)) return;
         setOrderError(failMsg);
@@ -346,12 +342,20 @@ export default function Checkout() {
         return;
       }
       const payment = pickPaymentData(result);
-      const key = String(payment?.razorpay_key ?? payment?.key ?? payment?.key_id ?? '').trim();
-      const orderId = String(
-        payment?.razorpay_order_id ?? payment?.razorpayOrderId ?? payment?.rzp_order_id ?? '',
-      ).trim();
+      const { key, orderId } = extractRazorpayCheckout(result);
       if (!key || !orderId) {
-        showSuccessToast('Payment gateway not ready. Please try again.', 'error');
+        if (import.meta.env.DEV) {
+          console.warn('[checkout] prepaid order response has no Razorpay key/order id', {
+            hasKey: Boolean(key),
+            hasOrderId: Boolean(orderId),
+            keys: Object.keys(payment || {}),
+          });
+        }
+        const failMsg = !key
+          ? 'Online payment is not configured right now. Please choose Cash on Delivery or contact support.'
+          : 'We could not start the payment for this order. Please check My Orders before trying again.';
+        setOrderError(failMsg);
+        showSuccessToast(failMsg, 'error');
         return;
       }
       const contactDigits = String(
@@ -470,207 +474,213 @@ export default function Checkout() {
       <section className="co-page">
         <PageHeader title={T.title} subtitle={T.itemsInOrder(itemUnits)} backTo="/cart" />
 
-        <button
-          type="button"
-          className="co-card co-address"
-          onClick={() =>
-            navigate('/profile/addresses', {
-              state: { returnTo: '/checkout', selectedAddress },
-            })
-          }
-        >
-          {selectedAddress ? (
-            <>
-              <div className="co-address__copy">
-                <p className="co-kicker">
-                  <MapPin size={14} aria-hidden />
-                  {T.deliverTo}
-                  <Badge tone="neutral" size="sm">
-                    {selectedAddress.address_type_name || selectedAddress.address_type || 'Home'}
-                  </Badge>
-                </p>
-                <p className="co-address__line">{formatAddress(selectedAddress)}</p>
+        <div className="co-layout">
+          <div className="co-main">
+            <button
+              type="button"
+              className="co-card co-address"
+              onClick={() =>
+                navigate('/profile/addresses', {
+                  state: { returnTo: '/checkout', selectedAddress },
+                })
+              }
+            >
+              {selectedAddress ? (
+                <>
+                  <div className="co-address__copy">
+                    <p className="co-kicker">
+                      <MapPin size={14} aria-hidden />
+                      {T.deliverTo}
+                      <Badge tone="neutral" size="sm">
+                        {selectedAddress.address_type_name || selectedAddress.address_type || 'Home'}
+                      </Badge>
+                    </p>
+                    <p className="co-address__line">{formatAddress(selectedAddress)}</p>
+                  </div>
+                  <span className="am-btn am-btn--ghost am-btn--sm" aria-hidden>
+                    <span className="am-btn__label">{T.changeAddress}</span>
+                    <ChevronRight size={16} aria-hidden />
+                  </span>
+                </>
+              ) : (
+                <>
+                  <div className="co-address__copy">
+                    <strong>{T.addAddress}</strong>
+                    <p className="co-address__hint">{T.addAddressHint}</p>
+                  </div>
+                  <span className="am-btn am-btn--primary am-btn--sm" aria-hidden>
+                    <Plus size={16} aria-hidden />
+                    <span className="am-btn__label">{T.add}</span>
+                  </span>
+                </>
+              )}
+            </button>
+
+            <div className="co-card co-items-card">
+              <h2>{T.itemsInOrder(itemUnits)}</h2>
+              {items.map((item) => (
+                <button
+                  key={item.id || item.variant_id}
+                  type="button"
+                  className="co-item"
+                  onClick={() => item.variant_id && navigate(`/products/${item.variant_id}`)}
+                >
+                  <span className="co-item__thumb">
+                    {item.image ? (
+                      <img src={item.image} alt="" loading="lazy" decoding="async" />
+                    ) : (
+                      <Leaf size={20} aria-hidden />
+                    )}
+                  </span>
+                  <p className="co-item__name">
+                    {item.name}
+                    <small>{T.qty(item.quantity)}</small>
+                  </p>
+                  <strong className="co-item__price">
+                    {money(Number(item.price) * Number(item.quantity))}
+                  </strong>
+                </button>
+              ))}
+            </div>
+
+            <div className="co-card">
+              <h2>{T.paymentTitle}</h2>
+              <div className="co-pay" role="radiogroup" aria-label={T.paymentTitle}>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={method === 'online'}
+                  className={`co-pay__option${method === 'online' ? ' is-on' : ''}`}
+                  onClick={() => setMethod('online')}
+                >
+                  <strong>{T.payOnline}</strong>
+                  <small>{T.payOnlineHint}</small>
+                </button>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={method === 'cod'}
+                  className={`co-pay__option${method === 'cod' ? ' is-on' : ''}${codAvailable ? '' : ' is-off'}`}
+                  onClick={() => {
+                    if (!codAvailable) return;
+                    setMethod('cod');
+                  }}
+                  disabled={!codAvailable}
+                >
+                  <strong>{T.cod}</strong>
+                  <small>{codAvailable ? T.codHint : T.codUnavailable}</small>
+                </button>
               </div>
-              <span className="am-btn am-btn--ghost am-btn--sm" aria-hidden>
-                <span className="am-btn__label">{T.changeAddress}</span>
-                <ChevronRight size={16} aria-hidden />
-              </span>
-            </>
-          ) : (
-            <>
-              <div className="co-address__copy">
-                <strong>{T.addAddress}</strong>
-                <p className="co-address__hint">{T.addAddressHint}</p>
+              {method === 'online' ? <p className="co-online-hint">{T.onlineHint}</p> : null}
+            </div>
+
+            <div className="co-card">
+              <CouponApplyCard
+                coupons={coupons}
+                eligibleCoupons={eligibleCoupons}
+                cartAmount={subtotal}
+                loading={couponsLoading}
+                applied={appliedCoupon}
+                discount={feeBreakdown.discount || couponDiscount}
+                payable={total}
+                error={couponError}
+                checkoutScope="product"
+                onApply={applyCode}
+                onRemove={removeCoupon}
+              />
+            </div>
+          </div>
+
+          <aside className="co-summary" aria-label={T.billTitle}>
+            <div className="co-card co-bill">
+              <button
+                type="button"
+                className="co-bill-toggle"
+                onClick={() => setBillExpanded((open) => !open)}
+                aria-expanded={billExpanded}
+              >
+                <h2>{T.billTitle}</h2>
+                <span>{billExpanded ? T.hide : T.show}</span>
+              </button>
+              {feeLoading ? <p className="co-online-hint">{T.calculating}</p> : null}
+              {feeError ? <p className="co-error">{feeError}</p> : null}
+              {billExpanded ? (
+                <>
+                  <p className="co-bill__row">
+                    <span>{T.itemTotal}</span>
+                    <span>{money(feeBreakdown.baseAmount)}</span>
+                  </p>
+                  {feeBreakdown.discount > 0 ? (
+                    <p className="co-bill__row is-success">
+                      <span>{T.discount}</span>
+                      <span>− {money(feeBreakdown.discount)}</span>
+                    </p>
+                  ) : null}
+                  {feeBreakdown.discount > 0 || feeBreakdown.itemsAfterDiscount !== feeBreakdown.baseAmount ? (
+                    <p className="co-bill__row">
+                      <span>{T.subTotal}</span>
+                      <span>{money(feeBreakdown.itemsAfterDiscount)}</span>
+                    </p>
+                  ) : null}
+                  <p className={`co-bill__row${feeBreakdown.freeDelivery ? ' is-success' : ''}`}>
+                    <span>
+                      {feeBreakdown.freeDelivery
+                        ? T.freeDelivery(formatRupee(feeBreakdown.freeDeliveryMinimum))
+                        : T.delivery}
+                    </span>
+                    <span>{feeBreakdown.freeDelivery || !shipping ? T.free : money(shipping)}</span>
+                  </p>
+                  {method === 'cod' ? (
+                    <p className="co-bill__row">
+                      <span>{T.codCharges}</span>
+                      <span>{money(codFee)}</span>
+                    </p>
+                  ) : null}
+                  {platform > 0 ? (
+                    <p className="co-bill__row">
+                      <span>{feeRateLabel(T.platformFee, feeBreakdown.platformRate)}</span>
+                      <span>{money(platform)}</span>
+                    </p>
+                  ) : null}
+                  {gst > 0 ? (
+                    <p className="co-bill__row">
+                      <span>{feeRateLabel(T.gst, feeBreakdown.gstRate)}</span>
+                      <span>{money(gst)}</span>
+                    </p>
+                  ) : null}
+                </>
+              ) : null}
+              <p className="co-bill__row is-total">
+                <span>{T.grandTotal}</span>
+                <span>{money(total)}</span>
+              </p>
+            </div>
+
+            <ul className="co-trust">
+              <li>{T.trustSecure}</li>
+              <li>{T.trustDelivery}</li>
+              <li>{T.trustGenuine}</li>
+            </ul>
+
+            {orderError ? <p className="co-error" role="alert">{orderError}</p> : null}
+
+            <div className="co-sticky">
+              <div className="co-sticky__meta">
+                <strong>{money(total)}</strong>
+                <small>
+                  {method === 'cod' ? T.payOnDelivery : T.payNow} · {T.itemsInOrder(itemUnits)}
+                </small>
               </div>
-              <span className="am-btn am-btn--primary am-btn--sm" aria-hidden>
-                <Plus size={16} aria-hidden />
-                <span className="am-btn__label">{T.add}</span>
-              </span>
-            </>
-          )}
-        </button>
-
-        <div className="co-card">
-          <h2>{T.itemsInOrder(itemUnits)}</h2>
-          {items.map((item) => (
-            <button
-              key={item.id || item.variant_id}
-              type="button"
-              className="co-item"
-              onClick={() => item.variant_id && navigate(`/products/${item.variant_id}`)}
-            >
-              <span className="co-item__thumb">
-                {item.image ? (
-                  <img src={item.image} alt="" loading="lazy" decoding="async" />
-                ) : (
-                  <Leaf size={20} aria-hidden />
-                )}
-              </span>
-              <p className="co-item__name">
-                {item.name}
-                <small>{T.qty(item.quantity)}</small>
-              </p>
-              <strong className="co-item__price">
-                {money(Number(item.price) * Number(item.quantity))}
-              </strong>
-            </button>
-          ))}
-        </div>
-
-        <div className="co-card">
-          <h2>{T.paymentTitle}</h2>
-          <div className="co-pay" role="radiogroup" aria-label={T.paymentTitle}>
-            <button
-              type="button"
-              role="radio"
-              aria-checked={method === 'online'}
-              className={`co-pay__option${method === 'online' ? ' is-on' : ''}`}
-              onClick={() => setMethod('online')}
-            >
-              <strong>{T.payOnline}</strong>
-              <small>{T.payOnlineHint}</small>
-            </button>
-            <button
-              type="button"
-              role="radio"
-              aria-checked={method === 'cod'}
-              className={`co-pay__option${method === 'cod' ? ' is-on' : ''}${codAvailable ? '' : ' is-off'}`}
-              onClick={() => {
-                if (!codAvailable) return;
-                setMethod('cod');
-              }}
-              disabled={!codAvailable}
-            >
-              <strong>{T.cod}</strong>
-              <small>{codAvailable ? T.codHint : T.codUnavailable}</small>
-            </button>
-          </div>
-          {method === 'online' ? <p className="co-online-hint">{T.onlineHint}</p> : null}
-        </div>
-
-        <div className="co-card">
-          <CouponApplyCard
-            coupons={coupons}
-            eligibleCoupons={eligibleCoupons}
-            cartAmount={subtotal}
-            loading={couponsLoading}
-            applied={appliedCoupon}
-            discount={feeBreakdown.discount || couponDiscount}
-            payable={total}
-            error={couponError}
-            checkoutScope="product"
-            onApply={applyCode}
-            onRemove={removeCoupon}
-          />
-        </div>
-
-        <div className="co-card">
-          <button
-            type="button"
-            className="co-bill-toggle"
-            onClick={() => setBillExpanded((open) => !open)}
-            aria-expanded={billExpanded}
-          >
-            <h2>{T.billTitle}</h2>
-            <span>{billExpanded ? T.hide : T.show}</span>
-          </button>
-          {feeLoading ? <p className="co-online-hint">{T.calculating}</p> : null}
-          {feeError ? <p className="co-error">{feeError}</p> : null}
-          {billExpanded ? (
-            <>
-              <p className="co-bill__row">
-                <span>{T.itemTotal}</span>
-                <span>{money(feeBreakdown.baseAmount)}</span>
-              </p>
-              {feeBreakdown.discount > 0 ? (
-                <p className="co-bill__row is-success">
-                  <span>{T.discount}</span>
-                  <span>− {money(feeBreakdown.discount)}</span>
-                </p>
-              ) : null}
-              {feeBreakdown.discount > 0 || feeBreakdown.itemsAfterDiscount !== feeBreakdown.baseAmount ? (
-                <p className="co-bill__row">
-                  <span>{T.subTotal}</span>
-                  <span>{money(feeBreakdown.itemsAfterDiscount)}</span>
-                </p>
-              ) : null}
-              <p className={`co-bill__row${feeBreakdown.freeDelivery ? ' is-success' : ''}`}>
-                <span>
-                  {feeBreakdown.freeDelivery
-                    ? T.freeDelivery(formatRupee(feeBreakdown.freeDeliveryMinimum))
-                    : T.delivery}
-                </span>
-                <span>{feeBreakdown.freeDelivery || !shipping ? T.free : money(shipping)}</span>
-              </p>
-              {method === 'cod' ? (
-                <p className="co-bill__row">
-                  <span>{T.codCharges}</span>
-                  <span>{money(codFee)}</span>
-                </p>
-              ) : null}
-              {platform > 0 ? (
-                <p className="co-bill__row">
-                  <span>{feeRateLabel(T.platformFee, feeBreakdown.platformRate)}</span>
-                  <span>{money(platform)}</span>
-                </p>
-              ) : null}
-              {gst > 0 ? (
-                <p className="co-bill__row">
-                  <span>{feeRateLabel(T.gst, feeBreakdown.gstRate)}</span>
-                  <span>{money(gst)}</span>
-                </p>
-              ) : null}
-            </>
-          ) : null}
-          <p className="co-bill__row is-total">
-            <span>{T.grandTotal}</span>
-            <span>{money(total)}</span>
-          </p>
-        </div>
-
-        <ul className="co-trust">
-          <li>{T.trustSecure}</li>
-          <li>{T.trustDelivery}</li>
-          <li>{T.trustGenuine}</li>
-        </ul>
-
-        {orderError ? <p className="co-error" role="alert">{orderError}</p> : null}
-
-        <div className="co-sticky">
-          <div className="co-sticky__meta">
-            <strong>{money(total)}</strong>
-            <small>
-              {method === 'cod' ? T.payOnDelivery : T.payNow} · {T.itemsInOrder(itemUnits)}
-            </small>
-          </div>
-          <Button
-            variant="primary"
-            disabled={busy || feeLoading || Boolean(feeError) || !selectedAddress}
-            loading={busy}
-            onClick={place}
-          >
-            {busy ? T.placing : method === 'cod' ? T.placeOrder : T.payNow}
-          </Button>
+              <Button
+                variant="primary"
+                disabled={busy || feeLoading || Boolean(feeError) || !selectedAddress}
+                loading={busy}
+                onClick={place}
+              >
+                {busy ? T.placing : method === 'cod' ? T.placeOrder : T.payNow}
+              </Button>
+            </div>
+          </aside>
         </div>
 
         <Disclaimer />
