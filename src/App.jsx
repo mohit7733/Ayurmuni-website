@@ -63,7 +63,7 @@ const Profile = loadPage(() => import("./pages/Profile"));
 const EditProfile = loadPage(() => import("./pages/EditProfile"));
 const Settings = loadPage(() => import("./pages/Settings"));
 const NotificationSettings = loadPage(() => import("./pages/NotificationSettings"));
-const OrangeLab = loadPage(() => import("./pages/OrangeLab"));
+// const OrangeLab = loadPage(() => import("./pages/OrangeLab")); // Health Lab disabled per Rohit
 const Packages = loadPage(() => import("./pages/Packages"));
 const Panchakarma = loadPage(() => import("./pages/Panchakarma"));
 const Addresses = loadPage(() => import("./pages/Addresses"));
@@ -432,7 +432,8 @@ export default function App() {
                     element={<VideoCall />}
                   />
                   <Route path="/medicines" element={<Medicines />} />
-                  <Route path="/labs" element={<OrangeLab />} />
+                  {/* Health Lab disabled per Rohit
+                  <Route path="/labs" element={<OrangeLab />} /> */}
                   <Route path="/packages" element={<Packages />} />
                   <Route path="/panchakarma" element={<Panchakarma />} />
                   <Route

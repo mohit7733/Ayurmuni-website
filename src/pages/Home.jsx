@@ -444,7 +444,8 @@ export default function Home() {
     const list = Array.isArray(categories) ? categories.filter(Boolean) : [];
     const isLab = (item) =>
       /lab/i.test(`${item?.name || ''} ${item?.redirect_url || item?.app_screen || ''}`);
-    return [...list.filter((item) => !isLab(item)), ...list.filter(isLab)];
+    // Health Lab disabled per Rohit: lab service tiles hidden (was: [...nonLab, ...lab]).
+    return list.filter((item) => !isLab(item));
   }, [categories]);
 
   const bannerItems = useMemo(
@@ -513,10 +514,11 @@ export default function Home() {
 
   const handleCategoryPress = (item) => {
     const nameKey = item?.name?.trim().toLowerCase() ?? '';
-    if (/lab/i.test(`${nameKey} ${item?.redirect_url || item?.app_screen || item?.screen || ''}`)) {
-      navigate('/labs');
-      return;
-    }
+    // Health Lab disabled per Rohit
+    // if (/lab/i.test(`${nameKey} ${item?.redirect_url || item?.app_screen || item?.screen || ''}`)) {
+    //   navigate('/labs');
+    //   return;
+    // }
     if (/panchakarma|panchkarma/i.test(`${nameKey} ${item?.redirect_url || item?.app_screen || item?.screen || ''}`)) {
       navigate('/panchakarma');
       return;

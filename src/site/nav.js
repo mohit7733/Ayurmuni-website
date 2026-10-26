@@ -27,7 +27,7 @@ export const FOOTER_COLUMNS = [
       { to: '/yoga', label: 'Yoga' },
       { to: '/diet', label: 'Diet plans' },
       { to: '/packages', label: 'Packages' },
-      { to: '/labs', label: 'Lab tests' },
+      // { to: '/labs', label: 'Lab tests' }, // Health Lab disabled per Rohit
     ],
   },
   {

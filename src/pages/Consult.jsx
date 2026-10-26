@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { SearchX, Stethoscope } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import SuggestedDoctorCard from '../components/SuggestedDoctorCard';
-import DummyOfferCard from '../components/DummyOfferCard';
-import LabHomeBanner from '../components/LabHomeBanner';
+// import DummyOfferCard from '../components/DummyOfferCard'; // Health Lab disabled per Rohit
+// import LabHomeBanner from '../components/LabHomeBanner'; // Health Lab disabled per Rohit
 import ProductCard from '../components/ProductCard';
 import ConsultationCard from '../components/consult/ConsultationCard';
 import { SectionHead, ViewAll } from '../components/ServiceHome';
@@ -33,7 +33,7 @@ import {
 } from '../components/ui';
 import { CONSULT_COPY as T } from '../content/consult';
 import { HOME_COPY as H } from '../content/home';
-import { DUMMY_LAB_TESTS } from '../data/homeDummySections';
+// import { DUMMY_LAB_TESTS } from '../data/homeDummySections'; // Health Lab disabled per Rohit
 import '../design/pages/dummy-offers.css';
 import '../design/pages/orange-lab.css';
 
@@ -388,6 +388,7 @@ export default function Consult() {
                 </div>
               ) : null}
 
+              {/* Health Lab disabled per Rohit
               <Reveal as="section" className="hm-section hm-panel hm-lab" aria-labelledby="cs-lab-title">
                 <SectionHead
                   id="cs-lab-title"
@@ -407,7 +408,7 @@ export default function Consult() {
                     </RailItem>
                   ))}
                 </Rail>
-              </Reveal>
+              </Reveal> */}
             </>
           )}
         </div>
