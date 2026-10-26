@@ -6,7 +6,6 @@ import {
   ShoppingBag,
   Stethoscope,
 } from "lucide-react";
-import { COPY } from "../content/copy";
 import { useCart } from "../hooks/useCart";
 import useLoggedIn from "../hooks/useLoggedIn";
 import { TAB_ITEMS } from "../site/nav";
