@@ -8,8 +8,44 @@ export const PRICE_RANGE_OPTIONS = [
   { key: 'above_1000', label: `Above ${formatRupee(1000)}`, min: 1000 },
 ];
 
+export const PRODUCT_RATING_OPTIONS = [
+  { key: 'all', label: 'Any rating' },
+  { key: '4', label: '4★ & above' },
+  { key: '3', label: '3★ & above' },
+];
+
+export const DOSHA_OPTIONS = [
+  { key: 'all', label: 'All doshas' },
+  { key: 'Vata', label: 'Vata' },
+  { key: 'Pitta', label: 'Pitta' },
+  { key: 'Kapha', label: 'Kapha' },
+];
+
+/** UI sort -> `sort` query param on `customers/products/` (null = server default). */
+export const toProductApiSort = (sortBy) => {
+  switch (sortBy) {
+    case 'price_low':
+      return 'price_asc';
+    case 'price_high':
+      return 'price_desc';
+    case 'popularity':
+      return 'popularity';
+    case 'rating':
+      return 'rating';
+    default:
+      return null;
+  }
+};
+
+/** Price chip -> `min_price` / `max_price` query params. */
+export const getPriceRangeBounds = (priceRange) => {
+  const option = PRICE_RANGE_OPTIONS.find((o) => o.key === priceRange);
+  return { min_price: option?.min ?? null, max_price: option?.max ?? null };
+};
+
 export const PRODUCT_SORT_OPTIONS = [
   { key: 'relevance', label: 'Relevance' },
+  { key: 'popularity', label: 'Popularity' },
   { key: 'price_low', label: 'Price: Low to High' },
   { key: 'price_high', label: 'Price: High to Low' },
   { key: 'discount', label: 'Max Discount' },
@@ -46,7 +82,9 @@ export const applyProductFilters = ({
   brandNames = null,
   brandIds = null,
   priceRange = 'all',
+  minRating = 'all',
 }) => {
+  const ratingFloor = minRating === 'all' || minRating == null ? null : Number(minRating);
   const list = Array.isArray(products) ? products : [];
   const q = String(search || '').trim().toLowerCase();
   const priceOption = PRICE_RANGE_OPTIONS.find((option) => option.key === priceRange);
@@ -91,6 +129,12 @@ export const applyProductFilters = ({
       const price = getPrice(item);
       if (priceOption.min !== undefined && price < priceOption.min) return false;
       if (priceOption.max !== undefined && price > priceOption.max) return false;
+    }
+
+    if (ratingFloor != null) {
+      const rating = Number(item?.average_rating ?? item?.rating ?? item?.avg_rating ?? NaN);
+      // Rows without a rating are left to the API's `min_rating` filter.
+      if (Number.isFinite(rating) && rating < ratingFloor) return false;
     }
 
     return true;

@@ -1,12 +1,20 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FileText, Leaf, Package } from 'lucide-react';
+import { ChevronRight, FileText, Leaf, Package, RefreshCw } from 'lucide-react';
+import { buildRequestViewRoute } from '../cart/rxGroups';
 import AppShell from '../components/AppShell';
 import PageHeader from '../components/PageHeader';
 import { formatRupee } from '../home/catalog';
 import { mapOrderToListItem } from '../profile/map';
 import { requireAuth } from '../services/guestAuth';
 import { getOrders, normalizeOrdersList } from '../services/orderService';
+import {
+  countReturns,
+  filterReturns,
+  getReturnStatusMeta,
+  loadAllReturns,
+  RETURN_FILTERS,
+} from '../services/returnService';
 import {
   formatPrescriptionDate,
   getPrescriptionRequests,
@@ -32,6 +40,8 @@ import {
   orderStatusLabel,
   orderStatusTone,
 } from '../content/orders';
+import { formatOrderId } from '../utils/formatDisplayId';
+import { formatOrderDateTime } from '../utils/orderDetailUtils';
 import '../design/pages/orders.css';
 
 const requestTone = (item) => {
@@ -43,7 +53,7 @@ const requestTone = (item) => {
 export default function OrderHistory() {
   const navigate = useNavigate();
   const location = useLocation();
-  const openedTab = location.state?.tab === 'requested' ? 'requested' : 'orders';
+  const openedTab = ['requested', 'returns'].includes(location.state?.tab) ? location.state.tab : 'orders';
   const [tab, setTab] = useState(openedTab);
   const [orders, setOrders] = useState([]);
   const [requests, setRequests] = useState([]);
@@ -51,6 +61,11 @@ export default function OrderHistory() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [requestsLoading, setRequestsLoading] = useState(true);
+  const [returns, setReturns] = useState([]);
+  const [returnsLoading, setReturnsLoading] = useState(false);
+  const [returnsLoaded, setReturnsLoaded] = useState(false);
+  const [returnFilter, setReturnFilter] = useState('all');
+  const [returnSearch, setReturnSearch] = useState('');
 
   useEffect(() => {
     (async () => {
@@ -71,6 +86,32 @@ export default function OrderHistory() {
       setRequestsLoading(false);
     })();
   }, []);
+
+  // The Returns tab loads on first open and refreshes every time it is opened again.
+  useEffect(() => {
+    if (tab !== 'returns' || loading) return undefined;
+    let active = true;
+    (async () => {
+      if (!(await requireAuth('Please login to view returns'))) return;
+      setReturnsLoading(true);
+      const next = await loadAllReturns(orders);
+      if (!active) return;
+      setReturns(next);
+      setReturnsLoaded(true);
+      setReturnsLoading(false);
+    })();
+    return () => {
+      active = false;
+    };
+    // `orders` only feeds the fallback path; reload on tab open / initial orders load.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, loading]);
+
+  const returnList = useMemo(
+    () => filterReturns(returns, returnFilter, returnSearch),
+    [returns, returnFilter, returnSearch],
+  );
+  const returnCounts = useMemo(() => countReturns(returns), [returns]);
 
   const list = useMemo(() => {
     const chip = T.filters.find((item) => item.key === filter);
@@ -108,6 +149,7 @@ export default function OrderHistory() {
           onChange={setTab}
           items={[
             { id: 'orders', label: T.ordersTab },
+            { id: 'returns', label: returns.length ? `${T.returnsTab} (${returns.length})` : T.returnsTab },
             {
               id: 'requested',
               label: requests.length ? `${T.requestedTab} (${requests.length})` : T.requestedTab,
@@ -187,6 +229,72 @@ export default function OrderHistory() {
               </div>
             )}
           </>
+        ) : tab === 'returns' ? (
+          <>
+            <div className="or-toolbar">
+              <SearchField
+                value={returnSearch}
+                onChange={setReturnSearch}
+                placeholder={T.returnsSearchPlaceholder}
+                label={T.returnsSearchPlaceholder}
+              />
+              <div className="or-filters" role="group" aria-label={T.statusFilter}>
+                {RETURN_FILTERS.map((item) => (
+                  <Chip
+                    key={item.key}
+                    selected={returnFilter === item.key}
+                    count={returnCounts[item.key] > 0 ? returnCounts[item.key] : undefined}
+                    onClick={() => setReturnFilter(item.key)}
+                  >
+                    {item.label}
+                  </Chip>
+                ))}
+              </div>
+            </div>
+            {returnsLoading && !returnsLoaded ? (
+              <div className="or-skel" aria-busy="true">
+                <Skeleton style={{ height: 88, borderRadius: 'var(--am-radius-lg)' }} />
+                <SkeletonText lines={2} />
+              </div>
+            ) : returnList.length === 0 ? (
+              <EmptyState
+                icon={<RefreshCw size={28} />}
+                title={T.returnsEmptyTitle}
+                description={T.returnsEmptyText}
+              />
+            ) : (
+              <div className="or-list">
+                {returnList.map((ret) => {
+                  const meta = getReturnStatusMeta(ret.status);
+                  const qty = ret.items.reduce((sum, line) => sum + line.quantity, 0);
+                  return (
+                    <button
+                      key={ret.id}
+                      type="button"
+                      className="or-row"
+                      onClick={() => navigate(`/profile/returns/${ret.id}`, { state: { returnRequest: ret.raw } })}
+                    >
+                      <span className="or-row__thumb">
+                        <RefreshCw size={22} aria-hidden />
+                      </span>
+                      <div className="or-row__body">
+                        <p className="or-row__title">
+                          Order #{formatOrderId(ret.orderCode || ret.orderId)}
+                        </p>
+                        <p className="or-row__meta">
+                          {qty} item{qty === 1 ? '' : 's'} · {ret.reason || 'Return request'}
+                        </p>
+                        <p className="or-row__meta">{formatOrderDateTime(ret.createdAt)}</p>
+                      </div>
+                      <div className="or-row__aside">
+                        <Badge tone={meta.tone}>{meta.label}</Badge>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </>
         ) : requestsLoading ? (
           <div className="or-skel" aria-busy="true">
             <Skeleton style={{ height: 88, borderRadius: 'var(--am-radius-lg)' }} />
@@ -228,6 +336,17 @@ export default function OrderHistory() {
                   </div>
                   <div className="or-row__aside">
                     <Badge tone={requestTone(item)}>{getStatusLabel(item)}</Badge>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      trailingIcon={<ChevronRight size={14} aria-hidden />}
+                      onClick={() => {
+                        const route = buildRequestViewRoute(item);
+                        navigate(route.path, { state: route.state });
+                      }}
+                    >
+                      View request
+                    </Button>
                   </div>
                 </div>
               );

@@ -68,15 +68,21 @@ export default function EditProfile() {
   };
 
   const save = async () => {
-    if (!form.first_name.trim()) {
+    const firstName = String(form.first_name || '').trim();
+    const lastName = String(form.last_name || '').trim();
+    if (!firstName) {
       showSuccessToast('Please enter your first name', 'error');
+      return;
+    }
+    if (!lastName) {
+      showSuccessToast('Last name is required', 'error');
       return;
     }
     setLoading(true);
     try {
       const res = await update_Profile({
-        first_name: form.first_name,
-        last_name: String(form.last_name || '').trim(),
+        first_name: firstName,
+        last_name: lastName,
         email: form.email,
         secondary_number: form.secondary_number,
         gender: form.gender,

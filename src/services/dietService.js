@@ -2,13 +2,38 @@ import { apiClient } from './apiClient';
 
 export const DIET_PLAN_PAGE_SIZE = 20;
 
+// Query keys GET patients/diet-plans/ accepts (the app's DIET_PLAN_QUERY_KEYS); anything else is dropped.
+export const DIET_PLAN_QUERY_KEYS = [
+  'id',
+  'type',
+  'page',
+  'page_size',
+  'search',
+  'health_category_id',
+  'health_disease_id',
+  'prakriti',
+  'is_paid',
+  'patient_assignment_status',
+  'duration',
+  'duration_min',
+  'duration_max',
+  'calories',
+  'calories_min',
+  'calories_max',
+  'min_rating',
+  'sort',
+];
+
 const cleanParams = (params = {}) =>
   Object.fromEntries(
-    Object.entries(params).filter(([key, value]) => {
-      if (key === 'min_rating') return false;
-      return value !== undefined && value !== null && String(value).trim() !== '';
-    }),
+    Object.entries(params)
+      .filter(([key]) => DIET_PLAN_QUERY_KEYS.includes(key))
+      .filter(([, value]) => value !== undefined && value !== null && String(value).trim() !== '')
+      // The API sort value is `ratings`; older callers pass `rating`.
+      .map(([key, value]) => [key, key === 'sort' && value === 'rating' ? 'ratings' : String(value).trim()]),
   );
+
+export const toDietPlansQuery = (params = {}) => toQuery(params);
 
 const toQuery = (params = {}) => {
   const query = new URLSearchParams();

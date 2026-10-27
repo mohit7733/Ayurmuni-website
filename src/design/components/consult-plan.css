@@ -1,0 +1,62 @@
+/* Plan funding on Confirm Booking (cp-*). Built on booking.css bk-* rows + ui Modal. */
+.cp-row {
+  align-items: flex-start;
+}
+.cp-row.is-off {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.cp-row__off {
+  color: var(--am-danger, #b42318);
+}
+.cp-row__price {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  white-space: nowrap;
+}
+.cp-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--am-line);
+  border-radius: var(--am-radius-lg);
+  background: #fff;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+button.cp-banner {
+  cursor: pointer;
+}
+.cp-banner--on {
+  border-color: var(--dx-green);
+  background: color-mix(in srgb, var(--dx-green) 8%, #fff);
+}
+.cp-banner__copy {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1px;
+}
+.cp-banner__copy small {
+  color: var(--am-ink-2, #475569);
+}
+.cp-banner__actions {
+  display: flex;
+  gap: 6px;
+}
+@media (max-width: 480px) {
+  .cp-banner {
+    padding: 8px 10px;
+  }
+  .cp-banner__actions {
+    flex-direction: column;
+    align-items: flex-end;
+  }
+}

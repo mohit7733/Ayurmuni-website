@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import AgoraVideoTile from '../components/AgoraVideoTile';
 import { useVideoCall } from '../context/VideoCallContext';
+import CallTimeWarning from '../components/CallTimeWarning';
 import { requireAuth } from '../services/guestAuth';
 
 export default function VideoCall() {
@@ -119,6 +120,14 @@ export default function VideoCall() {
           </button>
         </div>
       ) : null}
+
+      <CallTimeWarning
+        appointmentId={extras.appointmentId || appointmentId}
+        consultationId={extras.consultationId}
+        appointmentDate={extras.appointmentDate}
+        startTime={extras.startTime}
+        endTime={extras.endTime}
+      />
 
       <div className="video-stage">
         {waiting ? (

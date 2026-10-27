@@ -21,6 +21,12 @@ export const getProducts = async (params = {}) => {
     'brand_name_id',
     'category_id',
     'variant_id',
+    // Server-side filters / sort (same params the app sends).
+    'min_price',
+    'max_price',
+    'min_rating',
+    'dosha_type',
+    'sort',
   ].forEach((key) => appendQueryParam(query, key, params[key]));
   const qs = query.toString();
   return apiClient(
@@ -28,6 +34,10 @@ export const getProducts = async (params = {}) => {
     { method: 'GET' },
   );
 };
+
+/** GET favorites/products/ - the customer's saved products (array or paged `{results}`). */
+export const getWishlistProducts = async () =>
+  apiClient('favorites/products/', { method: 'GET' });
 
 export const getHealthCategories = async (options = {}) => {
   const query = new URLSearchParams();

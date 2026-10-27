@@ -1,0 +1,10 @@
+/* Availability pill inside the All-doctors card fact row (reuses .dl-card__facts li). */
+.dl-card__facts li.dl-card__avail {
+  background: rgba(100, 116, 139, 0.12);
+  color: #475569;
+}
+
+.dl-card__facts li.dl-card__avail.is-on {
+  background: var(--am-success-soft, #e8f5ee);
+  color: var(--am-success, #1c7c4f);
+}

@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
+import DietitianBadge from '../components/DietitianBadge';
 import {
-  canModifyAppointment,
+  canOfferReschedule,
   formatAppointmentDateFull,
   formatDoctorDisplayName,
   resolveAppointmentLookupId,
@@ -218,7 +219,7 @@ export default function ConsultHistory() {
             {paged.map((item) => {
               const status = String(item.status || '').toLowerCase();
               const statusStyle = STATUS_STYLE[status] || { background: '#f3f4f6', color: '#000' };
-              const showReschedule = canModifyAppointment(status, item.date, item.time);
+              const showReschedule = canOfferReschedule(status, item.date, item.time, item);
               const showReceipt = Boolean(item.consultationId);
               const showBookAgain = !showReschedule && PAST_STATUSES.includes(status);
               const weekday = weekdayFrom(item.date);
@@ -237,6 +238,7 @@ export default function ConsultHistory() {
                           </em>
                         ) : null}
                       </div>
+                      <DietitianBadge doctor={item} />
                       <small className="history-specialty">{item.specialty || 'General Physician'}</small>
                       <div className="history-meta">
                         {weekday ? <span>{weekday}</span> : null}

@@ -123,19 +123,25 @@ export default function Login() {
     setIsLoading(true);
     try {
       const fullPhone = `+91${phone}`;
+      let localHoldDaysLeft = null;
       const hold = await Utils.getData('_DELETED_ACCOUNT_HOLD');
-      if (hold?.phone && String(hold.phone) === fullPhone) {
+      const holdDigits = String(hold?.phone ?? '').replace(/\D/g, '').slice(-10);
+      if (holdDigits && holdDigits === phone) {
         const days = Number(hold.retention_days) || 30;
         const heldAt = Number(hold.held_at) || 0;
         const msLeft = heldAt + days * 24 * 60 * 60 * 1000 - Date.now();
-        if (msLeft <= 0) {
+        if (msLeft > 0) {
+          localHoldDaysLeft = Math.max(1, Math.ceil(msLeft / (24 * 60 * 60 * 1000)));
+        } else {
           await Utils.removeData('_DELETED_ACCOUNT_HOLD');
         }
       }
 
       const response = await AuthService.send_otp({ phone_number: fullPhone });
       const OTP = response?.data?.otp;
-      const deletedInfo = parseDeletedAccountInfo(response);
+      const deletedInfo =
+        parseDeletedAccountInfo(response) ||
+        (localHoldDaysLeft && response?.success ? { retentionDays: localHoldDaysLeft } : null);
       const isCustomer = response?.data?.user_roles?.some(
         (role) => role?.toLowerCase() === 'customer',
       );

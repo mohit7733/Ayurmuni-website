@@ -179,7 +179,7 @@ export const formatAddress = (address) => {
     .join(', ');
 };
 
-const getResponseMessage = (response) =>
+export const getResponseMessage = (response) =>
   String(
     response?.message ||
       response?.data?.message ||
@@ -188,7 +188,7 @@ const getResponseMessage = (response) =>
       '',
   ).toLowerCase();
 
-const hasOrderEntity = (response) => {
+export const hasOrderEntity = (response) => {
   const data = response?.data;
   const order = data?.order ?? data;
   return Boolean(
@@ -218,7 +218,7 @@ const isFulfillmentNoise = (msg) =>
   msg.includes('facility') ||
   msg.includes('allocation');
 
-const isHardPaymentFailure = (msg) =>
+export const isHardPaymentFailure = (msg) =>
   msg.includes('signature') ||
   msg.includes('invalid payment') ||
   msg.includes('payment failed') ||

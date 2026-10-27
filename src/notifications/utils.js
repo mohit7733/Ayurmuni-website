@@ -141,3 +141,27 @@ export const normalizeNotificationPayload = (raw = {}) => ({
   diet_id: raw?.diet_id ?? raw?.dietId ?? raw?.data?.diet_id,
   medicine_id: raw?.medicine_id ?? raw?.medicineId ?? raw?.data?.medicine_id,
 });
+
+/** Detail-sheet rows (app NotificationDetailModal): Patient / Doctor / Reason, only when present. */
+export const getNotificationDetailRows = (item) => {
+  const nested = item?.rawData?.data && typeof item.rawData.data === 'object' ? item.rawData.data : {};
+  return [
+    ['Patient', item?.patientName ?? nested.patient_name],
+    ['Doctor', item?.doctorName ?? nested.doctor_name],
+    ['Reason', item?.reason ?? nested.reason],
+  ]
+    .filter(([, value]) => value != null && String(value).trim() !== '')
+    .map(([label, value]) => ({ label, value: String(value) }));
+};
+
+/** Payload for the sheet's "View Appointment" shortcut (app handleViewDetails -> AppointmentDetails). */
+export const buildViewAppointmentPayload = (item) => {
+  const raw = item?.rawData ?? item ?? {};
+  const nested = raw?.data && typeof raw.data === 'object' ? raw.data : {};
+  return normalizeNotificationPayload({
+    ...raw,
+    ...nested,
+    route: 'AppointmentDetails',
+    appointment_id: raw?.appointment_id ?? nested.appointment_id ?? item?.appointmentId,
+  });
+};

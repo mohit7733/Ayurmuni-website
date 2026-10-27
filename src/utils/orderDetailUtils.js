@@ -25,7 +25,9 @@ export const INVOICE_ALLOWED = [
   'delivered',
   'returned',
 ];
-export const RETURN_ALLOWED = ['delivered'];
+export const RETURN_ALLOWED = ['delivered', 'completed'];
+/** Statuses whose order may already have return requests to list. */
+export const RETURN_LIST_STATUSES = ['delivered', 'completed', 'returned'];
 export const TRACKING_ALLOWED = [
   'packed',
   'dispatched',

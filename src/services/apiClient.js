@@ -196,9 +196,10 @@ export const MUTATION_RULES = [
     'customers/doctors/appointments/action/',
     ['customers/doctors/', 'customers/patient/consultation/', 'doctors/appointments/', 'payments/'],
   ],
+  // Booking can be funded by a plan (package_purchase_id): remaining sessions change too.
   [
     'payments/customer/consultation/',
-    ['payments/', 'customers/doctors/', 'customers/patient/consultation/', 'promotions/'],
+    ['payments/', 'customers/doctors/', 'customers/patient/consultation/', 'promotions/', 'packages/'],
   ],
   [
     'favorites/',
@@ -233,6 +234,8 @@ export const MUTATION_RULES = [
 export const invalidationPrefixesFor = (endpoint, method = 'POST') => {
   const path = pathOf(endpoint);
   if (String(method).toUpperCase() === 'DELETE' && path.startsWith('customers/profile/')) return ALL;
+  // A return request only changes the order and its return list: keep cart / coupon GETs warm.
+  if (/^order\/[^/]+\/returns\/?$/.test(path)) return ['order/'];
   const rule = MUTATION_RULES.find(([prefix]) => path.startsWith(prefix));
   return rule ? rule[1] : ALL;
 };

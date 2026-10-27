@@ -45,6 +45,12 @@ import {
   getOrderById,
   pollOrderTracking,
 } from '../services/orderService';
+import {
+  getOrderReturns,
+  getReturnStatusMeta,
+  normalizeReturnList,
+  sortReturnsNewestFirst,
+} from '../services/returnService';
 import { formatOrderId } from '../utils/formatDisplayId';
 import { consumePendingProductReview } from '../utils/pendingReviews';
 import { isOrderItemRated, resolveOrderItemVariantId } from '../utils/reviewUtils';
@@ -61,12 +67,14 @@ import {
   getRefundInfo,
   INVOICE_ALLOWED,
   RETURN_ALLOWED,
+  RETURN_LIST_STATUSES,
   SUPPORT_EMAIL,
   TRACKING_ALLOWED,
 } from '../utils/orderDetailUtils';
 import { Button, Chip, Disclaimer, Modal, Textarea } from '../components/ui';
 import { ORDERS_COPY as T, orderStatusLabel } from '../content/orders';
 import '../design/pages/orders.css';
+import '../design/pages/returns.css';
 
 export default function OrderDetails() {
   const { orderId } = useParams();
@@ -77,7 +85,8 @@ export default function OrderDetails() {
   const [loading, setLoading] = useState(true);
   const [localReviews, setLocalReviews] = useState({});
   const [cancelOpen, setCancelOpen] = useState(false);
-  const [returnOpen, setReturnOpen] = useState(false);
+  const [orderReturns, setOrderReturns] = useState([]);
+  const [returnsChecked, setReturnsChecked] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [customReason, setCustomReason] = useState('');
   const [cancelLoading, setCancelLoading] = useState(false);
@@ -117,7 +126,10 @@ export default function OrderDetails() {
   const canReview = status === 'delivered' || status === 'completed';
   const canCancel = CANCEL_ALLOWED.includes(status);
   const canInvoice = INVOICE_ALLOWED.includes(status);
-  const canReturn = RETURN_ALLOWED.includes(status);
+  const canListReturns = RETURN_LIST_STATUSES.includes(status);
+  // One return request per order: once raised, its status replaces the "Return" action.
+  const latestReturn = orderReturns[0] ?? null;
+  const canReturn = RETURN_ALLOWED.includes(status) && returnsChecked && orderReturns.length === 0;
   const canTrackLive = TRACKING_ALLOWED.includes(status);
   const orderCode = order?.order_code || order?.order_number || orderId;
   const trackingSteps = useMemo(() => buildOrderTrackingSteps(order), [order]);
@@ -151,6 +163,25 @@ export default function OrderDetails() {
     const interval = setInterval(refreshTracking, 60_000);
     return () => clearInterval(interval);
   }, [order?.id, canTrackLive, refreshTracking]);
+
+  useEffect(() => {
+    if (!order?.id || !canListReturns) return undefined;
+    let active = true;
+    getOrderReturns(order.id)
+      .then((res) => {
+        if (active) setOrderReturns(sortReturnsNewestFirst(normalizeReturnList(res)));
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (active) setReturnsChecked(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, [order?.id, canListReturns, location.key]);
+
+  const openReturnDetails = (ret) =>
+    navigate(`/profile/returns/${ret.id}`, { state: { returnRequest: ret.raw, order } });
 
   const openProductReview = (item) => {
     const variantId = resolveOrderItemVariantId(item);
@@ -344,9 +375,19 @@ export default function OrderDetails() {
                     variant="secondary"
                     size="sm"
                     leadingIcon={<RefreshCw size={14} />}
-                    onClick={() => setReturnOpen(true)}
+                    onClick={() => navigate(`/profile/orders/${order.id}/return`, { state: { order } })}
                   >
                     {T.returnOrder}
+                  </Button>
+                ) : null}
+                {latestReturn ? (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    leadingIcon={<RefreshCw size={14} />}
+                    onClick={() => openReturnDetails(latestReturn)}
+                  >
+                    {`${T.returnOrder} · ${getReturnStatusMeta(latestReturn.status).label}`}
                   </Button>
                 ) : null}
                 {canCancel ? (
@@ -482,6 +523,37 @@ export default function OrderDetails() {
                 </ul>
               </DetailCard>
 
+              {orderReturns.length > 0 ? (
+                <DetailCard
+                  id="order-returns"
+                  title={`Return requests (${orderReturns.length})`}
+                  icon={RefreshCw}
+                >
+                  {orderReturns.map((ret) => {
+                    const retMeta = getReturnStatusMeta(ret.status);
+                    const qty = ret.items.reduce((sum, line) => sum + line.quantity, 0);
+                    return (
+                      <button
+                        key={ret.id}
+                        type="button"
+                        className="rt-order-return"
+                        onClick={() => openReturnDetails(ret)}
+                      >
+                        <span>
+                          <strong>
+                            {qty} item{qty === 1 ? '' : 's'} · {formatOrderDateTime(ret.createdAt)}
+                          </strong>
+                          <small>{ret.reason || 'Return request'}</small>
+                        </span>
+                        <StatusPill status={ret.status} tone={retMeta.tone === 'neutral' ? undefined : retMeta.tone}>
+                          {retMeta.label}
+                        </StatusPill>
+                      </button>
+                    );
+                  })}
+                </DetailCard>
+              ) : null}
+
               <DetailCard
                 id="order-track"
                 title={T.trackOrder}
@@ -576,29 +648,6 @@ export default function OrderDetails() {
             />
           ) : null}
         </Modal>
-
-        <Modal
-          open={returnOpen}
-          onClose={() => setReturnOpen(false)}
-          title={T.returnTitle}
-          description={T.returnText}
-          footer={
-            <>
-              <Button variant="secondary" onClick={() => setReturnOpen(false)}>
-                {T.keepOrder}
-              </Button>
-              <Button
-                variant="primary"
-                onClick={() => {
-                  setReturnOpen(false);
-                  contactSupport(`Return request for order ${formatOrderId(orderCode)}`);
-                }}
-              >
-                {T.contactSupport}
-              </Button>
-            </>
-          }
-        />
 
         <Disclaimer />
       </DetailPage>

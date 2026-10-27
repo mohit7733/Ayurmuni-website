@@ -1,4 +1,4 @@
-const API_BASE_URL = String(import.meta.env.VITE_API_BASE || 'https://scarce-derby-voice.ngrok-free.dev/').replace(
+const API_BASE_URL = String(import.meta.env.VITE_API_BASE || 'https://ayurmuni.aimantra.info/').replace(
   /\/*$/,
   '/',
 );

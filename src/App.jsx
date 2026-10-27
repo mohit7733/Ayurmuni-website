@@ -68,6 +68,7 @@ const Settings = loadPage(() => import("./pages/Settings"));
 const NotificationSettings = loadPage(() => import("./pages/NotificationSettings"));
 // const OrangeLab = loadPage(() => import("./pages/OrangeLab")); // Health Lab disabled per Rohit
 const Packages = loadPage(() => import("./pages/Packages"));
+const PackageDetails = loadPage(() => import("./pages/PackageDetails"));
 const Panchakarma = loadPage(() => import("./pages/Panchakarma"));
 const Addresses = loadPage(() => import("./pages/Addresses"));
 const AddressForm = loadPage(() => import("./pages/AddressForm"));
@@ -83,7 +84,10 @@ const FeedbackInformation = loadPage(() => import("./pages/FeedbackInformation")
 const LegalPoliciesHub = loadPage(() => import("./pages/LegalPoliciesHub"));
 const OrderHistory = loadPage(() => import("./pages/OrderHistory"));
 const OrderDetails = loadPage(() => import("./pages/OrderDetails"));
+const ReturnRequest = loadPage(() => import("./pages/ReturnRequest"));
+const ReturnDetails = loadPage(() => import("./pages/ReturnDetails"));
 const Wishlist = loadPage(() => import("./pages/Wishlist"));
+const MyPlans = loadPage(() => import("./pages/MyPlans"));
 const FavDoctors = loadPage(() => import("./pages/FavDoctors"));
 const HelpCenter = loadPage(() => import("./pages/HelpCenter"));
 const FaqDetail = loadPage(() => import("./pages/FaqDetail"));
@@ -398,7 +402,16 @@ export default function App() {
                     path="/profile/orders/:orderId"
                     element={<OrderDetails />}
                   />
+                  <Route
+                    path="/profile/orders/:orderId/return"
+                    element={<ReturnRequest />}
+                  />
+                  <Route
+                    path="/profile/returns/:returnId"
+                    element={<ReturnDetails />}
+                  />
                   <Route path="/profile/wishlist" element={<Wishlist />} />
+                  <Route path="/profile/plans" element={<MyPlans />} />
                   <Route
                     path="/profile/favourite-doctors"
                     element={<FavDoctors />}
@@ -442,6 +455,7 @@ export default function App() {
                   {/* Health Lab disabled per Rohit
                   <Route path="/labs" element={<OrangeLab />} /> */}
                   <Route path="/packages" element={<Packages />} />
+                  <Route path="/packages/:packageId" element={<PackageDetails />} />
                   <Route path="/panchakarma" element={<Panchakarma />} />
                   <Route
                     path="/medicines/prescription"

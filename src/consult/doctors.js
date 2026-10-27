@@ -120,7 +120,67 @@ export const doctorImage = (item) =>
     profile_image: item?.profile_image || item?.doctor_image || item?.profile_picture,
   });
 
+/** Patient-facing availability only: never show admin approval strings (port of app getDoctorAvailabilityLabel). */
+const APPROVAL_STATUS_RE = /not\s*approved|unapproved|pending\s*approval|rejected|inactive|disabled/i;
+export const getDoctorAvailabilityLabel = (item, available) => {
+  const isAvailable =
+    available ??
+    (item?.has_availability === true ||
+      item?.is_available === true ||
+      String(item?.availability_status || '').toLowerCase() === 'available');
+  if (isAvailable) return 'Available';
+  const raw = String(item?.availability_status || item?.availability || '').trim();
+  if (!raw || APPROVAL_STATUS_RE.test(raw)) return 'Unavailable';
+  const lower = raw.toLowerCase();
+  if (lower === 'available' || lower === 'online') return 'Available';
+  if (lower.includes('limited') || lower.includes('few')) return 'Limited slots';
+  return 'Unavailable';
+};
+
+/** Port of app formatDoctorSpecialization: every specialization source flattened, de-duplicated. */
+export const flattenDoctorSpecializations = (doctor) => {
+  if (!doctor || typeof doctor !== 'object') return [];
+  const out = [];
+  const seen = new Set();
+  const push = (value) => {
+    if (value == null) return;
+    if (typeof value === 'string') {
+      value
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .forEach((label) => {
+          const key = label.toLowerCase();
+          if (seen.has(key)) return;
+          seen.add(key);
+          out.push(label);
+        });
+      return;
+    }
+    if (typeof value === 'object') {
+      const label = String(value.name ?? value.title ?? value.label ?? value.specialization ?? '').trim();
+      if (label) push(label);
+    }
+  };
+  [
+    doctor.doctor_specialization,
+    doctor.specializations,
+    doctor.specialization,
+    doctor.custom_specializations,
+    doctor.other_specializations,
+    doctor.health_diseases,
+  ].forEach((source) => {
+    if (Array.isArray(source)) source.forEach(push);
+    else push(source);
+  });
+  return out;
+};
+
+export const formatDoctorSpecialization = (doctor) => flattenDoctorSpecializations(doctor).join(', ');
+
 export const doctorSpeciality = (item) => {
+  const merged = formatDoctorSpecialization(item);
+  if (merged) return merged;
   const raw =
     item?.specialization_name ||
     item?.specialization ||
@@ -133,6 +193,26 @@ export const doctorSpeciality = (item) => {
   if (raw && typeof raw === 'object') return String(raw.name || raw.title || '');
   return String(raw).trim();
 };
+
+const isTrueFlag = (v) => v === true || v === 'true' || v === 1 || v === '1';
+
+/** `is_dietitian` from doctor list / profile / slot / appointment payloads (top level or nested doctor). */
+export const isDietitian = (item) => {
+  if (!item || typeof item !== 'object') return false;
+  return (
+    isTrueFlag(item.is_dietitian) ||
+    isTrueFlag(item.doctor?.is_dietitian) ||
+    isTrueFlag(item.doctor_details?.is_dietitian) ||
+    isTrueFlag(item.doctor_info?.is_dietitian) ||
+    isTrueFlag(item.info?.is_dietitian) ||
+    // Normalised appointment list rows keep the API row under `raw` / `rawData`.
+    (item.raw && item.raw !== item ? isDietitian(item.raw) : false) ||
+    (item.rawData && item.rawData !== item ? isDietitian(item.rawData) : false)
+  );
+};
+
+/** "Dietitian" / "Doctor" - for labels like "About the doctor". */
+export const getDoctorRoleLabel = (item) => (isDietitian(item) ? 'Dietitian' : 'Doctor');
 
 export const doctorExperience = (item) => {
   const raw = item?.experience_display || item?.experience_years || item?.experience || '';

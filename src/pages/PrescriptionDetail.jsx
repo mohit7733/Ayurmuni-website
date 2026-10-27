@@ -42,23 +42,27 @@ import { requireAuth } from '../services/guestAuth';
 import { downloadPrescriptionFile, getAppointmentDetail } from '../services/consultService';
 import { formatPrescriptionId } from '../utils/formatDisplayId';
 import { createPlainTextPdfBytes } from '../utils/plainPdf';
+import { buildPrescriptionDocument } from '../documents/documentData';
+import { printDocumentHtml, renderDocumentHtml } from '../documents/documentHtml';
 import {
   buildPrescriptionDownloadText,
   consultationHasPrescription,
   formatIssuedLabel,
   getAllergiesList,
   getClinicalAdvisory,
-  getConcernText,
   getDiagnosisText,
   getDoctorLocationLine,
   getDoList,
   getDontList,
   getFamilyHistoryText,
   getFollowUpInfo,
+  getGynaecologicalLines,
   getMedicineItems,
   getMedicineScheduleChips,
+  mergeMedicineItems,
   getPastIllnessText,
   getPaymentAmount,
+  getPersonalHistoryLines,
   getPrescriptionExpiry,
   getRecommendedDietPlans,
   getSuggestionList,
@@ -174,7 +178,6 @@ export default function PrescriptionDetail() {
   const doctorId = getDoctorId(doctor);
   const hasContent = consultationHasPrescription(payload);
   const paymentAmount = getPaymentAmount(payload);
-  const concernText = getConcernText(payload);
   const diagnosisText = getDiagnosisText(prescription);
   const prescriptionCode = formatPrescriptionId(
     prescription?.prescription_code || prescription?.id || normalized.prescriptionId,
@@ -183,6 +186,8 @@ export default function PrescriptionDetail() {
   const allergies = getAllergiesList(prescription);
   const pastIllnessText = getPastIllnessText(prescription);
   const familyHistoryText = getFamilyHistoryText(prescription);
+  const personalHistory = getPersonalHistoryLines(prescription);
+  const gynaecological = getGynaecologicalLines(prescription);
   const followUp = getFollowUpInfo(prescription, appointment);
   const paymentStatus = String(
     payload?.payment?.status ||
@@ -220,11 +225,7 @@ export default function PrescriptionDetail() {
   const statusLabel = String(prescription?.status || normalized.status || 'issued')
     .replace(/_/g, ' ')
     .trim();
-  const presentingComplaint =
-    concernText &&
-    ![symptomText, diagnosisText].some((text) => text && concernText.toLowerCase() === text.toLowerCase())
-      ? concernText
-      : '';
+  const presentingComplaint = symptomText;
 
   const openDietPlan = (diet) => {
     const planId = diet?.diet_plan_id || diet?.id || diet?.plan_id || null;
@@ -331,6 +332,7 @@ export default function PrescriptionDetail() {
       ).replace(/[^a-zA-Z0-9._-]/g, '_');
       const fileName = `Ayurmuni_Prescription_${code}.pdf`;
       if (response.prescriptionData) {
+        const downloadRx = response.prescriptionData.prescription ?? response.prescriptionData;
         const mergedPayload = {
           ...(payload ?? {}),
           ...response.prescriptionData,
@@ -340,11 +342,21 @@ export default function PrescriptionDetail() {
             payload?.patient ??
             payload?.appointment?.patient,
           appointment: response.prescriptionData.appointment ?? payload?.appointment,
-          prescription:
-            response.prescriptionData.prescription ?? response.prescriptionData,
+          payment:
+            response.prescriptionData.payment ??
+            payload?.payment ??
+            payload?.appointment?.payment,
+          prescription: {
+            ...(prescription ?? {}),
+            ...downloadRx,
+            items: mergeMedicineItems(getMedicineItems(downloadRx), getMedicineItems(prescription ?? {})),
+          },
           diets:
             response.prescriptionData.diets ?? payload?.diets ?? payload?.appointment?.diets,
         };
+        // Designed prescription (same layout as the app PDF): print dialog -> "Save as PDF".
+        const html = renderDocumentHtml(buildPrescriptionDocument(mergedPayload), `Prescription ${code}`);
+        if (await printDocumentHtml(html)) return;
         const text = buildPrescriptionDownloadText(mergedPayload);
         saveBrowserFile(new Blob([createPlainTextPdfBytes(text)], { type: 'application/pdf' }), fileName);
         return;
@@ -380,11 +392,12 @@ export default function PrescriptionDetail() {
   const hasCode = prescriptionCode && prescriptionCode !== '-';
   const clinicalItems = [
     { label: 'Chief complaint', value: presentingComplaint, wide: true },
-    { label: 'Symptoms', value: symptomText, wide: true },
     { label: 'Examination', value: clinicalNotes, wide: true },
     { label: 'Allergies', value: allergies.join(', '), tone: 'danger' },
     { label: 'Past illness', value: pastIllnessText },
     { label: 'Family history', value: familyHistoryText },
+    { label: 'Personal history', value: personalHistory.join('; '), wide: true },
+    { label: 'Gynaecological history', value: gynaecological.join('; '), wide: true },
   ];
   const hasClinical = clinicalItems.some((item) => item.value);
 

@@ -105,6 +105,7 @@ export default function Diet() {
   const [durationFilter, setDurationFilter] = useState(ALL);
   const [caloriesFilter, setCaloriesFilter] = useState(ALL);
   const [sortFilter, setSortFilter] = useState(ALL);
+  const [ratingFilter, setRatingFilter] = useState(ALL);
   const [filterCatalog, setFilterCatalog] = useState({
     prakriti: DEFAULT_PRAKRITI,
     diseases: [],
@@ -128,9 +129,19 @@ export default function Diet() {
       is_paid: paidFilter === 'true' || paidFilter === 'false' ? paidFilter : undefined,
       duration: durationFilter !== ALL ? durationFilter : undefined,
       calories: caloriesFilter !== ALL ? caloriesFilter : undefined,
-      sort: ['popularity', 'latest', 'rating'].includes(sortFilter) ? sortFilter : undefined,
+      min_rating: ratingFilter !== ALL ? ratingFilter : undefined,
+      sort: ['popularity', 'latest', 'rating'].includes(sortFilter)
+        ? sortFilter === 'rating'
+          ? 'ratings'
+          : sortFilter
+        : undefined,
+      // Assignment status is filtered by the API as well (active / paused).
+      patient_assignment_status:
+        statusTab === 'active' ? 'active' : statusTab === 'inactive' ? 'paused' : undefined,
     }),
     [
+      statusTab,
+      ratingFilter,
       debounced,
       prakriti,
       diseaseFilter,
@@ -222,6 +233,19 @@ export default function Diet() {
       ],
     },
     {
+      key: 'rating',
+      label: 'Rating',
+      value: ratingFilter,
+      set: setRatingFilter,
+      options: [
+        { label: 'All ratings', value: ALL },
+        { label: '4.5 & above', value: '4.5' },
+        { label: '4.0 & above', value: '4' },
+        { label: '3.5 & above', value: '3.5' },
+        { label: '3.0 & above', value: '3' },
+      ],
+    },
+    {
       key: 'sort',
       label: 'Sort by',
       value: sortFilter,
@@ -236,10 +260,31 @@ export default function Diet() {
   ];
 
   const visible = useMemo(() => {
-    if (statusTab === 'all') return plans;
-    if (statusTab === 'active') return plans.filter((p) => getDietListStatus(p) === 'active');
-    return plans.filter((p) => getDietListStatus(p) !== 'active');
-  }, [plans, statusTab]);
+    // Same pass as the app: min rating (also sent to the API), then status, active first.
+    const minRating = ratingFilter !== ALL ? Number(ratingFilter) : 0;
+    const source =
+      Number.isFinite(minRating) && minRating > 0
+        ? plans.filter((p) => Number(p?.avg_rating ?? p?.my_rating ?? 0) >= minRating)
+        : plans;
+    const rank = (p) => {
+      const st = getDietListStatus(p);
+      if (st === 'active') return 0;
+      if (st === 'paused') return 1;
+      if (st === 'completed' || st === 'stopped') return 2;
+      return 3;
+    };
+    const ranked = [...source].sort((a, b) => {
+      const byStatus = rank(a) - rank(b);
+      if (byStatus !== 0) return byStatus;
+      if (sortFilter === 'rating') {
+        return Number(b?.avg_rating ?? b?.my_rating ?? 0) - Number(a?.avg_rating ?? a?.my_rating ?? 0);
+      }
+      return 0;
+    });
+    if (statusTab === 'active') return ranked.filter((p) => getDietListStatus(p) === 'active');
+    if (statusTab === 'inactive') return ranked.filter((p) => getDietListStatus(p) === 'paused');
+    return ranked;
+  }, [plans, statusTab, ratingFilter, sortFilter]);
 
   const { preview: activeDiet } = useActiveDietHome(true);
 
@@ -346,9 +391,19 @@ export default function Diet() {
             ) : visible.length === 0 ? (
               <EmptyState
                 icon={<Leaf size={28} />}
-                title="No diet plans"
+                title={
+                  statusTab === 'active'
+                    ? 'No active diet'
+                    : statusTab === 'inactive'
+                      ? 'No paused diets'
+                      : 'No diet plans'
+                }
                 description={
-                  debounced
+                  statusTab === 'active'
+                    ? "You don't have a diet in progress. Open All and start a plan."
+                    : statusTab === 'inactive'
+                      ? 'No plans are currently paused.'
+                      : debounced
                     ? 'Try another search.'
                     : 'Plans for this concern will appear here when available.'
                 }

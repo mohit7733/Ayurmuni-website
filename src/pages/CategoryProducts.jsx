@@ -17,7 +17,12 @@ import {
   SkeletonGrid,
 } from '../components/ui';
 import useBrands from '../hooks/useBrands';
-import { applyProductFilters, brandOptionsFromProducts } from '../utils/productSearchUtils';
+import {
+  applyProductFilters,
+  brandOptionsFromProducts,
+  DOSHA_OPTIONS,
+  toProductApiSort,
+} from '../utils/productSearchUtils';
 import { STORE_COPY as T } from '../content/store';
 import '../design/pages/store.css';
 import '../design/brand.css';
@@ -66,6 +71,7 @@ export default function CategoryProducts() {
   const [sortBy, setSortBy] = useState('relevance');
   const [priceRange, setPriceRange] = useState([0, 10000]);
   const [minRating, setMinRating] = useState(0);
+  const [dosha, setDosha] = useState('all');
   const [inStockOnly, setInStockOnly] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [brandIds, setBrandIds] = useState(brandId ? [brandId] : []);
@@ -128,8 +134,22 @@ export default function CategoryProducts() {
     };
   }, [brandId, mode, activeCategoryId, selectedSubcategoryId, serviceCategoryId]);
 
+  // Price / rating / dosha / sort are also sent to the API (same params as the app); the
+  // client-side pass below keeps results exact for rows the API leaves unrated.
+  const requestFilter = useMemo(
+    () => ({
+      ...productFilter,
+      min_price: priceRange[0] > 0 ? priceRange[0] : null,
+      max_price: priceRange[1] < 10000 ? priceRange[1] : null,
+      min_rating: minRating > 0 ? minRating : null,
+      dosha_type: dosha === 'all' ? null : dosha,
+      sort: toProductApiSort(sortBy),
+    }),
+    [productFilter, priceRange, minRating, dosha, sortBy],
+  );
+
   const { products, loading, loadingMore, hasMore, loadMore, refresh, refreshing } =
-    useCategoryProducts(productFilter, []);
+    useCategoryProducts(requestFilter, []);
 
   const brandOptions = useMemo(() => {
     if (brandRecords.length > 0) return brandRecords;
@@ -219,6 +239,7 @@ export default function CategoryProducts() {
     priceRange[0] !== 0 ||
     priceRange[1] !== 10000 ||
     minRating > 0 ||
+    dosha !== 'all' ||
     inStockOnly ||
     sortBy !== 'relevance' ||
     hasBrandFilter;
@@ -226,6 +247,7 @@ export default function CategoryProducts() {
   const clearFilters = () => {
     setPriceRange([0, 10000]);
     setMinRating(0);
+    setDosha('all');
     setInStockOnly(false);
     setSortBy('relevance');
     setBrandIds(brandId ? [brandId] : []);
@@ -313,6 +335,7 @@ export default function CategoryProducts() {
               <option value="relevance">Relevance</option>
               <option value="price_low">Price: Low to High</option>
               <option value="price_high">Price: High to Low</option>
+              <option value="popularity">Popularity</option>
               <option value="discount">Max Discount</option>
               <option value="rating">Highest Rated</option>
               <option value="name">Name: A-Z</option>
@@ -453,6 +476,26 @@ export default function CategoryProducts() {
             </div>
           </section>
 
+          <section className="st-filter-section" aria-labelledby="st-filter-dosha-title">
+            <div className="st-filter-section__heading">
+              <h3 id="st-filter-dosha-title">Dosha type</h3>
+              <span>Ayurvedic constitution</span>
+            </div>
+            <div className="st-filter-ratings" role="group" aria-label="Dosha type">
+              {DOSHA_OPTIONS.map((option) => (
+                <button
+                  key={option.key}
+                  type="button"
+                  onClick={() => setDosha(option.key)}
+                  className={`st-filter-rating${dosha === option.key ? ' is-selected' : ''}`}
+                  aria-pressed={dosha === option.key}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </section>
+
           {!brandId ? (
             <section
               className="st-filter-section st-filter-section--brands"
@@ -523,6 +566,7 @@ export default function CategoryProducts() {
                   <span>Price: ₹{priceRange[0]} – ₹{priceRange[1]}</span>
                 ) : null}
                 {minRating > 0 && <span>Rating: {minRating}★ and up</span>}
+                {dosha !== 'all' && <span>Dosha: {dosha}</span>}
                 {inStockOnly && <span>In stock only</span>}
                 {(brandIds.length > 0 || brandNames.length > 0) && (
                   <span>

@@ -7,6 +7,8 @@ import {
   formatAppointmentTimeLabel,
   formatDoctorDisplayName,
   getJoinableAppointment,
+  getMsUntilJoinWindowChange,
+  isActiveAppointmentStatus,
   isAppointmentInPast,
   sortAppointmentsByDateTime,
 } from '../consult/appointmentUtils';
@@ -54,27 +56,56 @@ export default function HomeJoinAppointments({ appointments, loading }) {
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
-    const timer = setInterval(() => setTick((value) => value + 1), 30_000);
-    return () => clearInterval(timer);
+    const timer = setInterval(() => setTick((value) => value + 1), 15_000);
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') setTick((value) => value + 1);
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   }, []);
 
-  const upcoming = useMemo(
+  // Banner keeps a just-completed slot until its end_time; the list does not (app development parity).
+  const bannerCandidates = useMemo(
     () =>
       sortAppointmentsByDateTime(
-        (appointments || []).filter(
-          (item) =>
-            String(item?.status || '').trim().toLowerCase() === 'confirmed' && !isAppointmentInPast(item),
-        ),
+        (appointments || []).filter((item) => {
+          const callLive = String(item?.call_status || '').toLowerCase() === 'in_progress';
+          const completed = String(item?.status || '').toLowerCase() === 'completed';
+          return (callLive || completed || isActiveAppointmentStatus(item?.status)) && !isAppointmentInPast(item);
+        }),
       ),
     // tick drops appointments whose end time passed while Home stays open
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [appointments, tick],
   );
 
+  const upcoming = useMemo(
+    () =>
+      bannerCandidates.filter(
+        (item) =>
+          String(item?.call_status || '').toLowerCase() === 'in_progress' ||
+          isActiveAppointmentStatus(item?.status),
+      ),
+    [bannerCandidates],
+  );
+
+  // Re-render exactly when the next banner window opens (start - 5 min) or closes (end_time).
+  useEffect(() => {
+    const waits = bannerCandidates
+      .map((item) => getMsUntilJoinWindowChange(item, 5))
+      .filter((ms) => ms != null && ms > 0);
+    if (!waits.length) return undefined;
+    const timer = setTimeout(() => setTick((value) => value + 1), Math.min(Math.min(...waits) + 300, 55_000));
+    return () => clearTimeout(timer);
+  }, [bannerCandidates, tick]);
+
   const joinable = useMemo(
-    () => getJoinableAppointment(upcoming, 5),
+    () => getJoinableAppointment(bannerCandidates, 5),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [upcoming, tick],
+    [bannerCandidates, tick],
   );
 
   const openAppointments = async () => {

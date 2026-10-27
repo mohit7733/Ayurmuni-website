@@ -16,6 +16,7 @@ import {
   Video,
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import DietitianBadge from '../components/DietitianBadge';
 import { getDoctorById } from '../services/consultService';
 import { invalidateApiCache } from '../services/apiClient';
 import {
@@ -304,6 +305,7 @@ export default function DoctorSlot() {
               <h1 id="bkp-hero-title">{T.slotTitle}</h1>
               <p className="bkp-hero__name">
                 {name}
+                <DietitianBadge doctor={doctor} className="bkp-dietitian" />
                 {rating ? <span className="bkp-rating">★ {rating}</span> : null}
               </p>
               {heroMeta.length ? <p className="bkp-hero__meta">{heroMeta.join(' · ')}</p> : null}
@@ -502,7 +504,7 @@ export default function DoctorSlot() {
               <div className="bk-card__head">
                 <h2 id="bk-records-title">{T.recordsTitle}</h2>
               </div>
-              <p className="bk-card__hint">{T.recordsHint}</p>
+              <p className="bk-card__hint">{T.recordsHintFor(concern) || T.recordsHint}</p>
               {records.length ? (
                 <div className="bk-record-list">
                   {records.map((item) => {

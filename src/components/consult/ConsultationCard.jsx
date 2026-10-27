@@ -1,10 +1,11 @@
 import { CalendarDays, Clock, Stethoscope } from 'lucide-react';
 import {
-  canModifyAppointment,
+  canOfferReschedule,
   formatDoctorDisplayName,
   getConsultationScheduleLabels,
 } from '../../consult/appointmentUtils';
 import Badge from '../ui/Badge';
+import DietitianBadge from '../DietitianBadge';
 import Button from '../ui/Button';
 
 const PAST_STATUSES = ['completed', 'cancelled', 'missed', 'expired', 'no_show', 'noshow'];
@@ -27,7 +28,7 @@ const formatStatusLabel = (status) => String(status || '').replace(/_/g, ' ').tr
 export default function ConsultationCard({ item, onOpen, onReceipt, onBook }) {
   const schedule = getConsultationScheduleLabels(item);
   const status = String(item.status || schedule.status || '').toLowerCase();
-  const showReschedule = canModifyAppointment(status, item.date, item.time);
+  const showReschedule = canOfferReschedule(status, item.date, item.time, item);
   const showBookAgain = !showReschedule && PAST_STATUSES.includes(status) && Boolean(item.doctorId);
   const name = formatDoctorDisplayName(item.doctorName);
 
@@ -43,6 +44,7 @@ export default function ConsultationCard({ item, onOpen, onReceipt, onBook }) {
               {name}
             </button>
           </h3>
+          <DietitianBadge doctor={item} />
           <p>{item.specialty || 'Ayurveda'}</p>
         </div>
         {status ? (

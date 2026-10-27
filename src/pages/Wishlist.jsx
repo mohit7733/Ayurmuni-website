@@ -4,21 +4,38 @@ import AppShell from '../components/AppShell';
 import ProductCard from '../components/ProductCard';
 import { mapCatalogProductItem, normalizeApiList } from '../home/catalog';
 import { requireAuth } from '../services/guestAuth';
-import { getProducts } from '../services/productService';
+import { getWishlistProducts } from '../services/productService';
 
 export default function Wishlist() {
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const load = async () => {
-    setLoading(true);
-    const res = await getProducts({ page: 1, page_size: 60 });
-    const list = normalizeApiList(res)
-      .map(mapCatalogProductItem)
-      .filter((item) => item && item.is_wishlist_item);
-    setItems(list);
-    setLoading(false);
+  // Only the first load shows the loading state; later refreshes are silent (as in the app).
+  const load = async (silent = false) => {
+    if (!silent) setLoading(true);
+    try {
+      const res = await getWishlistProducts();
+      const list = normalizeApiList(res)
+        .map(mapCatalogProductItem)
+        .filter(Boolean)
+        .map((item) => ({ ...item, is_wishlist_item: true }));
+      setItems(list);
+    } catch {
+      /* keep what is already shown */
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Removing a heart drops the card right away (the app's removeWhenUnwishlisted); adding refetches silently.
+  const handleWishlistChange = (item, nextWishlisted) => {
+    if (nextWishlisted === false) {
+      const key = String(item?.variant_id || item?.id || '');
+      setItems((prev) => prev.filter((entry) => String(entry.variant_id || entry.id || '') !== key));
+      return;
+    }
+    load(true);
   };
 
   useEffect(() => {
@@ -53,7 +70,7 @@ export default function Wishlist() {
               <ProductCard
                 key={item.variant_id || item.id}
                 item={item}
-                onWishlistChange={() => load()}
+                onWishlistChange={handleWishlistChange}
               />
             ))}
           </div>

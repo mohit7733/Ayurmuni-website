@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { logoutOneSignalUser } from '../services/pushNotificationService';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, LogOut } from 'lucide-react';
+import { Camera, ChevronRight, Eye, LogOut, Trash2 } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import PageHeader from '../components/PageHeader';
 import { Utils } from '../common/utils';
@@ -10,9 +10,12 @@ import {
   getAccessLevel,
   isProfileComplete,
   navigateToCompleteDetails,
+  persistProfileAndSyncAccess,
   resolveAccessLikeProfile,
 } from '../services/guestAuth';
-import { deleteAccount } from '../services/profileService';
+import { deleteAccount, update_Profile, UploadProfilePhoto } from '../services/profileService';
+import useProfileDashboardStats from '../hooks/useProfileDashboardStats';
+import { LOGGED_OUT_STATS, buildPhotoOptions, buildProfilePayload } from '../profile/dashboardStats';
 import { useLocation as useDeliveryLocation } from '../context/LocationContext';
 import { Button, Disclaimer, Modal, Skeleton, SkeletonText } from '../components/ui';
 import {
@@ -33,6 +36,12 @@ export default function Profile() {
   const [deleteDone, setDeleteDone] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [retentionDays, setRetentionDays] = useState(30);
+  const [photoSheet, setPhotoSheet] = useState(false);
+  const [photoViewer, setPhotoViewer] = useState(false);
+  const [removeOpen, setRemoveOpen] = useState(false);
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const fileRef = useRef(null);
+  const { stats: dashboardStats } = useProfileDashboardStats(level === 'full');
 
   useEffect(() => {
     let alive = true;
@@ -88,6 +97,65 @@ export default function Profile() {
     logoutOneSignalUser();
     await Utils.clearAllData();
     navigate('/welcome', { replace: true });
+  };
+
+  // Persist a new (or removed) profile picture. Optimistic, reverted on failure (app ProfileHeader).
+  const saveProfilePicture = async (nextUrl, message) => {
+    const previous = user;
+    setUser((prev) => ({ ...(prev || {}), profile_picture: nextUrl }));
+    try {
+      const res = await update_Profile(buildProfilePayload(previous, nextUrl));
+      if (res?.success === false) {
+        setUser(previous);
+        showSuccessToast(res?.message || 'Could not update profile photo', 'error');
+        return;
+      }
+      const next = { ...(previous || {}), ...(res?.data || {}), profile_picture: nextUrl };
+      await persistProfileAndSyncAccess(next);
+      setUser(next);
+      showSuccessToast(message, 'success');
+    } catch {
+      setUser(previous);
+      showSuccessToast('Could not update profile photo', 'error');
+    }
+  };
+
+  const onPickPhoto = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file || photoBusy) return;
+    setPhotoBusy(true);
+    try {
+      const body = new FormData();
+      body.append('image', file);
+      body.append('dir', 'customer_avatar');
+      const res = await UploadProfilePhoto(body);
+      const url = String(res?.data?.url || res?.url || '').trim();
+      if (res?.success === false || !url) {
+        showSuccessToast('Image upload failed. Please try again.', 'error');
+        return;
+      }
+      await saveProfilePicture(url, 'Profile photo updated');
+    } finally {
+      setPhotoBusy(false);
+    }
+  };
+
+  const confirmRemovePhoto = async () => {
+    setPhotoBusy(true);
+    try {
+      await saveProfilePicture('', 'Profile photo removed');
+    } finally {
+      setPhotoBusy(false);
+      setRemoveOpen(false);
+    }
+  };
+
+  const onPhotoAction = (key) => {
+    setPhotoSheet(false);
+    if (key === 'view') setPhotoViewer(true);
+    else if (key === 'change') fileRef.current?.click();
+    else if (key === 'remove') setRemoveOpen(true);
   };
 
   const go = (item) => {
@@ -193,9 +261,20 @@ export default function Profile() {
         />
 
         <div className="pf-hero">
-          <div className="pf-hero__avatar" aria-hidden>
+          <button
+            type="button"
+            className="pf-hero__avatar pf-hero__avatar--btn"
+            aria-label={photo ? 'Profile photo options' : 'Add profile photo'}
+            aria-busy={photoBusy}
+            disabled={photoBusy}
+            onClick={() => (photo ? setPhotoSheet(true) : fileRef.current?.click())}
+          >
             {photo ? <img src={photo} alt="" /> : <span>{name.charAt(0)}</span>}
-          </div>
+            <i className="pf-hero__camera" aria-hidden>
+              <Camera size={12} />
+            </i>
+          </button>
+          <input ref={fileRef} type="file" accept="image/*" hidden onChange={onPickPhoto} />
           <div className="pf-hero__copy">
             <h2>{name}</h2>
             <p className="pf-hero__meta">
@@ -211,6 +290,15 @@ export default function Profile() {
               {T.viewPrakriti}
             </Button>
           </div>
+        </div>
+
+        <div className="pf-stats" role="group" aria-label="Your activity">
+          {(dashboardStats || LOGGED_OUT_STATS).map((stat) => (
+            <button key={stat.key} type="button" className="pf-stat" onClick={() => navigate(stat.to)}>
+              <strong>{stat.value}</strong>
+              <small>{stat.label}</small>
+            </button>
+          ))}
         </div>
 
         <div className="pf-explore" aria-label={T.exploreLabel}>
@@ -295,6 +383,43 @@ export default function Profile() {
             </Button>
             <Button variant="primary" onClick={logout}>
               {T.logoutConfirm}
+            </Button>
+          </>
+        }
+      />
+      <Modal open={photoSheet} onClose={() => setPhotoSheet(false)} title="Profile photo" size="sm">
+        <div className="pf-photo-actions">
+          {buildPhotoOptions(Boolean(photo)).map((option) => (
+            <button
+              key={option.key}
+              type="button"
+              className={`pf-photo-actions__row${option.destructive ? ' is-danger' : ''}`}
+              onClick={() => onPhotoAction(option.key)}
+            >
+              {option.key === 'view' ? <Eye size={18} aria-hidden /> : null}
+              {option.key === 'change' ? <Camera size={18} aria-hidden /> : null}
+              {option.key === 'remove' ? <Trash2 size={18} aria-hidden /> : null}
+              <span>{option.label}</span>
+            </button>
+          ))}
+        </div>
+      </Modal>
+      <Modal open={photoViewer} onClose={() => setPhotoViewer(false)} title={name} size="sm">
+        {photo ? <img className="pf-photo-view" src={photo} alt={`${name} profile`} /> : null}
+      </Modal>
+      <Modal
+        open={removeOpen}
+        onClose={() => !photoBusy && setRemoveOpen(false)}
+        title="Remove photo?"
+        description="Your profile photo will be removed."
+        dismissible={!photoBusy}
+        footer={
+          <>
+            <Button variant="secondary" disabled={photoBusy} onClick={() => setRemoveOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="danger" loading={photoBusy} onClick={confirmRemovePhoto}>
+              Remove
             </Button>
           </>
         }

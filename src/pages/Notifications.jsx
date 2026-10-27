@@ -5,7 +5,11 @@ import AppShell from "../components/AppShell";
 import { buildVideoCallNavParams } from "../consult/appointmentUtils";
 import { useNotifications } from "../hooks/useNotifications";
 import { handleNotificationNavigation } from "../notifications/router";
-import { normalizeNotificationPayload } from "../notifications/utils";
+import {
+  buildViewAppointmentPayload,
+  getNotificationDetailRows,
+  normalizeNotificationPayload,
+} from "../notifications/utils";
 import { requireAuth } from "../services/guestAuth";
 import "../design/pages/notifications.css";
 import "../design/pages/notifications-compact.css";
@@ -305,7 +309,24 @@ export default function Notifications() {
           <div className="web-modal" role="dialog">
             <div className="web-modal-card">
               <h3>{selected.title}</h3>
+              <p className="nt-sheet__time">
+                {selected.time}
+                {!selected.isRead ? " · Unread" : ""}
+              </p>
               <p>{selected.description}</p>
+              {selected.eventType ? (
+                <p className="nt-sheet__tag">{selected.eventType}</p>
+              ) : null}
+              {getNotificationDetailRows(selected).length ? (
+                <dl className="nt-sheet__details">
+                  {getNotificationDetailRows(selected).map((row) => (
+                    <div key={row.label}>
+                      <dt>{row.label}</dt>
+                      <dd>{row.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              ) : null}
               <div className="detail-cta">
                 <button
                   type="button"
@@ -314,6 +335,31 @@ export default function Notifications() {
                 >
                   Close
                 </button>
+                {selected.appointmentId ? (
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={() => {
+                      const payload = buildViewAppointmentPayload(selected);
+                      setSelected(null);
+                      handleNotificationNavigation(navigate, payload);
+                    }}
+                  >
+                    View Appointment
+                  </button>
+                ) : null}
+                {!selected.isRead ? (
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={() => {
+                      markAsRead?.(selected.id);
+                      setSelected({ ...selected, isRead: true });
+                    }}
+                  >
+                    Mark as Read
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   className="cta"

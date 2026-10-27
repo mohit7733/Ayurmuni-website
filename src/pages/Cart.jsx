@@ -4,6 +4,9 @@ import {
   ArrowLeft,
   ArrowRight,
   BadgePercent,
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
   FileText,
   Leaf,
   Minus,
@@ -17,6 +20,13 @@ import AppShell from "../components/AppShell";
 import { formatRupee } from "../home/catalog";
 import { useCart } from "../hooks/useCart";
 import { buildCartSections, CHECKOUT_KEY } from "../cart/mapCart";
+import {
+  buildDoctorDetailRoute,
+  buildUploadVerifyRoute,
+  groupRxLines,
+  groupSubtotal,
+  toggleGroupSelection,
+} from "../cart/rxGroups";
 import {
   getAddQtyBlockMessage,
   isPrescriptionRequired,
@@ -73,6 +83,7 @@ export default function Cart() {
   const [fees, setFees] = useState(null);
   const [feeLoading, setFeeLoading] = useState(false);
   const [qtyConfirm, setQtyConfirm] = useState(null);
+  const [collapsedRx, setCollapsedRx] = useState({});
   const doctorQtyRef = useRef({});
 
   useEffect(() => {
@@ -170,20 +181,11 @@ export default function Cart() {
     ? Math.round(subtotal + shipping + gst + platform)
     : Math.round(subtotal);
 
-  const rxGroups = useMemo(() => {
-    if (tab !== "prescribed") return [];
-    const groups = new Map();
-    visible.forEach((item) => {
-      const key = String(item.rx_group_id || item.id);
-      const existing = groups.get(key);
-      if (existing) {
-        existing.items.push(item);
-        return;
-      }
-      groups.set(key, { meta: item.rx_group || item, items: [item] });
-    });
-    return [...groups.values()];
-  }, [tab, visible]);
+  // Doctor vs uploaded-prescription groups (uploads grouped by prescription_request_id).
+  const rxGroups = useMemo(
+    () => (tab === "prescribed" ? groupRxLines(visible) : []),
+    [tab, visible],
+  );
 
   const toggle = (id, disabled) => {
     if (disabled) return;
@@ -531,13 +533,22 @@ export default function Cart() {
                 rxGroups.map((group) => {
                   const meta = group.meta || {};
                   const tone = rxTone(meta);
+                  const isUpload = group.kind === "upload";
                   const groupIds = group.items
                     .filter((line) => !line._isOutOfStock)
                     .map((line) => line.id);
                   const groupSelected =
                     groupIds.length > 0 && groupIds.every((id) => selected.includes(id));
+                  const groupTotal = groupSubtotal(group);
+                  const open = collapsedRx[group.key] !== true;
+                  const detailsRoute = isUpload
+                    ? buildUploadVerifyRoute(group)
+                    : buildDoctorDetailRoute(group);
                   return (
-                    <div key={meta.id || group.items[0]?.rx_group_id} className="cp-rx">
+                    <div
+                      key={group.key}
+                      className={`cp-rx${isUpload ? " cp-rx--upload" : ""}`}
+                    >
                       <header className="cp-rx__head">
                         <label className="cp-rx__label">
                           <input
@@ -545,17 +556,22 @@ export default function Cart() {
                             className="cp-check"
                             checked={groupSelected}
                             disabled={!groupIds.length}
-                            onChange={() => {
-                              setSelected((prev) =>
-                                groupSelected
-                                  ? prev.filter((id) => !groupIds.includes(id))
-                                  : [...new Set([...prev, ...groupIds])],
-                              );
-                            }}
+                            onChange={() => setSelected((prev) => toggleGroupSelection(prev, group))}
                           />
                           <span className="cp-rx__copy">
-                            <span className="cp-rx__kicker">{T.doctorRx}</span>
-                            <strong>{meta.doctor_name || group.items[0]?.doctorName || "Doctor"}</strong>
+                            <span className="cp-rx__kicker">
+                              {isUpload ? T.uploadedRx : T.doctorRx}
+                            </span>
+                            <strong>
+                              {isUpload
+                                ? [
+                                    T.itemsCount(group.items.length),
+                                    groupTotal != null ? formatRupee(groupTotal, { decimals: 2 }) : "",
+                                  ]
+                                    .filter(Boolean)
+                                    .join(" · ")
+                                : meta.doctor_name || group.items[0]?.doctorName || "Doctor"}
+                            </strong>
                             <span className="cp-rx__meta">
                               {[
                                 meta.patient_name,
@@ -569,7 +585,34 @@ export default function Cart() {
                         </label>
                         <Badge tone={tone.tone}>{tone.label}</Badge>
                       </header>
-                      {group.items.map(renderLine)}
+                      {open ? group.items.map(renderLine) : null}
+                      <footer className="cp-rx__foot">
+                        <button
+                          type="button"
+                          className="cp-rx__link"
+                          aria-expanded={open}
+                          onClick={() =>
+                            setCollapsedRx((prev) => ({ ...prev, [group.key]: open }))
+                          }
+                        >
+                          {open ? T.hideItems : T.showItems}
+                          {open ? (
+                            <ChevronUp size={14} aria-hidden />
+                          ) : (
+                            <ChevronDown size={14} aria-hidden />
+                          )}
+                        </button>
+                        {detailsRoute ? (
+                          <button
+                            type="button"
+                            className="cp-rx__link cp-rx__link--primary"
+                            onClick={() => navigate(detailsRoute.path, { state: detailsRoute.state })}
+                          >
+                            {T.rxDetails}
+                            <ChevronRight size={14} aria-hidden />
+                          </button>
+                        ) : null}
+                      </footer>
                     </div>
                   );
                 })

@@ -8,6 +8,7 @@ import {
 } from '../consult/doctors';
 import { Utils } from '../common/utils';
 import { BaseUrl } from '../config/key';
+import { toApiPaymentGateway } from '../payment/gateways';
 
 const cleanParams = (params = {}) =>
   Object.fromEntries(
@@ -110,34 +111,55 @@ export const getConsultHistory = async (params = {}) => {
 
 export const createConsultationPayment = async (data) => {
   const clean = cleanParams(data);
+  // API accepts only cashfree | razorpay (never "payphi"); package_purchase_id books with a plan.
+  if (clean.payment_gateway != null) clean.payment_gateway = toApiPaymentGateway(clean.payment_gateway);
   return apiClient('payments/customer/consultation/payment/book-slot/', {
     method: 'POST',
     body: JSON.stringify(clean),
   });
 };
 
-export const retryConsultationPayment = async (appointmentId) =>
-  apiClient(
-    `payments/customer/consultation/payment/retry/?appointment_id=${encodeURIComponent(
-      String(appointmentId),
-    )}`,
-    { method: 'POST' },
-  );
+export const retryConsultationPayment = async (appointmentId, paymentGateway) => {
+  const apiGateway = paymentGateway ? toApiPaymentGateway(paymentGateway) : undefined;
+  let url = `payments/customer/consultation/payment/retry/?appointment_id=${encodeURIComponent(
+    String(appointmentId),
+  )}`;
+  if (apiGateway) url += `&payment_gateway=${apiGateway}`;
+  return apiClient(url, {
+    method: 'POST',
+    body: JSON.stringify(apiGateway ? { payment_gateway: apiGateway } : {}),
+  });
+};
 
-export const getConsultationFeeQuote = async (slotId, couponCode) => {
+export const getConsultationFeeQuote = async (slotId, couponCode, packagePurchaseId) => {
   const params = new URLSearchParams();
   params.set('slot_id', String(slotId));
   if (couponCode) params.set('coupon_code', String(couponCode));
+  const purchaseId = String(packagePurchaseId || '').trim();
+  if (purchaseId) params.set('package_purchase_id', purchaseId);
   return apiClient(`payments/customer/consultation/fee-quote/?${params.toString()}`, {
     method: 'GET',
   });
 };
 
-export const verifyConsultationPayment = async (data) =>
-  apiClient('payments/customer/consultation/payment/verify-payment/', {
+/**
+ * Required: { payment_id, gateway_order_id, gateway_payment_id, gateway_signature }.
+ * Optional `payment_gateway` lets the backend pick the Cashfree vs Razorpay verifier.
+ */
+export const verifyConsultationPayment = async (data) => {
+  const body = {
+    payment_id: data?.payment_id,
+    gateway_order_id: data?.gateway_order_id,
+    gateway_payment_id: data?.gateway_payment_id,
+    gateway_signature: data?.gateway_signature,
+  };
+  const gateway = String(data?.payment_gateway ?? '').trim();
+  if (gateway) body.payment_gateway = gateway;
+  return apiClient('payments/customer/consultation/payment/verify-payment/', {
     method: 'POST',
-    body: JSON.stringify(data),
+    body: JSON.stringify(body),
   });
+};
 
 /** GET payments/customer/consultation/payment/<uuid>/ — includes gateway ids after the Cashfree webhook. */
 export const getConsultationPayment = async (paymentId) =>

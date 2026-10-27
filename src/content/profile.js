@@ -138,6 +138,7 @@ export const PROFILE_COPY = {
 export const PROFILE_ACCOUNT = [
   { title: 'My Orders', to: '/profile/orders' },
   { title: 'My Consultations', to: '/profile/appointments' },
+  { title: 'My Plans', to: '/profile/plans' },
   { title: 'Ayurchat', to: '/profile/chats' },
   { title: 'Consultation History', to: '/consult/history' },
   { title: 'Medical Records', to: '/profile/records' },

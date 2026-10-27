@@ -329,7 +329,7 @@ const mergeGateway = (internalPaymentId, ...parts) => {
 
 /**
  * Body for POST .../verify-payment/
- * { payment_id, gateway_order_id, gateway_payment_id, gateway_signature }
+ * { payment_id, gateway_order_id, gateway_payment_id, gateway_signature, payment_gateway }
  */
 export const buildCashfreeVerifyPayload = (checkout, result) => {
   const internalPaymentId = asText(checkout?.paymentId);
@@ -351,6 +351,7 @@ export const buildCashfreeVerifyPayload = (checkout, result) => {
     gateway_order_id: gateway.gateway_order_id,
     gateway_payment_id: gateway.gateway_payment_id,
     gateway_signature: gateway.gateway_signature,
+    payment_gateway: 'cashfree',
   };
 };
 

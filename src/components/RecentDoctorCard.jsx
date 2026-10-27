@@ -11,6 +11,7 @@ import {
   getDoctorId,
 } from '../consult/doctors';
 import Rating from './ui/Rating';
+import DietitianBadge from './DietitianBadge';
 import { nameInitial } from '../utils/initials';
 
 export default function RecentDoctorCard({ item, fallbackRole = 'Ayurvedic doctor' }) {
@@ -43,6 +44,7 @@ export default function RecentDoctorCard({ item, fallbackRole = 'Ayurvedic docto
             {name}
           </button>
         </h3>
+        <DietitianBadge doctor={item} />
         <p className="am-recent-card__role">{role}</p>
         {rating || experience ? (
           <div className="am-recent-card__meta">

@@ -206,6 +206,11 @@ export const parseFeeQuoteConfig = (data, fallbackBase = 0, options = {}) => {
     fallbackBase,
   );
 
+  const couponInfo = data.coupon && typeof data.coupon === 'object' ? data.coupon : null;
+  const couponValid = typeof couponInfo?.valid === 'boolean' ? couponInfo.valid : null;
+  const couponDiscountRaw = summary?.coupon_discount ?? data?.coupon_discount ?? couponInfo?.discount;
+  const quotedCouponCode = String(data?.coupon_code ?? couponInfo?.code ?? '').trim();
+
   const itemsAfterDiscountRaw = summary?.items_after_discount ?? data?.items_after_discount;
   const itemsAfterDiscount =
     itemsAfterDiscountRaw == null || itemsAfterDiscountRaw === ''
@@ -254,9 +259,14 @@ export const parseFeeQuoteConfig = (data, fallbackBase = 0, options = {}) => {
     currency: String(summary?.currency || data?.currency || 'INR'),
     durationMinutes: toNumber(config?.consultation?.duration_minutes) || null,
     couponDiscount:
-      summary?.coupon_discount == null && data?.coupon_discount == null
-        ? null
-        : roundMoney(toNumber(summary?.coupon_discount ?? data?.coupon_discount)),
+      couponValid === false
+        ? 0
+        : couponDiscountRaw == null || couponDiscountRaw === ''
+          ? null
+          : roundMoney(toNumber(couponDiscountRaw)),
+    quotedCouponCode,
+    couponValid,
+    couponMessage: String(couponInfo?.message ?? ''),
     itemsAfterDiscount,
     deliveryCharge: delivery.charge,
     freeDeliveryMinimum: delivery.minimum,
@@ -276,19 +286,36 @@ export const calculateOrderFees = ({
   couponCode,
 }) => {
   const items = quote?.items ?? [];
-  const itemTotal = items.length
-    ? roundMoney(items.reduce((sum, item) => sum + item.sellingPrice * item.quantity, 0))
-    : roundMoney(quote?.baseAmount || fallbackSubtotal);
-
   const requestedCoupon = String(couponCode || '').trim();
   const quoteMatchesCoupon = (quote?.quotedCouponCode || '') === requestedCoupon;
-  const resolvedDiscount =
-    quoteMatchesCoupon && quote?.couponDiscount != null ? quote.couponDiscount : localDiscount;
-  const discount = roundMoney(Math.min(Math.max(0, resolvedDiscount), itemTotal));
-  const taxable = roundMoney(Math.max(0, itemTotal - discount));
-  const itemsAfterDiscount = roundMoney(
-    quote?.itemsAfterDiscount != null ? quote.itemsAfterDiscount : taxable,
-  );
+  const apiDiscount =
+    quoteMatchesCoupon && quote?.couponDiscount != null
+      ? roundMoney(Math.max(0, quote.couponDiscount))
+      : null;
+  const useApiSummary =
+    quote?.itemsAfterDiscount != null &&
+    quoteMatchesCoupon &&
+    (apiDiscount != null || !requestedCoupon);
+
+  let itemTotal;
+  let discount;
+  let itemsAfterDiscount;
+  if (useApiSummary) {
+    // summary.items_after_discount already has summary.coupon_discount removed.
+    discount = apiDiscount ?? 0;
+    itemsAfterDiscount = roundMoney(Math.max(0, quote.itemsAfterDiscount));
+    itemTotal = roundMoney(itemsAfterDiscount + discount);
+  } else {
+    // Quote was priced without the applied coupon: apply the local discount on top.
+    itemTotal =
+      quote?.itemsAfterDiscount != null && quote.itemsAfterDiscount > 0
+        ? roundMoney(quote.itemsAfterDiscount)
+        : items.length
+          ? roundMoney(items.reduce((sum, item) => sum + item.sellingPrice * item.quantity, 0))
+          : roundMoney(quote?.baseAmount || fallbackSubtotal);
+    discount = roundMoney(Math.min(Math.max(0, localDiscount), itemTotal));
+    itemsAfterDiscount = roundMoney(Math.max(0, itemTotal - discount));
+  }
   const discountRatio = itemTotal > 0 ? itemsAfterDiscount / itemTotal : 1;
 
   const computedGst = items.reduce((sum, item) => {

@@ -1,5 +1,6 @@
 import { Utils } from '../common/utils';
 import { BaseUrl } from '../config/key';
+import { toApiPaymentGateway } from '../payment/gateways';
 import { apiClient } from './apiClient';
 
 export const getOrderFeeQuote = async (payload) => {
@@ -38,13 +39,14 @@ export const buildOrderPayload = ({
   shipping_method = 'STD',
   prepaid_amount = 0,
   coupon_code,
+  payment_gateway,
 }) => {
   const isCod = mode === 'cod';
   return withCouponFields(
     {
       delivery_address_id,
       payment_type: isCod ? 'cod' : 'prepaid',
-      ...(isCod ? { payment_method: 'cash' } : { payment_gateway: 'cashfree' }),
+      ...(isCod ? { payment_method: 'cash' } : { payment_gateway: toApiPaymentGateway(payment_gateway) }),
       shipping_method,
       shipping_charges: Number(shipping_charges) || 0,
       cod_charges: isCod ? Number(cod_charges) || 0 : 0,

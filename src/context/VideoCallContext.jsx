@@ -8,6 +8,7 @@ import {
   useState,
 } from 'react';
 import { replace } from '../navigation/nav';
+import { activateKeepAwake, deactivateKeepAwake } from '../utils/keepAwake';
 
 let agoraPromise;
 const loadAgora = () => {
@@ -22,6 +23,7 @@ import {
   apiStartCall,
   buildTokenInfo,
   requestCallPermissions,
+  shouldPostLeftOnDisconnect,
 } from '../services/videoCallApi';
 
 const VideoCallContext = createContext(null);
@@ -206,6 +208,21 @@ export function VideoCallProvider({ children }) {
       setErrorMsg(`Connection error (${evt?.code}): ${evt?.msg || ''}`);
     });
     client.on('connection-state-change', (cur, _prev, reason) => {
+      if (cur === 'DISCONNECTED') {
+        // App onLeaveChannel: mark not joined, and report an unexpected leave to the server.
+        setIsJoined(false);
+        isJoinedRef.current = false;
+        if (
+          shouldPostLeftOnDisconnect({
+            current: cur,
+            reason,
+            endedByUser: endedByUserRef.current,
+            appointmentId: appointmentIdRef.current,
+          })
+        ) {
+          apiPostCallEvent(appointmentIdRef.current, 'left', sessionIdRef.current);
+        }
+      }
       if (cur === 'DISCONNECTED' && reason === 'NETWORK_ERROR') {
         setErrorMsg('Connection failed. Token/App ID mismatch ho sakta hai.');
       }
@@ -446,6 +463,16 @@ export function VideoCallProvider({ children }) {
       }
     };
   }, [remoteUid]);
+
+  // Keep the screen awake for the whole call (app: utils/keepAwake).
+  useEffect(() => {
+    if (viewMode === 'idle') {
+      deactivateKeepAwake();
+      return undefined;
+    }
+    activateKeepAwake();
+    return () => deactivateKeepAwake();
+  }, [viewMode]);
 
   useEffect(() => {
     if (viewMode === 'idle' || !appointmentIdRef.current || !isJoined) {

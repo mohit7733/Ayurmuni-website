@@ -3,6 +3,13 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
 import PrescriptionFilePreview from '../components/PrescriptionFilePreview';
 import { showSuccessToast } from '../config/key';
+import { formatRupee } from '../home/catalog';
+import {
+  getVerifyCta,
+  pickPrescribedItems,
+  resolveVerifyParams,
+} from '../cart/rxGroups';
+import '../design/pages/rx-verify.css';
 import { UploadProfilePhoto } from '../services/profileService';
 import {
   createPrescriptionRequest,
@@ -19,15 +26,23 @@ import {
 export default function PrescriptionVerify() {
   const navigate = useNavigate();
   const location = useLocation();
-  const files = Array.isArray(location.state?.files) ? location.state.files : [];
-  const variantIds = Array.isArray(location.state?.variantIds)
-    ? location.state.variantIds.map(String).filter(Boolean)
-    : [];
-  const [notes, setNotes] = useState('');
+  // An existing request (from the cart's uploaded-prescription Details, or ?requestId=) opens
+  // read-only and polls, as in the app; otherwise this is the upload-and-submit flow.
+  const params = useMemo(
+    () => resolveVerifyParams(location.state, location.search),
+    [location.state, location.search],
+  );
+  const { files, previewItems } = params;
+  const [notes, setNotes] = useState(String(params.existingRequest?.notes || '').trim());
   const [saveToRecords, setSaveToRecords] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [request, setRequest] = useState(null);
+  const [request, setRequest] = useState(params.existingRequest);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [previews, setPreviews] = useState([]);
+  const variantIds = useMemo(() => {
+    const fromRequest = Array.isArray(request?.variant_ids) ? request.variant_ids : [];
+    return [...new Set([...params.variantIds, ...fromRequest].map(String).filter(Boolean))];
+  }, [params.variantIds, request]);
 
   useEffect(() => {
     const urls = files.map((file) => (file instanceof File ? URL.createObjectURL(file) : ''));
@@ -35,7 +50,7 @@ export default function PrescriptionVerify() {
     return () => urls.forEach((url) => url && URL.revokeObjectURL(url));
   }, [files]);
 
-  const requestId = request?.id ? String(request.id) : '';
+  const requestId = String(params.requestId || request?.prescription_request_id || request?.id || '');
   const pending = request ? isPrescriptionPending(request) : false;
   const approved = isPrescriptionApproved(request);
   const rejected = isPrescriptionRejected(request);
@@ -44,9 +59,16 @@ export default function PrescriptionVerify() {
   useEffect(() => {
     if (!requestId) return undefined;
     const load = async () => {
-      const res = await getPrescriptionRequests({ id: requestId });
-      const next = extractPrescriptionRequest(res);
-      if (next) setRequest(next);
+      try {
+        const res = await getPrescriptionRequests({ id: requestId });
+        const next = extractPrescriptionRequest(res);
+        if (next) {
+          setRequest(next);
+          setLoadFailed(false);
+        }
+      } catch {
+        setLoadFailed(true);
+      }
     };
     load();
     const timer = setInterval(load, 12000);
@@ -113,6 +135,33 @@ export default function PrescriptionVerify() {
     }
   };
 
+  const prescribedItems = pickPrescribedItems(request, previewItems);
+  const cta = getVerifyCta(request, { approved, rejected, pending });
+  const onCta = () => {
+    if (cta.action === 'finalize') {
+      navigate('/medicines/checkout', {
+        state: { request, notes: notes || request?.notes, approved: true },
+      });
+    } else if (cta.action === 'upload') {
+      showSuccessToast('This request was rejected. Please upload a clearer prescription.', 'error');
+      navigate('/medicines/prescription', { state: { variantIds } });
+    } else if (cta.action === 'view') {
+      navigate('/profile/orders', { state: { tab: 'requested', requestId } });
+    } else {
+      showSuccessToast('Waiting for prescription approval', 'error');
+    }
+  };
+
+  if (!files.length && !request && requestId && !loadFailed) {
+    return (
+      <AppShell tab="medicines">
+        <section className="catalog-page">
+          <p className="empty-copy">Loading prescription request…</p>
+        </section>
+      </AppShell>
+    );
+  }
+
   if (!files.length && !request) {
     return (
       <AppShell tab="medicines">
@@ -177,7 +226,9 @@ export default function PrescriptionVerify() {
             <h3>{getStatusLabel(request)}</h3>
             {pending ? <p>A pharmacist usually reviews this within 12–24 hours.</p> : null}
             {approved ? <p>Approved. You can add this medicine to cart from the product page.</p> : null}
-            {rejected ? <p>This request was rejected. Please upload a clearer prescription.</p> : null}
+            {rejected ? (
+              <p>{request?.rejection_reason || 'This request was rejected. Please upload a clearer prescription.'}</p>
+            ) : null}
             <div className="detail-cta">
               <button type="button" className="ghost" onClick={() => navigate('/medicines')}>
                 Medicine store
@@ -185,19 +236,47 @@ export default function PrescriptionVerify() {
               <button
                 type="button"
                 className="cta"
-                onClick={() =>
-                  approved
-                    ? navigate('/medicines/checkout', {
-                        state: { request, notes: notes || request?.notes, approved: true },
-                      })
-                    : showSuccessToast('Waiting for prescription approval', 'error')
-                }
+                onClick={onCta}
               >
-                {approved ? 'Finalize order' : 'Waiting for approval'}
+                {cta.label}
               </button>
             </div>
           </div>
         )}
+
+        {request && (notes || request?.notes) ? (
+          <div className="rx-notes">
+            <small>Your notes</small>
+            <p>{notes || request?.notes}</p>
+          </div>
+        ) : null}
+
+        {prescribedItems.length ? (
+          <div className="rx-items">
+            <h2>
+              {approved ? 'Prescribed items' : 'Requested items'} ({prescribedItems.length})
+            </h2>
+            {prescribedItems.map((item, index) => {
+              const qty = Math.max(1, Number(item.raw?.quantity) || 1);
+              return (
+                <div key={`${item.id}-${index}`} className="rx-item">
+                  <span className="rx-item__thumb">
+                    {item.image ? <img src={item.image} alt="" loading="lazy" /> : null}
+                  </span>
+                  <span className="rx-item__copy">
+                    <strong>{item.name}</strong>
+                    {item.desc ? <small>{item.desc}</small> : null}
+                    {item.notes ? <small>{item.notes}</small> : null}
+                  </span>
+                  <span className="rx-item__side">
+                    <span>×{qty}</span>
+                    {item.price != null ? <span>{formatRupee(item.price)}</span> : null}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        ) : null}
       </section>
     </AppShell>
   );

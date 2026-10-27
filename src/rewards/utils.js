@@ -347,3 +347,20 @@ export const triggerLabel = (trigger) => {
   if (key === 'loyalty') return 'Loyalty';
   return couponSourceLabel(key || 'reward');
 };
+
+/**
+ * Add-coupon sheet (app RewardsScreen.submitManualCode): a typed/pasted code is upper-cased; if it
+ * matches one of the user's rewards it is claimed with that reward's title, otherwise it is saved
+ * (copied) as-is.
+ */
+export const resolveManualCoupon = (input, rewards = []) => {
+  const code = String(input || '').trim().toUpperCase();
+  if (!code) return { kind: 'empty', code: '' };
+  const reward = (rewards || []).find(
+    (item) => String(item?.coupon?.code || '').trim().toUpperCase() === code,
+  );
+  if (reward?.coupon) {
+    return { kind: 'known', code: reward.coupon.code, reward, coupon: reward.coupon };
+  }
+  return { kind: 'saved', code };
+};

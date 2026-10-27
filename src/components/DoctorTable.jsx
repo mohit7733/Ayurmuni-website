@@ -18,6 +18,7 @@ import { showSuccessToast } from '../config/key';
 import { requireAuth } from '../services/guestAuth';
 import { toggleFavDoctor } from '../services/consultService';
 import FavButton from './ui/FavButton';
+import DietitianBadge from './DietitianBadge';
 import { nameInitial } from '../utils/initials';
 
 function DoctorTableRow({ item, fallbackSpeciality }) {
@@ -80,6 +81,7 @@ function DoctorTableRow({ item, fallbackSpeciality }) {
                 <BadgeCheck size={14} aria-label="Verified" />
               ) : null}
             </p>
+            <DietitianBadge doctor={item} />
             {credential ? <p className="hm-doc-table__cred">{credential}</p> : null}
           </div>
         </div>

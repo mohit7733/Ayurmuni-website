@@ -13,7 +13,7 @@ import {
 import { requireAuth } from "../services/guestAuth";
 import { showPrescriptionRequired } from "../services/prescriptionGate";
 import { showSuccessToast } from "../config/key";
-import { toggleWishlistProduct } from "../services/productService";
+import { toggleWishlistItem, useWishlistFlag } from "../product/wishlistSync";
 import Badge from "./ui/Badge";
 import FavButton from "./ui/FavButton";
 import CartAddButton from "./CartAddButton";
@@ -57,7 +57,7 @@ export default function ProductCard({
   const subtitle =
     lowStockNote || item?.brand_name || item?.variant_title || "";
   const rating = item?.avg_rating ?? "0";
-  const [wish, setWish] = useState(Boolean(item?.is_wishlist_item));
+  const wish = useWishlistFlag(item);
   const [wishBusy, setWishBusy] = useState(false);
 
   const updateQty = async (nextQty) => {
@@ -81,19 +81,14 @@ export default function ProductCard({
     if (!(await requireAuth("Please login to save wishlist items"))) return;
     if (!variantId) return;
     const prev = wish;
-    setWish(!prev);
     setWishBusy(true);
     try {
-      const res = await toggleWishlistProduct(variantId);
-      if (res?.success === false) {
-        setWish(prev);
-        showSuccessToast(res?.message || "Unable to update wishlist", "error");
+      const result = await toggleWishlistItem(item);
+      if (result === "error") {
+        showSuccessToast("Unable to update wishlist", "error");
         return;
       }
       onWishlistChange?.(item, !prev);
-    } catch {
-      setWish(prev);
-      showSuccessToast("Unable to update wishlist", "error");
     } finally {
       setWishBusy(false);
     }

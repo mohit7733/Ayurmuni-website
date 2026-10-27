@@ -1,0 +1,13 @@
+/* Compact "Dietitian" pill (reuses .am-badge--success); keeps card layouts untouched. */
+.am-dietitian-badge {
+  align-self: flex-start;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+/* Inline inside the slot-picker hero name line. */
+.bkp-dietitian {
+  margin: 0 0 0 6px;
+  vertical-align: middle;
+}

@@ -1,0 +1,87 @@
+/* Appointment payment / refund timeline (compact). */
+.pht {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pht__row {
+  position: relative;
+  display: flex;
+  gap: 10px;
+  padding-bottom: 10px;
+  --pht-tone: var(--am-text-muted);
+  --pht-soft: var(--am-surface-muted);
+}
+
+.pht__row:last-child {
+  padding-bottom: 0;
+}
+
+.pht__row:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 14px;
+  bottom: 0;
+  width: 2px;
+  background: var(--am-border, #e4e0d4);
+}
+
+.pht--success { --pht-tone: var(--am-success); --pht-soft: var(--am-success-soft); }
+.pht--warning { --pht-tone: var(--am-warning); --pht-soft: var(--am-warning-soft); }
+.pht--danger { --pht-tone: var(--am-danger); --pht-soft: var(--am-danger-soft); }
+
+.pht__dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: var(--pht-tone);
+}
+
+.pht__body {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.pht__title {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: var(--am-text-sm, 0.8125rem);
+}
+
+.pht__title strong {
+  color: var(--pht-tone);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.pht__title span {
+  flex: none;
+  font-weight: 600;
+  color: var(--am-text);
+}
+
+.pht__body small,
+.pht__body p {
+  margin: 0;
+  font-size: var(--am-text-xs, 0.75rem);
+  color: var(--am-text-muted);
+}
+
+.pht__ref {
+  justify-self: start;
+  max-width: 100%;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--pht-soft);
+  color: var(--pht-tone);
+  font-size: var(--am-text-2xs, 0.6875rem);
+  font-style: normal;
+  overflow-wrap: anywhere;
+}

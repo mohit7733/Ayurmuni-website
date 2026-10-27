@@ -1,6 +1,6 @@
 # Ayurmuni Website
 
-React 19 + Vite single-page app for Ayurmuni (consultations, medicines, products, diet, yoga). The backend API lives at `https://scarce-derby-voice.ngrok-free.dev/`.
+React 19 + Vite single-page app for Ayurmuni (consultations, medicines, products, diet, yoga). The backend API lives at `https://ayurmuni.aimantra.info/`.
 
 ## Local development
 
@@ -12,7 +12,7 @@ npm run lint
 
 ## Configuration
 
-The API base URL is read at build time from `VITE_API_BASE` (defaults to `https://scarce-derby-voice.ngrok-free.dev/`). The chat WebSocket uses the same host over `wss://`. To point a build at another backend, copy `.env.example` to `.env.production` and edit it before building. Online payments use Cashfree (`VITE_CASHFREE_MODE=sandbox` or `production`).
+The API base URL is read at build time from `VITE_API_BASE` (defaults to `https://ayurmuni.aimantra.info/`). The chat WebSocket uses the same host over `wss://`. To point a build at another backend, copy `.env.example` to `.env.production` and edit it before building. Online payments use Cashfree (`VITE_CASHFREE_MODE=sandbox` or `production`).
 
 ## Production build
 

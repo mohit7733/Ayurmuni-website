@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Gift, Star } from 'lucide-react';
+import { Gift, Plus, Star } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import PageHeader from '../components/PageHeader';
 import ReferralCard from '../components/ReferralCard';
@@ -17,6 +17,7 @@ import {
   couponSourceLabel,
   couponThemeIndex,
   isRewardsScreenItem,
+  resolveManualCoupon,
   triggerLabel,
 } from '../rewards/utils';
 import {
@@ -25,6 +26,7 @@ import {
   Chip,
   Disclaimer,
   EmptyState,
+  Input,
   Modal,
   Skeleton,
 } from '../components/ui';
@@ -45,6 +47,8 @@ export default function Rewards() {
   const [filterKey, setFilterKey] = useState('all');
   const [detail, setDetail] = useState(null);
   const [copied, setCopied] = useState(null);
+  const [addOpen, setAddOpen] = useState(false);
+  const [codeInput, setCodeInput] = useState('');
 
   const load = async () => {
     setLoading(true);
@@ -82,13 +86,62 @@ export default function Rewards() {
     }
   };
 
+  const submitManualCode = async () => {
+    const result = resolveManualCoupon(codeInput, displayRewards);
+    if (result.kind === 'empty') {
+      showSuccessToast(T.enterCode, 'error');
+      return;
+    }
+    if (result.kind === 'known') {
+      await copyCode(result.coupon, result.reward);
+      setAddOpen(false);
+      setCodeInput('');
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(result.code);
+      setAddOpen(false);
+      setCopied({ code: result.code, title: T.couponSaved });
+      setCodeInput('');
+    } catch {
+      showSuccessToast('Could not save code', 'error');
+    }
+  };
+
+  const pasteCode = async () => {
+    try {
+      const text = String((await navigator.clipboard.readText()) || '').trim().toUpperCase();
+      if (!text) {
+        showSuccessToast(T.clipboardEmpty, 'error');
+        return;
+      }
+      setCodeInput(text);
+    } catch {
+      showSuccessToast('Could not paste', 'error');
+    }
+  };
+
   const isEmptyFilter = !loading && filtered.length === 0 && filterKey !== 'all';
   const isEmptyAll = !loading && displayRewards.length === 0;
 
   return (
     <AppShell tab="profile">
       <section className="rw-page">
-        <PageHeader title={T.title} subtitle={T.subtitle} backTo="/profile" />
+        <PageHeader
+          title={T.title}
+          subtitle={T.subtitle}
+          backTo="/profile"
+          actions={
+            <Button
+              variant="secondary"
+              size="sm"
+              leadingIcon={<Plus size={16} aria-hidden />}
+              onClick={() => setAddOpen(true)}
+            >
+              {T.addCoupon}
+            </Button>
+          }
+        />
 
         {/* Referral Card */}
         <div className="rw-referral-section">
@@ -245,6 +298,35 @@ export default function Rewards() {
             ) : null}
           </div>
         ) : null}
+      </Modal>
+
+      <Modal
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        title={T.addTitle}
+        description={T.addSub}
+        footer={
+          <Button variant="primary" block onClick={submitManualCode}>
+            {T.saveCoupon}
+          </Button>
+        }
+      >
+        <div className="rw-add">
+          <Input
+            value={codeInput}
+            onChange={(event) => setCodeInput(event.target.value.toUpperCase())}
+            placeholder={T.codePlaceholder}
+            aria-label={T.codePlaceholder}
+            autoCapitalize="characters"
+            autoComplete="off"
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') submitManualCode();
+            }}
+          />
+          <Button variant="secondary" onClick={pasteCode}>
+            {T.paste}
+          </Button>
+        </div>
       </Modal>
 
       <Modal

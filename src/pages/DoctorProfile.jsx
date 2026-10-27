@@ -16,6 +16,7 @@ import {
   Video,
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import DietitianBadge from '../components/DietitianBadge';
 import {
   ActionStack,
   DetailCard,
@@ -298,6 +299,7 @@ export default function DoctorProfile() {
           lede={showQualification ? `${speciality} · ${qualification}` : speciality}
           chips={
             <>
+              <DietitianBadge doctor={doctor} size="md" />
               {ratingValue ? (
                 <MetaChip icon={Star} tone="gold">
                   {ratingValue} · {reviewCount} {T.reviews.toLowerCase()}

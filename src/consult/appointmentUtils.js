@@ -40,9 +40,13 @@ export function getVideoCallId(source) {
 export function buildVideoCallNavParams(source, extras = {}) {
   const ids = getAppointmentIds(source);
   const primaryId = ids.appointmentId || ids.consultationId;
+  const slot = resolveAppointmentSlot(source);
   return {
     appointmentId: primaryId,
     ...(ids.consultationId ? { consultationId: ids.consultationId } : {}),
+    ...(slot.date ? { appointmentDate: slot.date } : {}),
+    ...(slot.startTime ? { startTime: slot.startTime } : {}),
+    ...(slot.endTime ? { endTime: slot.endTime } : {}),
     ...extras,
   };
 }
@@ -236,16 +240,25 @@ export const getMinutesUntilAppointment = (dateStr, timeStr) => {
   return Math.ceil((start.getTime() - Date.now()) / 60000);
 };
 
-const RESCHEDULABLE_STATUSES = [
+const normalizeApptStatus = (status) => String(status || '').trim().toLowerCase();
+const ALREADY_RESCHEDULED_STATUSES = ['rescheduled', 're-scheduled', 're_scheduled'];
+
+/** Statuses where the patient can still reschedule (app RESCHEDULABLE_STATUSES). */
+const RESCHEDULABLE_STATUSES = ['confirmed', 'reschedule', 'upcoming', 'booked'];
+/** Statuses that still allow Cancel, including already-rescheduled (app CANCELABLE_STATUSES). */
+export const CANCELABLE_STATUSES = [
   'confirmed',
-  'reschedule',
-  'rescheduled',
   'upcoming',
   'booked',
+  'reschedule',
+  'rescheduled',
+  're-scheduled',
+  're_scheduled',
 ];
 const NON_RESCHEDULABLE_STATUSES = [
   'completed',
   'cancelled',
+  'canceled',
   'missed',
   'expired',
   'no_show',
@@ -255,20 +268,47 @@ const NON_RESCHEDULABLE_STATUSES = [
 ];
 
 export const canRescheduleAppointment = (status) => {
-  const value = String(status || '').trim().toLowerCase();
+  const value = normalizeApptStatus(status);
   if (!value) return false;
   if (NON_RESCHEDULABLE_STATUSES.includes(value)) return false;
+  if (ALREADY_RESCHEDULED_STATUSES.includes(value)) return false;
   return RESCHEDULABLE_STATUSES.includes(value);
 };
 
-export const canModifyAppointment = (status, dateStr, timeStr, windowMinutes = 180) => {
-  if (!canRescheduleAppointment(status)) return false;
+/** True when start is more than `windowMinutes` (default 3h) away. */
+const isWithinModifyWindow = (dateStr, timeStr, windowMinutes = 180) => {
   const date = String(dateStr || '').trim();
   const time = String(timeStr || '').trim();
   if (!date) return false;
   const mins = getMinutesUntilAppointment(date, time || undefined);
   if (mins == null || !Number.isFinite(mins) || mins <= 0) return false;
   return mins > Math.max(1, Math.floor(Number(windowMinutes) || 180));
+};
+
+/** Mirrors app canModifyAppointment: reschedulable, not rescheduled once, outside the lock window. */
+export const canModifyAppointment = (status, dateStr, timeStr, windowMinutes = 180, item) => {
+  if (hasAlreadyRescheduled(item ?? status)) return false;
+  if (!canRescheduleAppointment(status)) return false;
+  return isWithinModifyWindow(dateStr, timeStr, windowMinutes);
+};
+
+/** Reschedule button: hidden after one successful reschedule. */
+export const canOfferReschedule = (status, dateStr, timeStr, item, windowMinutes = 180) =>
+  canModifyAppointment(status, dateStr, timeStr, windowMinutes, item);
+
+/** Cancel stays available after a one-time reschedule (within the time window). */
+export const canOfferCancel = (status, dateStr, timeStr, windowMinutes = 180) => {
+  const value = normalizeApptStatus(status);
+  if (!value) return false;
+  if (NON_RESCHEDULABLE_STATUSES.includes(value)) return false;
+  if (!CANCELABLE_STATUSES.includes(value)) return false;
+  return isWithinModifyWindow(dateStr, timeStr, windowMinutes);
+};
+
+/** Receipt is available for any consultation that has an id; past statuses fall back. */
+export const canShowConsultationReceipt = (status, consultationId) => {
+  if (consultationId != null && String(consultationId).trim() !== '') return true;
+  return NON_RESCHEDULABLE_STATUSES.includes(normalizeApptStatus(status));
 };
 
 export const isAppointmentInPast = (raw) => {
@@ -302,10 +342,13 @@ export const buildAppointmentStartEnd = (dateStr, startTime, endTime) => {
   return { start, end };
 };
 
-// App ENDED_CALL_STATUSES (utils/appointmentUtils.ts) — exact list.
-const ENDED_CALL_STATUSES = new Set([
+// Only a cancelled / rejected call removes the Home banner early; ending or leaving the
+// call keeps it until end_time (app development BANNER_CLOSED_CALL_STATUSES).
+const BANNER_CLOSED_CALL_STATUSES = new Set(['cancelled', 'canceled', 'rejected']);
+
+// Call states that close the join window (patient `left` can still rejoin inside the slot).
+const JOIN_CLOSED_CALL_STATUSES = new Set([
   'ended',
-  'left',
   'completed',
   'cancelled',
   'canceled',
@@ -314,6 +357,108 @@ const ENDED_CALL_STATUSES = new Set([
   'rejected',
 ]);
 
+// Appointment states that can still have a live consultation.
+const JOINABLE_APPOINTMENT_STATUSES = new Set([
+  'confirmed',
+  'upcoming',
+  'booked',
+  'scheduled',
+  'reschedule',
+  'rescheduled',
+  're-scheduled',
+  're_scheduled',
+  'cancellation_requested',
+  'in_progress',
+  'ongoing',
+  'started',
+  'live',
+]);
+
+const DEFAULT_JOIN_WINDOW_MINUTES = 5;
+
+export const isActiveAppointmentStatus = (status) =>
+  JOINABLE_APPOINTMENT_STATUSES.has(String(status || '').trim().toLowerCase());
+
+/** Date / start / end from list items, raw API rows or detail payloads. */
+export function resolveAppointmentSlot(source) {
+  if (!source) return {};
+  const root = source?.rawData ?? source;
+  const appt = source?.appointment ?? root?.appointment ?? root;
+  const pick = (...values) => {
+    const found = values.find((v) => v != null && String(v).trim() !== '');
+    return found != null ? String(found).trim() : undefined;
+  };
+  return {
+    date: pick(source?.date, appt?.appointment_date, root?.appointment_date),
+    startTime: pick(source?.time, appt?.start_time, root?.start_time),
+    endTime: pick(source?.endTime, appt?.end_time, root?.end_time),
+  };
+}
+
+/** Slot start / end timestamps; `endMs` is null when end_time is missing or invalid. */
+export function getAppointmentSlotMs(date, startTime, endTime) {
+  const start = parseAppointmentStart(date, startTime);
+  const end = endTime ? parseAppointmentStart(date, endTime) : null;
+  const startMs = start ? start.getTime() : null;
+  const endMs = end && (startMs == null || end.getTime() > startMs) ? end.getTime() : null;
+  return { startMs, endMs };
+}
+
+/** Call-time strip stage: null = hidden, `over` once the slot end passed. */
+export const getCallTimeStage = (endMs, now, warnMinutes = 10) => {
+  if (endMs == null) return null;
+  const msLeft = endMs - now;
+  if (msLeft > warnMinutes * 60 * 1000) return null;
+  const minutesLeft = Math.ceil(msLeft / 60000);
+  const stage = minutesLeft <= 0 ? 'over' : minutesLeft <= 5 ? '5' : String(warnMinutes);
+  return { minutesLeft, stage, isOver: minutesLeft <= 0 };
+};
+
+const readCallStatus = (raw) =>
+  String(raw?.call_status ?? raw?.appointment?.call_status ?? raw?.rawData?.appointment?.call_status ?? '')
+    .toLowerCase()
+    .trim();
+
+const readStatus = (raw) =>
+  raw?.status ??
+  raw?.appointment?.appointment_status ??
+  raw?.rawData?.appointment?.appointment_status ??
+  raw?.appointment_status;
+
+/** Start / effective end (end_time, or start + 15 min) of an appointment slot. */
+const getSlotBounds = (raw) => {
+  const slot = resolveAppointmentSlot(raw);
+  const start = parseAppointmentStart(slot.date, slot.startTime);
+  if (!start) return null;
+  const end = slot.endTime ? parseAppointmentStart(slot.date, slot.endTime) : null;
+  const endMs = end && end.getTime() > start.getTime() ? end.getTime() : start.getTime() + 15 * 60 * 1000;
+  return { startMs: start.getTime(), endMs };
+};
+
+/** True while the appointment is inside its join window (5 min before start until end). */
+export function isAppointmentJoinable(raw, windowMinutes = DEFAULT_JOIN_WINDOW_MINUTES) {
+  if (!raw) return false;
+  const callStatus = readCallStatus(raw);
+  if (JOIN_CLOSED_CALL_STATUSES.has(callStatus)) return false;
+  if (callStatus !== 'in_progress' && !isActiveAppointmentStatus(readStatus(raw))) return false;
+  const bounds = getSlotBounds(raw);
+  if (!bounds) return callStatus === 'in_progress';
+  const now = Date.now();
+  if (now >= bounds.endMs) return false;
+  if (callStatus === 'in_progress') return true;
+  return bounds.startMs - now <= windowMinutes * 60 * 1000;
+}
+
+/** ms until the join window opens or closes (null when nothing changes anymore). */
+export function getMsUntilJoinWindowChange(raw, windowMinutes = DEFAULT_JOIN_WINDOW_MINUTES) {
+  if (!raw) return null;
+  const bounds = getSlotBounds(raw);
+  if (!bounds) return null;
+  const now = Date.now();
+  const opensAt = bounds.startMs - windowMinutes * 60 * 1000;
+  const next = [opensAt, bounds.endMs].find((t) => t > now);
+  return next != null ? next - now : null;
+}
 /** Short local day label ("Mon, 26 Oct") — parses YYYY-MM-DD / DD-MM-YYYY / ISO without UTC shift. */
 export const formatAppointmentDayShort = (dateStr) => {
   const parts = parseLocalDateParts(dateStr);
@@ -328,13 +473,13 @@ export const formatAppointmentDayShort = (dateStr) => {
 };
 
 export function getJoinableAppointment(items = [], windowMinutes = 5) {
-  // Exact port of app getJoinableAppointment (utils/appointmentUtils.ts).
+  // Port of app getJoinableAppointment (utils/appointmentUtils.ts, development).
   const now = Date.now();
   const windowMs = windowMinutes * 60 * 1000;
 
   for (const item of items) {
     const callStatus = String(item?.call_status || '').toLowerCase().trim();
-    if (ENDED_CALL_STATUSES.has(callStatus)) continue;
+    if (BANNER_CLOSED_CALL_STATUSES.has(callStatus)) continue;
 
     const start = parseAppointmentStart(item?.date, item?.time);
     if (!start) continue;
@@ -375,7 +520,14 @@ export const hasAlreadyRescheduled = (source) => {
   if (once(norm(source?.status ?? appt?.appointment_status ?? root?.appointment_status ?? appt?.status))) return true;
   const count = Number(appt?.reschedule_count ?? root?.reschedule_count ?? source?.reschedule_count ?? 0);
   if (Number.isFinite(count) && count >= 1) return true;
-  return [appt?.is_rescheduled, root?.is_rescheduled, appt?.already_rescheduled, root?.already_rescheduled, source?.is_rescheduled].includes(true);
+  if ([appt?.is_rescheduled, root?.is_rescheduled, appt?.already_rescheduled, root?.already_rescheduled, source?.is_rescheduled].includes(true)) return true;
+  return Boolean(
+    appt?.previous_appointment_date ||
+      appt?.original_appointment_date ||
+      appt?.previous_start_time ||
+      appt?.original_start_time ||
+      root?.previous_appointment_date,
+  );
 };
 
 /** Mirrors app sortAppointmentsByDateTime: earliest start first. */
