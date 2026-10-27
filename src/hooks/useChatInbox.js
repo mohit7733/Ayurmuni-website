@@ -5,6 +5,7 @@ import { resolveAppointmentLookupId } from '../consult/appointmentUtils';
 import { mapAppointment } from '../profile/map';
 import { chatService } from '../services/chatService';
 import { getConsultHistory } from '../services/consultService';
+import { currentApiIdentity, invalidateApiCache, subscribeApiSession } from '../services/apiClient';
 
 const HISTORY_PAGE_SIZE = 50;
 const MAX_THREADS = 40;
@@ -49,6 +50,7 @@ const buildThreadBase = (item) => {
     patientName: item.patientName,
     appointmentDate: item.date,
     status: item.status.toLowerCase(),
+    raw,
     chatContext,
     extras: {
       role: PATIENT_ROLE,
@@ -105,7 +107,50 @@ const fetchHistory = async () => {
     .slice(0, MAX_THREADS);
 };
 
+// No chat exists for cancelled or unpaid bookings (backend answers 409 "cancelled"), so never
+// request their messages.
+const NO_CHAT_STATUS_RE = /cancel|reject|declin|expired|payment_pending|pending_payment|unpaid/;
+const PAYMENT_PENDING_RE = /^(pending|created|initiated|unpaid|failed|payment_pending|attempted)$/;
+const isPaymentPending = (raw = {}) => {
+  const appt = raw.appointment || {};
+  const value = String(
+    raw.payment_status ??
+      raw.payment?.status ??
+      raw.payment?.payment_status ??
+      appt.payment_status ??
+      appt.payment?.status ??
+      (raw.is_paid === false || appt.is_paid === false ? 'unpaid' : ''),
+  )
+    .trim()
+    .toLowerCase();
+  return PAYMENT_PENDING_RE.test(value);
+};
+// Missed / no-show consults have no chat unless a follow-up was scheduled.
+const MISSED_STATUS_RE = /missed|no_show|noshow/;
+const hasFollowUp = (raw) => {
+  const fu = raw?.follow_up || raw?.prescription?.follow_up;
+  return Boolean(fu && (fu.schedule || fu.date));
+};
+const hasNoChat = (base) => {
+  const status = String(base.status || '').toLowerCase();
+  if (NO_CHAT_STATUS_RE.test(status) || isPaymentPending(base.raw)) return true;
+  return MISSED_STATUS_RE.test(status) && !hasFollowUp(base.raw);
+};
+
+/** 409 cancelled / 403 / 404: the appointment simply has no chat. */
+const isNoChatError = (error) =>
+  error?.code === 'cancelled' || [403, 404, 409].includes(Number(error?.httpStatus));
+
+const emptyThread = (base) => ({
+  ...base,
+  lastMessage: null,
+  unreadCount: 0,
+  messageCount: 0,
+  canSend: false,
+});
+
 const loadThread = async (base) => {
+  if (hasNoChat(base)) return emptyThread(base);
   try {
     const data = await chatService.getMessages(base.id);
     const summary = summarizeMessages(data.messages);
@@ -114,7 +159,8 @@ const loadThread = async (base) => {
       ...summary,
       canSend: isChatSendEnabled(data.chat_access, base.appointmentDate, base.chatContext),
     };
-  } catch {
+  } catch (error) {
+    if (isNoChatError(error)) return emptyThread(base);
     return {
       ...base,
       lastMessage: null,
@@ -178,6 +224,45 @@ const groupByDoctor = (threads) => {
   });
 };
 
+// One inbox load (history + per-thread messages) is shared by every hook instance, and the
+// last result is reused for a short window so re-enabling the launcher on navigation does not
+// re-run the whole fan-out. Polling, focus and manual refresh still load fresh.
+const SNAPSHOT_FRESH_MS = 30_000;
+let inboxSnapshot = null; // { identity, at, threads }
+let sharedInboxLoad = null; // Promise<threads>
+subscribeApiSession(() => {
+  inboxSnapshot = null;
+});
+
+const loadInboxThreads = () => {
+  if (sharedInboxLoad) return sharedInboxLoad;
+  sharedInboxLoad = (async () => {
+    const identity = await currentApiIdentity();
+    const bases = await fetchHistory();
+    const loaded = await runPool(bases, FETCH_CONCURRENCY, loadThread);
+    const threads = sortThreads(groupByDoctor(loaded.filter(isVisibleThread)));
+    inboxSnapshot = { identity, at: Date.now(), threads };
+    return threads;
+  })().finally(() => {
+    sharedInboxLoad = null;
+  });
+  return sharedInboxLoad;
+};
+
+const freshSnapshot = async () => {
+  if (!inboxSnapshot || Date.now() - inboxSnapshot.at >= SNAPSHOT_FRESH_MS) return null;
+  return inboxSnapshot.identity === (await currentApiIdentity()) ? inboxSnapshot.threads : null;
+};
+
+const updateSnapshot = (threads) => {
+  if (inboxSnapshot) inboxSnapshot = { ...inboxSnapshot, threads };
+};
+
+/** Test hook: forget the shared inbox snapshot. */
+export const resetChatInboxSnapshot = () => {
+  inboxSnapshot = null;
+};
+
 export function useChatInbox({ enabled = true, refreshMs = REFRESH_INTERVAL_MS } = {}) {
   const [threads, setThreads] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -191,10 +276,11 @@ export function useChatInbox({ enabled = true, refreshMs = REFRESH_INTERVAL_MS }
     inFlightRef.current = true;
     if (mode === 'refresh') setRefreshing(true);
     try {
-      const bases = await fetchHistory();
-      const loaded = await runPool(bases, FETCH_CONCURRENCY, loadThread);
+      if (mode === 'refresh') invalidateApiCache('customers/doctors/consultation-history/');
+      const cached = mode === 'initial' ? await freshSnapshot() : null;
+      const next = cached || (await loadInboxThreads());
       if (!mountedRef.current) return;
-      setThreads(sortThreads(groupByDoctor(loaded.filter(isVisibleThread))));
+      setThreads(next);
       setError('');
     } catch {
       if (mountedRef.current) setError('Unable to load your conversations.');
@@ -224,8 +310,13 @@ export function useChatInbox({ enabled = true, refreshMs = REFRESH_INTERVAL_MS }
     const timer = setInterval(() => {
       if (document.visibilityState !== 'hidden') load('silent');
     }, refreshMs);
+    // Tab refocus refreshes at most once per interval (not on every tab switch).
+    let lastFocusLoad = Date.now();
     const onVisibility = () => {
-      if (document.visibilityState !== 'hidden') load('silent');
+      if (document.visibilityState === 'hidden') return;
+      if (Date.now() - lastFocusLoad < Math.min(refreshMs, 30_000)) return;
+      lastFocusLoad = Date.now();
+      load('silent');
     };
     document.addEventListener('visibilitychange', onVisibility);
     return () => {
@@ -252,14 +343,18 @@ export function useChatInbox({ enabled = true, refreshMs = REFRESH_INTERVAL_MS }
       }
       const next = [...prev];
       next[index] = { ...current, ...summary, unreadCount };
-      return sortThreads(next);
+      const sorted = sortThreads(next);
+      updateSnapshot(sorted);
+      return sorted;
     });
   }, []);
 
   const markThreadRead = useCallback((threadId) => {
-    setThreads((prev) =>
-      prev.map((t) => (t.id === threadId && t.unreadCount ? { ...t, unreadCount: 0 } : t)),
-    );
+    setThreads((prev) => {
+      const next = prev.map((t) => (t.id === threadId && t.unreadCount ? { ...t, unreadCount: 0 } : t));
+      updateSnapshot(next);
+      return next;
+    });
   }, []);
 
   return {

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { readAuthenticated } from '../services/guestAuth';
 import { getRecentSearches } from '../services/globalSearchService';
+import { subscribeApiSession } from '../services/apiClient';
 
 /**
  * Recent search queries (customers/search/recent/) for PremiumSearch's rotating hints.
@@ -13,6 +14,9 @@ export const invalidateRecentSearchQueries = () => {
   cache = null;
   pending = null;
 };
+
+// Recent searches belong to the signed-in account: never show them to the next account.
+subscribeApiSession(invalidateRecentSearchQueries);
 
 export default function useRecentSearchQueries(enabled = true) {
   const [queries, setQueries] = useState(cache || []);

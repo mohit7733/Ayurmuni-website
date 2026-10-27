@@ -9,9 +9,9 @@ const toQuery = (payload = {}) =>
     ),
   ).toString();
 
-export const getNotification = async (payload = {}) => {
+export const getNotification = async (payload = {}, options = {}) => {
   const qs = toQuery(payload);
-  return apiClient(qs ? `notifications/?${qs}` : 'notifications/', { method: 'GET' });
+  return apiClient(qs ? `notifications/?${qs}` : 'notifications/', { ...options, method: 'GET' });
 };
 
 export const manageNotification = async (payload = {}) => {

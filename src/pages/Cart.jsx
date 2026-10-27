@@ -1,8 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Leaf, Minus, Plus, RefreshCw, Search } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  BadgePercent,
+  FileText,
+  Leaf,
+  Minus,
+  Plus,
+  RefreshCw,
+  Search,
+  ShoppingBag,
+  Trash2,
+} from "lucide-react";
 import AppShell from "../components/AppShell";
-import PageHeader from "../components/PageHeader";
 import { formatRupee } from "../home/catalog";
 import { useCart } from "../hooks/useCart";
 import { buildCartSections, CHECKOUT_KEY } from "../cart/mapCart";
@@ -12,6 +23,7 @@ import {
 } from "../product/stock";
 import { showPrescriptionRequired } from "../services/prescriptionGate";
 import { getOrderFeeQuote } from "../services/orderService";
+import { invalidateApiCache } from "../services/apiClient";
 import {
   getStatusLabel,
   isPrescriptionApproved,
@@ -23,8 +35,6 @@ import {
   Badge,
   Button,
   Disclaimer,
-  EmptyState,
-  IconButton,
   Modal,
   Skeleton,
   SkeletonText,
@@ -32,6 +42,7 @@ import {
 } from "../components/ui";
 import { CART_COPY as T } from "../content/cart";
 import "../design/pages/cart.css";
+import "../design/pages/cart-premium.css";
 
 const rxTone = (item) => {
   if (isPrescriptionApproved(item))
@@ -59,7 +70,6 @@ export default function Cart() {
   const [tab, setTab] = useState("cart");
   const [selected, setSelected] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
   const [fees, setFees] = useState(null);
   const [feeLoading, setFeeLoading] = useState(false);
   const [qtyConfirm, setQtyConfirm] = useState(null);
@@ -197,6 +207,7 @@ export default function Cart() {
   const onRefresh = async () => {
     setRefreshing(true);
     doctorQtyRef.current = {};
+    invalidateApiCache("cart/"); // manual refresh must hit the network, not the 10s GET cache
     await fetchCart();
     setRefreshing(false);
   };
@@ -291,41 +302,29 @@ export default function Cart() {
     navigate("/checkout", { state: { selectedProducts: checkoutProducts } });
   };
 
-  const headerActions = (
-    <>
-      <IconButton
-        label={T.search}
-        variant="soft"
-        onClick={() => navigate("/search")}
-      >
-        <Search size={18} aria-hidden />
-      </IconButton>
-      <IconButton
-        label={refreshing || loading ? T.refreshing : T.refresh}
-        variant="soft"
-        disabled={refreshing || loading}
-        onClick={onRefresh}
-      >
-        <RefreshCw
-          size={18}
-          aria-hidden
-          className={refreshing || loading ? "ct-spin" : undefined}
-        />
-      </IconButton>
-    </>
-  );
+  const mrpOf = (item) => {
+    const mrp = Number(item.mrp) || 0;
+    const price = Number(item.price) || 0;
+    return mrp > price ? mrp : 0;
+  };
+  const mrpSavings = selectedProducts.reduce((sum, item) => {
+    const mrp = mrpOf(item);
+    return mrp ? sum + (mrp - Number(item.price)) * Number(item.quantity) : sum;
+  }, 0);
 
   const renderLine = (item) => {
     const adding = addingVariantId === item.variant_id;
     const isPrescribed = item.source === "prescribed";
+    const mrp = mrpOf(item);
+    const off = mrp ? Math.round(((mrp - Number(item.price)) / mrp) * 100) : 0;
     return (
       <article
         key={item.id}
-        className={`ct-line${item._isOutOfStock ? " is-oos" : ""}`}
+        className={`cp-line${item._isOutOfStock ? " is-oos" : ""}`}
       >
         <input
           type="checkbox"
-          className="ct-line__check"
+          className="cp-check"
           checked={selected.includes(item.id)}
           disabled={item._isOutOfStock}
           aria-label={T.selectItem}
@@ -333,29 +332,35 @@ export default function Cart() {
         />
         <button
           type="button"
-          className="ct-line__thumb"
+          className="cp-line__thumb"
           onClick={() => navigate(`/products/${item.variant_id}`)}
+          aria-label={item.name || "View product"}
         >
           {item.image ? (
             <img src={item.image} alt="" loading="lazy" decoding="async" />
           ) : (
-            <span aria-hidden>
-              <Leaf size={22} />
-            </span>
+            <Leaf size={22} aria-hidden />
           )}
         </button>
-        <div className="ct-line__body">
-          <p className="ct-line__name">{item.name}</p>
-          {item.size ? <p className="ct-line__meta">{item.size}</p> : null}
-          {item._isOutOfStock ? (
-            <Badge tone="neutral">{T.outOfStock}</Badge>
+        <div className="cp-line__body">
+          <p className="cp-line__name">{item.name}</p>
+          {item.size || item._isOutOfStock ? (
+            <p className="cp-line__meta">
+              {item.size ? <span>{item.size}</span> : null}
+              {item._isOutOfStock ? (
+                <span className="cp-line__oos">{T.outOfStock}</span>
+              ) : null}
+            </p>
           ) : null}
-          <strong className="ct-line__price">{formatRupee(item.price)}</strong>
+          <p className="cp-line__price">
+            <strong>{formatRupee(item.price)}</strong>
+            {mrp ? <s>{formatRupee(mrp)}</s> : null}
+            {off > 0 ? <span className="cp-off">{off}% off</span> : null}
+          </p>
           {isPrescribed && (item.appointment_id || item.consultation_id) ? (
-            <Button
-              className="ct-line__rx"
-              variant="ghost"
-              size="sm"
+            <button
+              type="button"
+              className="cp-line__rx"
               onClick={() =>
                 navigate(
                   `/profile/prescriptions/${item.consultation_id || item.appointment_id}`,
@@ -374,11 +379,13 @@ export default function Cart() {
                 )
               }
             >
-              {T.viewPrescription}
-            </Button>
+              <FileText size={13} aria-hidden /> {T.viewPrescription}
+            </button>
           ) : null}
+        </div>
+        <div className="cp-line__side">
           <div
-            className="am-stepper ct-line__qty"
+            className="cp-stepper"
             role="group"
             aria-label={`Quantity of ${item.name || "item"}`}
           >
@@ -388,7 +395,11 @@ export default function Cart() {
               disabled={adding || (isPrescribed && item.quantity <= 1)}
               onClick={() => changeQty(item, "minus")}
             >
-              <Minus size={16} aria-hidden />
+              {!isPrescribed && Number(item.quantity) <= 1 ? (
+                <Trash2 size={14} aria-hidden />
+              ) : (
+                <Minus size={14} aria-hidden />
+              )}
             </button>
             <span aria-live="polite">{adding ? "…" : item.quantity}</span>
             <button
@@ -397,9 +408,12 @@ export default function Cart() {
               disabled={adding || item._isOutOfStock}
               onClick={() => changeQty(item, "plus")}
             >
-              <Plus size={16} aria-hidden />
+              <Plus size={14} aria-hidden />
             </button>
           </div>
+          <span className="cp-line__total">
+            {formatRupee(Number(item.price) * Number(item.quantity))}
+          </span>
         </div>
       </article>
     );
@@ -407,197 +421,232 @@ export default function Cart() {
 
   const showTabs = cartCount + prescribedCount > 0;
   const isEmpty = !visible.length;
+  const allSelected =
+    visible.filter((i) => !i._isOutOfStock).every((i) => selected.includes(i.id)) &&
+    visible.some((i) => !i._isOutOfStock);
+  const busy = refreshing || loading;
+  const totalLabel = feeLoading ? "…" : formatRupee(payable);
 
   return (
     <AppShell tab="cart">
-      <section className="ct-page">
-        <PageHeader
-          title={T.title}
-          subtitle={
-            visible.length ? T.itemsCount(visible.length) : T.subtitleEmpty
-          }
-          hideBack
-          actions={headerActions}
-        />
-
-        {showTabs ? (
-          <Tabs
-            label={T.tabsLabel}
-            value={tab}
-            onChange={setTab}
-            items={[
-              { id: "cart", label: T.tabCart, count: cartCount || undefined },
-              {
-                id: "prescribed",
-                label: T.tabPrescribed,
-                count: prescribedCount || undefined,
-              },
-            ]}
-          />
-        ) : null}
+      <section className="cp-page">
+        <header className="cp-head">
+          <button
+            type="button"
+            className="cp-iconbtn"
+            onClick={() => navigate(-1)}
+            aria-label="Back"
+          >
+            <ArrowLeft size={18} aria-hidden />
+          </button>
+          <div className="cp-head__copy">
+            <h1 className="cp-head__title">{T.title}</h1>
+            <p className="cp-head__desc">
+              {visible.length ? T.itemsCount(visible.length) : T.subtitleEmpty}
+            </p>
+          </div>
+          <div className="cp-head__actions">
+            <button
+              type="button"
+              className="cp-iconbtn"
+              onClick={() => navigate("/search")}
+              aria-label={T.search}
+              title={T.search}
+            >
+              <Search size={17} aria-hidden />
+            </button>
+            <button
+              type="button"
+              className="cp-iconbtn"
+              onClick={onRefresh}
+              disabled={busy}
+              aria-label={busy ? T.refreshing : T.refresh}
+              title={T.refresh}
+            >
+              <RefreshCw size={17} aria-hidden className={busy ? "ct-spin" : undefined} />
+            </button>
+          </div>
+        </header>
 
         {loading && !sections.length ? (
-          <div className="ct-skel" aria-busy="true" aria-label={T.loading}>
-            <Skeleton
-              style={{ height: 96, borderRadius: "var(--am-radius-lg)" }}
-            />
-            <Skeleton
-              style={{ height: 96, borderRadius: "var(--am-radius-lg)" }}
-            />
+          <div className="cp-skel" aria-busy="true" aria-label={T.loading}>
+            <Skeleton style={{ height: 88, borderRadius: 16 }} />
+            <Skeleton style={{ height: 88, borderRadius: 16 }} />
             <SkeletonText lines={3} />
           </div>
-        ) : isEmpty ? (
-          <EmptyState
-            title={tab === "prescribed" ? T.emptyRxTitle : T.emptyTitle}
-            description={tab === "prescribed" ? T.emptyRxText : T.emptyText}
-            action={
-              <>
-                <Button variant="secondary" onClick={() => navigate("/search")}>
-                  {T.search}
-                </Button>
-                <Button variant="primary" onClick={() => navigate("/products")}>
-                  {T.shopProducts}
-                </Button>
-              </>
-            }
-          />
+        ) : isEmpty && !showTabs ? (
+          <div className="cp-empty">
+            <span className="cp-empty__icon" aria-hidden>
+              <ShoppingBag size={26} />
+            </span>
+            <h2>{tab === "prescribed" ? T.emptyRxTitle : T.emptyTitle}</h2>
+            <p>{tab === "prescribed" ? T.emptyRxText : T.emptyText}</p>
+            <div className="cp-empty__actions">
+              <button type="button" className="cp-btn cp-btn--ghost" onClick={() => navigate("/search")}>
+                {T.search}
+              </button>
+              <button type="button" className="cp-btn" onClick={() => navigate("/products")}>
+                {T.shopProducts}
+              </button>
+            </div>
+          </div>
         ) : (
-          <>
-            {outOfStockCount > 0 ? (
-              <p className="ct-banner" role="status">
-                {outOfStockCount === 1
-                  ? T.outOfStockBannerOne
-                  : T.outOfStockBannerMany(outOfStockCount)}
-              </p>
-            ) : null}
+          <div className="cp-layout">
+            <div className="cp-card cp-items">
+              <div className="cp-items__bar">
+                {showTabs ? (
+                  <Tabs
+                    className="cp-tabs"
+                    label={T.tabsLabel}
+                    value={tab}
+                    onChange={setTab}
+                    items={[
+                      { id: "cart", label: T.tabCart, count: cartCount || undefined },
+                      { id: "prescribed", label: T.tabPrescribed, count: prescribedCount || undefined },
+                    ]}
+                  />
+                ) : null}
+                {!isEmpty ? (
+                  <label className="cp-selectall">
+                    <input type="checkbox" className="cp-check" checked={allSelected} onChange={toggleAll} />
+                    {T.selectAll}
+                  </label>
+                ) : null}
+              </div>
 
-            <label className="ct-select-all">
-              <input
-                type="checkbox"
-                checked={
-                  visible
-                    .filter((i) => !i._isOutOfStock)
-                    .every((i) => selected.includes(i.id)) &&
-                  visible.some((i) => !i._isOutOfStock)
-                }
-                onChange={toggleAll}
-              />
-              {T.selectAll}
-            </label>
+              {outOfStockCount > 0 ? (
+                <p className="cp-notice" role="status">
+                  {outOfStockCount === 1
+                    ? T.outOfStockBannerOne
+                    : T.outOfStockBannerMany(outOfStockCount)}
+                </p>
+              ) : null}
 
-            <div className="ct-list">
-              {tab === "prescribed"
-                ? rxGroups.map((group) => {
-                    const meta = group.meta || {};
-                    const tone = rxTone(meta);
-                    const groupIds = group.items
-                      .filter((line) => !line._isOutOfStock)
-                      .map((line) => line.id);
-                    const groupSelected =
-                      groupIds.length > 0 &&
-                      groupIds.every((id) => selected.includes(id));
-                    return (
-                      <div
-                        key={meta.id || group.items[0]?.rx_group_id}
-                        className="ct-rx-group"
-                      >
-                        <header className="ct-rx-group__head">
-                          <label className="ct-rx-group__label">
-                            <input
-                              type="checkbox"
-                              checked={groupSelected}
-                              disabled={!groupIds.length}
-                              onChange={() => {
-                                setSelected((prev) =>
-                                  groupSelected
-                                    ? prev.filter(
-                                        (id) => !groupIds.includes(id),
-                                      )
-                                    : [...new Set([...prev, ...groupIds])],
-                                );
-                              }}
-                            />
-                            <div>
-                              <p className="ct-rx-group__kicker">
-                                {T.doctorRx}
-                              </p>
-                              <p className="ct-rx-group__name">
-                                {meta.doctor_name ||
-                                  group.items[0]?.doctorName ||
-                                  "Doctor"}
-                              </p>
-                              <p className="ct-rx-group__meta">
-                                {[
-                                  meta.patient_name,
-                                  formatRxDate(
-                                    meta.created_at ||
-                                      group.items[0]?.rx_created_at,
-                                  ),
-                                  T.itemsCount(group.items.length),
-                                ]
-                                  .filter(Boolean)
-                                  .join(" · ")}
-                              </p>
-                            </div>
-                          </label>
-                          <Badge tone={tone.tone}>{tone.label}</Badge>
-                        </header>
-                        {group.items.map(renderLine)}
-                      </div>
-                    );
-                  })
-                : visible.map(renderLine)}
+              {isEmpty ? (
+                <div className="cp-empty cp-empty--inline">
+                  <h2>{tab === "prescribed" ? T.emptyRxTitle : T.emptyTitle}</h2>
+                  <p>{tab === "prescribed" ? T.emptyRxText : T.emptyText}</p>
+                </div>
+              ) : tab === "prescribed" ? (
+                rxGroups.map((group) => {
+                  const meta = group.meta || {};
+                  const tone = rxTone(meta);
+                  const groupIds = group.items
+                    .filter((line) => !line._isOutOfStock)
+                    .map((line) => line.id);
+                  const groupSelected =
+                    groupIds.length > 0 && groupIds.every((id) => selected.includes(id));
+                  return (
+                    <div key={meta.id || group.items[0]?.rx_group_id} className="cp-rx">
+                      <header className="cp-rx__head">
+                        <label className="cp-rx__label">
+                          <input
+                            type="checkbox"
+                            className="cp-check"
+                            checked={groupSelected}
+                            disabled={!groupIds.length}
+                            onChange={() => {
+                              setSelected((prev) =>
+                                groupSelected
+                                  ? prev.filter((id) => !groupIds.includes(id))
+                                  : [...new Set([...prev, ...groupIds])],
+                              );
+                            }}
+                          />
+                          <span className="cp-rx__copy">
+                            <span className="cp-rx__kicker">{T.doctorRx}</span>
+                            <strong>{meta.doctor_name || group.items[0]?.doctorName || "Doctor"}</strong>
+                            <span className="cp-rx__meta">
+                              {[
+                                meta.patient_name,
+                                formatRxDate(meta.created_at || group.items[0]?.rx_created_at),
+                                T.itemsCount(group.items.length),
+                              ]
+                                .filter(Boolean)
+                                .join(" · ")}
+                            </span>
+                          </span>
+                        </label>
+                        <Badge tone={tone.tone}>{tone.label}</Badge>
+                      </header>
+                      {group.items.map(renderLine)}
+                    </div>
+                  );
+                })
+              ) : (
+                visible.map(renderLine)
+              )}
             </div>
 
-            <div className="ct-sticky">
-              {showDetails ? (
-                <div className="ct-bill">
-                  <p className="ct-bill__row">
-                    <span>{T.itemTotal}</span>
-                    <strong>{formatRupee(subtotal)}</strong>
+            {!isEmpty ? (
+              <aside className="cp-card cp-summary" aria-label="Order summary">
+                <h2 className="cp-summary__title">
+                  Order summary
+                  <span>{T.itemsCount(selectedProducts.length)}</span>
+                </h2>
+                <dl className="cp-bill">
+                  <div>
+                    <dt>{T.itemTotal}</dt>
+                    <dd>{formatRupee(subtotal)}</dd>
+                  </div>
+                  <div>
+                    <dt>{T.delivery}</dt>
+                    <dd>{feeLoading ? "…" : fees && !shipping ? <span className="cp-free">Free</span> : formatRupee(shipping)}</dd>
+                  </div>
+                  <div>
+                    <dt>{T.gst}</dt>
+                    <dd>{feeLoading ? "…" : formatRupee(gst)}</dd>
+                  </div>
+                  <div>
+                    <dt>{T.platformFee}</dt>
+                    <dd>{feeLoading ? "…" : formatRupee(platform)}</dd>
+                  </div>
+                  <div className="cp-bill__total">
+                    <dt>{T.toPay}</dt>
+                    <dd>{totalLabel}</dd>
+                  </div>
+                </dl>
+                {mrpSavings > 0 ? (
+                  <p className="cp-savings">
+                    <BadgePercent size={15} aria-hidden />
+                    You save {formatRupee(Math.round(mrpSavings))} on MRP
                   </p>
-                  <p className="ct-bill__row">
-                    <span>{T.delivery}</span>
-                    <strong>{feeLoading ? "…" : formatRupee(shipping)}</strong>
-                  </p>
-                  <p className="ct-bill__row">
-                    <span>{T.gst}</span>
-                    <strong>{feeLoading ? "…" : formatRupee(gst)}</strong>
-                  </p>
-                  <p className="ct-bill__row">
-                    <span>{T.platformFee}</span>
-                    <strong>{feeLoading ? "…" : formatRupee(platform)}</strong>
-                  </p>
-                </div>
-              ) : null}
-              <div className="ct-sticky__row">
-                <div className="ct-sticky__meta">
-                  <small>{T.toPay}</small>
-                  <strong>{feeLoading ? "…" : formatRupee(payable)}</strong>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowDetails((open) => !open)}
-                >
-                  {showDetails ? T.hideBill : T.viewBill}
-                </Button>
-                <Button
-                  variant="primary"
+                ) : null}
+                <button
+                  type="button"
+                  className="cp-btn cp-btn--checkout"
                   disabled={!selectedProducts.length}
                   onClick={goCheckout}
                 >
                   {T.checkout}
-                  {selectedProducts.length
-                    ? ` (${selectedProducts.length})`
-                    : ""}
-                </Button>
-              </div>
-            </div>
-
-            <Disclaimer />
-          </>
+                  {selectedProducts.length ? ` (${selectedProducts.length})` : ""}
+                  <ArrowRight size={16} aria-hidden />
+                </button>
+                <Disclaimer />
+              </aside>
+            ) : null}
+          </div>
         )}
+
+        {!isEmpty ? (
+          <div className="cp-bar">
+            <div className="cp-bar__meta">
+              <small>{T.toPay}</small>
+              <strong>{totalLabel}</strong>
+              {mrpSavings > 0 ? <span>Saving {formatRupee(Math.round(mrpSavings))}</span> : null}
+            </div>
+            <button
+              type="button"
+              className="cp-btn cp-btn--checkout"
+              disabled={!selectedProducts.length}
+              onClick={goCheckout}
+            >
+              {T.checkout}
+              {selectedProducts.length ? ` (${selectedProducts.length})` : ""}
+              <ArrowRight size={16} aria-hidden />
+            </button>
+          </div>
+        ) : null}
       </section>
 
       <Modal

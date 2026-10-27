@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, RefreshCw, SearchX, SlidersHorizontal, X } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import DoctorListCard from '../components/DoctorListCard';
 import { getDoctors } from '../services/consultService';
+import { invalidateApiCache } from '../services/apiClient';
 import { getHealthCategories } from '../services/productService';
 import { mapProductCategory, normalizeApiList } from '../home/catalog';
 import { getDoctorId, listDoctors } from '../consult/doctors';
@@ -189,10 +190,16 @@ export default function Doctors() {
     [submitted, experience, specialization, categoryId, diseaseId, dates.from, dates.to],
   );
 
+  // Only the newest filter/search request may write the list (typing, filter chips, refresh).
+  const doctorsRequestRef = useRef(0);
   const loadDoctors = async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
-    else setLoading(true);
+    const requestId = ++doctorsRequestRef.current;
+    if (isRefresh) {
+      setRefreshing(true);
+      invalidateApiCache('customers/doctors/');
+    } else setLoading(true);
     const res = await getDoctors(filters);
+    if (requestId !== doctorsRequestRef.current) return;
     setFailed(res?.success === false);
     setDoctors(listDoctors(res));
     setLoading(false);

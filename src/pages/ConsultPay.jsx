@@ -45,22 +45,9 @@ import {
   StepIndicator,
 } from "../components/ui";
 import { BOOKING_COPY as T } from "../content/booking";
-import { extractRazorpayCheckout } from "../payment/razorpay";
+import { loadRazorpay, normalizeRazorpayContact } from "../payment/razorpay";
 import { nameInitial } from '../utils/initials';
 import "../design/pages/booking.css";
-
-const loadRazorpay = () =>
-  new Promise((resolve, reject) => {
-    if (window.Razorpay) {
-      resolve(window.Razorpay);
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.onload = () => resolve(window.Razorpay);
-    script.onerror = () => reject(new Error("Unable to load Razorpay"));
-    document.body.appendChild(script);
-  });
 
 const isApiSuccess = (response) =>
   response?.success === true ||
@@ -320,43 +307,59 @@ export default function ConsultPay() {
         try {
           const retry = await retryConsultationPayment(appointmentId);
           if (isApiSuccess(retry) && retry?.data) {
-            payment = { ...payment, ...retry.data };
+            payment = {
+              ...payment,
+              ...retry.data,
+              summary: retry.data?.summary ?? payment?.summary,
+              configurations: retry.data?.configurations ?? payment?.configurations,
+            };
           }
         } catch {
           // keep original payload
         }
       }
       const payable = consultPayableRupees(payment, feeBreakdown.total);
-      // Look for key / order id anywhere in the response (nested shapes too);
-      // falls back to VITE_RAZORPAY_KEY_ID for the key.
-      // Use the merged payload (retry may issue a fresh order), like the app.
-      const { key, orderId } = extractRazorpayCheckout(payment);
       const amount = toRazorpayPaise(
         payment.amount ?? payment?.summary?.total_payable_amount,
         payable,
       );
-      if (!key || !orderId) {
-        // Like the app: never confirm without Razorpay + verify-payment.
-        showSuccessToast(
-          "Payment gateway could not be started (missing Razorpay order). Please try again.",
-          "error",
-        );
+      const key = String(payment?.razorpay_key || "").trim();
+      const orderId = String(payment?.razorpay_order_id || "").trim();
+      if (!key) {
+        showSuccessToast("Payment key missing from order response", "error");
+        return;
+      }
+      if (!orderId) {
+        showSuccessToast("Razorpay order id missing from order response", "error");
+        return;
+      }
+      if (!Number.isFinite(amount) || amount <= 0) {
+        showSuccessToast("Invalid payment amount", "error");
         return;
       }
       const Razorpay = await loadRazorpay();
       await new Promise((resolve) => {
+        let settled = false;
+        const done = () => {
+          if (settled) return;
+          settled = true;
+          resolve();
+        };
         const rzp = new Razorpay({
           key,
           amount,
           currency: payment.currency || "INR",
-          name: "Ayurmuni",
-          description: `Consult ${doctorDisplayName(doctor)}`,
+          name: doctor.full_name || doctorDisplayName(doctor) || "AyurMuni",
+          description: "Consultation payment",
           order_id: orderId,
           prefill: {
-            name: patientName(activePatient),
-            contact: String(
-              activePatient?.phone_number || activePatient?.phone || "",
-            ).replace(/\D/g, ""),
+            name: doctor.full_name || doctorDisplayName(doctor) || "AyurMuni",
+            email: doctor.email || "customer@ayurmuni.com",
+            contact: normalizeRazorpayContact(
+              activePatient?.phone_number ||
+                activePatient?.phone ||
+                doctor?.phone_number,
+            ),
           },
           theme: { color: "#0D614E" },
           handler: async (response) => {
@@ -364,7 +367,7 @@ export default function ConsultPay() {
             try {
               const verify = await verifyConsultationPayment({
                 payment_id: payment.payment_id,
-                razorpay_order_id: response.razorpay_order_id,
+                razorpay_order_id: orderId,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
               });
@@ -374,28 +377,31 @@ export default function ConsultPay() {
                   "error",
                 );
               } else {
-                finish(verify?.data ? verify : paymentResponse);
+                finish(verify);
               }
             } finally {
               setVerifying(false);
-              resolve();
+              done();
             }
           },
           modal: {
             ondismiss: () => {
+              if (settled) return;
               showSuccessToast(
                 "Payment cancelled. You can try again anytime.",
                 "error",
               );
-              resolve();
+              done();
             },
           },
         });
         rzp.on?.("payment.failed", (resp) => {
+          if (settled) return;
           showSuccessToast(
             resp?.error?.description || "Payment failed. Please try again.",
             "error",
           );
+          done();
         });
         rzp.open();
       });

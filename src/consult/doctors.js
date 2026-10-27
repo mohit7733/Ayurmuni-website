@@ -1,3 +1,4 @@
+import { calculateFeeBreakdown, parseFeeQuoteConfig } from '../cart/feeQuote';
 import { doctorDisplayName, doctorFeeLabel, formatRupee, resolveImageUrl } from '../home/catalog';
 
 export const CONSULT_BOOKING_KEY = 'ayurmuni_consult_booking';
@@ -72,21 +73,35 @@ export const parseDoctor = (response) => {
   return null;
 };
 
+/** Book-slot may omit data.amount. Same order as the app's RazorpayScreen. */
 export const consultPayableRupees = (data, fallback = 0) => {
   const summary = data?.summary ?? {};
-  const candidates = [
+  const direct = [
+    data?.amount,
     data?.total_payable_amount,
     summary?.total_payable_amount,
     summary?.payable_amount,
     summary?.amount,
-    data?.amount,
-    fallback,
   ];
-  for (const value of candidates) {
+  for (const value of direct) {
     const n = Number(value);
     if (Number.isFinite(n) && n > 0) return n;
   }
-  return 0;
+
+  const parsed = parseFeeQuoteConfig(data, fallback);
+  if (parsed) {
+    const breakdown = calculateFeeBreakdown({
+      baseAmount: parsed.baseAmount,
+      discount: parsed.couponDiscount ?? 0,
+      gst: parsed.gst,
+      platformFee: parsed.platformFee,
+      includeShipping: false,
+      includeCod: false,
+    });
+    if (breakdown.total > 0) return breakdown.total;
+  }
+
+  return fallback > 0 ? fallback : 0;
 };
 
 export const toRazorpayPaise = (apiAmount, fallbackRupees) => {

@@ -11,6 +11,7 @@ import ToastHost from "./components/ToastHost";
 import { Utils } from "./common/utils";
 import { getAccessLevel } from "./services/guestAuth";
 import { syncPushForSession } from "./services/pushNotificationService";
+import { runWhenIdle } from "./hooks/useLazySection";
 import Splash from "./pages/Splash";
 import Welcome from "./pages/Welcome";
 import Login from "./pages/Login";
@@ -42,6 +43,7 @@ const Products = loadPage(() => import("./pages/Products"));
 const CategoryProducts = loadPage(() => import("./pages/CategoryProducts"));
 const TopCategories = loadPage(() => import("./pages/TopCategories"));
 const ProductDetails = loadPage(() => import("./pages/ProductDetails"));
+const MedicineDetails = loadPage(() => import("./pages/MedicineDetails"));
 const ProductSearch = loadPage(() => import("./pages/ProductSearch"));
 const ReviewPage = loadPage(() => import("./pages/ReviewPage"));
 const ReviewGallery = loadPage(() => import("./pages/ReviewGallery"));
@@ -186,7 +188,10 @@ function PushSessionSync() {
       const userId = await Utils.getData('_USER_ID');
       const info = await Utils.getData('_USER_INFO');
       if (!userId || info?.is_notification_enabled === false) return;
-      syncPushForSession(userId);
+      // OneSignal is non-critical: init after first paint / idle.
+      runWhenIdle(() => {
+        if (alive) syncPushForSession(userId);
+      }, 4000);
     })();
     return () => {
       alive = false;
@@ -451,6 +456,10 @@ export default function App() {
                   <Route
                     path="/medicines/order-status"
                     element={<OrderStatus />}
+                  />
+                  <Route
+                    path="/medicines/:variantId"
+                    element={<MedicineDetails />}
                   />
                   <Route path="/yoga" element={<Yoga />} />
                   <Route path="/yoga/:sessionId" element={<YogaSession />} />

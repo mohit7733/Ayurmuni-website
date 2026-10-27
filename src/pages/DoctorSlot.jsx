@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import { getDoctorById } from '../services/consultService';
+import { invalidateApiCache } from '../services/apiClient';
 import {
   CONSULT_PAY_KEY,
   doctorConsultFee,
@@ -113,14 +114,20 @@ export default function DoctorSlot() {
     setRecords(listMedicalRecords(res));
   }, []);
 
+  const slotsRequestRef = useRef(0);
   const loadSlots = useCallback(
     async (date, isRefresh = false) => {
       if (!doctorId || !date) return;
-      if (isRefresh) setRefreshing(true);
-      else setLoading(true);
+      const requestId = ++slotsRequestRef.current;
+      if (isRefresh) {
+        setRefreshing(true);
+        invalidateApiCache('customers/doctors/');
+      } else setLoading(true);
       setSelectedSlot(null);
       try {
         const res = await getDoctorById(doctorId, { date });
+        // Switching dates quickly: an older date's slots must not replace the selected date's.
+        if (requestId !== slotsRequestRef.current) return;
         const data = res?.data ?? res;
         const list = (Array.isArray(data?.slots) ? data.slots : []).map((slot) => withSlotDate(slot, date));
         setSlots(list);
@@ -130,8 +137,10 @@ export default function DoctorSlot() {
           setDoctor((prev) => ({ ...(prev || {}), ...rest }));
         }
       } finally {
-        setLoading(false);
-        setRefreshing(false);
+        if (requestId === slotsRequestRef.current) {
+          setLoading(false);
+          setRefreshing(false);
+        }
       }
     },
     [doctorId],

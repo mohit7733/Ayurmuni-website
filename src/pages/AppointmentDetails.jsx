@@ -62,6 +62,7 @@ import { formatRupee } from '../home/catalog';
 import { showSuccessToast } from '../config/key';
 import { Utils } from '../common/utils';
 import { requireAuth } from '../services/guestAuth';
+import { invalidateApiCache } from '../services/apiClient';
 import {
   appointmentActionAPI,
   getAppointmentDetail,
@@ -179,6 +180,7 @@ export default function AppointmentDetails() {
   const onRefresh = async () => {
     setRefreshing(true);
     try {
+      invalidateApiCache('customers/patient/consultation/');
       await fetchDetail({ silent: true });
     } finally {
       setRefreshing(false);

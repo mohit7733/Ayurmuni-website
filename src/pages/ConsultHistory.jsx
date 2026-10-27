@@ -11,6 +11,7 @@ import { formatSlotTime } from '../consult/doctors';
 import { mapAppointment } from '../profile/map';
 import { requireAuth } from '../services/guestAuth';
 import { getConsultHistory } from '../services/consultService';
+import { invalidateApiCache } from '../services/apiClient';
 
 const TABS = [
   { key: 'all', label: 'All' },
@@ -144,7 +145,10 @@ export default function ConsultHistory() {
             <p>Track your medical journey</p>
           </div>
           <div className="catalog-head-actions">
-            <button type="button" disabled={loading} onClick={() => setReload((n) => n + 1)}>
+            <button type="button" disabled={loading} onClick={() => {
+                invalidateApiCache('customers/doctors/consultation-history/');
+                setReload((n) => n + 1);
+              }}>
               Refresh
             </button>
           </div>

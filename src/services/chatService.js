@@ -2,6 +2,7 @@ import { Utils } from '../common/utils';
 import { extractUploadUrl } from './prescriptionService';
 import { API_BASE } from '../chat/api';
 import { parseApiError } from '../chat/apiError';
+import { fetchWithTimeout } from './apiClient';
 
 const MESSAGE_KEYS = ['messages', 'results', 'items', 'message_list', 'history'];
 
@@ -83,7 +84,8 @@ export const chatService = {
       url += `?mark_read=${value}`;
     }
 
-    const response = await fetch(url, {
+    // Read-only poll: bounded by a timeout so a hung request cannot stall the inbox pool.
+    const response = await fetchWithTimeout(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

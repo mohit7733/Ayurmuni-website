@@ -459,7 +459,7 @@ export default function Medicines() {
                     <ul className="svc-catalog">
                       {filteredProducts.map((item) => (
                         <li key={item.variant_id || item.id}>
-                          <ProductCard item={item} />
+                          <ProductCard item={item} detailBase="/medicines" />
                         </li>
                       ))}
                     </ul>
@@ -496,7 +496,7 @@ export default function Medicines() {
                                 season: item.lastOrdered ? `Ordered ${item.lastOrdered}` : 'Recent order',
                                 prakriti: formatRupee(item.price, { decimals: 0 }),
                               }}
-                              onClick={() => item.variantId && navigate(`/products/${item.variantId}`)}
+                              onClick={() => item.variantId && navigate(`/medicines/${item.variantId}`)}
                             />
                           </RailItem>
                         ))}

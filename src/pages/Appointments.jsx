@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import PageHeader from "../components/PageHeader";
@@ -16,6 +16,7 @@ import { showSuccessToast } from "../config/key";
 import { mapAppointment } from "../profile/map";
 import { requireAuth } from "../services/guestAuth";
 import { getConsultHistory } from "../services/consultService";
+import { invalidateApiCache } from "../services/apiClient";
 import { consultationHasPrescription } from "../utils/prescriptionDetailUtils";
 import "../design/pages/appointments.css";
 
@@ -153,9 +154,13 @@ export default function Appointments() {
     return filters;
   }, [listScope, statusFilter, followUpFilter]);
 
+  // Tab / filter switches and refresh race: only the newest list request may write state.
+  const listRequestRef = useRef(0);
   const loadPage = useCallback(
     async (pageNo, mode = "replace") => {
       if (!(await requireAuth("Please login to view appointments"))) return;
+      const requestId = ++listRequestRef.current;
+      if (mode === "refresh") invalidateApiCache("customers/doctors/consultation-history/");
       if (mode === "append") setLoadingMore(true);
       else if (mode === "refresh") setRefreshing(true);
       else setLoading(true);
@@ -165,15 +170,18 @@ export default function Appointments() {
           page_size: PAGE_SIZE,
           ...apiFilters,
         });
+        if (requestId !== listRequestRef.current) return;
         const list = res?.data?.results || res?.results || [];
         const mapped = Array.isArray(list) ? list.map(mapAppointment) : [];
         setItems((prev) => (mode === "append" ? [...prev, ...mapped] : mapped));
         setPage(pageNo);
         setHasMore(Boolean(res?.data?.next) || mapped.length >= PAGE_SIZE);
       } finally {
-        setLoading(false);
-        setLoadingMore(false);
-        setRefreshing(false);
+        if (requestId === listRequestRef.current) {
+          setLoading(false);
+          setLoadingMore(false);
+          setRefreshing(false);
+        }
       }
     },
     [apiFilters],

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getBrands, listBrands, mapBrandItem } from '../services/medicineService';
 
-export default function useBrands() {
+export default function useBrands(enabled = true) {
   const [brands, setBrands] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -21,8 +21,9 @@ export default function useBrands() {
   }, []);
 
   useEffect(() => {
+    if (!enabled) return;
     fetchBrands();
-  }, [fetchBrands]);
+  }, [enabled, fetchBrands]);
 
   return { brands, loading, refresh: fetchBrands };
 }

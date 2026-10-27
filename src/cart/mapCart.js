@@ -189,18 +189,25 @@ const getResponseMessage = (response) =>
   ).toLowerCase();
 
 const hasOrderEntity = (response) => {
-  const data = response?.data ?? {};
-  const order = data.order ?? data;
+  const data = response?.data;
+  const order = data?.order ?? data;
   return Boolean(
     order?.id ||
       order?.order_id ||
       order?.order_number ||
       order?.order_code ||
-      response?.order?.id,
+      data?.order_id ||
+      data?.order_number ||
+      data?.order_code ||
+      response?.order_id ||
+      response?.order_code,
   );
 };
 
 const isFulfillmentNoise = (msg) =>
+  msg.includes('out of stock') ||
+  msg.includes('sku') ||
+  msg.includes('insufficient') ||
   msg.includes('unicommerce') ||
   msg.includes('uni-commerce') ||
   msg.includes('fulfillment') ||
@@ -249,6 +256,17 @@ export const isOrderSuccessful = (response) => {
   }
   return false;
 };
+
+export const getVerifiedOrderResult = (response) =>
+  response?.data?.order ??
+  (response?.data?.id ||
+  response?.data?.order_code ||
+  response?.data?.order_number ||
+  response?.data?.order_id
+    ? response.data
+    : null) ??
+  response?.order ??
+  null;
 
 export const isPrepaidVerifyAcceptable = (response, razorpayResult) => {
   if (isOrderSuccessful(response)) return true;

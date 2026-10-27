@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation as useRouterLocation, useNavigate } from 'react-router-dom';
+import { AlertCircle, ArrowLeft, Hash, Loader2, LocateFixed, MapPin, RotateCw, Search } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import '../design/pages/location-picker.css';
 import InteractiveMapPicker from '../components/InteractiveMapPicker';
 import { useLocation } from '../context/LocationContext';
 import { showSuccessToast } from '../config/key';
@@ -12,6 +14,8 @@ import {
   getPlaceDetails,
   reverseGeocode,
   searchPlaces,
+  GEOCODE_UNAVAILABLE_MESSAGE,
+  isAbortError,
 } from '../services/locationService';
 
 export default function LocationPicker() {
@@ -37,6 +41,7 @@ export default function LocationPicker() {
   const [suggestions, setSuggestions] = useState([]);
   const [searching, setSearching] = useState(false);
   const [locationError, setLocationError] = useState('');
+  const [retryable, setRetryable] = useState(false);
   const [pincodeInput, setPincodeInput] = useState(
     String(currentAddress?.zipcode || deliveryLocation?.zipcode || '').replace(/[^0-9]/g, '').slice(0, 6),
   );
@@ -52,35 +57,76 @@ export default function LocationPicker() {
     }
   }, []);
 
+  const geocodeControllerRef = useRef(null);
+  const moveTimerRef = useRef(null);
+  const lastCoordsRef = useRef(null);
+
+  // Resolve an address for coords. A newer call aborts the older request, and
+  // aborts are never shown to the user.
   const updateLocation = useCallback(
     async (coords) => {
+      clearTimeout(moveTimerRef.current);
+      geocodeControllerRef.current?.abort();
+      const controller = new AbortController();
+      geocodeControllerRef.current = controller;
+      lastCoordsRef.current = coords;
       setGeocoding(true);
       setLocationError('');
+      setRetryable(false);
       try {
-        const parsed = await reverseGeocode(coords);
-        const enriched = await enrichAddressWithPincode(parsed);
+        const parsed = await reverseGeocode(coords, { signal: controller.signal });
+        // Reverse geocoding already returns a postcode; only fall back to a pincode lookup when missing.
+        const enriched = parsed.zipcode ? parsed : await enrichAddressWithPincode(parsed);
+        if (controller.signal.aborted) return;
         applyParsedAddress(enriched);
       } catch (error) {
+        if (controller.signal.aborted || isAbortError(error)) return;
         setMarker(coords);
-        setLocationError(error?.message || 'Could not fetch address. Try search or enter a pincode.');
+        setLocationError(GEOCODE_UNAVAILABLE_MESSAGE);
+        setRetryable(true);
       } finally {
-        setGeocoding(false);
+        if (geocodeControllerRef.current === controller) setGeocoding(false);
       }
     },
     [applyParsedAddress],
   );
 
+  // Map moves are debounced (~600ms) so dragging doesn't hammer the geocoder.
+  const handleMapMove = useCallback(
+    (coords) => {
+      clearTimeout(moveTimerRef.current);
+      moveTimerRef.current = setTimeout(() => updateLocation(coords), 600);
+    },
+    [updateLocation],
+  );
+
+  useEffect(
+    () => () => {
+      clearTimeout(moveTimerRef.current);
+      geocodeControllerRef.current?.abort();
+    },
+    [],
+  );
+
+  const retryGeocode = () => {
+    if (lastCoordsRef.current) updateLocation(lastCoordsRef.current);
+  };
+
   const loadCurrentLocation = useCallback(async () => {
     setLoading(true);
     setLocationError('');
+    setRetryable(false);
+    let coords;
     try {
-      const coords = await getCurrentPosition();
-      await updateLocation(coords);
-    } catch {
-      setLocationError('Location unavailable. Search, enter a pincode, or move the map.');
-    } finally {
+      coords = await getCurrentPosition();
+    } catch (error) {
+      setLocationError(error?.message || 'Location unavailable. Search, enter a pincode, or move the map.');
       setLoading(false);
+      return;
     }
+    setMarker(coords);
+    setLoading(false);
+    await updateLocation(coords);
   }, [updateLocation]);
 
   useEffect(() => {
@@ -96,17 +142,23 @@ export default function LocationPicker() {
       setSuggestions([]);
       return undefined;
     }
+    // Debounced; a newer query aborts the older lookup so its results never replace newer ones.
+    const controller = new AbortController();
     const timer = setTimeout(async () => {
       setSearching(true);
       try {
-        setSuggestions(await searchPlaces(q));
+        const places = await searchPlaces(q, { signal: controller.signal });
+        if (!controller.signal.aborted) setSuggestions(places);
       } catch {
-        setSuggestions([]);
+        if (!controller.signal.aborted) setSuggestions([]);
       } finally {
-        setSearching(false);
+        if (!controller.signal.aborted) setSearching(false);
       }
     }, 400);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
   }, [searchQuery]);
 
   useEffect(() => {
@@ -193,52 +245,57 @@ export default function LocationPicker() {
 
   return (
     <AppShell tab="home">
-      <section className="catalog-page loc-page">
-        <header className="catalog-head">
-          <button type="button" className="text-back" onClick={() => navigate(-1)}>
-            ← Back
+      <section className="catalog-page loc-page loc-premium">
+        <header className="locp-head">
+          <button type="button" className="locp-back" onClick={() => navigate(-1)} aria-label="Back">
+            <ArrowLeft size={18} aria-hidden />
           </button>
           <div>
-            <h1>Pin Your Location</h1>
-            <p>Enter a pincode or move the map</p>
+            <h1>Pin your location</h1>
+            <p>Search, enter a pincode or move the map</p>
           </div>
         </header>
 
-        <label className="loc-search">
-          <span>⌕</span>
-          <input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search area, street, landmark..."
-          />
-          {searching ? <em>…</em> : null}
-        </label>
+        <div className="locp-fields">
+          <label className="locp-field">
+            <Search size={16} aria-hidden />
+            <input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search area, street, landmark..."
+              aria-label="Search location"
+            />
+            {searching ? <Loader2 size={16} className="locp-spin" aria-hidden /> : null}
+          </label>
 
-        <label className="loc-search">
-          <span>📍</span>
-          <input
-            value={pincodeInput}
-            onChange={(e) => {
-              const cleaned = e.target.value.replace(/[^0-9]/g, '').slice(0, 6);
-              if (cleaned !== pincodeInput) lastPincodeLookupRef.current = '';
-              setPincodeInput(cleaned);
-            }}
-            placeholder="Enter 6-digit pincode"
-            inputMode="numeric"
-            maxLength={6}
-          />
-          {pincodeLoading ? <em>…</em> : null}
-        </label>
+          <label className="locp-field locp-field--pin">
+            <Hash size={16} aria-hidden />
+            <input
+              value={pincodeInput}
+              onChange={(e) => {
+                const cleaned = e.target.value.replace(/[^0-9]/g, '').slice(0, 6);
+                if (cleaned !== pincodeInput) lastPincodeLookupRef.current = '';
+                setPincodeInput(cleaned);
+              }}
+              placeholder="Pincode"
+              inputMode="numeric"
+              maxLength={6}
+              aria-label="Pincode"
+            />
+            {pincodeLoading ? <Loader2 size={16} className="locp-spin" aria-hidden /> : null}
+          </label>
+        </div>
 
         {suggestions.length > 0 ? (
-          <div className="privacy-card loc-suggestions">
+          <div className="locp-suggestions" role="listbox">
             {suggestions.map((item) => (
               <button
                 key={item.place_id}
                 type="button"
-                className="privacy-row"
+                className="locp-suggestion"
                 onClick={() => handleSelectSuggestion(item)}
               >
+                <MapPin size={16} aria-hidden />
                 <span>
                   <strong>{item.main_text}</strong>
                   {item.secondary_text ? <small>{item.secondary_text}</small> : null}
@@ -248,41 +305,64 @@ export default function LocationPicker() {
           </div>
         ) : null}
 
-        <InteractiveMapPicker center={marker} onCenterChange={updateLocation} loading={loading} />
+        <InteractiveMapPicker center={marker} onCenterChange={handleMapMove} loading={loading}>
+          <span className="locp-chip">Move the map · pin stays at centre</span>
+          <button
+            type="button"
+            className="locp-gps"
+            onClick={loadCurrentLocation}
+            disabled={loading}
+          >
+            <LocateFixed size={16} aria-hidden />
+            {loading ? 'Locating…' : 'Use my current location'}
+          </button>
+        </InteractiveMapPicker>
 
-        <button
-          type="button"
-          className="ghost loc-gps"
-          onClick={loadCurrentLocation}
-          disabled={loading}
-        >
-          Use my current location
-        </button>
-        <p className="loc-hint">Move the map — pin stays at center</p>
-        {locationError ? <p className="loc-error">{locationError}</p> : null}
+        {locationError ? (
+          <div className="locp-alert" role="alert">
+            <AlertCircle size={16} aria-hidden />
+            <span>{locationError}</span>
+            {retryable ? (
+              <button type="button" onClick={retryGeocode} disabled={geocoding}>
+                <RotateCw size={14} aria-hidden />
+                Retry
+              </button>
+            ) : null}
+          </div>
+        ) : null}
 
-        <div className="loc-address">
-          {geocoding ? (
-            <p className="muted">Fetching address…</p>
-          ) : (
-            <>
-              <strong>{address?.formatted_address || 'Move map, search, or enter pincode'}</strong>
-              {address?.city ? (
-                <small>
-                  {[address.city, address.state, address.zipcode].filter(Boolean).join(', ')}
-                </small>
-              ) : null}
-            </>
-          )}
+        <div className="locp-address">
+          <span className="locp-address__icon" aria-hidden>
+            <MapPin size={18} />
+          </span>
+          <div className="locp-address__text">
+            <small className="locp-address__eyebrow">Delivering to</small>
+            {geocoding ? (
+              <p className="locp-address__muted">Fetching address…</p>
+            ) : (
+              <>
+                <strong>
+                  {address?.address_line_1 || address?.formatted_address || 'Move map, search, or enter pincode'}
+                </strong>
+                {address ? (
+                  <p className="locp-address__muted">
+                    {[address.address_line_2, address.city, address.state, address.zipcode]
+                      .filter(Boolean)
+                      .join(', ') || address.formatted_address}
+                  </p>
+                ) : null}
+              </>
+            )}
+          </div>
         </div>
 
         <button
           type="button"
-          className="cta"
+          className="locp-cta"
           disabled={!address || geocoding}
           onClick={handleContinue}
         >
-          Continue
+          Confirm location
         </button>
       </section>
     </AppShell>

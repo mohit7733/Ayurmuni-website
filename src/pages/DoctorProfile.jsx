@@ -34,6 +34,7 @@ import { formatRupee } from '../home/catalog';
 import { getDoctorById, toggleFavDoctor } from '../services/consultService';
 import { getReviews } from '../services/productService';
 import { requireAuth } from '../services/guestAuth';
+import { invalidateApiCache } from '../services/apiClient';
 import { showSuccessToast } from '../config/key';
 import { formatDoctorDisplayName } from '../consult/appointmentUtils';
 import {
@@ -117,8 +118,10 @@ export default function DoctorProfile() {
   const load = useCallback(
     async (isRefresh = false) => {
       if (!doctorId) return;
-      if (isRefresh) setRefreshing(true);
-      else if (!seeded) setLoading(true);
+      if (isRefresh) {
+        setRefreshing(true);
+        invalidateApiCache(['customers/doctors/', 'review/']);
+      } else if (!seeded) setLoading(true);
       try {
         const [docRes, reviewRes] = await Promise.all([
           getDoctorById(doctorId),

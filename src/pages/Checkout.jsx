@@ -11,6 +11,7 @@ import {
   CHECKOUT_KEY,
   ORDER_RESULT_KEY,
   formatAddress,
+  getVerifiedOrderResult,
   isCodAvailableForItems,
   isOrderSuccessful,
   isPrepaidVerifyAcceptable,
@@ -31,18 +32,14 @@ import { requireAuth } from '../services/guestAuth';
 import { Badge, Button, Disclaimer, EmptyState } from '../components/ui';
 import { CHECKOUT_COPY as T } from '../content/checkout';
 import '../design/pages/checkout.css';
-import { extractRazorpayCheckout, loadRazorpay, preloadRazorpay } from '../payment/razorpay';
-
-const pickPaymentData = (orderResponse) => {
-  const data = orderResponse?.data && typeof orderResponse.data === 'object' ? orderResponse.data : {};
-  const nested = data.payment || orderResponse?.payment || data.order?.payment || {};
-  return {
-    ...orderResponse,
-    ...data,
-    ...(data.order && typeof data.order === 'object' ? data.order : {}),
-    ...nested,
-  };
-};
+import {
+  loadRazorpay,
+  normalizeRazorpayContact,
+  pickPaymentData,
+  pickRazorpayKey,
+  pickRazorpayOrderId,
+  preloadRazorpay,
+} from '../payment/razorpay';
 
 const isCouponOrderError = (message) => {
   const msg = String(message || '').toLowerCase();
@@ -318,6 +315,14 @@ export default function Checkout() {
       showSuccessToast('Please add a delivery address before checkout', 'error');
       return;
     }
+    if (!items.length) {
+      showSuccessToast('Cart is empty', 'error');
+      return;
+    }
+    if (items.some((item) => !(item.cart_item_id ?? item.id))) {
+      showSuccessToast('Cart item id missing. Please refresh cart.', 'error');
+      return;
+    }
     setPlacing(true);
     setOrderError('');
     try {
@@ -333,8 +338,8 @@ export default function Checkout() {
           coupon_code: appliedCoupon?.code,
         }),
       );
-      // Same as the app: prepaid place-order must return success: true.
-      if (!isOrderSuccessful(result) || result?.success === false || !(result?.success === true || result?.success === "true" || result?.success === 1)) {
+      // success: true with "Complete payment to confirm order" is a created Razorpay order.
+      if (!result?.success) {
         const failMsg = failMessage(result, 'Order failed');
         if (handleCouponFailure(failMsg)) return;
         setOrderError(failMsg);
@@ -342,25 +347,14 @@ export default function Checkout() {
         return;
       }
       const payment = pickPaymentData(result);
-      const { key, orderId } = extractRazorpayCheckout(result);
+      const key = pickRazorpayKey(payment);
+      const orderId = pickRazorpayOrderId(payment);
       if (!key || !orderId) {
-        if (import.meta.env.DEV) {
-          console.warn('[checkout] prepaid order response has no Razorpay key/order id', {
-            hasKey: Boolean(key),
-            hasOrderId: Boolean(orderId),
-            keys: Object.keys(payment || {}),
-          });
-        }
-        const failMsg = !key
-          ? 'Online payment is not configured right now. Please choose Cash on Delivery or contact support.'
-          : 'We could not start the payment for this order. Please check My Orders before trying again.';
+        const failMsg = 'Payment gateway not ready. Please try again.';
         setOrderError(failMsg);
         showSuccessToast(failMsg, 'error');
         return;
       }
-      const contactDigits = String(
-        customer?.phone_number ?? customer?.mobile ?? selectedAddress?.phone_number ?? selectedAddress?.phone ?? '',
-      ).replace(/\D/g, '');
       const customerName = String(
         customer?.first_name ?? customer?.full_name ?? selectedAddress?.full_name ?? selectedAddress?.name ?? 'AyurMuni Customer',
       );
@@ -384,7 +378,9 @@ export default function Checkout() {
           prefill: {
             name: customerName,
             email: customerEmail,
-            contact: contactDigits ? `91${contactDigits.slice(-10)}` : '919999999999',
+            contact: normalizeRazorpayContact(
+              customer?.phone_number ?? customer?.mobile ?? selectedAddress?.phone_number ?? selectedAddress?.phone,
+            ),
           },
           theme: { color: '#0D614E' },
           handler: async (response) => {
@@ -392,15 +388,22 @@ export default function Checkout() {
             try {
               const verify = await verifyOrderPayment({
                 payment_id: payment?.payment_id,
-                razorpay_order_id: response.razorpay_order_id || orderId,
+                razorpay_order_id: orderId,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
               });
               if (isPrepaidVerifyAcceptable(verify, response)) {
                 showSuccessToast('Payment Successful', 'success');
-                await finishOrder(verify?.data ? verify : result);
+                await finishOrder(
+                  getVerifiedOrderResult(verify) ?? {
+                    ...payment,
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    payment_status: 'paid',
+                  },
+                );
               } else {
-                const failMsg = failMessage(verify, 'Payment verification failed');
+                const failMsg =
+                  failMessage(verify, 'Payment verification failed. Some items may be out of stock.');
                 setOrderError(failMsg);
                 showSuccessToast(failMsg, 'error');
               }
@@ -425,7 +428,7 @@ export default function Checkout() {
         rzp.open();
       });
     } catch (error) {
-      const failMsg = formatOrderStockError(error?.message) || error?.message || 'Unable to start payment';
+      const failMsg = formatOrderStockError(error?.message) || error?.message || 'Something went wrong. Please try again.';
       if (handleCouponFailure(failMsg)) return;
       setOrderError(failMsg);
       showSuccessToast(failMsg, 'error');
@@ -435,6 +438,10 @@ export default function Checkout() {
   };
 
   const place = () => {
+    if (!feeConfig) {
+      showSuccessToast(feeError || 'Unable to load order fees. Please try again.', 'error');
+      return;
+    }
     if (!selectedAddress?.id) {
       showSuccessToast('Please add a delivery address before checkout', 'error');
       return;

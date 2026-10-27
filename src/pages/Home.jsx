@@ -31,6 +31,7 @@ import {
   resolveServiceCategoryKey,
 } from '../home/serviceCategories';
 import useHomeData from '../hooks/useHomeData';
+import { useLazySection, useSectionQueue } from '../hooks/useLazySection';
 import { getDoctors } from '../services/consultService';
 import { isAuthenticated, requireAuth } from '../services/guestAuth';
 import {
@@ -245,22 +246,29 @@ const OUR_DOCTORS_LIMIT = 10;
 /** "Our doctors" rail — customers/doctors/ (needs a token; shown for guests and full users, hidden when logged out, empty or failed (401/403)). */
 function useOurDoctors(enabled) {
   const [items, setItems] = useState([]);
+  const [done, setDone] = useState(false);
   useEffect(() => {
     if (!enabled) return undefined;
     let alive = true;
     (async () => {
-      // Guests are OTP-verified and hold a token; only logged-out visitors skip the call.
-      if (!(await isAuthenticated())) return;
-      const res = await getDoctors({ page: 1, page_size: OUR_DOCTORS_LIMIT });
-      if (!alive || !res || res.success === false) return;
-      const list = normalizeDoctorList(res, { approvedOnly: true }).filter((d) => getDoctorId(d));
-      setItems(list.slice(0, OUR_DOCTORS_LIMIT));
+      try {
+        // Guests are OTP-verified and hold a token; only logged-out visitors skip the call.
+        if (!(await isAuthenticated())) return;
+        const res = await getDoctors({ page: 1, page_size: OUR_DOCTORS_LIMIT });
+        if (!alive || !res || res.success === false) return;
+        const list = normalizeDoctorList(res, { approvedOnly: true }).filter((d) => getDoctorId(d));
+        setItems(list.slice(0, OUR_DOCTORS_LIMIT));
+      } catch {
+        // section stays hidden
+      } finally {
+        if (alive) setDone(true);
+      }
     })();
     return () => {
       alive = false;
     };
   }, [enabled]);
-  return items;
+  return [items, done];
 }
 
 /** Explicit approval flag from the API (not the permissive list filter default). */
@@ -407,6 +415,39 @@ function DoctorRailHeader({ id, eyebrow, title, description, onViewAll, reserveE
   );
 }
 
+/** Below-the-fold wrapper: a fixed-height placeholder until its data has loaded, then it
+ *  disappears from layout (display: contents) so the section renders exactly as before. */
+/** Home sections in visual order; each starts after the previous one finishes (or times out). */
+const HOME_SECTION_ORDER = [
+  'critical', // profile + service categories (hero, services row)
+  'pair', // upcoming appointment + active diet
+  'banners',
+  'concerns',
+  'ourDoctors',
+  'brands',
+  'doctors', // visited + suggested
+  'products',
+  'yoga',
+  'diet',
+];
+const SECTION_STEP_TIMEOUT_MS = 3000;
+// Scrolling bumps a section only after the user actually scrolls; initial load stays strictly ordered.
+const BUMP_AFTER_SCROLL = { requireScroll: true };
+const DATA_SECTIONS = ['banners', 'concerns', 'doctors', 'products', 'yoga', 'diet'];
+
+function LazyBlock({ blockRef, done, minHeight, skeleton = null, children }) {
+  return (
+    <div
+      ref={blockRef}
+      className="hm-lazy"
+      style={done ? { display: 'contents' } : { minHeight }}
+      aria-busy={done ? undefined : true}
+    >
+      {done ? children : skeleton}
+    </div>
+  );
+}
+
 export default function Home() {
   const navigate = useNavigate();
   const {
@@ -422,7 +463,10 @@ export default function Home() {
     sections,
     sectionLabels,
     loading,
-    loadingMore,
+    bannersLoading,
+    allSectionsDone,
+    isSectionDone,
+    loadSection,
     refreshing,
     loadingCustomer,
     medicineCategoryId,
@@ -430,13 +474,53 @@ export default function Home() {
     fetchCustomerData,
   } = useHomeData();
   const secondaryReady = !loading;
+  // All Home APIs load on mount, one section after another in visual order (top to bottom).
+  // Scrolling to a section that has not started yet bumps it to load immediately.
+  const queue = useSectionQueue(HOME_SECTION_ORDER, { timeout: SECTION_STEP_TIMEOUT_MS });
+  const { isStarted, markDone, bump } = queue;
+  const [concernsRef] = useLazySection(() => bump('concerns'), BUMP_AFTER_SCROLL);
+  const [ourDocsRef] = useLazySection(() => bump('ourDoctors'), BUMP_AFTER_SCROLL);
+  const [brandsRef] = useLazySection(() => bump('brands'), BUMP_AFTER_SCROLL);
+  const [doctorRowRef] = useLazySection(() => bump('doctors'), BUMP_AFTER_SCROLL);
+  const [productsRef] = useLazySection(() => bump('products'), BUMP_AFTER_SCROLL);
+  const [wellnessRef] = useLazySection(() => {
+    bump('yoga');
+    bump('diet');
+  }, BUMP_AFTER_SCROLL);
+  const pairStarted = isStarted('pair');
+  const ourDocsSeen = isStarted('ourDoctors');
+  const brandsSeen = isStarted('brands');
+  const doctorRowSeen = isStarted('doctors');
   const { doctors: visitedDoctors, loading: loadingVisitedDoctors } =
-    useRecentVisitedDoctors(secondaryReady);
-  const ourDoctors = useOurDoctors(secondaryReady);
+    useRecentVisitedDoctors(secondaryReady && doctorRowSeen);
+  const [ourDoctors, ourDoctorsDone] = useOurDoctors(secondaryReady && ourDocsSeen);
   const { appointments: upcomingAppointments, loading: loadingAppointments } =
-    useUpcomingAppointments(50, secondaryReady);
-  const { preview: activeDiet } = useActiveDietHome(secondaryReady);
-  const { brands } = useBrands();
+    useUpcomingAppointments(50, pairStarted);
+  const { preview: activeDiet } = useActiveDietHome(pairStarted);
+  const { brands, loading: brandsLoading } = useBrands(brandsSeen);
+
+  // Drive the section queue: start useHomeData sections when their turn comes, report completion.
+  useEffect(() => {
+    DATA_SECTIONS.forEach((key) => {
+      if (isStarted(key)) loadSection(key);
+      if (isSectionDone(key)) markDone(key);
+    });
+  }, [isStarted, isSectionDone, loadSection, markDone]);
+  useEffect(() => {
+    if (!loading) markDone('critical');
+  }, [loading, markDone]);
+  const pairWasLoading = useRef(false);
+  useEffect(() => {
+    if (!pairStarted) return;
+    if (loadingAppointments) pairWasLoading.current = true;
+    else if (pairWasLoading.current) markDone('pair');
+  }, [pairStarted, loadingAppointments, markDone]);
+  useEffect(() => {
+    if (ourDoctorsDone) markDone('ourDoctors');
+  }, [ourDoctorsDone, markDone]);
+  useEffect(() => {
+    if (brandsSeen && !brandsLoading) markDone('brands');
+  }, [brandsSeen, brandsLoading, markDone]);
 
   const [name, setName] = useState('');
   const [activeHomeModal, setActiveHomeModal] = useState('none');
@@ -753,7 +837,7 @@ export default function Home() {
           </div>
           <ActiveDietToast plan={activeDiet} />
 
-          {loading || bannerItems.length ? (
+          {bannersLoading || bannerItems.length ? (
           <div className="hm-dash">
             <div className="hm-dash__main">
               <BannerCarousel
@@ -761,13 +845,14 @@ export default function Home() {
                 initialIndex={0}
                 interval={6000}
                 onSelect={handleBannerPress}
-                loading={loading}
+                loading={bannersLoading}
                 copy={bannerCopy}
               />
             </div>
           </div>
           ) : null}
 
+          <LazyBlock blockRef={concernsRef} done={isSectionDone('concerns')} minHeight={240} skeleton={<RailSkeleton />}>
           {healthConcerns.length > 0 ? (
             <Reveal as="section" className="hm-section hm-panel hm-concerns-panel" aria-labelledby="hm-concerns-title">
               <SectionHeader
@@ -797,7 +882,9 @@ export default function Home() {
               </ConcernCarousel>
             </Reveal>
           ) : null}
+          </LazyBlock>
 
+          <LazyBlock blockRef={ourDocsRef} done={ourDoctorsDone} minHeight={320} skeleton={<RailSkeleton variant="doctor" />}>
           {ourDoctors.length > 0 ? (
             <Reveal as="section" className="hm-section hm-panel hm-odocs" aria-labelledby="hm-odocs-title">
               <SectionHeader
@@ -823,7 +910,9 @@ export default function Home() {
               </Rail>
             </Reveal>
           ) : null}
+          </LazyBlock>
 
+          <LazyBlock blockRef={brandsRef} done={brandsSeen && !brandsLoading} minHeight={180} skeleton={<RailSkeleton />}>
           {brands.length > 0 ? (
             <Reveal as="section" className="hm-section hm-panel hm-brands-panel" aria-labelledby="hm-brands-title">
               <SectionHeader
@@ -852,8 +941,9 @@ export default function Home() {
               </ConcernCarousel>
             </Reveal>
           ) : null}
+          </LazyBlock>
 
-
+          <LazyBlock blockRef={doctorRowRef} done={doctorRowSeen} minHeight={360}>
           {showVisitedDoctors || showSuggestedDoctors ? (
             <div className={splitDoctorRow ? 'hm-doctor-row hm-doctor-row--split' : 'hm-doctor-row'}>
               {loadingVisitedDoctors && visitedDoctors.length === 0 ? (
@@ -884,7 +974,7 @@ export default function Home() {
                 </Reveal>
               ) : null}
 
-              {loading && !doctors.length ? (
+              {!isSectionDone('doctors') && !doctors.length ? (
                 <section className="hm-section" aria-busy="true">
                   <DoctorRailHeader
                     eyebrow={T.doctorsEyebrow}
@@ -910,21 +1000,11 @@ export default function Home() {
               ) : null}
             </div>
           ) : null}
+          </LazyBlock>
 
-          {productPanels.length || (loading && !medicineProducts.length && !storeProducts.length) ? (
+          <LazyBlock blockRef={productsRef} done={isSectionDone('products')} minHeight={420} skeleton={<div className="hm-product-row hm-product-grid"><section className="hm-section hm-products" aria-busy="true"><DoctorRailHeader title={T.medicinesTitle} onViewAll={() => navigate('/medicines')} /><RailSkeleton /></section><section className="hm-section hm-products" aria-busy="true"><DoctorRailHeader title={T.productsTitle} onViewAll={() => navigate('/products')} /><RailSkeleton /></section></div>}>
+          {productPanels.length ? (
             <div className="hm-product-row hm-product-grid">
-              {loading && !medicineProducts.length && !storeProducts.length ? (
-                <>
-                  <section className="hm-section hm-products" aria-busy="true">
-                    <DoctorRailHeader title={T.medicinesTitle} onViewAll={() => navigate('/medicines')} />
-                    <RailSkeleton />
-                  </section>
-                  <section className="hm-section hm-products" aria-busy="true">
-                    <DoctorRailHeader title={T.productsTitle} onViewAll={() => navigate('/products')} />
-                    <RailSkeleton />
-                  </section>
-                </>
-              ) : null}
               {productPanels.map((panel) => (
                 <Reveal
                   as="section"
@@ -943,11 +1023,9 @@ export default function Home() {
               ))}
             </div>
           ) : null}
-          {loadingMore && !yogaSessions.length && !dietProducts.length ? (
-            <section className="hm-section hm-panel" aria-busy="true">
-              <RailSkeleton />
-            </section>
-          ) : null}
+          </LazyBlock>
+
+          <LazyBlock blockRef={wellnessRef} done={isSectionDone('yoga') && isSectionDone('diet')} minHeight={360} skeleton={<section className="hm-section hm-panel" aria-busy="true"><RailSkeleton /></section>}>
 
           {yogaSessions.length > 0 || dietProducts.length > 0 ? (
             <div
@@ -1004,6 +1082,7 @@ export default function Home() {
               ) : null}
             </div>
           ) : null}
+          </LazyBlock>
 
           <Reveal as="section" className="hm-section hm-panel" aria-labelledby="hm-packages-title">
             <SectionHeader
@@ -1060,7 +1139,7 @@ export default function Home() {
             </Rail>
           </Reveal> */}
 
-          {!loading && !hasAnyContent ? (
+          {!loading && allSectionsDone && !hasAnyContent ? (
             <EmptyState
               icon={<Leaf size={28} />}
               title={T.emptyTitle}

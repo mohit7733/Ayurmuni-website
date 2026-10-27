@@ -1,7 +1,8 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { addUpdateCart, cartMetrics, getAllCart } from '../services/cartService';
 import { isAuthenticated, requireAuth } from '../services/guestAuth';
 import { showSuccessToast } from '../config/key';
+import { subscribeApiSession } from '../services/apiClient';
 
 const CartContext = createContext(null);
 
@@ -11,6 +12,8 @@ export function CartProvider({ children }) {
   const [cartData, setCartData] = useState(null);
   const [addingVariantId, setAddingVariantId] = useState('');
   const [loading, setLoading] = useState(false);
+  // Only the newest cart read may write state: rapid qty changes each call fetchCart.
+  const cartRequestRef = useRef(0);
 
   const applyMetrics = useCallback((response) => {
     const metrics = cartMetrics(response);
@@ -21,7 +24,9 @@ export function CartProvider({ children }) {
   }, []);
 
   const fetchCart = useCallback(async () => {
+    const requestId = ++cartRequestRef.current;
     if (!(await isAuthenticated())) {
+      if (requestId !== cartRequestRef.current) return null;
       setVariantQuantities({});
       setItemCount(0);
       setCartData(null);
@@ -30,18 +35,23 @@ export function CartProvider({ children }) {
     setLoading(true);
     try {
       const res = await getAllCart();
+      if (requestId !== cartRequestRef.current) return null;
       if (res?.success === false) return null;
       return applyMetrics(res);
     } catch {
       return null;
     } finally {
-      setLoading(false);
+      if (requestId === cartRequestRef.current) setLoading(false);
     }
   }, [applyMetrics]);
 
   useEffect(() => {
     fetchCart();
   }, [fetchCart]);
+
+  // The provider lives for the whole app: reload the badge/cart when the account changes
+  // (login, logout, patient switch) instead of showing the previous account's cart.
+  useEffect(() => subscribeApiSession(() => fetchCart()), [fetchCart]);
 
   const syncCartQuantity = useCallback(
     async (item, newQty) => {

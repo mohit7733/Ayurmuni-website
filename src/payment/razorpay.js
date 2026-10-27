@@ -65,40 +65,57 @@ export const preloadRazorpay = () => {
   loadRazorpay({ retries: 0 }).catch(() => {});
 };
 
-const KEY_FIELDS = ['razorpay_key', 'razorpay_key_id', 'razorpayKey', 'razorpayKeyId', 'key_id', 'keyId', 'key'];
-const ORDER_FIELDS = ['razorpay_order_id', 'razorpayOrderId', 'rzp_order_id', 'gateway_order_id', 'payment_order_id'];
+/** Merge top-level + data + nested payment — same as the app's useProductOnlinePayment. */
+export const pickPaymentData = (orderResponse) => {
+  if (!orderResponse || typeof orderResponse !== 'object') return null;
 
-// Breadth-first search through nested objects (response.data.payment..., etc.)
-const findField = (root, names, test) => {
-  const queue = [root];
-  const seen = new Set();
-  while (queue.length) {
-    const node = queue.shift();
-    if (!node || typeof node !== 'object' || seen.has(node)) continue;
-    seen.add(node);
-    for (const name of names) {
-      const v = node[name];
-      if ((typeof v === 'string' || typeof v === 'number') && String(v).trim() && (!test || test(String(v).trim()))) {
-        return String(v).trim();
-      }
-    }
-    Object.values(node).forEach((v) => {
-      if (v && typeof v === 'object') queue.push(v);
-    });
+  const data =
+    orderResponse.data && typeof orderResponse.data === 'object' ? orderResponse.data : {};
+  const nestedPayment =
+    (data.payment && typeof data.payment === 'object' && data.payment) ||
+    (orderResponse.payment && typeof orderResponse.payment === 'object' && orderResponse.payment) ||
+    (data.order?.payment && typeof data.order.payment === 'object' && data.order.payment) ||
+    {};
+
+  return {
+    ...orderResponse,
+    ...data,
+    ...(data.order && typeof data.order === 'object' ? data.order : {}),
+    ...nestedPayment,
+  };
+};
+
+/** Never fall back to the app order UUID. Razorpay needs order_xxxxx. */
+export const pickRazorpayOrderId = (paymentData) => {
+  const candidates = [
+    paymentData?.razorpay_order_id,
+    paymentData?.razorpayOrderId,
+    paymentData?.rzp_order_id,
+  ];
+  for (const value of candidates) {
+    const id = String(value ?? '').trim();
+    if (id) return id;
   }
   return '';
 };
 
-const isRzpKey = (v) => /^rzp_(test|live)_/.test(v);
+export const pickRazorpayKey = (paymentData) =>
+  String(paymentData?.razorpay_key ?? paymentData?.key ?? paymentData?.key_id ?? '').trim();
 
-/** Returns { key, orderId } from any reasonable backend payload shape. */
+/** Same contact rules as the app's openRazorpayPayment. */
+export const normalizeRazorpayContact = (value) => {
+  let contact = String(value || '').replace(/\D/g, '');
+  if (contact.length === 10) contact = `91${contact}`;
+  if (contact.length < 10) contact = '919999999999';
+  return contact;
+};
+
+/** Returns { key, orderId, payment } using the app's field names only. */
 export const extractRazorpayCheckout = (response) => {
-  const envKey = String(import.meta.env.VITE_RAZORPAY_KEY_ID || import.meta.env.VITE_RAZORPAY_KEY || '').trim();
-  const key =
-    findField(response, KEY_FIELDS, isRzpKey) || findField(response, KEY_FIELDS.slice(0, 6)) || envKey;
-  const orderId =
-    findField(response, ORDER_FIELDS) ||
-    // Razorpay order ids look like "order_XXXX"; accept a generic order_id only in that form.
-    findField(response, ['order_id', 'orderId', 'id'], (v) => /^order_[A-Za-z0-9]+$/.test(v));
-  return { key, orderId };
+  const payment = pickPaymentData(response) || {};
+  return {
+    key: pickRazorpayKey(payment),
+    orderId: pickRazorpayOrderId(payment),
+    payment,
+  };
 };

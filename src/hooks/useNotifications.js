@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { isLikelyId, mapNotification } from '../notifications/utils';
 import { getNotification, manageNotification } from '../services/notificationService';
+import { readAuthenticated } from '../services/guestAuth';
 
 let unreadCountListeners = new Set();
 
@@ -13,14 +14,17 @@ export const subscribeUnreadCount = (listener) => {
   return () => unreadCountListeners.delete(listener);
 };
 
-export const fetchUnreadNotificationCount = async () => {
+export const fetchUnreadNotificationCount = async (options) => {
   try {
-    const res = await getNotification({
-      view: 'list',
-      is_read: false,
-      page: 1,
-      page_size: 1,
-    });
+    const res = await getNotification(
+      {
+        view: 'list',
+        is_read: false,
+        page: 1,
+        page_size: 1,
+      },
+      options,
+    );
     if (res?.success) {
       const total = res?.data?.count ?? res?.count ?? res?.data?.total ?? res?.total;
       if (total !== undefined && total !== null) return Number(total) || 0;
@@ -37,7 +41,8 @@ export const useUnreadNotificationCount = () => {
   const [unreadCount, setUnreadCount] = useState(0);
 
   const refreshUnreadCount = useCallback(async () => {
-    const count = await fetchUnreadNotificationCount();
+    // Logged-out visitors have no notifications: skip the guaranteed-401 request on every page.
+    const count = readAuthenticated() ? await fetchUnreadNotificationCount() : 0;
     setUnreadCount(count);
     publishUnreadCount(count);
   }, []);
@@ -61,6 +66,9 @@ export const useNotifications = () => {
   const [hasMore, setHasMore] = useState(true);
   const [filter, setFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
+  // Only the newest list request may write state (filter switches / refresh / load-more race).
+  const listRequestRef = useRef(0);
+  const plainLoadRef = useRef(0);
 
   const buildParams = useCallback(
     (pageNo) => {
@@ -73,8 +81,8 @@ export const useNotifications = () => {
     [filter, typeFilter],
   );
 
-  const fetchUnreadCount = useCallback(async () => {
-    const count = await fetchUnreadNotificationCount();
+  const fetchUnreadCount = useCallback(async (options) => {
+    const count = await fetchUnreadNotificationCount(options);
     setUnreadCount(count);
     publishUnreadCount(count);
   }, []);
@@ -82,11 +90,15 @@ export const useNotifications = () => {
   const fetchNotifications = useCallback(
     async (pageNo = 1, options = {}) => {
       const { isLoadMore = false, isRefresh = false } = options;
+      const requestId = ++listRequestRef.current;
+      if (!isLoadMore && !isRefresh) plainLoadRef.current = requestId;
       try {
         if (isLoadMore) setLoadingMore(true);
         else if (!isRefresh) setLoading(true);
 
-        const res = await getNotification(buildParams(pageNo));
+        // User-triggered refresh must hit the network, not the shared 10s GET cache.
+        const res = await getNotification(buildParams(pageNo), isRefresh ? { cache: false } : undefined);
+        if (requestId !== listRequestRef.current) return;
         if (res?.success) {
           const results = res?.data?.results ?? res?.results ?? [];
           const data = results
@@ -100,7 +112,7 @@ export const useNotifications = () => {
         console.log('Notification Error:', error);
       } finally {
         if (isLoadMore) setLoadingMore(false);
-        else if (!isRefresh) setLoading(false);
+        else if (!isRefresh && requestId === plainLoadRef.current) setLoading(false);
       }
     },
     [buildParams],
@@ -188,11 +200,14 @@ export const useNotifications = () => {
     setHasMore(true);
     setRefreshing(true);
     try {
-      await fetchNotifications(1, { isRefresh: true });
+      await Promise.all([
+        fetchNotifications(1, { isRefresh: true }),
+        fetchUnreadCount({ cache: false }),
+      ]);
     } finally {
       setRefreshing(false);
     }
-  }, [fetchNotifications]);
+  }, [fetchNotifications, fetchUnreadCount]);
 
   useEffect(() => {
     fetchNotifications(1);

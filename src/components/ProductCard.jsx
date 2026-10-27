@@ -23,6 +23,7 @@ export default function ProductCard({
   onWishlistChange,
   cartButton = false,
   layout = "default",
+  detailBase = "/products",
 }) {
   const app = layout === "app";
   const navigate = useNavigate();
@@ -148,7 +149,7 @@ export default function ProductCard({
           <button
             type="button"
             className="am-stretched"
-            onClick={() => variantId && navigate(`/products/${variantId}`)}
+            onClick={() => variantId && navigate(`${detailBase}/${variantId}`)}
           >
             {item.name}
           </button>

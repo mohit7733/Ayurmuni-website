@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
   Banknote,
   Check,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   CircleCheck,
   FileText,
   Flame,
@@ -21,6 +23,7 @@ import {
   Zap,
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import ImageMagnifier from '../components/ui/ImageMagnifier';
 import AutoScrollRail from '../components/AutoScrollRail';
 import ProductDiscoveryRails from '../components/ProductDiscoveryRails';
 import ReviewSubmitModal from '../components/ReviewSubmitModal';
@@ -84,9 +87,11 @@ const galleryFromProduct = (product, variant) => {
   return urls;
 };
 
-export default function ProductDetails() {
+export default function ProductDetails({ medicine = false } = {}) {
   const { variantId } = useParams();
   const navigate = useNavigate();
+  const basePath = medicine ? '/medicines' : '/products';
+  const shellTab = medicine ? 'medicines' : 'products';
   const { variantQuantities, addingVariantId, syncCartQuantity, itemCount } = useCart();
   const [loading, setLoading] = useState(true);
   const [product, setProduct] = useState(null);
@@ -98,6 +103,7 @@ export default function ProductDetails() {
   const [reviewTarget, setReviewTarget] = useState(null);
   const [reviewLookupBusy, setReviewLookupBusy] = useState(false);
   const [zoomOpen, setZoomOpen] = useState(false);
+  const galleryMainRef = useRef(null);
   const [descExpanded, setDescExpanded] = useState(false);
   const [expandedDetail, setExpandedDetail] = useState('');
   const [wishBusy, setWishBusy] = useState(false);
@@ -255,7 +261,8 @@ export default function ProductDetails() {
       ? T.easyReturns
       : T.nonReturnable;
   const goBack = () => {
-    if (window.history.length > 1) navigate(-1);
+    if (medicine) navigate('/medicines');
+    else if (window.history.length > 1) navigate(-1);
     else navigate('/products');
   };
   const discoveryProductId = String(
@@ -409,7 +416,7 @@ export default function ProductDetails() {
 
   if (loading) {
     return (
-      <AppShell tab="products">
+      <AppShell tab={shellTab}>
         <section className="pd-page pd-page--brand" aria-busy="true" aria-label={T.loading}>
           <div className="pd-topbar">
             <span />
@@ -426,12 +433,12 @@ export default function ProductDetails() {
 
   if (!product && !active) {
     return (
-      <AppShell tab="products">
+      <AppShell tab={shellTab}>
         <section className="pd-page pd-page--brand">
           <div className="pd-topbar">
-            <button type="button" className="am-back" onClick={() => navigate('/products')}>
+            <button type="button" className="am-back" onClick={() => navigate(basePath)}>
               <ArrowLeft size={16} aria-hidden />
-              {T.backToStore}
+              {medicine ? 'Back to medicines' : T.backToStore}
             </button>
             {cartAction}
           </div>
@@ -439,8 +446,8 @@ export default function ProductDetails() {
             title={T.notFoundTitle}
             description={T.notFoundText}
             action={
-              <Button variant="primary" to="/products">
-                {T.backToStore}
+              <Button variant="primary" to={basePath}>
+                {medicine ? 'Back to medicines' : T.backToStore}
               </Button>
             }
           />
@@ -450,13 +457,20 @@ export default function ProductDetails() {
   }
 
   return (
-    <AppShell tab="products">
+    <AppShell tab={shellTab}>
       <section className="pd-page pd-page--brand">
         <div className="pd-topbar">
           <button type="button" className="am-back" onClick={goBack}>
             <ArrowLeft size={16} aria-hidden />
-            Back
+            {medicine ? 'Medicines' : 'Back'}
           </button>
+          {medicine ? (
+            <nav className="pd-crumbs" aria-label="Breadcrumb" style={{ fontSize: 13, opacity: 0.8 }}>
+              <a href="/medicines" onClick={(e) => { e.preventDefault(); navigate('/medicines'); }}>Medicines</a>
+              {' > '}
+              <span aria-current="page">{displayName}</span>
+            </nav>
+          ) : null}
           <div className="pd-topbar__actions">
             <ShareButton
               title={`${displayName} - Ayurmuni`}
@@ -471,7 +485,7 @@ export default function ProductDetails() {
 
         <div className="pd-layout">
           <div className="pd-gallery">
-            <div className="pd-gallery__main">
+            <div className="pd-gallery__main" ref={galleryMainRef}>
               {images[imageIndex] ? (
                 <button
                   type="button"
@@ -479,7 +493,9 @@ export default function ProductDetails() {
                   onClick={() => setZoomOpen(true)}
                   aria-label="Zoom product image"
                 >
-                  <img src={images[imageIndex]} alt={displayName} decoding="async" />
+                  <ImageMagnifier src={images[imageIndex]} anchorRef={galleryMainRef}>
+                    <img src={images[imageIndex]} alt={displayName} decoding="async" />
+                  </ImageMagnifier>
                 </button>
               ) : (
                 <span className="pd-gallery__placeholder" aria-hidden>
@@ -847,7 +863,7 @@ export default function ProductDetails() {
           )}
         </section>
 
-        <ProductDiscoveryRails productId={discoveryProductId} excludeVariantId={cartVariantId} />
+        <ProductDiscoveryRails productId={discoveryProductId} excludeVariantId={cartVariantId} detailBase={basePath} />
 
         <div className="pd-sticky">
           <div className="pd-sticky__price">
@@ -864,9 +880,63 @@ export default function ProductDetails() {
         </div>
       </section>
 
-      <Modal open={zoomOpen} onClose={() => setZoomOpen(false)} title={displayName} size="lg">
+      <Modal
+        open={zoomOpen}
+        onClose={() => setZoomOpen(false)}
+        title={displayName}
+        size="lg"
+        className="pd-zoom-modal"
+      >
         {images[imageIndex] ? (
-          <img className="pd-zoom-img" src={images[imageIndex]} alt={displayName} />
+          <div
+            className={`pd-zoom${images.length > 1 ? ' pd-zoom--multi' : ''}`}
+            onKeyDown={(event) => {
+              if (images.length < 2) return;
+              if (event.key === 'ArrowLeft') setImageIndex((i) => (i - 1 + images.length) % images.length);
+              if (event.key === 'ArrowRight') setImageIndex((i) => (i + 1) % images.length);
+            }}
+          >
+            <div className="pd-zoom__stage">
+              <img className="pd-zoom-img" src={images[imageIndex]} alt={displayName} />
+              {images.length > 1 ? (
+                <>
+                  <button
+                    type="button"
+                    className="pd-zoom__nav pd-zoom__nav--prev"
+                    aria-label="Previous image"
+                    onClick={() => setImageIndex((i) => (i - 1 + images.length) % images.length)}
+                  >
+                    <ChevronLeft size={20} aria-hidden />
+                  </button>
+                  <button
+                    type="button"
+                    className="pd-zoom__nav pd-zoom__nav--next"
+                    aria-label="Next image"
+                    onClick={() => setImageIndex((i) => (i + 1) % images.length)}
+                  >
+                    <ChevronRight size={20} aria-hidden />
+                  </button>
+                </>
+              ) : null}
+            </div>
+            {images.length > 1 ? (
+              <div className="pd-zoom__thumbs" role="tablist" aria-label="Product images">
+                {images.map((src, index) => (
+                  <button
+                    key={`${src}-${index}`}
+                    type="button"
+                    role="tab"
+                    aria-selected={index === imageIndex}
+                    aria-label={`Image ${index + 1} of ${images.length}`}
+                    className={`pd-zoom__thumb${index === imageIndex ? ' is-on' : ''}`}
+                    onClick={() => setImageIndex(index)}
+                  >
+                    <img src={src} alt="" loading="lazy" />
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
         ) : null}
       </Modal>
 

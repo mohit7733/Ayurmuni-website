@@ -5,6 +5,7 @@ import { formatListTime, previewText } from '../../chat/inboxFormat';
 import { formatDoctorDisplayName } from '../../consult/appointmentUtils';
 import { useVideoCall } from '../../context/VideoCallContext';
 import { useChatInbox } from '../../hooks/useChatInbox';
+import { useIdleReady } from '../../hooks/useLazySection';
 import useLoggedIn from '../../hooks/useLoggedIn';
 import ChatConversation from './ChatConversation';
 import ThreadAvatar from './ThreadAvatar';
@@ -66,8 +67,10 @@ export default function ChatLauncher() {
   // T134: /diet listing (exact) also hides AyurChat on phones so it never covers the plan cards' CTAs
   const hideOnMobile = matchesPrefix(pathname, MOBILE_HIDDEN_PREFIXES) || pathname === '/diet' || pathname === '/packages'; // T140: also /packages
 
+  // Ayurchat inbox is background work: start it after first paint / idle so page data goes first.
+  const idleReady = useIdleReady(!hidden, 3000);
   const { threads, loading, updateThreadMessages, markThreadRead } = useChatInbox({
-    enabled: !hidden,
+    enabled: !hidden && idleReady,
     refreshMs: open ? OPEN_REFRESH_MS : IDLE_REFRESH_MS,
   });
 

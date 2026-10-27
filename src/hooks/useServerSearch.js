@@ -1,5 +1,6 @@
 /** Port of the app's hooks/useGlobalSearch.ts (useGlobalSearch + useRecentSearches). */
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createLatestRequest } from "../utils/latestRequest";
 import {
   countGlobalSearchHits,
   emptyGrouped,
@@ -20,10 +21,14 @@ const useGlobalSearch = (query, enabled = true, options) => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const requestIdRef = useRef(0);
+  // Aborts the previous search when the query changes or a newer page/refresh starts.
+  const gateRef = useRef(null);
+  if (!gateRef.current) gateRef.current = createLatestRequest();
   const load = useCallback(
     async (opts) => {
       const q = String(query || "").trim();
       if (!enabled || !q) {
+        gateRef.current.cancel();
         setResults(emptyGrouped());
         setError(null);
         setLoading(false);
@@ -35,6 +40,7 @@ const useGlobalSearch = (query, enabled = true, options) => {
       }
       const nextPage = opts?.page || 1;
       const reqId = ++requestIdRef.current;
+      const { signal } = gateRef.current.begin();
       try {
         if (opts?.isRefresh) setRefreshing(true);
         else if (opts?.append) setLoadingMore(true);
@@ -49,8 +55,8 @@ const useGlobalSearch = (query, enabled = true, options) => {
           save_recent: opts?.saveRecent !== void 0 ? opts.saveRecent : saveRecent,
           page: nextPage,
           page_size: pageSize
-        });
-        if (reqId !== requestIdRef.current) return;
+        }, { signal, ...(opts?.isRefresh ? { cache: false } : {}) });
+        if (reqId !== requestIdRef.current || signal?.aborted) return;
         setResults(
           (prev) => opts?.append ? mergeGlobalSearchGroups(prev, grouped) : grouped
         );
@@ -73,6 +79,7 @@ const useGlobalSearch = (query, enabled = true, options) => {
   useEffect(() => {
     load({ page: 1, saveRecent: false });
   }, [load]);
+  useEffect(() => () => gateRef.current?.cancel(), []);
   const loadMore = useCallback(() => {
     if (!hasMore || loading || loadingMore || refreshing) return;
     load({ page: page + 1, append: true, saveRecent: false });

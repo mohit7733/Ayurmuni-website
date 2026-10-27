@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as HomeServices from '../services/homeService';
 import * as ProductServices from '../services/productService';
 import * as ProfileServices from '../services/profileService';
 import { getHomeHeroBanners } from '../services/bannerService';
+import { clearApiCache } from '../services/apiClient';
 import { isAuthenticated, isGuestUser } from '../services/guestAuth';
 import { normalizeDietPlanList } from '../diet/utils';
 import {
@@ -28,12 +29,12 @@ const SECTION_LABELS = {
 const flights = new Map();
 const once = (key, fn) => {
   if (!flights.has(key)) {
-    flights.set(
-      key,
-      Promise.resolve()
-        .then(fn)
-        .finally(() => flights.delete(key)),
-    );
+    const pending = Promise.resolve()
+      .then(fn)
+      .finally(() => {
+        if (flights.get(key) === pending) flights.delete(key);
+      });
+    flights.set(key, pending);
   }
   return flights.get(key);
 };
@@ -64,20 +65,33 @@ export const resolveHealthDiseaseIds = (customer) => {
   return Array.from(new Set(ids));
 };
 
-/** app loadCatalogFallback: getHomeProducts attempts (service + disease, then looser). */
-const loadCatalogFallback = async (kind, categories, healthDiseaseId) => {
+/** First disease id only: these APIs accept a single health_disease_id (comma lists return 400). */
+const firstDiseaseId = (diseaseIds) => (Array.isArray(diseaseIds) && diseaseIds.length ? diseaseIds[0] : null);
+
+const HOME_PRODUCTS_LIMIT = 12;
+
+/** Identical customers/products/ queries in flight (medicines + products rails) share one request. */
+const fetchHomeProducts = (params) => {
+  const key = `home-products:${params.service_category_id || ''}:${params.health_disease_id || ''}`;
+  return once(key, async () =>
+    parseHomeProducts(
+      await HomeServices.getHomeProducts({ ...params, page: 1, page_size: HOME_PRODUCTS_LIMIT }),
+    ),
+  );
+};
+
+/** Lean fallback: per category at most 2 product calls. One request with the primary
+ *  (first) health concern; only if that is empty, one request with the category alone.
+ *  Without a category, the same two steps run unfiltered. Disease ids are never comma-joined. */
+const loadCatalogFallback = async (kind, categories, diseaseIds) => {
   const serviceCategoryId = getServiceCategoryId(categories, kind === 'medicines' ? 'medicine' : 'products');
-  const attempts = healthDiseaseId
-    ? [
-        { service_category_id: serviceCategoryId, health_disease_id: healthDiseaseId },
-        { health_disease_id: healthDiseaseId },
-      ]
-    : [{ service_category_id: serviceCategoryId }, {}];
+  const primaryId = firstDiseaseId(diseaseIds);
+  const attempts = [];
+  if (primaryId) attempts.push({ service_category_id: serviceCategoryId, health_disease_id: primaryId });
+  attempts.push(serviceCategoryId ? { service_category_id: serviceCategoryId } : {});
   for (const attempt of attempts) {
     try {
-      const list = parseHomeProducts(
-        await HomeServices.getHomeProducts({ ...attempt, page: 1, page_size: 12 }),
-      );
+      const list = await fetchHomeProducts(attempt);
       if (list.length > 0) return list;
     } catch {
       // try next attempt
@@ -85,24 +99,23 @@ const loadCatalogFallback = async (kind, categories, healthDiseaseId) => {
   }
   return [];
 };
-
-/** app loadSuggestedCatalog: disease -> suggested API (+id); none -> unfiltered browse. */
-const loadSuggestedCatalog = async (kind, categories, healthDiseaseId) => {
+/** app loadSuggestedCatalog: disease -> suggested API (+first id); none -> unfiltered browse. */
+const loadSuggestedCatalog = async (kind, categories, diseaseIds) => {
+  const firstId = firstDiseaseId(diseaseIds);
   try {
-    if (!healthDiseaseId) return await loadCatalogFallback(kind, categories, null);
-    const opts = { health_disease_id: healthDiseaseId };
+    if (!firstId) return await loadCatalogFallback(kind, categories, null);
+    const opts = { health_disease_id: firstId };
     const suggested = parseHomeProducts(
       kind === 'medicines'
         ? await HomeServices.getSuggestedMedicines(opts)
         : await HomeServices.getSuggestedProducts(opts),
     );
     if (suggested.length > 0) return suggested;
-    return await loadCatalogFallback(kind, categories, healthDiseaseId);
+    return await loadCatalogFallback(kind, categories, diseaseIds);
   } catch {
-    return safe(() => loadCatalogFallback(kind, categories, healthDiseaseId), []);
+    return safe(() => loadCatalogFallback(kind, categories, diseaseIds), []);
   }
 };
-
 const parseDoctorList = (res) =>
   normalizeApiList(res).filter(
     (item) =>
@@ -162,6 +175,22 @@ const loadSectionProducts = async (section) => {
   return normalizeApiList(res).map(mapCatalogProductItem).filter(Boolean);
 };
 
+const LAZY_SECTIONS = ['banners', 'concerns', 'doctors', 'products', 'yoga', 'diet'];
+
+const createDeferred = () => {
+  let resolve;
+  const promise = new Promise((r) => {
+    resolve = r;
+  });
+  return { promise, resolve };
+};
+
+/**
+ * Home data, loaded top to bottom:
+ *  1. critical: profile + service categories (hero, services row)
+ *  2. the rest via loadSection(key), called by Home's ordered section queue
+ *     (concerns, doctors, products, wellness). Each section loads once.
+ */
 export default function useHomeData() {
   const [categories, setCategories] = useState([]);
   const [doctors, setDoctors] = useState([]);
@@ -178,10 +207,16 @@ export default function useHomeData() {
     recently_viewed: [],
   });
   const [loading, setLoading] = useState(true);
-  // Second wave (yoga, diet, product sections, concerns) loads after the first.
-  const [loadingMore, setLoadingMore] = useState(true);
+  const [bannersLoading, setBannersLoading] = useState(true);
+  const [sectionStatus, setSectionStatus] = useState(() =>
+    Object.fromEntries(LAZY_SECTIONS.map((key) => [key, 'idle'])),
+  );
   const [refreshing, setRefreshing] = useState(false);
   const [loadingCustomer, setLoadingCustomer] = useState(true);
+  // Shared context (categories + disease ids) that lazy sections wait for.
+  const ctxRef = useRef(createDeferred());
+  const requestedRef = useRef(new Set());
+  const aliveRef = useRef(true);
 
   const medicineCategoryId = useMemo(
     () => getServiceCategoryId(categories, 'medicine'),
@@ -223,21 +258,126 @@ export default function useHomeData() {
     }
   }, []);
 
+  const runSection = useCallback(async (key, isRefresh = false) => {
+    const load = (k, fn) => (isRefresh ? fn() : once(k, fn));
+    const apply = (promise, setter) =>
+      promise.then((value) => {
+        if (aliveRef.current) setter(value);
+      });
+    setSectionStatus((prev) => (prev[key] === 'done' && isRefresh ? prev : { ...prev, [key]: 'loading' }));
+    const { cats, diseasePromise } = await ctxRef.current.promise;
+    const diseaseId = async () => firstDiseaseId(await diseasePromise);
+    const jobs = [];
+    if (key === 'banners') {
+      const bannerRes = await safe(() => load('banners', () => getHomeHeroBanners()), { data: [] });
+      if (aliveRef.current) {
+        setBanners(
+          Array.isArray(bannerRes?.data) ? bannerRes.data : Array.isArray(bannerRes) ? bannerRes : [],
+        );
+        setBannersLoading(false);
+      }
+    } else if (key === 'concerns') {
+      const medicineId = getServiceCategoryId(cats, 'medicine');
+      jobs.push(
+        apply(
+          safe(
+            () =>
+              load('concerns', async () => {
+                const res = await ProductServices.getHealthCategories(
+                  medicineId ? { service_category_id: medicineId } : undefined,
+                );
+                if (res?.success === false) return [];
+                return normalizeApiList(res).map(mapProductCategory).filter((item) => item.id);
+              }),
+            [],
+          ),
+          setHealthConcerns,
+        ),
+      );
+    } else if (key === 'doctors') {
+      jobs.push(
+        apply(safe(() => load('doctors', async () => loadHomeDoctors(await diseaseId())), []), setDoctors),
+      );
+    } else if (key === 'products') {
+      // Visual order inside the product grid: medicines, products, recently viewed, trending, featured.
+      jobs.push(
+        apply(
+          safe(() => load('medicines', async () => loadSuggestedCatalog('medicines', cats, await diseasePromise)), []),
+          setMedicineProducts,
+        ),
+        apply(
+          safe(() => load('products', async () => loadSuggestedCatalog('products', cats, await diseasePromise)), []),
+          setStoreProducts,
+        ),
+        apply(safe(() => load('recent', loadRecentlyViewed), []), (recentlyViewed) =>
+          setSections((prev) => ({ ...prev, recently_viewed: recentlyViewed })),
+        ),
+        apply(safe(() => load('trending', () => loadSectionProducts('trending')), []), (trending) =>
+          setSections((prev) => ({ ...prev, trending })),
+        ),
+        apply(safe(() => load('featured', () => loadSectionProducts('featured')), []), (featured) =>
+          setSections((prev) => ({ ...prev, featured })),
+        ),
+      );
+    } else if (key === 'yoga') {
+      jobs.push(
+        apply(
+          safe(
+            () =>
+              load('yoga', async () => {
+                const id = await diseaseId();
+                const res = await HomeServices.getYogaSession(id ? { health_disease_id: id } : undefined);
+                return normalizeYogaSessionList(res);
+              }),
+            [],
+          ),
+          setYogaSessions,
+        ),
+      );
+    } else if (key === 'diet') {
+      jobs.push(
+        apply(
+          safe(
+            () =>
+              load('diet', async () => {
+                // Diet endpoints need a token: skip logged-out visitors only.
+                if (!(await isAuthenticated())) return [];
+                return loadDietPlansForHome(await diseaseId());
+              }),
+            [],
+          ),
+          setDietProducts,
+        ),
+      );
+    }
+    await Promise.all(jobs);
+    if (aliveRef.current) setSectionStatus((prev) => ({ ...prev, [key]: 'done' }));
+  }, []);
+
+  /** Called by Home when a below-the-fold section nears the viewport. Loads once. */
+  const loadSection = useCallback(
+    (key) => {
+      if (!LAZY_SECTIONS.includes(key) || requestedRef.current.has(key)) return;
+      requestedRef.current.add(key);
+      runSection(key);
+    },
+    [runSection],
+  );
+
   const loadAll = useCallback(async (isRefresh = false, isCancelled = () => false) => {
-    if (isRefresh) setRefreshing(true);
-    else {
+    if (isRefresh) {
+      // User-triggered refresh: drop the shared GET cache and any in-flight work.
+      clearApiCache();
+      flights.clear();
+      setRefreshing(true);
+    } else {
       setLoading(true);
-      setLoadingMore(true);
+      setBannersLoading(true);
     }
 
     const load = (key, fn) => (isRefresh ? fn() : once(key, fn));
-    const asBanners = (bannerRes) =>
-      Array.isArray(bannerRes?.data)
-        ? bannerRes.data
-        : Array.isArray(bannerRes)
-          ? bannerRes
-          : [];
 
+    // 1. Critical: profile (hero) + service categories (services row).
     const catsPromise = load('cats', async () => {
       const res = await HomeServices.getHomeCategory();
       const list = normalizeServiceCategories(res?.data ?? res)
@@ -246,7 +386,6 @@ export default function useHomeData() {
         .sort((a, b) => a.sequence - b.sequence);
       return list.length ? list : FALLBACK_SERVICE_CATEGORIES;
     });
-    // App homeSlice: categories + customer first so disease selection drives rail filters.
     const customerPromise = fetchCustomerData();
     const diseasePromise = customerPromise.then(async (customer) => {
       let source = customer;
@@ -256,118 +395,46 @@ export default function useHomeData() {
         source = res && res.success !== false ? res.data ?? null : null;
       }
       const ids = resolveHealthDiseaseIds(source);
-      return ids.length > 0 ? ids.join(',') : null;
-    });
-    const catsForRails = safe(() => catsPromise, FALLBACK_SERVICE_CATEGORIES);
-    const doctorsPromise = load('doctors', async () => loadHomeDoctors(await diseasePromise));
-    const medicinesPromise = load('medicines', async () =>
-      loadSuggestedCatalog('medicines', await catsForRails, await diseasePromise),
-    );
-    const productsPromise = load('products', async () =>
-      loadSuggestedCatalog('products', await catsForRails, await diseasePromise),
-    );
-    const bannersPromise = load('banners', () => getHomeHeroBanners());
-
-    const apply = (promise, setter) =>
-      promise.then((value) => {
-        if (!isCancelled()) setter(value);
-      });
-
-    catsPromise.then((next) => {
-      if (!isCancelled() && next) setCategories(next);
+      return ids.length > 0 ? ids : null;
     });
 
     let cats = FALLBACK_SERVICE_CATEGORIES;
     try {
       const [nextCategories] = await Promise.all([
         safe(() => catsPromise, FALLBACK_SERVICE_CATEGORIES),
-        apply(safe(() => doctorsPromise, []), setDoctors),
-        apply(safe(() => medicinesPromise, []), setMedicineProducts),
-        apply(safe(() => productsPromise, []), setStoreProducts),
-        apply(safe(() => bannersPromise, { data: [] }), (bannerRes) =>
-          setBanners(asBanners(bannerRes)),
-        ),
+        customerPromise,
       ]);
       cats = nextCategories || FALLBACK_SERVICE_CATEGORIES;
     } finally {
       if (!isCancelled()) {
-        if (cats) setCategories(cats);
+        setCategories(cats);
         setLoading(false);
       }
     }
 
+    if (isRefresh) ctxRef.current = createDeferred();
+    ctxRef.current.resolve({ cats, diseasePromise });
     if (isCancelled()) return;
 
-    const medicineId = getServiceCategoryId(cats, 'medicine');
-    await Promise.all([
-      apply(
-        safe(
-          () =>
-            load('yoga', async () => {
-              const diseaseId = await diseasePromise;
-              const res = await HomeServices.getYogaSession(
-                diseaseId ? { health_disease_id: diseaseId } : undefined,
-              );
-              return normalizeYogaSessionList(res);
-            }),
-          [],
-        ),
-        setYogaSessions,
-      ),
-      apply(
-        safe(
-          () =>
-            load('diet', async () => {
-              // Diet endpoints need a token: skip logged-out visitors only.
-              if (!(await isAuthenticated())) return [];
-              return loadDietPlansForHome(await diseasePromise);
-            }),
-          [],
-        ),
-        setDietProducts,
-      ),
-      apply(safe(() => load('featured', () => loadSectionProducts('featured')), []), (featured) =>
-        setSections((prev) => ({ ...prev, featured })),
-      ),
-      apply(safe(() => load('trending', () => loadSectionProducts('trending')), []), (trending) =>
-        setSections((prev) => ({ ...prev, trending })),
-      ),
-      apply(
-        safe(() => load('recent', loadRecentlyViewed), []),
-        (recentlyViewed) =>
-          setSections((prev) => ({ ...prev, recently_viewed: recentlyViewed })),
-      ),
-      apply(
-        safe(
-          () =>
-            load('concerns', async () => {
-              const res = await ProductServices.getHealthCategories(
-                medicineId ? { service_category_id: medicineId } : undefined,
-              );
-              if (res?.success === false) return [];
-              return normalizeApiList(res)
-                .map(mapProductCategory)
-                .filter((item) => item.id);
-            }),
-          [],
-        ),
-        setHealthConcerns,
-      ),
-      customerPromise,
-    ]);
-    if (!isCancelled()) {
-      setRefreshing(false);
-      setLoadingMore(false);
+    // 2. Refresh: reload sections the user has already reached.
+    if (isRefresh) {
+      await Promise.all(Array.from(requestedRef.current).map((key) => runSection(key, true)));
+      if (!isCancelled()) setRefreshing(false);
     }
-  }, [fetchCustomerData]);
+  }, [fetchCustomerData, runSection]);
 
   useEffect(() => {
+    aliveRef.current = true;
     let cancelled = false;
     loadAll(false, () => cancelled);
     return () => {
       cancelled = true;
+      aliveRef.current = false;
     };
   }, [loadAll]);
+
+  const isSectionDone = useCallback((key) => sectionStatus[key] === 'done', [sectionStatus]);
+  const allSectionsDone = LAZY_SECTIONS.every((key) => sectionStatus[key] === 'done');
 
   return {
     categories,
@@ -382,7 +449,11 @@ export default function useHomeData() {
     sections,
     sectionLabels: SECTION_LABELS,
     loading,
-    loadingMore,
+    bannersLoading,
+    loadingMore: !allSectionsDone,
+    allSectionsDone,
+    isSectionDone,
+    loadSection,
     refreshing,
     loadingCustomer,
     medicineCategoryId,
