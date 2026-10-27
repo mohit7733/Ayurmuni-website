@@ -10,6 +10,7 @@ import {
   resolveYogaThumbnailUri,
   resolveYogaVideoUri,
 } from "../yoga/utils";
+import "../design/pages/yoga.css";
 
 function YogaListThumb({ item }) {
   const videoUri = resolveYogaVideoUri(item);

@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import {
   BrowserRouter,
   Route,
@@ -174,12 +174,35 @@ function NavBinder() {
 
 function ScrollToTop() {
   const location = useLocation();
+  const previousPath = useRef(location.pathname);
 
   useLayoutEffect(() => {
+    const isGalleryOverlay = Boolean(location.state?.backgroundLocation);
+    const returningFromGallery = previousPath.current === "/reviews/gallery";
+    previousPath.current = location.pathname;
+    if (isGalleryOverlay || returningFromGallery) return;
     window.scrollTo(0, 0);
-  }, [location.key]);
+  }, [location.key, location.pathname, location.state]);
 
   return null;
+}
+
+function AppRoutes({ children }) {
+  const location = useLocation();
+  const backgroundLocation = location.state?.backgroundLocation;
+
+  return (
+    <>
+      <Routes location={backgroundLocation || location}>{children}</Routes>
+      {backgroundLocation ? (
+        <Routes>
+          <Route element={<RequireAuth />}>
+            <Route path="/reviews/gallery" element={<ReviewGallery />} />
+          </Route>
+        </Routes>
+      ) : null}
+    </>
+  );
 }
 
 export default function App() {
@@ -193,7 +216,7 @@ export default function App() {
             <ToastHost />
             <FloatingVideoOverlay />
             <NetworkGuard>
-              <Routes>
+              <AppRoutes>
                 <Route path="/" element={<Splash />} />
                 <Route path="/welcome" element={<WelcomePage />} />
                 <Route path="/login" element={<LoginPage />} />
@@ -412,7 +435,7 @@ export default function App() {
                   />
                   <Route path="/search" element={<ProductSearch />} />
                 </Route>
-              </Routes>
+              </AppRoutes>
             </NetworkGuard>
           </CartProvider>
         </LocationProvider>

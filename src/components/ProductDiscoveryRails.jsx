@@ -1,28 +1,46 @@
-import { useEffect, useState } from 'react';
-import AutoScrollRail from './AutoScrollRail';
-import ProductCard from './ProductCard';
-import { SectionHeader } from './ui';
-import { getProductDiscovery, PRODUCT_SECTION_LABELS } from '../services/productService';
-import { mapCatalogProductItem, normalizeApiList } from '../home/catalog';
+import { useEffect, useState } from "react";
+import AutoScrollRail from "./AutoScrollRail";
+import ProductCard from "./ProductCard";
+import { SectionHeader } from "./ui";
+import {
+  getProductDiscovery,
+  PRODUCT_SECTION_LABELS,
+} from "../services/productService";
+import { mapCatalogProductItem, normalizeApiList } from "../home/catalog";
 
-const SECTIONS = ['trending', 'best_sellers', 'related', 'similar', 'recently_viewed'];
+const SECTIONS = [
+  "trending",
+  "best_sellers",
+  "related",
+  "similar",
+  "recently_viewed",
+];
 
 export default function ProductDiscoveryRails({ productId, excludeVariantId }) {
   const [rails, setRails] = useState({});
 
   useEffect(() => {
-    const pid = String(productId || '').trim();
+    const pid = String(productId || "").trim();
     if (!pid) return undefined;
     let alive = true;
     (async () => {
       setRails({});
       for (const section of SECTIONS) {
-        const res = await getProductDiscovery({ section, productId: pid, page: 1, page_size: 8 });
+        const res = await getProductDiscovery({
+          section,
+          productId: pid,
+          page: 1,
+          page_size: 8,
+        });
         if (!alive) return;
         const items = normalizeApiList(res)
           .map(mapCatalogProductItem)
           .filter(Boolean)
-          .filter((item) => String(item.variant_id || item.id || '') !== String(excludeVariantId || ''));
+          .filter(
+            (item) =>
+              String(item.variant_id || item.id || "") !==
+              String(excludeVariantId || ""),
+          );
         if (items.length) {
           setRails((prev) => ({ ...prev, [section]: items }));
         }

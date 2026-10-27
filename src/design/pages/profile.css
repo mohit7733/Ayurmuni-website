@@ -1014,3 +1014,113 @@
     padding-left: var(--am-space-4);
   }
 }
+
+/* Profile hub surfaces and cards use the brighter Home page finish. */
+.pf-hub {
+  gap: 0;
+  padding-top: clamp(var(--am-space-5), 4vw, var(--am-space-8));
+}
+
+.pf-hub > * + * {
+  margin-top: var(--am-space-6);
+}
+
+.pf-hub > .pf-referral-section {
+  margin-top: var(--am-space-6);
+}
+
+.pf-hub .pf-hero {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(var(--am-space-5), 3vw, var(--am-space-7));
+  border-color: color-mix(in srgb, var(--am-primary-tint) 78%, white);
+  border-radius: 26px;
+  background:
+    radial-gradient(65% 100% at 100% 0%, rgba(255, 205, 136, 0.3), transparent 62%),
+    radial-gradient(55% 90% at 0% 100%, rgba(130, 204, 170, 0.2), transparent 65%),
+    linear-gradient(145deg, #fff, #f2faf5 72%, #eef6ff);
+  box-shadow: 0 9px 28px rgba(16, 61, 48, 0.075);
+}
+
+.pf-hub .pf-hero__copy {
+  gap: var(--am-space-2);
+}
+
+.pf-hub .pf-menu h3 {
+  margin-bottom: var(--am-space-4);
+}
+
+.pf-hub .pf-menus {
+  gap: var(--am-space-7);
+}
+
+.pf-hub .pf-hero__avatar {
+  box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.7), 0 8px 18px rgba(16, 61, 48, 0.14);
+}
+
+.pf-hub .pf-explore__card {
+  min-height: 112px;
+  padding: var(--am-space-5);
+  border-color: color-mix(in srgb, var(--am-primary-tint) 70%, white);
+  border-radius: 19px;
+  background:
+    radial-gradient(110% 100% at 100% 0%, rgba(255, 222, 184, 0.22), transparent 60%),
+    linear-gradient(145deg, #fff, #f3faf6);
+  box-shadow: 0 4px 12px rgba(16, 61, 48, 0.055), 0 12px 24px rgba(16, 61, 48, 0.065);
+  transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+}
+
+.pf-hub .pf-explore__card:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--am-primary) 34%, white);
+  box-shadow: 0 12px 22px rgba(16, 61, 48, 0.09), 0 22px 34px rgba(16, 61, 48, 0.1);
+}
+
+.pf-hub .pf-menu__list {
+  border-color: color-mix(in srgb, var(--am-primary-tint) 70%, white);
+  border-radius: 19px;
+  background: linear-gradient(145deg, #fff, #f7fbf8);
+  box-shadow: 0 5px 16px rgba(16, 61, 48, 0.055);
+}
+
+.pf-hub .pf-menu__row {
+  min-height: 68px;
+  padding: var(--am-space-5) var(--am-space-6);
+  transition: background-color 180ms ease, padding 180ms ease;
+}
+
+.pf-hub .pf-menu__row:hover {
+  background: linear-gradient(90deg, #f0f8f3, #fff);
+}
+
+@media (max-width: 639px) {
+  .pf-hub {
+    gap: 0;
+    padding-top: var(--am-space-3);
+  }
+
+  .pf-hub > * + *,
+  .pf-hub > .pf-referral-section {
+    margin-top: var(--am-space-4);
+  }
+
+  .pf-hub .pf-menus {
+    gap: var(--am-space-5);
+  }
+
+  .pf-hub .pf-explore__card {
+    min-height: 94px;
+    padding: var(--am-space-3) calc(var(--am-space-3) + 22px) var(--am-space-3) var(--am-space-3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-hub .pf-explore__card,
+  .pf-hub .pf-menu__row {
+    transition: none;
+  }
+
+  .pf-hub .pf-explore__card:hover {
+    transform: none;
+  }
+}

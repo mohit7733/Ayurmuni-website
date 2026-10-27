@@ -103,7 +103,7 @@ function AutoScrollRail({ label, children }) {
       return undefined;
     }
 
-    const timer = window.setInterval(() => moveRail(1, true), 3000);
+    const timer = window.setInterval(() => moveRail(1, true), 3800);
     return () => window.clearInterval(timer);
   }, [moveRail, paused]);
 

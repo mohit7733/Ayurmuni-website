@@ -7,6 +7,7 @@ import AutoScrollRail from '../components/AutoScrollRail';
 import ProductCard from '../components/ProductCard';
 import { getBanners } from '../services/bannerService';
 import {
+  formatRupee,
   getBannerImageUri,
   mapProductCategory,
   normalizeApiList,
@@ -123,7 +124,7 @@ export default function Medicines() {
 
   return (
     <AppShell tab="medicines">
-      <div className="st-page">
+      <div className="st-page st-page--medicines">
         <section className="st-hero" aria-labelledby="st-med-title">
           <div className="st-hero__copy">
             <p className="am-eyebrow">Pharmacy</p>
@@ -215,10 +216,23 @@ export default function Medicines() {
                   >
                     {recent.map((item) => (
                         <MediaCard
+                          key={`${item.id}-${item.variantId}`}
+                          className="st-recent__card"
                           image={item.image}
                           title={item.name}
                           subtitle={
-                            item.lastOrdered ? `Ordered ${item.lastOrdered}` : 'Recent order'
+                            <>
+                              <span>
+                                {item.lastOrdered
+                                  ? `Ordered ${item.lastOrdered}`
+                                  : 'Recent order'}
+                              </span>
+                              {item.price ? (
+                                <span className="st-recent__price">
+                                  {formatRupee(item.price)}
+                                </span>
+                              ) : null}
+                            </>
                           }
                           onClick={() =>
                             item.variantId && navigate(`/products/${item.variantId}`)

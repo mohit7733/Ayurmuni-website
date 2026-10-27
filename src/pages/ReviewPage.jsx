@@ -78,6 +78,17 @@ export default function ReviewPage() {
 
   const average = getAverageRating(reviews);
   const gallery = collectReviewImageUrls(reviews);
+  const formatReviewDate = (value) => {
+    if (!value) return "";
+    const date = new Date(value);
+    return Number.isNaN(date.getTime())
+      ? ""
+      : new Intl.DateTimeFormat(undefined, {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        }).format(date);
+  };
 
   return (
     <AppShell tab={entityType === "product" ? "products" : "consult"}>
@@ -115,7 +126,19 @@ export default function ReviewPage() {
                 className="checkout-card review-card"
               >
                 <header>
-                  <strong>{item.patient_name || "Patient"}</strong>
+                  <div className="review-card__identity">
+                    <span className="review-card__avatar" aria-hidden>
+                      {(item.patient_name || "P").trim().charAt(0).toUpperCase()}
+                    </span>
+                    <div>
+                      <strong>{item.patient_name || "Patient"}</strong>
+                      {formatReviewDate(item.created_at || item.date) ? (
+                        <small>
+                          {formatReviewDate(item.created_at || item.date)}
+                        </small>
+                      ) : null}
+                    </div>
+                  </div>
                   <span className="review-card__rating">{item.rating ? `${item.rating}★` : ""}</span>
                 </header>
                 <p className="review-card__comment">{item.comment || item.review || item.message || ""}</p>
@@ -134,6 +157,7 @@ export default function ReviewPage() {
                               state: {
                                 images: item.image_urls,
                                 selectedIndex: mediaIndex,
+                                backgroundLocation: location,
                               },
                             })
                           }

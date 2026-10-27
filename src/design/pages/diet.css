@@ -581,3 +581,84 @@
     transform: none;
   }
 }
+
+/* Match the spacious, softly layered Home page treatment. */
+.diet-page.catalog-page {
+  gap: var(--am-space-6);
+  padding-top: clamp(var(--am-space-5), 4vw, var(--am-space-8));
+}
+
+.diet-page .catalog-head {
+  padding: clamp(var(--am-space-5), 4vw, var(--am-space-8));
+  border-color: color-mix(in srgb, var(--am-primary-tint) 78%, white);
+  border-radius: 28px;
+  background:
+    radial-gradient(65% 90% at 100% 0%, rgba(255, 205, 136, 0.32), transparent 62%),
+    radial-gradient(55% 90% at 0% 100%, rgba(130, 204, 170, 0.22), transparent 65%),
+    linear-gradient(145deg, #fff, #f2faf5 72%, #eef6ff);
+  box-shadow: 0 10px 30px rgba(16, 61, 48, 0.075);
+}
+
+.diet-page .search-form,
+.diet-page > .diet-chips {
+  border-radius: 18px;
+  box-shadow: 0 5px 16px rgba(16, 61, 48, 0.055);
+}
+
+.diet-page .diet-grid {
+  gap: var(--am-space-5);
+}
+
+.diet-page .diet-card {
+  border-color: color-mix(in srgb, var(--am-primary-tint) 76%, white);
+  border-radius: 20px;
+  background:
+    radial-gradient(110% 90% at 100% 0%, rgba(255, 222, 184, 0.2), transparent 60%),
+    linear-gradient(145deg, #fff, #f3faf6);
+  box-shadow: 0 5px 14px rgba(16, 61, 48, 0.06), 0 14px 28px rgba(16, 61, 48, 0.075);
+}
+
+.diet-page .diet-card:hover {
+  transform: translateY(-5px);
+  border-color: color-mix(in srgb, var(--am-primary) 34%, white);
+  box-shadow: 0 12px 22px rgba(16, 61, 48, 0.09), 0 22px 34px rgba(16, 61, 48, 0.1);
+}
+
+.diet-page .diet-card-media {
+  border-radius: 17px 17px 0 0;
+  background: linear-gradient(135deg, var(--am-green-100), var(--am-sand-100), #e9f1ff);
+}
+
+.diet-page .diet-results-heading {
+  margin-top: var(--am-space-3);
+  padding-bottom: var(--am-space-4);
+  border-bottom-color: color-mix(in srgb, var(--am-primary-tint) 70%, white);
+}
+
+@media (max-width: 639px) {
+  .diet-page.catalog-page {
+    gap: var(--am-space-4);
+    padding-top: var(--am-space-3);
+  }
+
+  .diet-page .catalog-head {
+    padding: var(--am-space-5) var(--am-space-4);
+    border-radius: 22px;
+  }
+
+  .diet-page .diet-grid {
+    gap: var(--am-space-3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .diet-page .diet-card,
+  .diet-page .diet-card-media img {
+    transition: none;
+  }
+
+  .diet-page .diet-card:hover,
+  .diet-page .diet-card:hover .diet-card-media img {
+    transform: none;
+  }
+}

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   FileText,
   Heart,
@@ -99,6 +99,7 @@ const formatProductDetail = (value) => {
 export default function ProductDetails() {
   const { variantId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { variantQuantities, addingVariantId, syncCartQuantity, itemCount } =
     useCart();
   const [loading, setLoading] = useState(true);
@@ -529,11 +530,90 @@ export default function ProductDetails() {
               </div>
 
               <Disclaimer />
+              <aside className="pd-buy" aria-label="Purchase options">
+                {renderBuyActions()}
+              </aside>
             </div>
 
-            <aside className="pd-buy" aria-label="Purchase options">
-              {renderBuyActions()}
-            </aside>
+            <section className="pd-reviews" aria-labelledby="pd-reviews-title">
+              <SectionHeader
+                id="pd-reviews-title"
+                title={T.reviews}
+                action={
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={async () => {
+                        if (!(await requireAuth("Please login to write a review")))
+                          return;
+                        setShowReviewModal(true);
+                      }}
+                      leadingIcon={<Star size={16} />}
+                    >
+                      Write Review
+                    </Button>
+                    {reviews.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          navigate("/reviews", {
+                            state: {
+                              entityType: "product",
+                              variantId,
+                              reviews,
+                            },
+                          })
+                        }
+                      >
+                        {T.viewAllReviews}
+                      </Button>
+                    )}
+                  </div>
+                }
+              />
+              {reviews.length > 0 ? (
+                <AutoScrollRail
+                  label="Product reviews"
+                  className="pd-auto-rail"
+                  trackClassName="pd-review-list"
+                  itemClassName="pd-review-item"
+                >
+                  {reviews.slice(0, 8).map((item, index) => {
+                    const media = (item.image_urls || []).map((url) => ({
+                      url,
+                      type: isReviewVideoUrl(url) ? "video" : "image",
+                    }));
+                    return (
+                      <ReviewCard
+                        key={item.id || index}
+                        name={item.patient_name || "Patient"}
+                        rating={item.rating}
+                        text={item.comment || item.review || item.message || ""}
+                        media={media}
+                        onMediaClick={(mediaIndex) =>
+                          navigate("/reviews/gallery", {
+                            state: {
+                              images: item.image_urls,
+                              selectedIndex: mediaIndex,
+                              backgroundLocation: location,
+                            },
+                          })
+                        }
+                      />
+                    );
+                  })}
+                </AutoScrollRail>
+              ) : (
+                <EmptyState
+                  compact
+                  title={T.noReviews}
+                  description={T.noReviewsText}
+                />
+              )}
+            </section>
+
           </div>
         </div>
 
@@ -562,7 +642,8 @@ export default function ProductDetails() {
                     className={[
                       "pd-information__card",
                       item.wide && "pd-information__card--wide",
-                      item.key === "benifits" && "pd-information__card--benefit",
+                      item.key === "benifits" &&
+                        "pd-information__card--benefit",
                       (item.key === "safety_information" ||
                         item.key === "side_effects") &&
                         "pd-information__card--caution",
@@ -589,84 +670,6 @@ export default function ProductDetails() {
             </div>
           </section>
         ) : null}
-
-        <section className="pd-reviews" aria-labelledby="pd-reviews-title">
-          <SectionHeader
-            id="pd-reviews-title"
-            title={T.reviews}
-            action={
-              <div style={{ display: "flex", gap: "8px" }}>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={async () => {
-                    if (!(await requireAuth("Please login to write a review")))
-                      return;
-                    setShowReviewModal(true);
-                  }}
-                  leadingIcon={<Star size={16} />}
-                >
-                  Write Review
-                </Button>
-                {reviews.length > 0 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      navigate("/reviews", {
-                        state: {
-                          entityType: "product",
-                          variantId,
-                          reviews,
-                        },
-                      })
-                    }
-                  >
-                    {T.viewAllReviews}
-                  </Button>
-                )}
-              </div>
-            }
-          />
-          {reviews.length > 0 ? (
-            <AutoScrollRail
-              label="Product reviews"
-              className="pd-auto-rail"
-              trackClassName="pd-review-list"
-              itemClassName="pd-review-item"
-            >
-              {reviews.slice(0, 4).map((item, index) => {
-                const media = (item.image_urls || []).map((url) => ({
-                  url,
-                  type: isReviewVideoUrl(url) ? "video" : "image",
-                }));
-                return (
-                  <ReviewCard
-                    key={item.id || index}
-                    name={item.patient_name || "Patient"}
-                    rating={item.rating}
-                    text={item.comment || item.review || item.message || ""}
-                    media={media}
-                    onMediaClick={(mediaIndex) =>
-                      navigate("/reviews/gallery", {
-                        state: {
-                          images: item.image_urls,
-                          selectedIndex: mediaIndex,
-                        },
-                      })
-                    }
-                  />
-                );
-              })}
-            </AutoScrollRail>
-          ) : (
-            <EmptyState
-              compact
-              title={T.noReviews}
-              description={T.noReviewsText}
-            />
-          )}
-        </section>
 
         <ProductDiscoveryRails
           productId={discoveryProductId}

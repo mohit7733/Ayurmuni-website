@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import logoImg from "/images/FinalLogo.png";
 import { PRAKRITI_IMAGES } from "../questionnaire/configs";
 import * as ProfileServices from "../services/profileService";
+import "../design/pages/prakriti-profile.css";
 
 const getDynamicTitle = (result) => {
   switch (result?.toLowerCase()) {

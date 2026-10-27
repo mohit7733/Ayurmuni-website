@@ -28,9 +28,8 @@ export default function ReviewGallery() {
     navigate('/reviews', { replace: true });
   };
 
-  return (
-    <AppShell tab="products" hideFooter>
-      <Modal
+  const galleryModal = (
+    <Modal
         open
         onClose={closeGallery}
         size="lg"
@@ -69,6 +68,13 @@ export default function ReviewGallery() {
           <p className="empty-copy">No media to show</p>
         )}
       </Modal>
+  );
+
+  return location.state?.backgroundLocation ? (
+    galleryModal
+  ) : (
+    <AppShell tab="products" hideFooter>
+      {galleryModal}
     </AppShell>
   );
 }

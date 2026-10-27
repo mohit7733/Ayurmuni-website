@@ -240,7 +240,7 @@ export default function Products() {
               aria-labelledby="st-cats-title"
             >
               <SectionHeader
-                  className="st-section-header"
+                className="st-section-header"
                 id="st-cats-title"
                 title={T.shopByCategory}
                 description={T.shopByCategoryText}
@@ -326,35 +326,41 @@ export default function Products() {
                     itemClassName="st-buy-again-rail__item"
                   >
                     {recentProducts.map((item) => (
-                      <div key={`${item.id}-${item.variantId}`}>
-                        <div className="st-recent">
-                          <MediaCard
-                            image={item.image}
-                            title={item.name}
-                            subtitle={
-                              item.lastOrdered
+                      <MediaCard
+                        key={`${item.id}-${item.variantId}`}
+                        className="st-recent__card"
+                        image={item.image}
+                        title={item.name}
+                        subtitle={
+                          <>
+                            <span>
+                              {item.lastOrdered
                                 ? `Ordered ${item.lastOrdered}`
-                                : "Recent order"
-                            }
-                            onClick={() =>
-                              item.variantId &&
-                              navigate(`/products/${item.variantId}`)
-                            }
-                          />
-                          {item.price ? (
-                            <span className="st-recent__price">
-                              {formatRupee(item.price)}
+                                : "Recent order"}
                             </span>
-                          ) : null}
-                        </div>
-                      </div>
+                            {item.price ? (
+                              <span className="st-recent__price">
+                                {formatRupee(item.price)}
+                              </span>
+                            ) : null}
+                          </>
+                        }
+                        onClick={() =>
+                          item.variantId &&
+                          navigate(`/products/${item.variantId}`)
+                        }
+                      />
                     ))}
                   </AutoScrollRail>
                 )}
               </Reveal>
             ) : null}
 
-            <section className="st-section" aria-labelledby="st-all-title">
+            <Reveal
+              as="section"
+              className="st-section st-section--products"
+              aria-labelledby="st-all-title"
+            >
               <SectionHeader
                 className="st-products-header"
                 id="st-all-title"
@@ -460,7 +466,7 @@ export default function Products() {
                 </>
               )}
               {refreshing ? <p className="am-sr-only">{T.refreshing}</p> : null}
-            </section>
+            </Reveal>
 
             <footer className="st-foot">
               <Disclaimer variant="banner" />

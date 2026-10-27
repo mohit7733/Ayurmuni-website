@@ -523,6 +523,7 @@ export default function DoctorProfile() {
                             state: {
                               images: item.image_urls,
                               selectedIndex: mediaIndex,
+                              backgroundLocation: location,
                             },
                           })
                         }
