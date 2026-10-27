@@ -73,6 +73,7 @@ import {
 import { HOME_COPY as T } from '../content/home';
 // TEMP hidden per Rohit — DUMMY_LAB_TESTS, DUMMY_PANCHAKARMA unused while Lab/Panchakarma are hidden
 import { DUMMY_CONSULT_PACKAGES } from '../data/homeDummySections';
+import { loadConsultPackages } from '../services/packageService';
 import '../design/pages/home.css';
 import '../design/pages/dummy-offers.css';
 import '../design/pages/orange-lab.css';
@@ -474,6 +475,18 @@ export default function Home() {
     fetchCustomerData,
   } = useHomeData();
   const secondaryReady = !loading;
+  const [consultPackages, setConsultPackages] = useState(DUMMY_CONSULT_PACKAGES);
+  useEffect(() => {
+    let cancelled = false;
+    loadConsultPackages()
+      .then((rows) => {
+        if (!cancelled && rows.length) setConsultPackages(rows);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   // All Home APIs load on mount, one section after another in visual order (top to bottom).
   // Scrolling to a section that has not started yet bumps it to load immediately.
   const queue = useSectionQueue(HOME_SECTION_ORDER, { timeout: SECTION_STEP_TIMEOUT_MS });
@@ -1091,7 +1104,7 @@ export default function Home() {
               action={<ViewAll label={T.packagesTitle} onClick={() => navigate('/packages')} />}
             />
             <Rail label={T.packagesTitle}>
-              {DUMMY_CONSULT_PACKAGES.slice(0, 6).map((item) => (
+              {consultPackages.slice(0, 6).map((item) => (
                 <RailItem key={item.id} size="product">
                   <DummyOfferCard item={item} kind="package" onClick={() => navigate('/packages')} />
                 </RailItem>

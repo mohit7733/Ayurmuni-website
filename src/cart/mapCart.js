@@ -262,22 +262,7 @@ export const isOrderSuccessful = (response) => {
   return false;
 };
 
-<<<<<<< HEAD
-export const getVerifiedOrderResult = (response) =>
-  response?.data?.order ??
-  (response?.data?.id ||
-  response?.data?.order_code ||
-  response?.data?.order_number ||
-  response?.data?.order_id
-    ? response.data
-    : null) ??
-  response?.order ??
-  null;
-
-export const isPrepaidVerifyAcceptable = (response, razorpayResult) => {
-=======
 export const isPrepaidVerifyAcceptable = (response, gatewayResult) => {
->>>>>>> ac136b753d45f3e24bf28f3c2acd56b7878f7077
   if (isOrderSuccessful(response)) return true;
   const gatewayPaid = Boolean(
     gatewayResult?.razorpay_payment_id || gatewayResult?.gateway_payment_id,

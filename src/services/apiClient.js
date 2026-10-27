@@ -226,6 +226,7 @@ export const MUTATION_RULES = [
     'customers/answer_prakriti/',
     ['customers/questionnaires/', 'customers/profile/', 'customers/prakriti/', 'customers/suggested/', 'customers/dashboard/'],
   ],
+  ['packages/', ['packages/']],
   // Login, register, account recovery and anything unlisted: drop everything.
 ];
 

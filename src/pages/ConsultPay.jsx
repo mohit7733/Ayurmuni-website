@@ -57,7 +57,6 @@ import {
   StepIndicator,
 } from "../components/ui";
 import { BOOKING_COPY as T } from "../content/booking";
-import { loadRazorpay, normalizeRazorpayContact } from "../payment/razorpay";
 import { nameInitial } from '../utils/initials';
 import "../design/pages/booking.css";
 
@@ -336,86 +335,6 @@ export default function ConsultPay() {
         }
       }
       const payable = consultPayableRupees(payment, feeBreakdown.total);
-<<<<<<< HEAD
-      const amount = toRazorpayPaise(
-        payment.amount ?? payment?.summary?.total_payable_amount,
-        payable,
-      );
-      const key = String(payment?.razorpay_key || "").trim();
-      const orderId = String(payment?.razorpay_order_id || "").trim();
-      if (!key) {
-        showSuccessToast("Payment key missing from order response", "error");
-        return;
-      }
-      if (!orderId) {
-        showSuccessToast("Razorpay order id missing from order response", "error");
-        return;
-      }
-      if (!Number.isFinite(amount) || amount <= 0) {
-        showSuccessToast("Invalid payment amount", "error");
-        return;
-      }
-      const Razorpay = await loadRazorpay();
-      await new Promise((resolve) => {
-        let settled = false;
-        const done = () => {
-          if (settled) return;
-          settled = true;
-          resolve();
-        };
-        const rzp = new Razorpay({
-          key,
-          amount,
-          currency: payment.currency || "INR",
-          name: doctor.full_name || doctorDisplayName(doctor) || "AyurMuni",
-          description: "Consultation payment",
-          order_id: orderId,
-          prefill: {
-            name: doctor.full_name || doctorDisplayName(doctor) || "AyurMuni",
-            email: doctor.email || "customer@ayurmuni.com",
-            contact: normalizeRazorpayContact(
-              activePatient?.phone_number ||
-                activePatient?.phone ||
-                doctor?.phone_number,
-            ),
-          },
-          theme: { color: "#0D614E" },
-          handler: async (response) => {
-            setVerifying(true);
-            try {
-              const verify = await verifyConsultationPayment({
-                payment_id: payment.payment_id,
-                razorpay_order_id: orderId,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-              });
-              if (!isApiSuccess(verify)) {
-                showSuccessToast(
-                  verify?.message || "Payment verification failed",
-                  "error",
-                );
-              } else {
-                finish(verify);
-              }
-            } finally {
-              setVerifying(false);
-              done();
-            }
-          },
-          modal: {
-            ondismiss: () => {
-              if (settled) return;
-              showSuccessToast(
-                "Payment cancelled. You can try again anytime.",
-                "error",
-              );
-              done();
-            },
-          },
-        });
-        rzp.on?.("payment.failed", (resp) => {
-          if (settled) return;
-=======
       const checkout = extractCashfreeCheckout({
         ...paymentResponse,
         data: { ...(paymentResponse?.data || {}), ...payment },
@@ -482,17 +401,10 @@ export default function ConsultPay() {
           ]);
         }
         if (!payload.gateway_payment_id) {
->>>>>>> ac136b753d45f3e24bf28f3c2acd56b7878f7077
           showSuccessToast(
             "Cashfree has not returned the payment id yet. Wait a few seconds, then confirm the booking again.",
             "error",
           );
-<<<<<<< HEAD
-          done();
-        });
-        rzp.open();
-      });
-=======
           return;
         }
         const verify = await verifyConsultationPayment(payload);
@@ -515,7 +427,6 @@ export default function ConsultPay() {
       } finally {
         setVerifying(false);
       }
->>>>>>> ac136b753d45f3e24bf28f3c2acd56b7878f7077
     } catch (error) {
       showSuccessToast(error?.message || "Unable to start payment", "error");
     } finally {

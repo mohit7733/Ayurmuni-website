@@ -103,6 +103,7 @@
   transition: background 200ms ease;
 }
 .pp-card__cta:hover { background: #0c4236; }
+.pp-card__cta:disabled { opacity: 0.65; cursor: progress; }
 .pp-card.is-featured .pp-card__cta { background: linear-gradient(135deg, #105343, #0c4236); box-shadow: inset 0 0 0 1px rgba(228, 196, 122, 0.6); }
 .pp-card__cta:focus-visible, .pp-help:focus-visible { outline: 2px solid var(--pp-gold); outline-offset: 2px; }
 

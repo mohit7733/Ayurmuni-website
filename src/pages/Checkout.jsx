@@ -11,7 +11,6 @@ import {
   CHECKOUT_KEY,
   ORDER_RESULT_KEY,
   formatAddress,
-  getVerifiedOrderResult,
   isCodAvailableForItems,
   isOrderSuccessful,
 } from '../cart/mapCart';
@@ -32,15 +31,6 @@ import { Badge, Button, Disclaimer, EmptyState } from '../components/ui';
 import { CHECKOUT_COPY as T } from '../content/checkout';
 import '../design/pages/checkout.css';
 import {
-<<<<<<< HEAD
-  loadRazorpay,
-  normalizeRazorpayContact,
-  pickPaymentData,
-  pickRazorpayKey,
-  pickRazorpayOrderId,
-  preloadRazorpay,
-} from '../payment/razorpay';
-=======
   buildCashfreeVerifyPayload,
   clearCashfreePending,
   enrichCashfreeVerifyPayload,
@@ -63,7 +53,6 @@ const pickPaymentData = (orderResponse) => {
     ...nested,
   };
 };
->>>>>>> ac136b753d45f3e24bf28f3c2acd56b7878f7077
 
 const isCouponOrderError = (message) => {
   const msg = String(message || '').toLowerCase();
@@ -369,12 +358,6 @@ export default function Checkout() {
         return;
       }
       const payment = pickPaymentData(result);
-<<<<<<< HEAD
-      const key = pickRazorpayKey(payment);
-      const orderId = pickRazorpayOrderId(payment);
-      if (!key || !orderId) {
-        const failMsg = 'Payment gateway not ready. Please try again.';
-=======
       const checkout = extractCashfreeCheckout(result);
       if (!checkout.sessionId) {
         if (total <= 0 && isOrderSuccessful(result)) {
@@ -390,84 +373,10 @@ export default function Checkout() {
         }
         const failMsg =
           'Online payment is not configured right now. Please choose Cash on Delivery or contact support.';
->>>>>>> ac136b753d45f3e24bf28f3c2acd56b7878f7077
         setOrderError(failMsg);
         showSuccessToast(failMsg, 'error');
         return;
       }
-<<<<<<< HEAD
-      const customerName = String(
-        customer?.first_name ?? customer?.full_name ?? selectedAddress?.full_name ?? selectedAddress?.name ?? 'AyurMuni Customer',
-      );
-      const customerEmail = String(customer?.email ?? selectedAddress?.email ?? 'customer@ayurmuni.com');
-      const amount = toRazorpayPaise(payment?.amount, total);
-      const Razorpay = await loadRazorpay();
-      await new Promise((resolve) => {
-        let settled = false;
-        const finish = () => {
-          if (settled) return;
-          settled = true;
-          resolve();
-        };
-        const rzp = new Razorpay({
-          key,
-          amount,
-          currency: payment?.currency || 'INR',
-          name: customerName,
-          description: 'Product Order Payment',
-          order_id: orderId,
-          prefill: {
-            name: customerName,
-            email: customerEmail,
-            contact: normalizeRazorpayContact(
-              customer?.phone_number ?? customer?.mobile ?? selectedAddress?.phone_number ?? selectedAddress?.phone,
-            ),
-          },
-          theme: { color: '#0D614E' },
-          handler: async (response) => {
-            setVerifying(true);
-            try {
-              const verify = await verifyOrderPayment({
-                payment_id: payment?.payment_id,
-                razorpay_order_id: orderId,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-              });
-              if (isPrepaidVerifyAcceptable(verify, response)) {
-                showSuccessToast('Payment Successful', 'success');
-                await finishOrder(
-                  getVerifiedOrderResult(verify) ?? {
-                    ...payment,
-                    razorpay_payment_id: response.razorpay_payment_id,
-                    payment_status: 'paid',
-                  },
-                );
-              } else {
-                const failMsg =
-                  failMessage(verify, 'Payment verification failed. Some items may be out of stock.');
-                setOrderError(failMsg);
-                showSuccessToast(failMsg, 'error');
-              }
-            } finally {
-              setVerifying(false);
-              finish();
-            }
-          },
-          modal: {
-            ondismiss: () => {
-              if (settled) return;
-              showSuccessToast('Payment cancelled. You can try again anytime.', 'error');
-              finish();
-            },
-          },
-        });
-        rzp.on('payment.failed', () => {
-          if (settled) return;
-          showSuccessToast('Unable to complete payment. Please try again.', 'error');
-          finish();
-        });
-        rzp.open();
-=======
       if (!checkout.paymentId && payment?.payment_id) checkout.paymentId = String(payment.payment_id);
       saveCashfreePending({
         kind: 'order',
@@ -479,7 +388,6 @@ export default function Checkout() {
         sessionId: checkout.sessionId,
         items,
         placed: result,
->>>>>>> ac136b753d45f3e24bf28f3c2acd56b7878f7077
       });
       const cfResult = await openCashfreeCheckout({
         sessionId: checkout.sessionId,
