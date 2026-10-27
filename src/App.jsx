@@ -49,6 +49,7 @@ const ReviewPage = loadPage(() => import("./pages/ReviewPage"));
 const ReviewGallery = loadPage(() => import("./pages/ReviewGallery"));
 const Cart = loadPage(() => import("./pages/Cart"));
 const Checkout = loadPage(() => import("./pages/Checkout"));
+const PaymentReturn = loadPage(() => import("./pages/PaymentReturn"));
 const OrderConfirmation = loadPage(() => import("./pages/OrderConfirmation"));
 const Consult = loadPage(() => import("./pages/Consult"));
 const ConsultHistory = loadPage(() => import("./pages/ConsultHistory"));
@@ -304,6 +305,7 @@ export default function App() {
                   <Route path="/reviews/gallery" element={<ReviewGallery />} />
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/payment/return" element={<PaymentReturn />} />
                   <Route
                     path="/order-confirmation"
                     element={<OrderConfirmation />}

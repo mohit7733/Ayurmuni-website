@@ -7,7 +7,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, __dirname, '');
-  const apiTarget = String(env.VITE_API_BASE || 'https://ayurmuni.aimantra.info/')
+  const apiTarget = String(env.VITE_API_BASE || 'https://scarce-derby-voice.ngrok-free.dev/')
     .replace(/\/+$/, '');
 
   return {

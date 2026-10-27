@@ -14,13 +14,12 @@ import {
   getVerifiedOrderResult,
   isCodAvailableForItems,
   isOrderSuccessful,
-  isPrepaidVerifyAcceptable,
 } from '../cart/mapCart';
 import { calculateOrderFees, feeRateLabel, parseFeeQuoteConfig } from '../cart/feeQuote';
-import { toRazorpayPaise } from '../consult/doctors';
 import {
   buildCartItemIds,
   buildOrderPayload,
+  getOrderById,
   getOrderFeeQuote,
   placeOrder,
   verifyOrderPayment,
@@ -33,6 +32,7 @@ import { Badge, Button, Disclaimer, EmptyState } from '../components/ui';
 import { CHECKOUT_COPY as T } from '../content/checkout';
 import '../design/pages/checkout.css';
 import {
+<<<<<<< HEAD
   loadRazorpay,
   normalizeRazorpayContact,
   pickPaymentData,
@@ -40,6 +40,30 @@ import {
   pickRazorpayOrderId,
   preloadRazorpay,
 } from '../payment/razorpay';
+=======
+  buildCashfreeVerifyPayload,
+  clearCashfreePending,
+  enrichCashfreeVerifyPayload,
+  extractCashfreeCheckout,
+  isCashfreePaymentVerified,
+  isRecordUuid,
+  openCashfreeCheckout,
+  preloadCashfree,
+  saveCashfreePending,
+  shouldVerifyCashfreePayment,
+} from '../payment/cashfree';
+
+const pickPaymentData = (orderResponse) => {
+  const data = orderResponse?.data && typeof orderResponse.data === 'object' ? orderResponse.data : {};
+  const nested = data.payment || orderResponse?.payment || data.order?.payment || {};
+  return {
+    ...orderResponse,
+    ...data,
+    ...(data.order && typeof data.order === 'object' ? data.order : {}),
+    ...nested,
+  };
+};
+>>>>>>> ac136b753d45f3e24bf28f3c2acd56b7878f7077
 
 const isCouponOrderError = (message) => {
   const msg = String(message || '').toLowerCase();
@@ -63,10 +87,9 @@ export default function Checkout() {
   const [placing, setPlacing] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [orderError, setOrderError] = useState('');
-  const [customer, setCustomer] = useState(null);
 
   useEffect(() => {
-    preloadRazorpay();
+    preloadCashfree();
   }, []);
 
   useEffect(() => {
@@ -102,7 +125,6 @@ export default function Checkout() {
       const profileRes = await user_profile();
       const profile =
         profileRes?.data && !Array.isArray(profileRes.data) ? profileRes.data : profileRes;
-      setCustomer(profile);
       const fromProfile = Array.isArray(profile?.addresses) ? profile.addresses : [];
       const addressRes = await getAddresses();
       const list = listAddresses(addressRes);
@@ -347,14 +369,33 @@ export default function Checkout() {
         return;
       }
       const payment = pickPaymentData(result);
+<<<<<<< HEAD
       const key = pickRazorpayKey(payment);
       const orderId = pickRazorpayOrderId(payment);
       if (!key || !orderId) {
         const failMsg = 'Payment gateway not ready. Please try again.';
+=======
+      const checkout = extractCashfreeCheckout(result);
+      if (!checkout.sessionId) {
+        if (total <= 0 && isOrderSuccessful(result)) {
+          await finishOrder(result);
+          return;
+        }
+        if (import.meta.env.DEV) {
+          console.warn('[checkout] prepaid order response has no Cashfree payment session', {
+            hasSession: Boolean(checkout.sessionId),
+            hasOrderId: Boolean(checkout.orderId),
+            keys: Object.keys(payment || {}),
+          });
+        }
+        const failMsg =
+          'Online payment is not configured right now. Please choose Cash on Delivery or contact support.';
+>>>>>>> ac136b753d45f3e24bf28f3c2acd56b7878f7077
         setOrderError(failMsg);
         showSuccessToast(failMsg, 'error');
         return;
       }
+<<<<<<< HEAD
       const customerName = String(
         customer?.first_name ?? customer?.full_name ?? selectedAddress?.full_name ?? selectedAddress?.name ?? 'AyurMuni Customer',
       );
@@ -426,7 +467,72 @@ export default function Checkout() {
           finish();
         });
         rzp.open();
+=======
+      if (!checkout.paymentId && payment?.payment_id) checkout.paymentId = String(payment.payment_id);
+      saveCashfreePending({
+        kind: 'order',
+        paymentId: checkout.paymentId,
+        orderId: checkout.orderId,
+        recordId: String(result?.data?.id || result?.data?.order?.id || result?.data?.order_id || '').trim(),
+        gatewayPaymentId: checkout.gatewayPaymentId,
+        signature: checkout.signature,
+        sessionId: checkout.sessionId,
+        items,
+        placed: result,
+>>>>>>> ac136b753d45f3e24bf28f3c2acd56b7878f7077
       });
+      const cfResult = await openCashfreeCheckout({
+        sessionId: checkout.sessionId,
+        mode: checkout.mode,
+        paymentId: checkout.paymentId,
+      });
+      if (cfResult?.redirect) return;
+      if (!shouldVerifyCashfreePayment(cfResult)) {
+        clearCashfreePending();
+        showSuccessToast('Payment cancelled. You can try again anytime.', 'error');
+        return;
+      }
+      setVerifying(true);
+      try {
+        let payload = buildCashfreeVerifyPayload(checkout, cfResult);
+        if (!payload.gateway_payment_id) {
+          const recordIds = [...new Set(
+            [result?.data?.id, result?.data?.order?.id, result?.data?.order_id]
+              .map((value) => String(value || '').trim())
+              .filter((id) => isRecordUuid(id)),
+          )];
+          payload = await enrichCashfreeVerifyPayload(
+            payload,
+            recordIds.map((id) => () => getOrderById(id)),
+          );
+        }
+        if (!payload.gateway_payment_id) {
+          const failMsg =
+            'Cashfree has not returned the payment id yet. Wait a few seconds, then try the payment again.';
+          setOrderError(failMsg);
+          showSuccessToast(failMsg, 'error');
+          return;
+        }
+        const verify = await verifyOrderPayment(payload);
+        const completed = Boolean(cfResult?.paymentDetails);
+        if (isCashfreePaymentVerified(verify)) {
+          clearCashfreePending();
+          showSuccessToast('Payment Successful', 'success');
+          await finishOrder(verify?.data ? verify : result);
+        } else if (completed) {
+          const failMsg = failMessage(verify, 'Payment verification failed');
+          setOrderError(failMsg);
+          showSuccessToast(failMsg, 'error');
+        } else {
+          clearCashfreePending();
+          const failMsg = cfResult?.error?.message
+            ? String(cfResult.error.message)
+            : 'Payment cancelled. You can try again anytime.';
+          showSuccessToast(failMsg, 'error');
+        }
+      } finally {
+        setVerifying(false);
+      }
     } catch (error) {
       const failMsg = formatOrderStockError(error?.message) || error?.message || 'Something went wrong. Please try again.';
       if (handleCouponFailure(failMsg)) return;

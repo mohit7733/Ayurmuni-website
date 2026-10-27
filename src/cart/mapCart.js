@@ -234,12 +234,17 @@ export const isOrderSuccessful = (response) => {
 
   const data = response.data ?? {};
   const msg = getResponseMessage(response);
+  const orderStatus = String(data?.order_status || response?.order_status || '').toUpperCase();
   const paidLike =
     data?.payment_id ||
     data?.razorpay_payment_id ||
+    data?.cf_payment_id ||
+    data?.cashfree_payment_id ||
+    data?.gateway_payment_id ||
     data?.status === 'paid' ||
     data?.payment_status === 'paid' ||
     data?.payment_status === 'success' ||
+    orderStatus === 'PAID' ||
     data?.order_status ||
     data?.verified === true ||
     response?.payment_id ||
@@ -257,6 +262,7 @@ export const isOrderSuccessful = (response) => {
   return false;
 };
 
+<<<<<<< HEAD
 export const getVerifiedOrderResult = (response) =>
   response?.data?.order ??
   (response?.data?.id ||
@@ -269,8 +275,14 @@ export const getVerifiedOrderResult = (response) =>
   null;
 
 export const isPrepaidVerifyAcceptable = (response, razorpayResult) => {
+=======
+export const isPrepaidVerifyAcceptable = (response, gatewayResult) => {
+>>>>>>> ac136b753d45f3e24bf28f3c2acd56b7878f7077
   if (isOrderSuccessful(response)) return true;
-  if (!razorpayResult?.razorpay_payment_id) return false;
+  const gatewayPaid = Boolean(
+    gatewayResult?.razorpay_payment_id || gatewayResult?.gateway_payment_id,
+  );
+  if (!gatewayPaid) return false;
   const msg = getResponseMessage(response);
   if (isHardPaymentFailure(msg)) return false;
   if (

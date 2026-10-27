@@ -22,12 +22,12 @@ import {
   doctorQualification,
   formatSlotTime,
   resolveDoctorSpecializations,
-  toRazorpayPaise,
 } from "../consult/doctors";
 import { formatDoctorDisplayName } from "../consult/appointmentUtils";
 import {
   createConsultationPayment,
   getConsultationFeeQuote,
+  getConsultationPayment,
   retryConsultationPayment,
   verifyConsultationPayment,
 } from "../services/consultService";
@@ -38,6 +38,18 @@ import {
 } from "../services/patientService";
 import { requireAuth } from "../services/guestAuth";
 import { showSuccessToast } from "../config/key";
+import {
+  buildCashfreeVerifyPayload,
+  clearCashfreePending,
+  enrichCashfreeVerifyPayload,
+  extractCashfreeCheckout,
+  isCashfreePaymentVerified,
+  isRecordUuid,
+  openCashfreeCheckout,
+  preloadCashfree,
+  saveCashfreePending,
+  shouldVerifyCashfreePayment,
+} from "../payment/cashfree";
 import {
   Button,
   Disclaimer,
@@ -222,7 +234,12 @@ export default function ConsultPay() {
     quotedCouponCode,
   ]);
 
+  useEffect(() => {
+    preloadCashfree();
+  }, []);
+
   const finish = (result) => {
+    clearCashfreePending();
     clearPending(slot.id);
     sessionStorage.removeItem(CONSULT_PAY_KEY);
     const paid = result?.data || result || {};
@@ -319,6 +336,7 @@ export default function ConsultPay() {
         }
       }
       const payable = consultPayableRupees(payment, feeBreakdown.total);
+<<<<<<< HEAD
       const amount = toRazorpayPaise(
         payment.amount ?? payment?.summary?.total_payable_amount,
         payable,
@@ -397,14 +415,107 @@ export default function ConsultPay() {
         });
         rzp.on?.("payment.failed", (resp) => {
           if (settled) return;
+=======
+      const checkout = extractCashfreeCheckout({
+        ...paymentResponse,
+        data: { ...(paymentResponse?.data || {}), ...payment },
+      });
+      if (!checkout.paymentId && payment.payment_id) {
+        checkout.paymentId = String(payment.payment_id);
+      }
+      if (!checkout.sessionId) {
+        if (payable <= 0) {
+          finish(paymentResponse);
+          return;
+        }
+        showSuccessToast("Payment details missing. Please try again.", "error");
+        return;
+      }
+      saveCashfreePending({
+        kind: "consultation",
+        paymentId: checkout.paymentId,
+        orderId: checkout.orderId,
+        gatewayPaymentId: checkout.gatewayPaymentId,
+        signature: checkout.signature,
+        sessionId: checkout.sessionId,
+        confirmBase: {
+          doctor_name: doctorDisplayName(doctor),
+          doctor_image: doctorImage(doctor),
+          date: booking.date,
+          start_time: slot.start_time,
+          end_time: slot.end_time,
+          concern: booking.concern,
+          doctor,
+          slot,
+          patient: {
+            patient_name: patientName(activePatient),
+            phone_number: activePatient?.phone_number || activePatient?.phone,
+          },
+          patient_name: patientName(activePatient),
+          amount: payable,
+          consultation_mode: "Video consultation",
+          hospital_name: doctor?.hospital_name || doctor?.clinic_name,
+          doctor_specialization: resolveDoctorSpecializations(doctor),
+          appointment_status: "CONFIRMED",
+        },
+      });
+      const cfResult = await openCashfreeCheckout({
+        sessionId: checkout.sessionId,
+        mode: checkout.mode,
+        paymentId: checkout.paymentId,
+      });
+      if (cfResult?.redirect) return;
+      if (!shouldVerifyCashfreePayment(cfResult)) {
+        clearCashfreePending();
+        showSuccessToast(
+          "Payment cancelled. You can try again anytime.",
+          "error",
+        );
+        return;
+      }
+      setVerifying(true);
+      try {
+        let payload = buildCashfreeVerifyPayload(checkout, cfResult);
+        if (!payload.gateway_payment_id && isRecordUuid(checkout.paymentId)) {
+          payload = await enrichCashfreeVerifyPayload(payload, [
+            () => getConsultationPayment(checkout.paymentId),
+          ]);
+        }
+        if (!payload.gateway_payment_id) {
+>>>>>>> ac136b753d45f3e24bf28f3c2acd56b7878f7077
           showSuccessToast(
-            resp?.error?.description || "Payment failed. Please try again.",
+            "Cashfree has not returned the payment id yet. Wait a few seconds, then confirm the booking again.",
             "error",
           );
+<<<<<<< HEAD
           done();
         });
         rzp.open();
       });
+=======
+          return;
+        }
+        const verify = await verifyConsultationPayment(payload);
+        if (isCashfreePaymentVerified(verify)) {
+          finish(verify?.data ? verify : paymentResponse);
+        } else if (cfResult?.paymentDetails) {
+          showSuccessToast(
+            verify?.message || "Payment verification failed",
+            "error",
+          );
+        } else {
+          clearCashfreePending();
+          showSuccessToast(
+            cfResult?.error?.message ||
+              verify?.message ||
+              "Payment cancelled. You can try again anytime.",
+            "error",
+          );
+        }
+      } finally {
+        setVerifying(false);
+      }
+>>>>>>> ac136b753d45f3e24bf28f3c2acd56b7878f7077
     } catch (error) {
       showSuccessToast(error?.message || "Unable to start payment", "error");
     } finally {
