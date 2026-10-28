@@ -1,11 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowRight, Calendar, Leaf, Salad } from 'lucide-react';
+import { Calendar, Check, ChevronDown, Leaf, Salad, X } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import { ActiveDietCard } from '../components/ActiveDietPlan';
 import dietCoverImg from '/images/login/14.webp';
 import { SectionHead, ViewAll } from '../components/ServiceHome';
 import DietListCard from '../components/DietListCard';
+import '../design/pages/store.css';
+import '../design/brand.css';
+import '../design/product-card-home.css';
+import '../design/pages/products.css';
 import '../design/pages/diet-list.css';
 import { formatRupee, mapProductCategory, normalizeApiList } from '../home/catalog';
 import { getServiceCategoryId } from '../home/serviceCategories';
@@ -22,7 +26,6 @@ import {
 } from '../diet/utils';
 import {
   Button,
-  Chip,
   ConcernCarousel,
   EmptyState,
   PageBar,
@@ -32,6 +35,7 @@ import {
   Tile,
 } from '../components/ui';
 import { HOME_COPY as H } from '../content/home';
+import { DIET_COPY as D } from '../content/diet';
 
 const ALL = 'all';
 // App DietScreen defaults; the lists grow from loaded plans (mergeFilterCatalog).
@@ -76,11 +80,106 @@ const mergeFilterCatalog = (prev, plans) => {
     calories: Array.from(calories).sort(sortNumericLike),
   };
 };
-const STATUS_TABS = [
-  { key: 'all', label: 'All' },
-  { key: 'active', label: 'Active' },
-  { key: 'inactive', label: 'Inactive' },
+/**
+ * Collapsible sidebar filter group (products page st-cat-filter look).
+ * type "multi" = checkboxes (values[]), type "single" = radios (value).
+ */
+function FilterGroup({ id, label, type = 'multi', values = [], value, options, onToggle, onChange, onClear }) {
+  const multi = type === 'multi';
+  const picked = multi ? values : value !== ALL ? [value] : [];
+  const active = picked.length > 0;
+  const [open, setOpen] = useState(active);
+  useEffect(() => {
+    if (active) setOpen(true);
+  }, [active]);
+  const summary =
+    picked.length > 1
+      ? `${picked.length} selected`
+      : active
+        ? options.find((o) => o.value === picked[0])?.label || ''
+        : '';
+  const panelId = `${id}-panel`;
+  return (
+    <div className={`dt-fgroup${open ? ' is-open' : ''}`}>
+      <h3 className="dt-fgroup__head">
+        <button
+          type="button"
+          id={id}
+          className="dt-fgroup__toggle"
+          aria-expanded={open}
+          aria-controls={panelId}
+          onClick={() => setOpen((v) => !v)}
+        >
+          <span className="dt-fgroup__label">{label}</span>
+          {active && !open ? <span className="dt-fgroup__value">{summary}</span> : null}
+          {active ? <span className="dt-fgroup__dot" aria-label="filter applied" /> : null}
+          <ChevronDown size={16} className="dt-fgroup__chev" aria-hidden />
+        </button>
+      </h3>
+      <div id={panelId} role="region" aria-labelledby={id} className="dt-fgroup__panel" inert={!open}>
+        <div className="dt-fgroup__inner">
+          <ul className="dt-opts" role={multi ? 'group' : 'radiogroup'} aria-labelledby={id}>
+            {options.map((o) => {
+              const on = picked.includes(o.value);
+              const disabled = o.count === 0 && !on;
+              return (
+                <li key={o.value}>
+                  <label className={`dt-opt${on ? ' is-on' : ''}${disabled ? ' is-disabled' : ''}`}>
+                    <input
+                      type={multi ? 'checkbox' : 'radio'}
+                      name={multi ? undefined : id}
+                      checked={on}
+                      disabled={disabled}
+                      onChange={() => (multi ? onToggle(o.value) : onChange(o.value))}
+                    />
+                    <span className={`dt-opt__box${multi ? '' : ' is-radio'}`} aria-hidden>
+                      {multi && on ? <Check size={12} strokeWidth={3} /> : null}
+                    </span>
+                    <span className="dt-opt__label">{o.label}</span>
+                    {typeof o.count === 'number' ? <span className="dt-opt__count">{o.count}</span> : null}
+                  </label>
+                </li>
+              );
+            })}
+          </ul>
+          {active && onClear ? (
+            <button type="button" className="dt-fgroup__clear" onClick={onClear}>
+              Clear {label.toLowerCase()}
+            </button>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const STATUS_OPTIONS = [
+  { value: 'active', label: 'Active' },
+  { value: 'inactive', label: 'Paused' },
 ];
+const MULTI_GROUPS = [
+  { key: 'status', label: 'Plan status' },
+  { key: 'prakriti', label: 'Prakriti' },
+  { key: 'disease', label: 'Health concern' },
+  { key: 'paid', label: 'Price' },
+  { key: 'duration', label: 'Duration' },
+  { key: 'calories', label: 'Calories' },
+];
+const EMPTY_SELECTION = { status: [], prakriti: [], disease: [], paid: [], duration: [], calories: [] };
+const isFreePlan = (p) => p?.is_paid === false || Number(p?.price) === 0;
+const GROUP_MATCH = {
+  status: (p, v) => getDietListStatus(p) === (v === 'active' ? 'active' : 'paused'),
+  prakriti: (p, v) => String(p?.prakriti || '').trim().toLowerCase() === String(v).toLowerCase(),
+  disease: (p, v) => (Array.isArray(p?.health_diseases) ? p.health_diseases : []).some((d) => String(d?.id ?? '') === v),
+  paid: (p, v) => (v === 'false' ? isFreePlan(p) : !isFreePlan(p)),
+  duration: (p, v) => planDurationValue(p) === v,
+  calories: (p, v) => planCaloriesValue(p) === v,
+};
+/** OR within a group, AND across groups; `skip` leaves one group out (for facet counts). */
+const planPasses = (plan, sel, skip) =>
+  MULTI_GROUPS.every(
+    ({ key }) => key === skip || !sel[key].length || sel[key].some((v) => GROUP_MATCH[key](plan, v)),
+  );
 
 const durationLabel = (plan) => {
   if (plan?.duration) return String(plan.duration);
@@ -99,11 +198,8 @@ export default function Diet() {
 
   const [search, setSearch] = useState('');
   const [debounced, setDebounced] = useState('');
-  const [prakriti, setPrakriti] = useState(ALL);
-  const [diseaseFilter, setDiseaseFilter] = useState(ALL);
-  const [paidFilter, setPaidFilter] = useState(ALL);
-  const [durationFilter, setDurationFilter] = useState(ALL);
-  const [caloriesFilter, setCaloriesFilter] = useState(ALL);
+  // Multi-select groups (OR within a group, AND across groups) - filtered client-side.
+  const [selected, setSelected] = useState(EMPTY_SELECTION);
   const [sortFilter, setSortFilter] = useState(ALL);
   const [ratingFilter, setRatingFilter] = useState(ALL);
   const [filterCatalog, setFilterCatalog] = useState({
@@ -112,7 +208,14 @@ export default function Diet() {
     durations: DEFAULT_DURATIONS,
     calories: DEFAULT_CALORIES,
   });
-  const [statusTab, setStatusTab] = useState('all');
+  const statusSel = selected.status;
+  const statusTab = statusSel.length === 1 ? statusSel[0] : 'all';
+  const toggleOption = (key, value) =>
+    setSelected((prev) => {
+      const cur = prev[key];
+      return { ...prev, [key]: cur.includes(value) ? cur.filter((v) => v !== value) : [...cur, value] };
+    });
+  const clearGroup = (key) => setSelected((prev) => ({ ...prev, [key]: [] }));
 
   useEffect(() => {
     const timer = setTimeout(() => setDebounced(search.trim()), 400);
@@ -122,32 +225,18 @@ export default function Diet() {
   const listFilters = useMemo(
     () => ({
       search: debounced || undefined,
-      prakriti: prakriti !== ALL ? prakriti : undefined,
-      health_category_id:
-        diseaseFilter === ALL && healthCategoryId ? healthCategoryId : undefined,
-      health_disease_id: (diseaseFilter !== ALL ? diseaseFilter : '') || healthDiseaseId || undefined,
-      is_paid: paidFilter === 'true' || paidFilter === 'false' ? paidFilter : undefined,
-      duration: durationFilter !== ALL ? durationFilter : undefined,
-      calories: caloriesFilter !== ALL ? caloriesFilter : undefined,
+      health_category_id: !healthDiseaseId && healthCategoryId ? healthCategoryId : undefined,
+      health_disease_id: healthDiseaseId || undefined,
       min_rating: ratingFilter !== ALL ? ratingFilter : undefined,
       sort: ['popularity', 'latest', 'rating'].includes(sortFilter)
         ? sortFilter === 'rating'
           ? 'ratings'
           : sortFilter
         : undefined,
-      // Assignment status is filtered by the API as well (active / paused).
-      patient_assignment_status:
-        statusTab === 'active' ? 'active' : statusTab === 'inactive' ? 'paused' : undefined,
     }),
     [
-      statusTab,
       ratingFilter,
       debounced,
-      prakriti,
-      diseaseFilter,
-      paidFilter,
-      durationFilter,
-      caloriesFilter,
       sortFilter,
       healthCategoryId,
       healthDiseaseId,
@@ -183,82 +272,72 @@ export default function Diet() {
     };
   }, []);
 
-  const filterSelects = [
-    {
-      key: 'prakriti',
-      label: 'Prakriti',
-      value: prakriti,
-      set: setPrakriti,
-      options: [{ label: 'All Prakriti', value: ALL }, ...filterCatalog.prakriti.map((v) => ({ label: v, value: v }))],
-    },
-    {
-      key: 'disease',
-      label: 'Health disease',
-      value: diseaseFilter,
-      set: setDiseaseFilter,
-      options: [
-        { label: 'All Diseases', value: ALL },
-        ...filterCatalog.diseases.map((d) => ({ label: d.name, value: d.id })),
-      ],
-    },
-    {
-      key: 'paid',
-      label: 'Paid status',
-      value: paidFilter,
-      set: setPaidFilter,
-      options: [
-        { label: 'All', value: ALL },
-        { label: 'Free', value: 'false' },
-        { label: 'Paid', value: 'true' },
-      ],
-    },
-    {
-      key: 'duration',
-      label: 'Duration',
-      value: durationFilter,
-      set: setDurationFilter,
-      options: [
-        { label: 'All Durations', value: ALL },
-        ...filterCatalog.durations.map((v) => ({ label: `${v} days`, value: v })),
-      ],
-    },
-    {
-      key: 'calories',
-      label: 'Calories',
-      value: caloriesFilter,
-      set: setCaloriesFilter,
-      options: [
-        { label: 'All Calories', value: ALL },
-        ...filterCatalog.calories.map((v) => ({ label: `${v} kcal`, value: v })),
-      ],
-    },
-    {
-      key: 'rating',
-      label: 'Rating',
-      value: ratingFilter,
-      set: setRatingFilter,
-      options: [
-        { label: 'All ratings', value: ALL },
-        { label: '4.5 & above', value: '4.5' },
-        { label: '4.0 & above', value: '4' },
-        { label: '3.5 & above', value: '3.5' },
-        { label: '3.0 & above', value: '3' },
-      ],
-    },
-    {
-      key: 'sort',
-      label: 'Sort by',
-      value: sortFilter,
-      set: setSortFilter,
-      options: [
-        { label: 'Default', value: ALL },
-        { label: 'Popularity', value: 'popularity' },
-        { label: 'Latest', value: 'latest' },
-        { label: 'Highest rating', value: 'rating' },
-      ],
-    },
+  const ratingSelect = {
+    key: 'rating',
+    label: 'Rating',
+    value: ratingFilter,
+    set: setRatingFilter,
+    options: [
+      { label: 'Any rating', value: ALL },
+      { label: '4.5 & up', value: '4.5' },
+      { label: '4.0 & up', value: '4' },
+      { label: '3.5 & up', value: '3.5' },
+      { label: '3.0 & up', value: '3' },
+    ],
+  };
+  const sortSelect = {
+    key: 'sort',
+    value: sortFilter,
+    set: setSortFilter,
+    options: [
+      { label: 'Default', value: ALL },
+      { label: 'Popularity', value: 'popularity' },
+      { label: 'Latest', value: 'latest' },
+      { label: 'Highest rating', value: 'rating' },
+    ],
+  };
+  const groupOptions = {
+    status: STATUS_OPTIONS,
+    prakriti: filterCatalog.prakriti.map((v) => ({ label: v, value: v })),
+    disease: filterCatalog.diseases.map((d) => ({ label: d.name, value: d.id })),
+    paid: [
+      { label: 'Free', value: 'false' },
+      { label: 'Paid', value: 'true' },
+    ],
+    duration: filterCatalog.durations.map((v) => ({ label: `${v} days`, value: v })),
+    calories: filterCatalog.calories.map((v) => ({ label: `${v} kcal`, value: v })),
+  };
+  // Facet counts: plans matching every other group plus this option.
+  const multiGroups = MULTI_GROUPS.map((g) => {
+    const others = plans.filter((plan) => planPasses(plan, selected, g.key));
+    const options = groupOptions[g.key]
+      .map((o) => ({ ...o, count: others.filter((plan) => GROUP_MATCH[g.key](plan, o.value)).length }))
+      .filter((o) => o.count > 0 || selected[g.key].includes(o.value));
+    return { ...g, values: selected[g.key], options };
+  }).filter((g) => g.options.length > 1 || g.values.length > 0);
+  const appliedChips = [
+    ...MULTI_GROUPS.flatMap((g) =>
+      selected[g.key].map((v) => ({
+        id: `${g.key}:${v}`,
+        label: groupOptions[g.key].find((o) => o.value === v)?.label || v,
+        remove: () => toggleOption(g.key, v),
+      })),
+    ),
+    ...(ratingFilter !== ALL
+      ? [
+          {
+            id: 'rating',
+            label: ratingSelect.options.find((o) => o.value === ratingFilter)?.label || ratingFilter,
+            remove: () => setRatingFilter(ALL),
+          },
+        ]
+      : []),
   ];
-
+  const hasActiveFilters = appliedChips.length > 0;
+  const clearFilters = () => {
+    setSelected(EMPTY_SELECTION);
+    setRatingFilter(ALL);
+  };
   const visible = useMemo(() => {
     // Same pass as the app: min rating (also sent to the API), then status, active first.
     const minRating = ratingFilter !== ALL ? Number(ratingFilter) : 0;
@@ -266,6 +345,7 @@ export default function Diet() {
       Number.isFinite(minRating) && minRating > 0
         ? plans.filter((p) => Number(p?.avg_rating ?? p?.my_rating ?? 0) >= minRating)
         : plans;
+    const matched = source.filter((p) => planPasses(p, selected));
     const rank = (p) => {
       const st = getDietListStatus(p);
       if (st === 'active') return 0;
@@ -273,7 +353,7 @@ export default function Diet() {
       if (st === 'completed' || st === 'stopped') return 2;
       return 3;
     };
-    const ranked = [...source].sort((a, b) => {
+    const ranked = [...matched].sort((a, b) => {
       const byStatus = rank(a) - rank(b);
       if (byStatus !== 0) return byStatus;
       if (sortFilter === 'rating') {
@@ -281,10 +361,8 @@ export default function Diet() {
       }
       return 0;
     });
-    if (statusTab === 'active') return ranked.filter((p) => getDietListStatus(p) === 'active');
-    if (statusTab === 'inactive') return ranked.filter((p) => getDietListStatus(p) === 'paused');
     return ranked;
-  }, [plans, statusTab, ratingFilter, sortFilter]);
+  }, [plans, selected, ratingFilter, sortFilter]);
 
   const { preview: activeDiet } = useActiveDietHome(true);
 
@@ -318,7 +396,14 @@ export default function Diet() {
 
   const showSkeleton = loadingList && plans.length === 0;
   const listTitle =
-    statusTab === 'active' ? 'Active plans' : statusTab === 'inactive' ? 'Past plans' : H.dietTitle;
+    statusTab === 'active'
+      ? D.activeTitle
+      : statusTab === 'inactive'
+        ? D.pastTitle
+        : categoryName
+          ? D.listTitleFor(categoryName)
+          : D.listTitle;
+  const listText = categoryName ? D.listTextFor(categoryName) : D.listText;
 
   const searchBar = (
       <PageBar className="am-page-bar--slot" id="dt-title" title={`${categoryName || 'Diet'} plans`}>
@@ -339,109 +424,167 @@ export default function Diet() {
         <div className="hm-body">
 
 
-          <section className="hm-well hm-well--nourish dlp-list" aria-labelledby="dt-list-title">
+          <section className="st-section st-panel st-page--products dt-shop" aria-labelledby="dt-list-title">
             <SectionHead
               id="dt-list-title"
               title={listTitle}
-              description={
-                showSkeleton
-                  ? H.dietText
-                  : `${visible.length} ${visible.length === 1 ? 'plan' : 'plans'}`
-              }
-              action={
-                <div className="am-head-tools">
-                  {searchBar}
-                  <Button
-                    variant="accent"
-                    onClick={() => navigate('/diet/weekly')}
-                    leadingIcon={<Calendar size={16} aria-hidden />}
-                    trailingIcon={<ArrowRight size={16} aria-hidden />}
-                  >
-                    Weekly planner
-                  </Button>
-                  {!wantsAll ? <ViewAll label={H.dietTitle} onClick={() => navigate('/diet?view=all')} /> : null}
-                </div>
-              }
+              description={listText}
+              action={!wantsAll ? <ViewAll label={H.dietTitle} onClick={() => navigate('/diet?view=all')} /> : null}
             />
 
-            <div className="dt-filters" role="group" aria-label="Filter diet plans">
-              {filterSelects.map((f) => (
-                <label key={f.key} className={`dt-filter${f.value !== ALL ? ' is-active' : ''}`}>
-                  <span className="dt-filter-label">{f.label}</span>
-                  <select value={f.value} onChange={(e) => f.set(e.target.value)} aria-label={f.label}>
-                    {f.options.map((o) => (
-                      <option key={o.value} value={o.value}>
-                        {o.label}
-                      </option>
+            <div className="st-catalog">
+              <nav className="st-cat-col dt-filter-col" aria-label="Filter diet plans">
+                <p className="st-cat-col__eyebrow">Filter</p>
+                {multiGroups.map((g) => (
+                  <FilterGroup
+                    key={g.key}
+                    id={`dt-f-${g.key}`}
+                    label={g.label}
+                    values={g.values}
+                    options={g.options}
+                    onToggle={(v) => toggleOption(g.key, v)}
+                    onClear={() => clearGroup(g.key)}
+                  />
+                ))}
+                <FilterGroup
+                  id="dt-f-rating"
+                  label="Rating"
+                  type="single"
+                  value={ratingFilter}
+                  options={ratingSelect.options}
+                  onChange={setRatingFilter}
+                  onClear={() => setRatingFilter(ALL)}
+                />
+              </nav>
+
+              <div className="st-catalog__main">
+                <div className="st-controls">
+                  <div className="st-controls__info">
+                    <span>{showSkeleton ? D.loading : D.count(visible.length)}</span>
+                    {hasActiveFilters ? (
+                      <Button variant="ghost" size="sm" onClick={clearFilters} leadingIcon={<X size={14} />}>
+                        Clear filters
+                      </Button>
+                    ) : null}
+                  </div>
+                  {searchBar}
+                  <div className="st-controls__actions">
+                    {sortSelect ? (
+                      <select
+                        value={sortSelect.value}
+                        onChange={(e) => sortSelect.set(e.target.value)}
+                        className="st-sort-select"
+                        aria-label="Sort diet plans"
+                      >
+                        {sortSelect.options.map((o) => (
+                          <option key={o.value} value={o.value}>
+                            {o.value === ALL ? 'Sort: Default' : `Sort: ${o.label}`}
+                          </option>
+                        ))}
+                      </select>
+                    ) : null}
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => navigate('/diet/weekly')}
+                      leadingIcon={<Calendar size={16} aria-hidden />}
+                    >
+                      Weekly planner
+                    </Button>
+                  </div>
+                </div>
+
+                {appliedChips.length ? (
+                  <div className="dt-applied" aria-label="Applied filters">
+                    {appliedChips.map((c) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        className="dt-applied__chip"
+                        onClick={c.remove}
+                        aria-label={`Remove ${c.label} filter`}
+                      >
+                        {c.label}
+                        <X size={13} aria-hidden />
+                      </button>
                     ))}
-                  </select>
-                </label>
-              ))}
-            </div>
-            <div className="svc-chips" role="group" aria-label="Filter by plan status">
-              {STATUS_TABS.map((tab) => (
-                <Chip key={tab.key} selected={statusTab === tab.key} onClick={() => setStatusTab(tab.key)}>
-                  {tab.label}
-                </Chip>
-              ))}
-            </div>
+                    <button type="button" className="dt-applied__clear" onClick={clearFilters}>
+                      Clear all
+                    </button>
+                  </div>
+                ) : null}
 
-            {showSkeleton ? (
-              <SkeletonGrid count={8} className="svc-meal-grid" label="Loading diet plans" />
-            ) : visible.length === 0 ? (
-              <EmptyState
-                icon={<Leaf size={28} />}
-                title={
-                  statusTab === 'active'
-                    ? 'No active diet'
-                    : statusTab === 'inactive'
-                      ? 'No paused diets'
-                      : 'No diet plans'
-                }
-                description={
-                  statusTab === 'active'
-                    ? "You don't have a diet in progress. Open All and start a plan."
-                    : statusTab === 'inactive'
-                      ? 'No plans are currently paused.'
-                      : debounced
-                    ? 'Try another search.'
-                    : 'Plans for this concern will appear here when available.'
-                }
-              />
-            ) : (
-              <ul className="svc-meal-grid dlp-grid">
-                {visible.map((item) => {
-                  const price =
-                    item.is_paid === false || Number(item.price) === 0
-                      ? 'Free'
-                      : formatRupee(item.price);
-                  const duration = durationLabel(item);
-                  const rating = getDietPlanRatingLabel(item);
-                  return (
-                    <li key={item.id}>
-                      <DietListCard
-                        title={item.title || item.name}
-                        image={getDietPlanCoverUrl(item) || dietCoverImg}
-                        status={getDietListStatus(item) || 'none'}
-                        prakriti={item.prakriti}
-                        duration={duration}
-                        price={price}
-                        rating={rating}
-                        onOpen={() => navigate(`/diet/${item.id}`, { state: { item } })}
-                      />
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
+                {showSkeleton ? (
+                  <SkeletonGrid count={8} className="am-product-grid" label="Loading diet plans" />
+                ) : visible.length === 0 ? (
+                <EmptyState
+                  icon={<Leaf size={28} />}
+                  title={
+                    statusTab === 'active'
+                      ? D.emptyActiveTitle
+                      : statusTab === 'inactive'
+                        ? D.emptyPausedTitle
+                        : debounced
+                          ? D.emptySearchTitle
+                          : D.emptyTitle
+                  }
+                  description={
+                    statusTab === 'active'
+                      ? D.emptyActiveText
+                      : statusTab === 'inactive'
+                        ? D.emptyPausedText
+                        : debounced
+                          ? D.emptySearchText
+                          : D.emptyText
+                  }
+                  action={
+                    statusTab !== 'inactive' ? (
+                      <Button
+                        onClick={() => {
+                          setSelected(EMPTY_SELECTION);
+                          setSearch('');
+                          setDebounced('');
+                          navigate('/diet?view=all');
+                        }}
+                      >
+                        {D.browseAll}
+                      </Button>
+                    ) : null
+                  }
+                />
+                ) : (
+                  <ul className="am-product-grid">
+                    {visible.map((item) => {
+                      const price =
+                        item.is_paid === false || Number(item.price) === 0 ? 'Free' : formatRupee(item.price);
+                      return (
+                        <li key={item.id}>
+                          <DietListCard
+                            title={item.title || item.name}
+                            image={getDietPlanCoverUrl(item) || dietCoverImg}
+                            status={getDietListStatus(item) || 'none'}
+                            prakriti={item.prakriti}
+                            duration={durationLabel(item)}
+                            calories={planCaloriesValue(item)}
+                            price={price}
+                            rating={getDietPlanRatingLabel(item)}
+                            onOpen={() => navigate(`/diet/${item.id}`, { state: { item } })}
+                          />
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
 
-            {hasMore && plans.length > 0 ? (
-              <div className="svc-more">
-                <Button variant="secondary" disabled={loadingMore} onClick={loadMore}>
-                  {loadingMore ? 'Loading…' : 'Load more'}
-                </Button>
+                {hasMore && plans.length > 0 ? (
+                  <div className="st-more">
+                    <Button variant="secondary" loading={loadingMore} onClick={loadMore}>
+                      {loadingMore ? 'Loading…' : 'Load more'}
+                    </Button>
+                  </div>
+                ) : null}
               </div>
-            ) : null}
+            </div>
           </section>
 
           {activeDiet ? <ActiveDietCard plan={activeDiet} /> : null}

@@ -23,12 +23,17 @@ import { useCart } from '../hooks/useCart';
 import { useUnreadNotificationCount } from '../hooks/useNotifications';
 import useLoggedIn from '../hooks/useLoggedIn';
 import { requireAuth } from '../services/guestAuth';
+import { useGlobalSearch, useRecentSearches } from '../hooks/useServerSearch';
+import { invalidateRecentSearchQueries } from '../hooks/useRecentSearchQueries';
+import RecentSearchList from './search/RecentSearchList';
+import LiveSearchResults from './search/LiveSearchResults';
 import { savedAddressToParsed } from '../services/locationService';
 import { getAddresses, listAddresses, updateAddress } from '../services/profileService';
 import { PRIMARY_NAV } from '../site/nav';
 import Button from './ui/Button';
 import IconButton from './ui/IconButton';
 import { cx } from './ui/cx';
+import '../design/global-search.css';
 
 function placeName(item) {
   return item?.city || item?.address_type_name || item?.address_line_1 || 'Saved address';
@@ -76,6 +81,10 @@ export default function SiteHeader({ minimal = false }) {
   const [scrolled, setScrolled] = useState(false);
   const [query, setQuery] = useState(params.get('q') || '');
   const [searchOpen, setSearchOpen] = useState(false);
+  const [clearingRecent, setClearingRecent] = useState(false);
+  const [liveQuery, setLiveQuery] = useState('');
+  const recent = useRecentSearches(searchOpen && loggedIn && !query.trim());
+  const live = useGlobalSearch(liveQuery, Boolean(searchOpen && loggedIn && liveQuery));
   const [locationOpen, setLocationOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
   const [savedAddresses, setSavedAddresses] = useState([]);
@@ -116,6 +125,15 @@ export default function SiteHeader({ minimal = false }) {
     searchInputRef.current?.focus();
     return undefined;
   }, [searchOpen]);
+
+  useEffect(() => {
+    if (!searchOpen) {
+      setLiveQuery('');
+      return undefined;
+    }
+    const timer = window.setTimeout(() => setLiveQuery(query.trim()), 350);
+    return () => window.clearTimeout(timer);
+  }, [query, searchOpen]);
 
   useEffect(() => {
     if (!searchOpen && !locationOpen && !userOpen) return undefined;
@@ -238,6 +256,86 @@ export default function SiteHeader({ minimal = false }) {
     navigate(next ? `/search?q=${encodeURIComponent(next)}` : '/search');
   };
 
+  const openRecent = (item) => {
+    setSearchOpen(false);
+    setMenuOpen(false);
+    setQuery(item.query || '');
+    navigate(`/search?recent=${encodeURIComponent(item.id)}`);
+  };
+
+  const clearRecent = async () => {
+    if (clearingRecent) return;
+    setClearingRecent(true);
+    try {
+      await recent.clearAll();
+    } finally {
+      setClearingRecent(false);
+    }
+  };
+
+  const closeSearch = () => {
+    setSearchOpen(false);
+    setMenuOpen(false);
+  };
+
+  const openLiveHit = (hit) => {
+    const clicked = String(hit.title || '').trim() || query.trim();
+    if (clicked) {
+      live.commitRecentSearch(clicked).then(() => {
+        invalidateRecentSearchQueries();
+        recent.refresh();
+      });
+    }
+    closeSearch();
+    const raw = hit.raw || {};
+    switch (hit.type) {
+      case 'product':
+      case 'medicine': {
+        const id = raw.variant_id ?? raw.product_id ?? raw.id ?? hit.id;
+        if (id) navigate(`/products/${id}`, { state: { item: raw } });
+        break;
+      }
+      case 'doctor': {
+        const id = raw.id ?? raw.doctor_id ?? hit.id;
+        if (id) navigate(`/consult/doctors/${id}`, { state: { doctor: { ...raw, id } } });
+        break;
+      }
+      case 'brand': {
+        const id = String(raw.brand_id ?? raw.brand_name_id ?? raw.id ?? hit.id);
+        navigate(`/products/category?mode=product&brand=${encodeURIComponent(id)}&name=${encodeURIComponent(hit.title)}`);
+        break;
+      }
+      case 'category': {
+        const id = String(raw.id ?? raw.category_id ?? raw.product_category_id ?? hit.id);
+        const mode = raw.health_category_id ? 'health' : 'product';
+        navigate(`/products/category?mode=${mode}&category=${encodeURIComponent(id)}&name=${encodeURIComponent(hit.title)}`);
+        break;
+      }
+      case 'yoga_session': {
+        const id = raw.id ?? raw.yoga_session_id ?? hit.id;
+        if (id) navigate(`/yoga/${id}`, { state: { item: raw } });
+        break;
+      }
+      case 'diet_plan': {
+        const planId = String(raw.id ?? raw.diet_plan_id ?? hit.id ?? '').trim();
+        if (planId) {
+          navigate(`/diet/${planId}`, {
+            state: { item: { ...raw, id: raw.id ?? hit.id, diet_plan_id: raw.diet_plan_id ?? raw.id ?? hit.id, name: raw.name || hit.title } },
+          });
+        }
+        break;
+      }
+      case 'banner': {
+        const url = String(raw.redirect_url || raw.link || raw.url || '').trim();
+        if (url) window.open(url, '_blank', 'noopener');
+        break;
+      }
+      default:
+        navigate(`/search?q=${encodeURIComponent(query.trim())}`);
+        break;
+    }
+  };
+
   const signOut = async () => {
     setUserOpen(false);
     await clearLocationSession();
@@ -319,6 +417,31 @@ export default function SiteHeader({ minimal = false }) {
               Search
             </button>
           </form>
+          {searchOpen && loggedIn ? (
+            <div className="site-recent">
+              {query.trim() ? (
+                <LiveSearchResults
+                  results={live.results}
+                  loading={live.loading || query.trim() !== liveQuery}
+                  error={live.error}
+                  onPick={openLiveHit}
+                  onSeeAll={() => {
+                    closeSearch();
+                    navigate(`/search?q=${encodeURIComponent(query.trim())}`);
+                  }}
+                />
+              ) : (
+                <RecentSearchList
+                  items={recent.items}
+                  loading={recent.loading}
+                  clearing={clearingRecent}
+                  onPick={openRecent}
+                  onClear={clearRecent}
+                  onRemove={(item) => recent.removeOne({ id: item.id, query: item.query })}
+                />
+              )}
+            </div>
+          ) : null}
         </div>
 
         <div className="site-header-actions">

@@ -397,3 +397,25 @@
     transform: none;
   }
 }
+
+/* Yoga card + listing - built on the /diet listing (dlp-*) and site tokens */
+.yc .dlp-card__cta svg { color: var(--am-gold-300, #e4c47a); }
+.yc__kind { font-size: var(--am-text-xs); font-weight: 600; color: var(--am-text-muted, #5f6f69); }
+.yg-list .yg-chips { margin-bottom: 8px; }
+.yg-list .yg-chips + .yg-chips { margin-top: -2px; }
+.yg-clear { justify-content: flex-end; margin: 0 0 8px; }
+.yc-rail > .am-rail__item { flex: 0 0 clamp(200px, 24vw, 260px); }
+.yc-rail .dlp-card { height: 100%; }
+@media (max-width: 479px) {
+  .yc .dlp-card__foot { flex-wrap: nowrap; }
+  .yc .dlp-card__cta { flex: none; height: 30px; padding: 0 10px; }
+  .yc__kind { display: none; }
+}
+
+/* Yoga detail */
+.yg-list { display: grid; gap: var(--am-space-2, 8px); margin: 0; padding: 0; list-style: none; }
+.yg-list li { display: flex; align-items: flex-start; gap: 8px; color: var(--am-text, #17302a); line-height: 1.5; }
+.yg-list li svg { flex: none; margin-top: 3px; color: var(--am-green-600); }
+.yg-list--caution li svg { color: var(--am-gold-600, #a8873f); }
+.yg-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.yg-safety { margin: 0; font-size: var(--am-text-sm); }

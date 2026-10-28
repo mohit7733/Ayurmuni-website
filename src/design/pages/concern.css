@@ -1,0 +1,100 @@
+/* Health concern page: Suggested + general doctors, products and medicines.
+   Panels reuse the homepage panel tokens (brand.css) and the shared rail, header,
+   loader and empty-state primitives; this file only lays them out. */
+
+.cn-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--am-space-4);
+  min-width: 0;
+}
+
+.cn-pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--am-space-4);
+  min-width: 0;
+}
+
+.cn-panel {
+  min-width: 0;
+  overflow: hidden;
+  padding: var(--am-panel-pad);
+  border: var(--am-panel-border);
+  border-radius: var(--am-panel-radius);
+  background: var(--am-panel-bg);
+  box-shadow: var(--am-panel-shadow);
+  color: var(--am-text);
+}
+
+/* Compact header: title + muted description stacked, View all on the right */
+.cn-panel .cn-head {
+  align-items: center;
+  margin-bottom: var(--am-space-3);
+}
+
+.cn-panel .cn-head .am-section-header__title {
+  font-size: var(--am-text-lg, 1.125rem);
+}
+
+.cn-panel .cn-head .am-section-header__desc {
+  font-size: var(--am-text-sm);
+  line-height: 1.45;
+}
+
+.cn-panel .cn-head__link {
+  white-space: nowrap;
+}
+
+/* Rails live inside the panel padding, so they never bleed past the panel edge */
+.cn-panel .am-rail {
+  gap: var(--am-space-3);
+  margin: 0;
+  padding: var(--am-space-1) 0 var(--am-space-2);
+  scroll-padding-inline: 0;
+}
+
+.cn-panel .am-rail__item--product {
+  flex-basis: min(46%, 176px);
+}
+
+.cn-panel .am-rail__item--wide {
+  flex-basis: min(86%, 288px);
+}
+
+.cn-panel .am-empty {
+  padding-block: var(--am-space-4);
+}
+
+/* Arrow buttons are a pointer affordance; touch screens swipe */
+@media (max-width: 1023px) {
+  .cn-panel .am-rail-scroller__btn {
+    display: none;
+  }
+}
+
+@media (min-width: 768px) {
+  .cn-stack,
+  .cn-pair {
+    gap: var(--am-space-5);
+  }
+}
+
+@media (min-width: 1024px) {
+  .cn-pair {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .cn-panel .am-rail__item--product {
+    flex-basis: 176px;
+  }
+
+  .cn-panel .am-rail__item--wide {
+    flex-basis: 288px;
+  }
+}
+/* Homepage-identical "Our ..." sections inside the concern page. */
+.hm-page.cn-home { display: flex; flex-direction: column; gap: var(--am-space-4); padding-bottom: 0; min-width: 0; }
+.hm-page.cn-home:empty { display: none; }
+

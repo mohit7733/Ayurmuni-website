@@ -170,6 +170,6 @@ export function RailItem({ size, className, children }) {
   return <li className={cx('am-rail__item', size && `am-rail__item--${size}`, className)}>{children}</li>;
 }
 
-export function RailSkeleton({ label = 'Loading' }) {
-  return <SectionHold label={label} minHeight={200} />;
+export function RailSkeleton({ label = 'Loading', variant = 'products', count }) {
+  return <SectionHold label={label} minHeight={200} variant={variant} count={count} />;
 }

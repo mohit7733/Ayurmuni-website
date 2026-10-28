@@ -22,6 +22,7 @@ import Home from "./pages/Home";
 import NetworkError from "./pages/NetworkError";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { PageSkeleton } from "./components/skeletons";
 
 const loadPage = (loader) => lazy(loader);
 const loadVideoCall = () => import("./pages/VideoCall");
@@ -226,12 +227,18 @@ const HEADER_HOLD_PATHS = [...PRIMARY_NAV.map((item) => item.to), "/profile", "/
 /**
  * Suspense fallback while a lazy page chunk loads. The header lives inside each page, so without
  * this the top of the screen shows the bare page background. Renders a static bar in the header's
- * own colours (no animation) so the header area looks the same before and after the page loads.
+ * own colours (no animation) so the header area looks the same before and after the page loads,
+ * followed by a page skeleton.
  */
 function RouteFallback() {
   const { pathname } = useLocation();
   const holdsHeader = HEADER_HOLD_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
-  return holdsHeader ? <div className="site-header-hold" aria-hidden="true" /> : null;
+  return (
+    <>
+      {holdsHeader ? <div className="site-header-hold" aria-hidden="true" /> : null}
+      <PageSkeleton />
+    </>
+  );
 }
 
 function ScrollToTop() {

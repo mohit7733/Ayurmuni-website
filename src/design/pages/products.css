@@ -929,3 +929,37 @@
 
 /* Banner removed: start directly under the site header with the homepage top spacing. */
 .st-page.st-page--products { padding-top: 6px; }
+
+/* Sticky filter sidebar (shared: Products, Medicines, Diet).
+   Only results scroll; the filter column stays pinned under the header.
+   Root cause it failed on Medicines: `.hm-doctor-row > .hm-section` sets
+   overflow:hidden (kills sticky) + a hover translate, and an old
+   `.hm-section.st-page--products .st-cat-col { top: 0 }` hid it under the header. */
+@media (min-width: 900px) {
+  .st-page--products .st-catalog { align-items: start; }
+  .st-page--products .st-catalog > .st-cat-col,
+  .hm-section.st-page--products .st-catalog > .st-cat-col {
+    position: sticky;
+    top: calc(var(--am-header-h, 64px) + 16px);
+    align-self: start;
+    max-height: calc(100vh - var(--am-header-h, 64px) - 32px);
+    max-height: calc(100dvh - var(--am-header-h, 64px) - 32px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--am-line-strong) transparent;
+  }
+  .st-page--products .st-catalog > .st-cat-col::-webkit-scrollbar { width: 6px; }
+  .st-page--products .st-catalog > .st-cat-col::-webkit-scrollbar-thumb {
+    background: var(--am-line-strong);
+    border-radius: 999px;
+  }
+  .hm-doctor-row > .hm-section.st-page--products,
+  .hm-page .hm-doctor-row > .hm-section.st-page--products {
+    overflow: visible;
+  }
+  .hm-doctor-row > .hm-section.st-page--products:hover,
+  .hm-page .hm-doctor-row > .hm-section.st-page--products:hover {
+    transform: none;
+  }
+}

@@ -1,18 +1,19 @@
 import { useEffect, useState } from 'react';
 import { RefreshCw } from 'lucide-react';
 import Button from './Button';
-import LogoSpinner from './LogoSpinner';
+import { SkeletonFor } from '../skeletons/Skeletons';
 import { cx } from './cx';
 
 const SLOW_MS = 4500;
 const STALLED_MS = 12000;
 
 /**
- * Section reloader. The Ayurmuni seal spins until the section's data arrives.
+ * Section reloader. A shape-matched skeleton shows until the section's data arrives.
  * After a few seconds it says the response is late, and after longer it offers a retry.
  */
 export default function AdvanceLoad({
   variant = 'list',
+  count,
   label = 'Loading',
   slowText = 'Still waiting for this. A slow connection can take a moment.',
   stalledText = 'This still hasn’t arrived. Check your connection and try again.',
@@ -45,7 +46,6 @@ export default function AdvanceLoad({
   }
 
   const retry = onRetry || (() => window.location.reload());
-  const scale = variant === 'page' ? 'page' : variant === 'detail' || variant === 'cards' ? 'feature' : 'section';
 
   return (
     <div
@@ -54,7 +54,7 @@ export default function AdvanceLoad({
       aria-live="polite"
       aria-busy="true"
     >
-      <LogoSpinner scale={scale} label={label} />
+      <SkeletonFor variant={variant} count={count} label={label} />
       {patience && stage !== 'loading' ? (
         <div className="am-load__note">
           <p>{stage === 'stalled' ? stalledText : slowText}</p>

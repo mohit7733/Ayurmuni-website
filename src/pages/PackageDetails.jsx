@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, ArrowRight, Calendar, Check, CheckCircle2, Clock, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Calendar, Check, CreditCard, ShieldCheck, Star, Users } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { Button, EmptyState, ErrorState, SectionHold } from "../components/ui";
@@ -8,7 +8,10 @@ import PlanTransferModal from "../components/PlanTransferModal";
 import usePackagePurchase from "../hooks/usePackagePurchase";
 import { isAuthenticated, requireAuth } from "../services/guestAuth";
 import { loadPackageById } from "../services/packageService";
+import PlanMark from "../packages/PlanMark";
+import { getPlanTheme, isCarePlan, planBilling, planCta, planDiscount, planDuration, themeStyle } from "../packages/planTheme";
 import "../design/pages/packages-premium.css";
+import "../design/pages/plan-cards.css";
 
 const formatDate = (value) => {
   const time = new Date(value).getTime();
@@ -65,7 +68,7 @@ export default function PackageDetails() {
 
   const onCta = () => {
     if (!item) return;
-    if (item.mode === "consult" || item.purchased) {
+    if (!isCarePlan(item)) {
       requireAuth("Sign in to book a consultation.").then((ok) => {
         if (ok) navigate("/consult");
       });
@@ -75,9 +78,10 @@ export default function PackageDetails() {
   };
 
   const owned = Boolean(item && item.mode === "purchase" && item.purchased);
-  const hasMrp = item && item.mrp && item.mrp > item.price;
-  const off = hasMrp ? Math.round(((item.mrp - item.price) / item.mrp) * 100) : 0;
-  const ctaLabel = owned ? "Book a consultation" : item?.mode === "purchase" ? "Buy plan" : "Book consult";
+  const theme = item ? getPlanTheme(item) : null;
+  const discount = item ? planDiscount(item) : 0;
+  const saving = item && item.mrp > item.price ? item.mrp - item.price : 0;
+  const ctaLabel = item ? planCta(item, { owned }) : "";
 
   return (
     <AppShell tab="home">
@@ -112,66 +116,99 @@ export default function PackageDetails() {
         ) : null}
 
         {!loading && !error && item ? (
-          <div className="pd-layout">
-            <article className={`pd-hero${owned ? " is-owned" : ""}`}>
-              <div className="pd-hero__top">
-                {owned ? (
-                  <span className="pp-card__owned is-light"><CheckCircle2 size={12} aria-hidden /> Active - Purchased</span>
-                ) : item.badge ? (
-                  <span className="pd-hero__badge">{item.badge}</span>
-                ) : <span className="pd-hero__badge is-quiet">{item.group}</span>}
-                {off > 0 && !owned ? <span className="pd-hero__off">{off}% off</span> : null}
+          <article className="am-detail" style={themeStyle(theme)}>
+            <div className="am-detail__head">
+              <div className="am-detail__row">
+                <span className="am-detail__icon">
+                  {item.image ? <img src={item.image} alt="" /> : <PlanMark name={theme.icon} size={20} color="#fff" />}
+                </span>
+                <span className="am-detail__cat">{item.group}</span>
+                {isCarePlan(item) ? (
+                  <span className="am-detail__ribbon"><Star size={10} aria-hidden /> CARE PLAN</span>
+                ) : null}
               </div>
-              <h2 className="pd-hero__name">{item.name}</h2>
-              <p className="pd-hero__price">
-                <strong>{formatRupee(item.price)}</strong>
-                {hasMrp ? <s>{formatRupee(item.mrp)}</s> : null}
-              </p>
-              <ul className="pd-hero__meta">
-                {item.duration ? <li><Clock size={13} aria-hidden /> Valid {item.duration}</li> : null}
-                {item.sessions ? <li><Calendar size={13} aria-hidden /> {item.sessions} {item.sessions === 1 ? "session" : "sessions"}</li> : null}
-                <li><ShieldCheck size={13} aria-hidden /> {item.group}</li>
-              </ul>
-              {owned && (item.remaining != null || item.expiresAt) ? (
-                <p className="pd-hero__status">
-                  {item.remaining != null ? `${item.remaining} ${item.remaining === 1 ? "session" : "sessions"} left` : ""}
-                  {item.remaining != null && item.expiresAt ? " - " : ""}
-                  {item.expiresAt && formatDate(item.expiresAt) ? `valid till ${formatDate(item.expiresAt)}` : ""}
-                </p>
-              ) : null}
-              <button type="button" className="pd-hero__cta" disabled={busy} onClick={onCta}>
-                {busy ? "Please wait..." : ctaLabel} {!busy ? <ArrowRight size={15} aria-hidden /> : null}
-              </button>
-            </article>
-
-            <div className="pd-body">
-              {item.description ? (
-                <section className="pd-card">
-                  <h3>About this plan</h3>
-                  <p>{item.description}</p>
-                </section>
-              ) : null}
-              {item.includes?.length ? (
-                <section className="pd-card">
-                  <h3>What is included</h3>
-                  <ul className="pp-card__list pd-list">
-                    {item.includes.map((line) => (
-                      <li key={line}>
-                        <Check size={14} aria-hidden />
-                        <span>{line}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              ) : null}
-              {!item.description && !item.includes?.length ? (
-                <section className="pd-card">
-                  <h3>About this plan</h3>
-                  <p>Our care team will guide you through this plan. Reach out any time for details.</p>
-                </section>
-              ) : null}
+              <h2>{item.name}</h2>
+              <p className="am-detail__dur">{planDuration(item)}</p>
+              <span className="am-detail__line" />
             </div>
-          </div>
+            {item.description ? <p className="am-detail__desc">{item.description}</p> : null}
+            {owned && (item.remaining != null || item.expiresAt) ? (
+              <p className="am-detail__note">
+                {item.remaining != null ? `${item.remaining} ${item.remaining === 1 ? "session" : "sessions"} left` : ""}
+                {item.remaining != null && item.expiresAt ? " · " : ""}
+                {item.expiresAt && formatDate(item.expiresAt) ? `valid till ${formatDate(item.expiresAt)}` : ""}
+              </p>
+            ) : null}
+            <ul className="am-detail__facts">
+              <li>
+                <ShieldCheck size={15} aria-hidden />
+                <span>
+                  <small>Plan type</small>
+                  <strong>{item.purchaseType === "prepaid_package" ? "Prepaid package" : "Open plan"}</strong>
+                </span>
+              </li>
+              <li>
+                <Calendar size={15} aria-hidden />
+                <span>
+                  <small>Validity</small>
+                  <strong>{item.validityDays ? `${item.validityDays} days` : planDuration(item)}</strong>
+                </span>
+              </li>
+              <li>
+                <CreditCard size={15} aria-hidden />
+                <span>
+                  <small>Billing</small>
+                  <strong>{planBilling(item)}</strong>
+                </span>
+              </li>
+              <li>
+                <Users size={15} aria-hidden />
+                <span>
+                  <small>Available for</small>
+                  <strong>{item.availableToAll ? "All users" : "Selected users"}</strong>
+                </span>
+              </li>
+            </ul>
+            {item.includes?.length ? (
+              <>
+                <h3>What&apos;s included ({item.includes.length})</h3>
+                <ul className="am-detail__benefits">
+                  {item.includes.map((line) => (
+                    <li key={line}>
+                      <span className="am-detail__check"><Check size={12} strokeWidth={3} aria-hidden /></span>
+                      <span>{line}</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : null}
+            <h3>Price details</h3>
+            <div className="am-detail__price">
+              <div>
+                <span>Plan price</span>
+                <span>{formatRupee(item.mrp || item.price)}</span>
+              </div>
+              {saving > 0 ? (
+                <div className="is-save">
+                  <span>Discount ({discount}%)</span>
+                  <span>- {formatRupee(saving)}</span>
+                </div>
+              ) : null}
+              <div className="is-total">
+                <span>You pay</span>
+                <strong>{formatRupee(item.price)}</strong>
+              </div>
+            </div>
+            <div className="am-detail__footer">
+              <div>
+                <p className="am-detail__pay">{formatRupee(item.price)}</p>
+                {saving > 0 ? <p className="am-detail__save">You save {formatRupee(saving)}</p> : null}
+              </div>
+              <button type="button" className="am-detail__cta" disabled={busy} onClick={onCta}>
+                {busy ? "Please wait..." : ctaLabel}
+              </button>
+            </div>
+          </article>
         ) : null}
         <PlanTransferModal prompt={prompt} onYes={confirm} onNo={cancel} />
       </section>

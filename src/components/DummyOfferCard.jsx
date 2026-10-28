@@ -1,8 +1,11 @@
 import { useState } from 'react';
+import { Star } from 'lucide-react';
 import { formatRupee } from '../home/catalog';
+import PlanMark from '../packages/PlanMark';
+import { getPlanTheme, isCarePlan, planCta, planDiscount, planDuration, themeStyle } from '../packages/planTheme';
 
 const CTA = {
-  package: 'Buy plans',
+  package: 'Buy plan',
   lab: 'Book',
   therapy: 'Book',
 };
@@ -33,6 +36,50 @@ export default function DummyOfferCard({ item, kind = 'lab', onClick, cta }) {
       {off > 0 ? <span className="do-card__off">{off}% OFF</span> : null}
     </>
   );
+
+  if (kind === 'package') {
+    const theme = getPlanTheme(item);
+    const care = isCarePlan(item);
+    const discount = planDiscount(item);
+    const owned = Boolean(item.purchased);
+    return (
+      <button
+        type="button"
+        className="am-plan-rail"
+        style={themeStyle(theme)}
+        onClick={onClick}
+        aria-label={item.name}
+      >
+        <span className="am-plan-rail__fill">
+          <span className="am-plan-rail__orb am-plan-rail__orb--lg" />
+          <span className="am-plan-rail__orb am-plan-rail__orb--sm" />
+          <span className="am-plan-rail__top">
+            <span className="am-plan-rail__icon">
+              {showImage ? <img src={image} alt="" onError={() => setImageFailed(true)} /> : <PlanMark name={theme.icon} size={14} color="#fff" />}
+            </span>
+            <span className="am-plan-rail__cat">{item.group || 'Plan'}</span>
+            {care ? (
+              <span className="am-plan-rail__badge"><Star size={9} aria-hidden /> CARE PLAN</span>
+            ) : discount > 0 ? (
+              <span className="am-plan-rail__off">{discount}% OFF</span>
+            ) : null}
+          </span>
+          <span className="am-plan-rail__copy">
+            <span className="am-plan-rail__name">{item.name}</span>
+            <span className="am-plan-rail__dur">{planDuration(item)}</span>
+          </span>
+          <span className="am-plan-rail__bottom">
+            <span className="am-plan-rail__price">
+              <strong>{formatRupee(item.price)}</strong>
+              {item.mrp && item.mrp > item.price ? <s>{formatRupee(item.mrp)}</s> : null}
+            </span>
+            <span className="am-plan-rail__cta">{cta || planCta(item, { owned, rail: true })}</span>
+          </span>
+          <span className="am-plan-rail__line" />
+        </span>
+      </button>
+    );
+  }
 
   return (
     <article className={`do-card do-card--${kind}${showImage ? '' : ' do-card--no-media'}`}>

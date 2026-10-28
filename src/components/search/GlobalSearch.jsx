@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { X, Clock } from 'lucide-react';
 import AppShell from '../AppShell';
+import RecentSearchList from './RecentSearchList';
 import ProductCard from '../ProductCard';
 import { PremiumSearch } from '../ui';
 import AdvanceLoad from '../ui/AdvanceLoad';
@@ -43,6 +43,7 @@ export default function GlobalSearch() {
   const [activeRecentId, setActiveRecentId] = useState(null);
   const [clearing, setClearing] = useState(false);
   const recentReq = useRef(0);
+  const appliedRecent = useRef('');
 
   useEffect(() => {
     if (source !== 'live') return undefined;
@@ -68,13 +69,19 @@ export default function GlobalSearch() {
 
   const onChange = useCallback((value) => {
     recentReq.current += 1;
+    appliedRecent.current = '';
     setText(value);
     setRecentOverride(null);
     setActiveRecentId(null);
     setRecentLoading(false);
     setSource(value.trim() ? 'live' : 'idle');
     if (!value.trim()) setQuery('');
-  }, []);
+    if (params.get('recent')) {
+      const next = new URLSearchParams(params);
+      next.delete('recent');
+      setParams(next, { replace: true });
+    }
+  }, [params, setParams]);
 
   // Keyboard submit only runs the search; it does not save recent (app behaviour).
   const onSubmit = useCallback(() => {
@@ -116,6 +123,14 @@ export default function GlobalSearch() {
       if (reqId === recentReq.current) setRecentLoading(false);
     }
   }, []);
+
+  const recentParam = params.get('recent') || '';
+  useEffect(() => {
+    if (!recentParam || appliedRecent.current === recentParam) return undefined;
+    appliedRecent.current = recentParam;
+    applyRecent({ id: recentParam, query: params.get('q') || '' });
+    return undefined;
+  }, [recentParam, applyRecent, params]);
 
   const onClearRecent = useCallback(async () => {
     if (clearing) return;
@@ -230,27 +245,18 @@ export default function GlobalSearch() {
           className="gs-field"
         />
 
-        {recent.items.length > 0 && (source === 'idle' || source === 'recent') ? (
-          <div className="gs-recent" aria-label="Recent searches">
-            <div className="gs-recent__head">
-              <h2>Recent searches</h2>
-              <button type="button" className="gs-link" onClick={onClearRecent} disabled={clearing}>
-                {clearing ? 'Clearing…' : 'Clear all'}
-              </button>
-            </div>
-            <ul className="gs-chips">
-              {recent.items.map((item) => (
-                <li key={item.id || item.query} className={item.id === activeRecentId ? 'gs-chip is-active' : 'gs-chip'}>
-                  <button type="button" className="gs-chip__main" onClick={() => applyRecent(item)}>
-                    <Clock size={13} aria-hidden /> <span>{item.query}</span>
-                  </button>
-                  <button type="button" className="gs-chip__x" aria-label={`Remove ${item.query}`} onClick={() => onRemoveRecent(item)}>
-                    <X size={13} aria-hidden />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
+        {source === 'idle' ? (
+          <RecentSearchList
+            items={recent.items}
+            loading={recent.loading}
+            clearing={clearing}
+            onPick={applyRecent}
+            onClear={onClearRecent}
+            onRemove={onRemoveRecent}
+          />
+        ) : null}
+        {source === 'live' && text.trim() ? (
+          <p className="gs-recent__hint">Suggestions — tap one to open and save in Recent</p>
         ) : null}
         {recentError ? <p className="gs-error" role="alert">{recentError}</p> : null}
 

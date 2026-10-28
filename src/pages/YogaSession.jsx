@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { Clock, Flower2, Gauge, ListOrdered, NotebookPen, Play, UserRound } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Clock, Flower2, Gauge, HeartPulse, ListOrdered, NotebookPen, Play, Stethoscope, Target, UserRound } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import ShareButton from '../components/ShareButton';
 import { Button } from '../components/ui';
+import { yogaView } from '../yoga/present';
+import { YOGA_COPY as Y } from '../content/yoga';
 import {
-  ActionStack,
   DetailCard,
   DetailEmpty,
   DetailHero,
@@ -46,7 +47,6 @@ export default function YogaSession() {
   const [session, setSession] = useState(routeItem || null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [loading, setLoading] = useState(!routeItem);
-
   useEffect(() => {
     const id = sessionId || routeItem?.id;
     if (id == null) {
@@ -96,7 +96,8 @@ export default function YogaSession() {
   const description =
     rawDescription && rawDescription.toLowerCase() !== difficulty.toLowerCase()
       ? rawDescription
-      : 'A guided practice for breath, strength and calm. Move at your own pace and pause whenever you need.';
+      : Y.fallbackLede;
+  const view = useMemo(() => yogaView(session), [session]);
 
   const playFrom = (startSeconds) => {
     const video = videoRef.current;
@@ -135,9 +136,9 @@ export default function YogaSession() {
         ) : !session ? (
           <DetailEmpty
             icon={Flower2}
-            title="Session unavailable"
-            text="This yoga session could not be loaded. It may have been removed."
-            action={<Button onClick={() => navigate('/yoga')}>Browse sessions</Button>}
+            title={Y.unavailableTitle}
+            text={Y.unavailableText}
+            action={<Button onClick={() => navigate('/yoga')}>{Y.ctaBrowse}</Button>}
           />
         ) : (
           <>
@@ -158,7 +159,7 @@ export default function YogaSession() {
                   <img src={posterUri} alt="" />
                 )
               }
-              eyebrow="Guided yoga"
+              eyebrow={Y.eyebrow}
               title={title}
               lede={description}
               chips={
@@ -184,11 +185,15 @@ export default function YogaSession() {
                     leadingIcon={<Play size={16} aria-hidden />}
                     onClick={() => playFrom(breakdown[activeIndex]?.startSeconds)}
                   >
-                    Start session
+                    {Y.start}
                   </Button>
                 ) : null}
-                <Button variant="secondary" onClick={() => navigate('/mentor/consult')}>
-                  Talk to a mentor
+                <Button
+                  variant="secondary"
+                  leadingIcon={<Stethoscope size={16} aria-hidden />}
+                  onClick={() => navigate('/consult/doctors')}
+                >
+                  {Y.ctaConsult}
                 </Button>
               </div>
             </DetailHero>
@@ -196,7 +201,7 @@ export default function YogaSession() {
             <DetailLayout
               aside={
                 <>
-                  <DetailCard id="yoga-about" title="At a glance" icon={Flower2}>
+                  <DetailCard id="yoga-about" title={Y.quickFacts} icon={Flower2}>
                     <InfoGrid
                       columns={2}
                       items={[
@@ -221,25 +226,42 @@ export default function YogaSession() {
                       </p>
                     </DetailCard>
                   ) : null}
-                  <ActionStack>
-                    <Button variant="secondary" onClick={() => navigate('/yoga')}>
-                      More yoga sessions
-                    </Button>
-                  </ActionStack>
                 </>
               }
             >
+              {view?.benefits.length ? (
+                <DetailCard id="yoga-benefits" title={Y.benefits} icon={HeartPulse}>
+                  <ul className="yg-list">
+                    {view.benefits.map((b) => (
+                      <li key={b}>
+                        <CheckCircle2 size={16} aria-hidden /> {b}
+                      </li>
+                    ))}
+                  </ul>
+                </DetailCard>
+              ) : null}
+
+              {view?.focus.length ? (
+                <DetailCard id="yoga-focus" title={Y.focus} icon={Target}>
+                  <div className="dx-chips yg-tags">
+                    {view.focus.map((f) => (
+                      <MetaChip key={f}>{f}</MetaChip>
+                    ))}
+                  </div>
+                </DetailCard>
+              ) : null}
+
               {notes ? (
-                <DetailCard id="yoga-notes" title="Before you begin" icon={NotebookPen} tone="accent">
+                <DetailCard id="yoga-notes" title={Y.before} icon={NotebookPen} tone="accent">
                   <p className="dx-prose">{notes}</p>
                 </DetailCard>
               ) : null}
 
               <DetailCard
                 id="yoga-breakdown"
-                title="Session breakdown"
+                title={Y.steps}
                 icon={ListOrdered}
-                meta={breakdown.length ? 'Tap a pose to jump to it' : undefined}
+                meta={breakdown.length && videoUri ? Y.stepsHint : undefined}
               >
                 {breakdown.length ? (
                   <Steps
@@ -253,12 +275,24 @@ export default function YogaSession() {
                     onPick={videoUri ? onPickStep : undefined}
                   />
                 ) : (
-                  <p className="dx-prose">
-                    Pose-by-pose timing will appear here when this session includes a breakdown.
-                  </p>
+                  <p className="dx-prose">{Y.stepsEmpty}</p>
                 )}
               </DetailCard>
+
+              <DetailCard id="yoga-safety" title={Y.precautions} icon={AlertTriangle}>
+                {view?.precautions.length ? (
+                  <ul className="yg-list yg-list--caution">
+                    {view.precautions.map((c) => (
+                      <li key={c}>
+                        <AlertTriangle size={15} aria-hidden /> {c}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+                <p className="dx-prose yg-safety">{Y.safetyNote}</p>
+              </DetailCard>
             </DetailLayout>
+
           </>
         )}
       </DetailPage>

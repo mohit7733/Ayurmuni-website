@@ -311,7 +311,7 @@ export function ActionStack({ children }) {
 }
 
 export function DetailSkeleton({ label = 'Loading' }) {
-  return <SectionHold label={label} minHeight={360} />;
+  return <SectionHold label={label} minHeight={360} variant="detail" />;
 }
 
 export function DetailEmpty({ icon: Icon, title, text, action }) {

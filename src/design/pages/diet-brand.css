@@ -1166,3 +1166,18 @@
   .dt-banner > button { width: 100%; }
 }
 /* === DIET COMPLETION / ALL DAYS (end) === */
+/* Premium polish - diet plan detail aligned with site tokens */
+.dt-meals { gap: var(--am-space-3, 12px); }
+.dt-meal { border-color: var(--am-line); border-radius: var(--am-radius-lg); box-shadow: var(--am-shadow-xs); }
+.dt-meal:hover { border-color: var(--am-line-strong); box-shadow: var(--am-shadow-xs), 0 14px 26px -20px rgba(13, 97, 78, 0.4); }
+.dt-meal.is-done { background: var(--am-green-50, #f3f8f5); }
+.dt-meal:focus-visible, .dt-day:focus-visible { outline: 2px solid var(--am-green-600); outline-offset: 2px; }
+.dt-day { border-color: var(--am-line); border-radius: var(--am-radius-md, 12px); }
+.dt-day:hover:not(:disabled) { border-color: var(--am-line-strong); }
+.dt-day.is-on { border-color: var(--am-green-600); background: var(--am-green-600); }
+.dt-day.is-on .dt-day__bar i, .dt-day.is-done:not(.is-on) .dt-day__bar i { background: var(--am-gold-300); }
+.dt-alldays__head {
+  display: flex; align-items: center; gap: 8px; margin: 0 0 var(--am-space-2, 8px); padding-bottom: 6px;
+  border-bottom: 1px solid var(--am-line); font-family: var(--am-font-display); font-size: var(--am-text-sm); color: var(--am-text);
+}
+.dt-alldays { gap: var(--am-space-5, 20px); }

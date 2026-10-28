@@ -1,0 +1,41 @@
+/* Skeleton loading (replaces the logo loader). Shimmer uses the site sand palette from .am-skeleton. */
+.am-skel-region { position: relative; min-width: 0; width: 100%; }
+.am-skel-fill { --am-skel-w: 100%; --am-skel-h: 100%; width: 100%; height: 100%; border-radius: inherit; }
+.am-skel-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.am-skel-gap { margin-top: 6px; }
+
+.am-skel-rail { overflow: hidden; pointer-events: none; }
+
+.am-skel-product .am-product-card__media { display: block; }
+.am-skel-product__body { display: flex; flex-direction: column; gap: 8px; padding: 12px; flex: 1; }
+.am-skel-product__foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; }
+
+.am-skel-odoc { pointer-events: none; opacity: 1 !important; translate: none !important; }
+.am-skel-odoc:hover { rotate: none; box-shadow: none; }
+.am-skel-odoc .hm-odoc__photo { overflow: hidden; }
+
+.am-skel-head { display: flex; flex-direction: column; gap: 8px; margin-bottom: var(--am-space-3, 12px); }
+.am-skel-head__row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+
+.am-skel-block { display: flex; flex-direction: column; gap: 10px; }
+.am-skel-block__lines { display: flex; flex-direction: column; gap: 12px; }
+
+.am-skel-chips { padding: 4px 0; }
+
+.am-skel-detail { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--am-space-5, 20px); min-height: 360px; }
+.am-skel-detail__media { --am-skel-h: auto; aspect-ratio: 4 / 3; border-radius: var(--am-radius-lg, 16px); }
+.am-skel-detail__copy { display: flex; flex-direction: column; gap: 14px; }
+@media (min-width: 900px) {
+  .am-skel-detail { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+}
+
+.am-skel-page { display: flex; flex-direction: column; gap: var(--am-space-4, 16px); padding: var(--am-space-4, 16px) var(--am-gutter, 16px); max-width: 1280px; margin: 0 auto; min-height: 68vh; }
+.am-skel-page__hero { --am-skel-h: clamp(160px, 28vw, 320px); border-radius: var(--am-radius-lg, 16px); }
+
+.am-load .am-skel-region,
+.am-load .am-load__rows { align-self: stretch; }
+
+@media (prefers-reduced-motion: reduce) {
+  .am-skel-region .am-skeleton,
+  .am-skeleton { animation: none !important; }
+}

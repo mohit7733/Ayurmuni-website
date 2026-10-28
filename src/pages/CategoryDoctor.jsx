@@ -1,12 +1,14 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowRight, Flower2, Leaf, Salad } from 'lucide-react';
+import { Flower2, Leaf, Pill, Salad, ShoppingBag, Stethoscope } from 'lucide-react';
 import AppShell from '../components/AppShell';
-import DoctorCard from '../components/DoctorCard';
+import ConcernPanel from '../components/ConcernPanel';
+import { HomeOurDoctors, HomeProductPanels } from '../components/HomeSections';
+import { HomeDoctorsSkeleton, HomeProductsSkeleton } from '../components/skeletons';
+import YogaCard from '../components/yoga/YogaCard';
 import PageHeader from '../components/PageHeader';
 import ProductCard from '../components/ProductCard';
 import dietCoverImg from '/images/login/14.webp';
-import yogaPosterImg from '/images/login/8.webp';
 import { mapDietPlanForHome, mapProductCategory, normalizeApiList } from '../home/catalog';
 import { getDoctors } from '../services/consultService';
 import { getDietPlans } from '../services/dietService';
@@ -14,37 +16,68 @@ import { getHealthCategories } from '../services/productService';
 import { getYogaSession } from '../services/yogaService';
 import { getDoctorId, listDoctors } from '../consult/doctors';
 import { normalizeDietPlanList } from '../diet/utils';
+import {
+  buildConcernFilter,
+  buildServiceFilter,
+  CONCERN_RAIL_SIZE,
+  concernCatalogPath,
+  concernDoctorsPath,
+  filterItemsByQuery,
+  resolveConcernServices,
+} from '../home/concernCatalog';
 import useCategoryProducts from '../hooks/useCategoryProducts';
+import useDashboardCategories from '../hooks/useDashboardCategories';
+import useOurDoctors from '../hooks/useOurDoctors';
 import {
   itemMatchesHealthConcern,
   normalizeYogaSessionList,
-  resolveYogaThumbnailUri,
 } from '../yoga/utils';
 import {
   Button,
   Chip,
   Disclaimer,
-  EmptyState,
   MediaCard,
   Rail,
   RailItem,
-  RailSkeleton,
   SearchField,
   searchSuggestions,
-  SectionHeader,
   SectionHold,
-  SkeletonGrid,
 } from '../components/ui';
+import { CONCERN_COPY as C } from '../content/concern';
 import { CONSULT_COPY as T } from '../content/consult';
 import '../design/pages/consult.css';
+import '../design/pages/concern.css';
 
 const PREVIEW = 6;
+const NO_ITEMS = [];
 
-function ViewAll({ onClick }) {
+/** Same card + rail sizing as the homepage "Our doctors" section. */
+function DoctorRail({ items, label, onOpen }) {
   return (
-    <Button variant="ghost" size="sm" onClick={onClick} trailingIcon={<ArrowRight size={16} aria-hidden />}>
-      {T.viewAll}
-    </Button>
+    <div className="hm-odocs">
+      <Rail label={label} controls>
+        {items.map((item, index) => {
+          const id = getDoctorId(item);
+          return (
+            <RailItem key={id || item.full_name}>
+              <OurDoctorCard item={item} index={index} onOpen={() => onOpen(id)} />
+            </RailItem>
+          );
+        })}
+      </Rail>
+    </div>
+  );
+}
+
+function ProductRail({ items, label }) {
+  return (
+    <Rail label={label} controls>
+      {items.map((item) => (
+        <RailItem key={item.variant_id || item.id} size="product">
+          <ProductCard item={item} />
+        </RailItem>
+      ))}
+    </Rail>
   );
 }
 
@@ -169,24 +202,59 @@ export default function CategoryDoctor() {
     };
   }, [apiFilters, concernId, selectedDiseaseId, filterByConcern, diseaseIdSet]);
 
-  const productFilter = useMemo(() => {
-    if (!concernId && !debounced) return {};
-    return {
-      ...(concernId
-        ? {
-            health_category_id: concernId,
-            ...(selectedDiseaseId ? { health_disease_id: selectedDiseaseId } : {}),
-          }
-        : {}),
-      ...(debounced ? { search: debounced } : {}),
-    };
-  }, [concernId, selectedDiseaseId, debounced]);
+  // Health concern -> service categories (Doctor / Products / Medicine) from the dashboard API.
+  const { categories: serviceCategories, loading: servicesLoading } = useDashboardCategories();
+  const services = useMemo(() => resolveConcernServices(serviceCategories), [serviceCategories]);
+  const productsServiceId = services.products.id;
+  const medicineServiceId = services.medicine.id;
 
-  const { products, loading: productsLoading, loadingMore, hasMore, loadMore } = useCategoryProducts(
-    productFilter,
-    [],
-    { enabled: Boolean(concernId) || Boolean(debounced), pageSize: 20 },
+  // Suggested = linked to this concern: health_category_id (+ health_disease_id) AND service_category_id.
+  const suggestedProductFilter = useMemo(
+    () => buildConcernFilter({ concernId, diseaseId: selectedDiseaseId, serviceId: productsServiceId }),
+    [concernId, selectedDiseaseId, productsServiceId],
   );
+  const suggestedMedicineFilter = useMemo(
+    () => buildConcernFilter({ concernId, diseaseId: selectedDiseaseId, serviceId: medicineServiceId }),
+    [concernId, selectedDiseaseId, medicineServiceId],
+  );
+  // General = every item of that service category, whatever the concern.
+  const ourProductFilter = useMemo(() => buildServiceFilter(productsServiceId), [productsServiceId]);
+  const ourMedicineFilter = useMemo(() => buildServiceFilter(medicineServiceId), [medicineServiceId]);
+
+  const railOptions = (enabled) => ({ enabled, pageSize: CONCERN_RAIL_SIZE });
+  const suggestedProductsOn = Boolean(concernId && productsServiceId);
+  const suggestedMedicinesOn = Boolean(concernId && medicineServiceId);
+  const suggestedProductsQuery = useCategoryProducts(
+    suggestedProductFilter,
+    NO_ITEMS,
+    railOptions(suggestedProductsOn),
+  );
+  const suggestedMedicinesQuery = useCategoryProducts(
+    suggestedMedicineFilter,
+    NO_ITEMS,
+    railOptions(suggestedMedicinesOn),
+  );
+  const ourProductsQuery = useCategoryProducts(ourProductFilter, NO_ITEMS, railOptions(Boolean(productsServiceId)));
+  const ourMedicinesQuery = useCategoryProducts(ourMedicineFilter, NO_ITEMS, railOptions(Boolean(medicineServiceId)));
+  const { doctors: ourDoctors, loading: ourDoctorsLoading } = useOurDoctors(CONCERN_RAIL_SIZE);
+
+  // useCategoryProducts reports loading while disabled; a service the API does not expose is simply empty.
+  const stillLoading = (enabled, query) => servicesLoading || (enabled && query.loading);
+  const suggestedProductsLoading = stillLoading(suggestedProductsOn, suggestedProductsQuery);
+  const suggestedMedicinesLoading = stillLoading(suggestedMedicinesOn, suggestedMedicinesQuery);
+  const ourProductsLoading = stillLoading(Boolean(productsServiceId), ourProductsQuery);
+  const ourMedicinesLoading = stillLoading(Boolean(medicineServiceId), ourMedicinesQuery);
+
+  const suggestedProducts = useMemo(
+    () => (suggestedProductsOn ? filterItemsByQuery(suggestedProductsQuery.products, debounced) : NO_ITEMS),
+    [suggestedProductsOn, suggestedProductsQuery.products, debounced],
+  );
+  const suggestedMedicines = useMemo(
+    () => (suggestedMedicinesOn ? filterItemsByQuery(suggestedMedicinesQuery.products, debounced) : NO_ITEMS),
+    [suggestedMedicinesOn, suggestedMedicinesQuery.products, debounced],
+  );
+  const ourProducts = productsServiceId ? ourProductsQuery.products : NO_ITEMS;
+  const ourMedicines = medicineServiceId ? ourMedicinesQuery.products : NO_ITEMS;
 
   useEffect(() => {
     let alive = true;
@@ -246,22 +314,6 @@ export default function CategoryDoctor() {
     };
   }, [concernId, selectedDiseaseId, debounced, filterByConcern]);
 
-  const productMatchList = useMemo(
-    () => (concernId ? filterByConcern(products) : products),
-    [products, concernId, filterByConcern],
-  );
-  const scopedProducts = useMemo(() => {
-    if (!concernId) return Array.isArray(products) ? products : [];
-    if (productMatchList.length > 0) return productMatchList;
-    if (Array.isArray(products) && products.length > 0) return products;
-    return [];
-  }, [concernId, productMatchList, products]);
-  const showingGeneralProducts =
-    Boolean(concernId) && productMatchList.length === 0 && scopedProducts.length > 0;
-
-  const doctorsQuery = selectedDiseaseId
-    ? `disease=${encodeURIComponent(selectedDiseaseId)}&name=${encodeURIComponent(selectedDiseaseName || categoryName)}`
-    : `category=${encodeURIComponent(concernId)}&name=${encodeURIComponent(categoryName)}`;
   const catalogQuery = [
     concernId ? `category=${encodeURIComponent(concernId)}` : '',
     selectedDiseaseId ? `disease=${encodeURIComponent(selectedDiseaseId)}` : '',
@@ -271,27 +323,123 @@ export default function CategoryDoctor() {
     .join('&');
 
   const scopeName = selectedDiseaseName || categoryName || T.related;
-  const productTitle = showingGeneralProducts ? T.generalProducts : T.productsFor(scopeName);
+  const emptyText = (linked) => (debounced ? C.noMatches : linked);
+  const emptyTitle = (linked) => (debounced ? C.noMatchesTitle : linked);
+  const openDoctor = (id) => navigate(id ? `/consult/doctors/${id}` : '/consult/doctors');
+  const cta = (label, to, variant = 'primary') => (
+    <Button variant={variant} size="sm" onClick={() => navigate(to)}>
+      {label}
+    </Button>
+  );
+  const ctaPair = (browseLabel, browseTo) => (
+    <>
+      {cta(C.ctaConsult, '/consult/doctors')}
+      {cta(browseLabel, browseTo, 'ghost')}
+    </>
+  );
 
-  const nothingFound =
-    !doctorsLoading &&
-    !dietLoading &&
-    !yogaLoading &&
-    !productsLoading &&
-    doctors.length === 0 &&
-    dietPlans.length === 0 &&
-    yogaSessions.length === 0 &&
-    scopedProducts.length === 0;
+  // Suggested sections: with data (or still loading) they lead the page; empty ones drop to the end.
+  const suggestedEmpty = {
+    doctors: !doctorsLoading && doctors.length === 0,
+    products: !suggestedProductsLoading && suggestedProducts.length === 0,
+    medicines: !suggestedMedicinesLoading && suggestedMedicines.length === 0,
+  };
+  const suggestedPanels = {
+    doctors: (
+            <ConcernPanel
+              id="cn-suggested-doctors"
+              eyebrow={services.consult.name}
+              title={C.suggestedDoctors}
+              description={C.suggestedDoctorsText(scopeName)}
+              loading={doctorsLoading}
+              loadingVariant="doctors"
+              empty={doctors.length === 0}
+              emptyIcon={<Stethoscope size={24} />}
+              emptyTitle={emptyTitle(C.noSuggestedDoctorsTitle(scopeName))}
+              emptyText={emptyText(C.noSuggestedDoctors(scopeName))}
+              emptyAction={cta(C.ctaBrowseDoctors, '/consult/doctors')}
+              onViewAll={() =>
+                navigate(
+                  concernDoctorsPath({
+                    concernId,
+                    diseaseId: selectedDiseaseId,
+                    name: selectedDiseaseName || categoryName,
+                  }),
+                )
+              }
+            >
+              <DoctorRail items={doctors} label={C.suggestedDoctors} onOpen={openDoctor} />
+            </ConcernPanel>
+    ),
+    products: (
+      <ConcernPanel
+        id="cn-suggested-products"
+        eyebrow={services.products.name}
+        title={C.suggestedProducts}
+        description={C.suggestedProductsText(scopeName)}
+        loading={suggestedProductsLoading}
+        empty={suggestedProducts.length === 0}
+        emptyIcon={<ShoppingBag size={24} />}
+        emptyTitle={emptyTitle(C.noSuggestedProductsTitle(scopeName))}
+        emptyText={emptyText(C.noSuggestedProducts(scopeName))}
+        emptyAction={ctaPair(C.ctaBrowseProducts, '/products')}
+        onViewAll={() =>
+          navigate(concernCatalogPath({ concernId, serviceId: productsServiceId, name: categoryName }))
+        }
+      >
+        <ProductRail items={suggestedProducts} label={C.suggestedProducts} />
+      </ConcernPanel>
+    ),
+    medicines: (
+      <ConcernPanel
+        id="cn-suggested-medicines"
+        eyebrow={services.medicine.name}
+        title={C.suggestedMedicines}
+        description={C.suggestedMedicinesText(scopeName)}
+        loading={suggestedMedicinesLoading}
+        empty={suggestedMedicines.length === 0}
+        emptyIcon={<Pill size={24} />}
+        emptyTitle={emptyTitle(C.noSuggestedMedicinesTitle(scopeName))}
+        emptyText={emptyText(C.noSuggestedMedicines(scopeName))}
+        emptyAction={ctaPair(C.ctaBrowseMedicines, '/medicines')}
+        onViewAll={() =>
+          navigate(concernCatalogPath({ concernId, serviceId: medicineServiceId, name: categoryName }))
+        }
+      >
+        <ProductRail items={suggestedMedicines} label={C.suggestedMedicines} />
+      </ConcernPanel>
+    ),  };
+  const groupSuggested = (wantEmpty) => {
+    const keys = ['doctors', 'products', 'medicines'].filter((k) => suggestedEmpty[k] === wantEmpty);
+    const out = [];
+    if (keys.includes('doctors')) out.push('doctors');
+    const pair = keys.filter((k) => k !== 'doctors');
+    if (pair.length) out.push(pair.join('+'));
+    return out;
+  };
+  const suggestedFirst = groupSuggested(false);
+  const suggestedLast = groupSuggested(true);
+  const suggestedBlocks = {};
+  for (const key of [...suggestedFirst, ...suggestedLast]) {
+    const parts = key.split('+');
+    suggestedBlocks[key] =
+      parts.length > 1 ? (
+        <div key={key} className="cn-pair">
+          {parts.map((p) => <Fragment key={p}>{suggestedPanels[p]}</Fragment>)}
+        </div>
+      ) : (
+        <Fragment key={key}>{suggestedPanels[key]}</Fragment>
+      );
+  }
 
-  return (
-    <AppShell tab="consult">
+  return (    <AppShell tab="consult">
       <div className="cs-page">
-        <PageHeader title={categoryName} subtitle={T.concernSubtitle} eyebrow={T.concernsEyebrow}>
+        <PageHeader title={categoryName} subtitle={C.subtitle} eyebrow={T.concernsEyebrow}>
           <SearchField
             value={search}
             onChange={setSearch}
             onSubmit={(value) => setDebounced(String(value || '').trim())}
-            placeholder={T.concernSearch}
+            placeholder={C.searchPlaceholder}
             suggestions={searchSuggestions(diseases)}
           />
         </PageHeader>
@@ -314,7 +462,7 @@ export default function CategoryDoctor() {
               {T.conditions}
             </h2>
             {diseasesLoading && diseases.length === 0 ? (
-              <SectionHold label={T.conditions} minHeight={88} scale="section" />
+              <SectionHold label={T.conditions} minHeight={88} variant="chips" />
             ) : (
               <div className="cs-chip-row">
                 <Chip selected={!selectedDiseaseId} onClick={() => setSelectedDiseaseId(null)}>
@@ -335,37 +483,36 @@ export default function CategoryDoctor() {
           </section>
         ) : null}
 
-        {doctorsLoading || doctors.length > 0 ? (
-          <section className="cs-section" aria-labelledby="cs-cd-doctors">
-            <SectionHeader
-              id="cs-cd-doctors"
-              title={T.doctorsFor(categoryName || T.related)}
-              action={doctors.length > 0 ? <ViewAll onClick={() => navigate(`/consult/doctors?${doctorsQuery}`)} /> : null}
-            />
-            {doctorsLoading && doctors.length === 0 ? (
-              <SkeletonGrid variant="doctor" count={3} label={T.loadingDoctors} className="am-doctor-grid" />
-            ) : (
-              <ul className="am-doctor-grid">
-                {doctors.map((item) => (
-                  <li key={getDoctorId(item) || item.full_name}>
-                    <DoctorCard item={item} />
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-        ) : null}
+        <div className="cn-stack">
+          {suggestedFirst.map((key) => suggestedBlocks[key])}
 
-        {dietLoading || dietPlans.length > 0 ? (
-          <section className="cs-section" aria-labelledby="cs-cd-diet">
-            <SectionHeader
+          <div className="hm-page cn-home">
+            {ourDoctorsLoading ? <HomeDoctorsSkeleton label={`Loading ${C.ourDoctors}`} /> : null}
+            <HomeOurDoctors
+              id="cn-our-doctors"
+              items={ourDoctors}
+              title={C.ourDoctors}
+              description={C.ourDoctorsText}
+              onViewAll={() => navigate('/consult/doctors')}
+              onOpen={openDoctor}
+            />
+            {ourProductsLoading || ourMedicinesLoading ? <HomeProductsSkeleton label={`Loading ${C.ourProducts}`} /> : null}
+            <HomeProductPanels
+              idPrefix="cn-our"
+              panels={[
+                { key: 'medicines', title: C.ourMedicines, description: C.ourMedicinesText, items: ourMedicines, onViewAll: () => navigate('/medicines') },
+                { key: 'products', title: C.ourProducts, description: C.ourProductsText, items: ourProducts, onViewAll: () => navigate('/products') },
+              ]}
+            />
+          </div>
+
+          {dietLoading || dietPlans.length > 0 ? (
+            <ConcernPanel
               id="cs-cd-diet"
               title={T.dietFor(scopeName)}
-              action={dietPlans.length > 0 ? <ViewAll onClick={() => navigate(`/diet?view=all&${catalogQuery}`)} /> : null}
-            />
-            {dietLoading && dietPlans.length === 0 ? (
-              <RailSkeleton size="wide" count={3} />
-            ) : (
+              loading={dietLoading && dietPlans.length === 0}
+              onViewAll={() => navigate(`/diet?view=all&${catalogQuery}`)}
+            >
               <Rail label={T.dietFor(scopeName)}>
                 {dietPlans.map((item) => (
                   <RailItem key={item.id} size="wide">
@@ -378,67 +525,31 @@ export default function CategoryDoctor() {
                   </RailItem>
                 ))}
               </Rail>
-            )}
-          </section>
-        ) : null}
+            </ConcernPanel>
+          ) : null}
 
-        {yogaLoading || yogaSessions.length > 0 ? (
-          <section className="cs-section" aria-labelledby="cs-cd-yoga">
-            <SectionHeader
+          {yogaLoading || yogaSessions.length > 0 ? (
+            <ConcernPanel
               id="cs-cd-yoga"
               title={T.yogaFor(scopeName)}
-              action={yogaSessions.length > 0 ? <ViewAll onClick={() => navigate(`/yoga?${catalogQuery}`)} /> : null}
-            />
-            {yogaLoading && yogaSessions.length === 0 ? (
-              <RailSkeleton size="wide" count={3} />
-            ) : (
-              <Rail label={T.yogaFor(scopeName)}>
+              loading={yogaLoading && yogaSessions.length === 0}
+              onViewAll={() => navigate(`/yoga?${catalogQuery}`)}
+            >
+              <Rail label={T.yogaFor(scopeName)} controls className="yc-rail">
                 {yogaSessions.map((item) => (
-                  <RailItem key={item.id} size="wide">
-                    <MediaCard
-                      image={resolveYogaThumbnailUri(item) || yogaPosterImg}
-                      title={item.title || item.name}
-                      fallbackIcon={Flower2}
-                      onClick={() => navigate(`/yoga/${item.id}`, { state: { item } })}
+                  <RailItem key={item.id}>
+                    <YogaCard
+                      item={item}
+                      onOpen={() => navigate(`/yoga/${item.id}`, { state: { item } })}
                     />
                   </RailItem>
                 ))}
               </Rail>
-            )}
-          </section>
-        ) : null}
+            </ConcernPanel>
+          ) : null}
 
-        {productsLoading || scopedProducts.length > 0 ? (
-          <section className="cs-section" aria-labelledby="cs-cd-products">
-            <SectionHeader
-              id="cs-cd-products"
-              title={productTitle}
-              description={showingGeneralProducts ? T.generalProductsNote : undefined}
-            />
-            {productsLoading && scopedProducts.length === 0 ? (
-              <SkeletonGrid count={4} className="am-product-grid" />
-            ) : (
-              <ul className="am-product-grid">
-                {scopedProducts.map((item) => (
-                  <li key={item.variant_id || item.id}>
-                    <ProductCard item={item} />
-                  </li>
-                ))}
-              </ul>
-            )}
-            {hasMore && scopedProducts.length > 0 ? (
-              <div className="cs-more">
-                <Button variant="secondary" loading={loadingMore} onClick={loadMore}>
-                  {loadingMore ? T.loadingMore : T.loadMore}
-                </Button>
-              </div>
-            ) : null}
-          </section>
-        ) : null}
-
-        {nothingFound ? (
-          <EmptyState icon={<Leaf size={28} />} title={T.concernEmpty} description={T.concernEmptyText} />
-        ) : null}
+          {suggestedLast.map((key) => suggestedBlocks[key])}
+        </div>
 
         <footer className="cs-foot">
           <Disclaimer variant="banner" />

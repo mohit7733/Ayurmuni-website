@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ArrowRight, Award, Check, CheckCircle2, Clock, HeartPulse, ShieldCheck, Sparkles, Stethoscope } from "lucide-react";
+import { ArrowLeft, ArrowRight, Award, Calendar, Check, HeartPulse, ShieldCheck, Sparkles, Star, Stethoscope } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { Button, EmptyState, ErrorState, SkeletonGrid } from "../components/ui";
@@ -8,9 +8,11 @@ import PlanTransferModal from "../components/PlanTransferModal";
 import usePackagePurchase from "../hooks/usePackagePurchase";
 import { isAuthenticated, requireAuth } from "../services/guestAuth";
 import { loadPackageKinds, loadPackagesWithStatus } from "../services/packageService";
+import PlanMark from "../packages/PlanMark";
+import { getPlanTheme, isCarePlan, planCta, planDiscount, planDuration, themeStyle } from "../packages/planTheme";
 import "../design/pages/packages-premium.css";
+import "../design/pages/plan-cards.css";
 
-const FEATURED_BADGES = new Set(["POPULAR", "BESTSELLER"]);
 const TRUST = ["Experienced practitioners", "Personalised guidance", "Care led by experts"];
 const MAX_LIST = 3;
 
@@ -22,49 +24,59 @@ const iconFor = (name) => {
 };
 
 function PlanCard({ item, busy, onAction }) {
-  const hasMrp = item.mrp && item.mrp > item.price;
-  const off = hasMrp ? Math.round(((item.mrp - item.price) / item.mrp) * 100) : 0;
-  const featured = FEATURED_BADGES.has(String(item.badge || "").toUpperCase());
+  const theme = getPlanTheme(item);
+  const care = isCarePlan(item);
+  const discount = planDiscount(item);
   const owned = item.mode === "purchase" && item.purchased;
-  const label = owned ? "View plan" : item.mode === "purchase" ? "Buy plan" : "Book consult";
   const lines = item.includes || [];
+  const extra = lines.length - Math.min(lines.length, MAX_LIST);
   return (
-    <article className={`pp-card${featured ? " is-featured" : ""}${owned ? " is-owned" : ""}`} aria-label={item.name}>
-      <div className="pp-card__top">
-        {owned ? (
-          <span className="pp-card__owned"><CheckCircle2 size={12} aria-hidden /> Purchased</span>
-        ) : item.badge ? (
-          <span className="pp-card__badge">{item.badge}</span>
-        ) : <span />}
-        {off > 0 && !owned ? <span className="pp-card__off">{off}% off</span> : null}
+    <article className={`am-plan${care ? " is-care" : ""}`} style={themeStyle(theme)} aria-label={item.name}>
+      <div className="am-plan__top">
+        <div className="am-plan__row">
+          <span className="am-plan__chip">
+            <PlanMark name={theme.icon} size={12} color={theme.accent} />
+            {item.group || "Plan"}
+          </span>
+          {care ? (
+            <span className="am-plan__ribbon"><Star size={10} aria-hidden /> CARE PLAN</span>
+          ) : null}
+        </div>
+        <div className="am-plan__title">
+          <div>
+            <h3>
+              <Link to={`/packages/${encodeURIComponent(item.id)}`}>{item.name}</Link>
+            </h3>
+            <p className="am-plan__dur"><Calendar size={12} aria-hidden /> {planDuration(item)}</p>
+          </div>
+          <span className="am-plan__bubble">
+            {item.image ? <img src={item.image} alt="" /> : <PlanMark name={theme.icon} size={22} color={theme.accent} />}
+          </span>
+        </div>
       </div>
-      <h3 className="pp-card__name">
-        <Link to={`/packages/${encodeURIComponent(item.id)}`} className="pp-card__link">{item.name}</Link>
-      </h3>
-      <p className="pp-card__price">
-        <strong>{formatRupee(item.price)}</strong>
-        {hasMrp ? <s>{formatRupee(item.mrp)}</s> : null}
-        {item.duration ? <span className="pp-card__dur"><Clock size={12} aria-hidden /> {item.duration}</span> : null}
-      </p>
-      {lines.length ? (
-        <ul className="pp-card__list">
-          {lines.slice(0, MAX_LIST).map((line) => (
-            <li key={line}>
-              <Check size={13} aria-hidden />
-              <span>{line}</span>
-            </li>
-          ))}
-          {lines.length > MAX_LIST ? <li className="pp-card__more">+{lines.length - MAX_LIST} more</li> : null}
-        </ul>
-      ) : null}
-      <button
-        type="button"
-        className={`pp-card__cta${owned ? " is-owned" : ""}`}
-        disabled={busy}
-        onClick={() => onAction(item)}
-      >
-        {busy ? "Please wait..." : label} {!busy ? <ArrowRight size={14} aria-hidden /> : null}
-      </button>
+      <div className="am-plan__body">
+        {item.description ? <p className="am-plan__desc">{item.description}</p> : null}
+        {lines.length ? (
+          <ul className="am-plan__list">
+            {lines.slice(0, MAX_LIST).map((line) => (
+              <li key={line}>
+                <span className="am-plan__check"><Check size={10} strokeWidth={3} aria-hidden /></span>
+                <span>{line}</span>
+              </li>
+            ))}
+            {extra > 0 ? <li className="am-plan__more">+{extra} more benefit{extra > 1 ? "s" : ""}</li> : null}
+          </ul>
+        ) : null}
+        <div className="am-plan__spacer" />
+        <p className="am-plan__price">
+          <strong>{formatRupee(item.price)}</strong>
+          {item.mrp > item.price ? <s>{formatRupee(item.mrp)}</s> : null}
+          {discount > 0 ? <span className="am-plan__off">{discount}% OFF</span> : null}
+        </p>
+        <button type="button" className="am-plan__cta" disabled={busy} onClick={() => onAction(item)}>
+          {busy ? "Please wait..." : planCta(item, { owned })} {!busy ? <ArrowRight size={14} aria-hidden /> : null}
+        </button>
+      </div>
     </article>
   );
 }
@@ -145,14 +157,10 @@ export default function Packages() {
     usePackagePurchase({ onPurchased });
 
   const onAction = (item) => {
-    if (item.mode === "consult") {
+    if (!isCarePlan(item)) {
       requireAuth("Sign in to book a consultation.").then((ok) => {
         if (ok) navigate("/consult");
       });
-      return;
-    }
-    if (item.purchased) {
-      navigate(`/packages/${encodeURIComponent(item.id)}`);
       return;
     }
     buyPlan(item);

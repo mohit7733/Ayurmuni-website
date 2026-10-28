@@ -13,7 +13,6 @@ import {
   Search,
   ShoppingBag,
   Sparkles,
-  Star,
   Stethoscope,
   Users,
   Heart,
@@ -35,21 +34,18 @@ import { useLazySection, useSectionQueue } from '../hooks/useLazySection';
 import { getDoctors } from '../services/consultService';
 import { isAuthenticated, requireAuth } from '../services/guestAuth';
 import {
-  doctorDisplayName,
-  doctorExperience,
-  doctorFeeLabel,
-  doctorImage,
-  doctorQualification,
-  doctorRating,
   getDoctorId,
   normalizeDoctorList,
-  resolveDoctorSpecializations,
 } from '../consult/doctors';
 import DoctorTable from '../components/DoctorTable';
 import VisitedDoctorList from '../components/VisitedDoctorList';
 import '../components/visited-doctors.css';
 import DummyOfferCard from '../components/DummyOfferCard';
 import ProductCard from '../components/ProductCard';
+import OurDoctorCard from '../components/OurDoctorCard';
+import { DoctorRailHeader, ViewAll } from '../components/HomeSections';
+import { HomeDoctorsSkeleton, HomeProductsSkeleton } from '../components/skeletons';
+import Skeleton from '../components/skeletons/Block';
 import HomeJoinAppointments from '../components/HomeJoinAppointments';
 import '../design/pages/home-pair.css';
 
@@ -76,6 +72,8 @@ import { DUMMY_CONSULT_PACKAGES } from '../data/homeDummySections';
 import { loadConsultPackages } from '../services/packageService';
 import '../design/pages/home.css';
 import '../design/pages/dummy-offers.css';
+import '../design/pages/plan-cards.css';
+import { isCarePlan } from '../packages/planTheme';
 import '../design/pages/orange-lab.css';
 
 let prakritiModalShownThisSession = false;
@@ -215,20 +213,6 @@ function CategoryRow({ items, renderItem }) {
   );
 }
 
-function ViewAll({ onClick, label, plain = false, className }) {
-  return (
-    <Button
-      variant="ghost"
-      size="sm"
-      className={[plain ? 'hm-doctor-head__link' : '', className].filter(Boolean).join(' ') || undefined}
-      onClick={onClick}
-      trailingIcon={<ArrowRight size={16} aria-hidden />}
-    >
-      {T.viewAll}
-      <span className="am-sr-only"> {label}</span>
-    </Button>
-  );
-}
 
 function shortLabel(value) {
   const text = String(value || '').replace(/\s+/g, ' ').trim();
@@ -266,73 +250,6 @@ function useOurDoctors(enabled) {
   return [items, done];
 }
 
-/** Explicit approval flag from the API (not the permissive list filter default). */
-const hasApprovalFlag = (d) => {
-  const status = String(d?.approval_status ?? d?.verification_status ?? '').trim().toLowerCase();
-  if (['approved', 'verified'].includes(status)) return true;
-  const flag = d?.is_approved ?? d?.is_verified;
-  return flag === true || flag === 'true' || flag === 1 || flag === '1';
-};
-
-function OurDoctorCard({ item, index, onOpen }) {
-  const name = doctorDisplayName(item);
-  const image = doctorImage(item);
-  const qualification = doctorQualification(item);
-  const specs = resolveDoctorSpecializations(item).slice(0, 2).join(', ');
-  const experience = doctorExperience(item);
-  const rating = doctorRating(item);
-  const fee = doctorFeeLabel(item);
-  const verified = hasApprovalFlag(item);
-  const line = [qualification, specs && specs !== qualification ? specs : ''].filter(Boolean);
-
-  return (
-    <article className="hm-odoc" style={{ '--hm-odoc-i': Math.min(index, 6) }}>
-      <span className="hm-odoc__photo">
-        {image ? (
-          <img src={image} alt="" loading="lazy" decoding="async" width="52" height="52" />
-        ) : (
-          <span aria-hidden>{name.charAt(0)}</span>
-        )}
-      </span>
-      <div className="hm-odoc__id">
-        <h3 className="hm-odoc__name">
-          <span>{name}</span>
-          {verified ? <BadgeCheck className="hm-odoc__tick" size={15} aria-label="Verified" /> : null}
-        </h3>
-        {line.length ? (
-          <p className="hm-odoc__line">
-            {line.map((part, i) => (
-              <span key={part} className={i ? 'hm-odoc__spec' : 'hm-odoc__qual'}>
-                {part}
-              </span>
-            ))}
-          </p>
-        ) : null}
-      </div>
-      <div className="hm-odoc__foot">
-        {experience || rating || fee ? (
-          <ul className="hm-odoc__meta">
-            {experience ? <li>{experience}</li> : null}
-            {rating ? (
-              <li>
-                <Star size={11} aria-hidden /> {rating}
-              </li>
-            ) : null}
-            {fee ? (
-              <li className="hm-odoc__fee">
-                <strong>{fee}</strong>
-              </li>
-            ) : null}
-          </ul>
-        ) : null}
-        <button type="button" className="hm-odoc__cta am-stretched" onClick={onOpen}>
-          Consult
-          <ArrowRight size={13} aria-hidden />
-        </button>
-      </div>
-    </article>
-  );
-}
 
 function YogaSessionCard({ item, onClick }) {
   const level = shortLabel(item.difficulty);
@@ -356,6 +273,29 @@ function YogaSessionCard({ item, onClick }) {
         {duration ? <span className="hm-pose__time">{duration}</span> : null}
       </span>
     </button>
+  );
+}
+
+function YogaPoseRailSkeleton({ label, count = 4 }) {
+  return (
+    <div role="status" aria-busy="true" aria-label={label}>
+      <span className="am-sr-only">{label}</span>
+      <ul className="am-rail am-skel-rail hm-yoga-rail">
+        {Array.from({ length: count }, (_, i) => (
+          <li key={i} className="am-rail__item" aria-hidden>
+            <span className="hm-pose">
+              <span className="hm-pose__media">
+                <Skeleton variant="rect" className="am-skel-fill" />
+              </span>
+              <span className="hm-pose__copy">
+                <Skeleton width="75%" height={14} />
+                <Skeleton width={48} height={12} />
+              </span>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -385,26 +325,6 @@ function DietPlanCard({ item, onClick }) {
   );
 }
 
-function DoctorRailHeader({ id, eyebrow, title, description, onViewAll, reserveEyebrow = false }) {
-  return (
-    <div className="hm-doctor-head">
-      {eyebrow ? (
-        <p className="am-eyebrow">{eyebrow}</p>
-      ) : reserveEyebrow ? (
-        <p className="am-eyebrow" aria-hidden="true">
-          &nbsp;
-        </p>
-      ) : null}
-      <div className="hm-doctor-head__row">
-        <h2 id={id} className="hm-doctor-head__title">
-          {title}
-        </h2>
-        <ViewAll plain label={title} onClick={onViewAll} />
-      </div>
-      {description ? <p className="hm-doctor-head__desc">{description}</p> : null}
-    </div>
-  );
-}
 
 /** Below-the-fold wrapper: a fixed-height placeholder until its data has loaded, then it
  *  disappears from layout (display: contents) so the section renders exactly as before. */
@@ -855,7 +775,7 @@ export default function Home() {
           </div>
           ) : null}
 
-          <LazyBlock blockRef={concernsRef} done={isSectionDone('concerns')} minHeight={120} skeleton={<SectionHold label={T.concernsTitle} minHeight={120} scale="section" />}>
+          <LazyBlock blockRef={concernsRef} done={isSectionDone('concerns')} minHeight={120} skeleton={<SectionHold label={T.concernsTitle} minHeight={120} variant="chips" />}>
           {healthConcerns.length > 0 ? (
             <Reveal as="section" className="hm-section hm-panel hm-concerns-panel" aria-labelledby="hm-concerns-title">
               <SectionHeader
@@ -887,7 +807,7 @@ export default function Home() {
           ) : null}
           </LazyBlock>
 
-          <LazyBlock blockRef={ourDocsRef} done={ourDoctorsDone} minHeight={120} skeleton={<SectionHold label="Our doctors" minHeight={120} scale="section" />}>
+          <LazyBlock blockRef={ourDocsRef} done={ourDoctorsDone} minHeight={120} skeleton={<HomeDoctorsSkeleton label="Loading our doctors" />}>
           {ourDoctors.length > 0 ? (
             <Reveal as="section" className="hm-section hm-panel hm-odocs" aria-labelledby="hm-odocs-title">
               <SectionHeader
@@ -915,7 +835,7 @@ export default function Home() {
           ) : null}
           </LazyBlock>
 
-          <LazyBlock blockRef={brandsRef} done={brandsSeen && !brandsLoading} minHeight={120} skeleton={<SectionHold label={T.brandsTitle} minHeight={120} scale="section" />}>
+          <LazyBlock blockRef={brandsRef} done={brandsSeen && !brandsLoading} minHeight={120} skeleton={<SectionHold label={T.brandsTitle} minHeight={120} variant="chips" />}>
           {brands.length > 0 ? (
             <Reveal as="section" className="hm-section hm-panel hm-brands-panel" aria-labelledby="hm-brands-title">
               <SectionHeader
@@ -956,7 +876,7 @@ export default function Home() {
                     description={T.visitedText}
                     onViewAll={() => navigate('/consult')}
                   />
-                  <SectionHold label={T.visitedTitle} minHeight={120} scale="section" />
+                  <SectionHold label={T.visitedTitle} minHeight={120} variant="list" count={2} />
                 </section>
               ) : null}
 
@@ -985,7 +905,7 @@ export default function Home() {
                     description={T.doctorsText}
                     onViewAll={() => navigate('/consult/doctors')}
                   />
-                  <SectionHold label={T.doctorsTitle} minHeight={120} scale="section" />
+                  <SectionHold label={T.doctorsTitle} minHeight={120} variant="list" count={3} />
                 </section>
               ) : null}
 
@@ -1005,7 +925,7 @@ export default function Home() {
           ) : null}
           </LazyBlock>
 
-          <LazyBlock blockRef={productsRef} done={isSectionDone('products')} minHeight={140} skeleton={<SectionHold label={T.productsTitle} minHeight={140} scale="section" />}>
+          <LazyBlock blockRef={productsRef} done={isSectionDone('products')} minHeight={140} skeleton={<HomeProductsSkeleton label={T.productsTitle} />}>
           {productPanels.length ? (
             <div className="hm-product-row hm-product-grid">
               {productPanels.map((panel) => (
@@ -1028,7 +948,7 @@ export default function Home() {
           ) : null}
           </LazyBlock>
 
-          <LazyBlock blockRef={wellnessRef} done={isSectionDone('yoga') && isSectionDone('diet')} minHeight={140} skeleton={<SectionHold label={T.yogaTitle} minHeight={140} scale="section" />}>
+          <LazyBlock blockRef={wellnessRef} done={isSectionDone('yoga') && isSectionDone('diet')} minHeight={140} skeleton={<YogaPoseRailSkeleton label={T.yogaTitle} count={4} />}>
 
           {yogaSessions.length > 0 || dietProducts.length > 0 ? (
             <div
@@ -1093,13 +1013,26 @@ export default function Home() {
               title={T.packagesTitle}
               action={<ViewAll label={T.packagesTitle} onClick={() => navigate('/packages')} />}
             />
-            <Rail label={T.packagesTitle}>
-              {consultPackages.slice(0, 6).map((item) => (
-                <RailItem key={item.id} size="product">
-                  <DummyOfferCard item={item} kind="package" onClick={() => navigate('/packages')} />
-                </RailItem>
-              ))}
-            </Rail>
+            <div className="hm-plan-band">
+              <p className="hm-plan-band__tag">
+                <span className="hm-plan-band__dot" aria-hidden />
+                Save more with guided Ayurvedic care plans
+              </p>
+              <Rail label={T.packagesTitle} className="hm-package-rail" auto interval={3200} controls>
+                {[...consultPackages]
+                  .sort((a, b) => Number(isCarePlan(b)) - Number(isCarePlan(a)))
+                  .slice(0, 8)
+                  .map((item) => (
+                    <RailItem key={item.id}>
+                      <DummyOfferCard
+                        item={item}
+                        kind="package"
+                        onClick={() => navigate(`/packages/${encodeURIComponent(item.id)}`)}
+                      />
+                    </RailItem>
+                  ))}
+              </Rail>
+            </div>
           </Reveal>
 
           {/* TEMP hidden per Rohit — Health Lab (Home collection) + Panchakarma (Classical therapies) sections

@@ -1,78 +1,32 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Flower2, Play } from 'lucide-react';
+import { Flower2 } from 'lucide-react';
 import AppShell from '../components/AppShell';
-import yogaPosterImg from '/images/login/8.webp';
+import YogaCard, { YogaGridSkeleton } from '../components/yoga/YogaCard';
 import { getYogaSession } from '../services/yogaService';
-import {
-  itemMatchesHealthConcern,
-  matchesYogaSearch,
-  normalizeYogaSessionList,
-  resolveYogaThumbnailUri,
-} from '../yoga/utils';
-import { EmptyState, SearchField, searchSuggestions, SkeletonGrid } from '../components/ui';
-import { HOME_COPY as H } from '../content/home';
+import { itemMatchesHealthConcern, matchesYogaSearch, normalizeYogaSessionList } from '../yoga/utils';
+import { DURATION_BUCKETS, levelLabel, yogaMinutes } from '../yoga/present';
+import { Button, Chip, EmptyState, SearchField, searchSuggestions } from '../components/ui';
+import PageBar from '../components/ui/PageBar';
+import { SectionHead } from '../components/ServiceHome';
+import { YOGA_COPY as Y } from '../content/yoga';
 import '../design/pages/yoga.css';
 
-const clip = (value) => {
-  const text = String(value || '').replace(/\s+/g, ' ').trim();
-  return text.length > 28 ? '' : text;
-};
-
-const sessionTitle = (item) => item.title || item.name || 'Yoga session';
-
-function SessionArt({ item }) {
-  const src = resolveYogaThumbnailUri(item) || yogaPosterImg;
-  return <img src={src} alt="" loading="lazy" decoding="async" />;
-}
-
-function FeatureSession({ item, onOpen }) {
-  const level = clip(item.difficulty);
-  const duration = clip(item.duration);
+function FilterRow({ label, options, value, onChange }) {
+  if (options.length < 2) return null;
   return (
-    <article className="yg-feature">
-      <SessionArt item={item} />
-      <div className="yg-feature__shade" aria-hidden />
-      <div className="yg-feature__body">
-        {level ? <span className="yg-chip">{level}</span> : null}
-        <h2>
-          <button type="button" className="am-stretched" onClick={() => onOpen(item)}>
-            {sessionTitle(item)}
-          </button>
-        </h2>
-        <p>{duration || 'Guided practice'}</p>
-      </div>
-      <span className="yg-play" aria-hidden>
-        <Play size={16} fill="currentColor" />
-      </span>
-    </article>
+    <div className="svc-chips yg-chips" role="group" aria-label={label}>
+      <Chip selected={!value} onClick={() => onChange('')}>
+        {label}: {Y.filterAll}
+      </Chip>
+      {options.map((opt) => (
+        <Chip key={opt.key} selected={value === opt.key} onClick={() => onChange(value === opt.key ? '' : opt.key)}>
+          {opt.label}
+        </Chip>
+      ))}
+    </div>
   );
 }
-
-function SideSession({ item, onOpen }) {
-  const level = clip(item.difficulty);
-  const duration = clip(item.duration);
-  return (
-    <article className="yg-mini">
-      <div className="yg-mini__art">
-        <SessionArt item={item} />
-      </div>
-      <div className="yg-mini__body">
-        {level ? <span className="yg-chip">{level}</span> : null}
-        <h3>
-          <button type="button" className="am-stretched" onClick={() => onOpen(item)}>
-            {sessionTitle(item)}
-          </button>
-        </h3>
-        <p>{duration || 'Guided practice'}</p>
-      </div>
-      <span className="yg-play yg-play--sm" aria-hidden>
-        <Play size={12} fill="currentColor" />
-      </span>
-    </article>
-  );
-}
-
 export default function Yoga() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
@@ -82,6 +36,8 @@ export default function Yoga() {
 
   const [search, setSearch] = useState('');
   const [debounced, setDebounced] = useState('');
+  const [level, setLevel] = useState('');
+  const [duration, setDuration] = useState('');
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const concernMatch = useMemo(
@@ -122,77 +78,117 @@ export default function Yoga() {
     loadSessions();
   }, [loadSessions]);
 
-  const filtered = useMemo(
-    () => sessions.filter((item) => matchesYogaSearch(debounced, item)),
-    [sessions, debounced],
+  // Filter options come only from values present in the data.
+  const levelOptions = useMemo(() => {
+    const seen = new Map();
+    sessions.forEach((item) => {
+      const label = levelLabel(item);
+      if (label && !seen.has(label.toLowerCase())) seen.set(label.toLowerCase(), label);
+    });
+    return [...seen].map(([key, label]) => ({ key, label }));
+  }, [sessions]);
+  const durationOptions = useMemo(
+    () => DURATION_BUCKETS.filter((b) => sessions.some((item) => b.test(yogaMinutes(item)))),
+    [sessions],
   );
 
-  const openSession = (item) => {
-    navigate(`/yoga/${item.id}`, { state: { item } });
+  const filtered = useMemo(() => {
+    const bucket = DURATION_BUCKETS.find((b) => b.key === duration);
+    return sessions.filter(
+      (item) =>
+        matchesYogaSearch(debounced, item) &&
+        (!level || levelLabel(item).toLowerCase() === level) &&
+        (!bucket || bucket.test(yogaMinutes(item))),
+    );
+  }, [sessions, debounced, level, duration]);
+
+  const filtering = Boolean(debounced || level || duration);
+  const clearAll = () => {
+    setSearch('');
+    setDebounced('');
+    setLevel('');
+    setDuration('');
   };
+  const openSession = (item) => navigate(`/yoga/${item.id}`, { state: { item } });
+
+  const title = categoryName ? Y.listTitleFor(categoryName) : Y.listTitle;
 
   return (
     <AppShell tab="home">
       <div className="hm-page svc-page yg-page">
         <div className="hm-body">
-          <section className="yg-studio" aria-labelledby="yg-list-title">
-            <header className="yg-mast">
-              <div className="yg-mast__copy">
-                <p className="yg-mast__kicker">Practice</p>
-                <h1 id="yg-list-title">
-                  {categoryName ? `${categoryName} yoga` : H.yogaTitle}
-                </h1>
-                <p>
-                  {categoryName
-                    ? `Practices selected for ${categoryName}.`
-                    : 'Guided practices for breath, strength, and calm.'}
-                </p>
-              </div>
-              <SearchField
-                value={search}
-                onChange={setSearch}
-                onSubmit={(value) => setDebounced(String(value || '').trim())}
-                placeholder="Search sessions"
-                label="Search yoga sessions"
-                submitLabel={false}
-                suggestions={searchSuggestions(sessions)}
-              />
-            </header>
+          <section className="hm-well hm-well--move dlp-list yg-list" aria-labelledby="yg-list-title">
+            <SectionHead
+              id="yg-list-title"
+              title={title}
+              description={
+                loading && sessions.length === 0
+                  ? categoryName
+                    ? Y.listTextFor(categoryName)
+                    : Y.listText
+                  : `${categoryName ? Y.listTextFor(categoryName) : Y.listText} ${Y.resultCount(filtered.length)}.`
+              }
+              action={
+                <div className="am-head-tools">
+                  <PageBar className="am-page-bar--slot" id="yg-bar" title={title}>
+                    <SearchField
+                      value={search}
+                      onChange={setSearch}
+                      onSubmit={(value) => setDebounced(String(value || '').trim())}
+                      placeholder={Y.searchPlaceholder}
+                      label={Y.searchLabel}
+                      suggestions={searchSuggestions(sessions)}
+                    />
+                  </PageBar>
+                </div>
+              }
+            />
+
+            {!loading && sessions.length > 0 ? (
+              <>
+                <FilterRow label={Y.filterLevel} options={levelOptions} value={level} onChange={setLevel} />
+                <FilterRow label={Y.filterDuration} options={durationOptions} value={duration} onChange={setDuration} />
+              </>
+            ) : null}
+
             {loading && sessions.length === 0 ? (
-              <SkeletonGrid count={4} className="yg-stage" label="Loading sessions" />
+              <YogaGridSkeleton count={8} />
             ) : filtered.length === 0 ? (
               <EmptyState
                 icon={<Flower2 size={28} />}
-                title="No yoga sessions"
-                description={
-                  debounced
-                    ? 'Try another search.'
-                    : 'Sessions for this concern will appear here when available.'
+                title={filtering ? Y.emptyFilteredTitle : Y.emptyTitle}
+                description={filtering ? Y.emptyFilteredText : Y.emptyText}
+                action={
+                  filtering ? (
+                    <Button onClick={clearAll}>{Y.clearFilters}</Button>
+                  ) : (
+                    <>
+                      <Button onClick={() => navigate('/consult/doctors')}>{Y.ctaConsult}</Button>
+                      {categoryName ? (
+                        <Button variant="secondary" onClick={() => navigate('/yoga')}>
+                          {Y.ctaBrowse}
+                        </Button>
+                      ) : null}
+                    </>
+                  )
                 }
               />
             ) : (
               <>
-                <div className={`yg-stage${filtered.length === 1 ? ' is-solo' : ''}`}>
-                  <FeatureSession item={filtered[0]} onOpen={openSession} />
-                  {filtered.length > 1 ? (
-                    <ul className="yg-side">
-                      {filtered.slice(1, 4).map((item) => (
-                        <li key={item.id}>
-                          <SideSession item={item} onOpen={openSession} />
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
-                </div>
-                {filtered.length > 4 ? (
-                  <ul className="yg-more">
-                    {filtered.slice(4).map((item) => (
-                      <li key={item.id}>
-                        <SideSession item={item} onOpen={openSession} />
-                      </li>
-                    ))}
-                  </ul>
+                {filtering ? (
+                  <div className="svc-more yg-clear">
+                    <Button variant="ghost" size="sm" onClick={clearAll}>
+                      {Y.clearFilters}
+                    </Button>
+                  </div>
                 ) : null}
+                <ul className="svc-meal-grid dlp-grid">
+                  {filtered.map((item) => (
+                    <li key={item.id}>
+                      <YogaCard item={item} onOpen={openSession} />
+                    </li>
+                  ))}
+                </ul>
               </>
             )}
           </section>

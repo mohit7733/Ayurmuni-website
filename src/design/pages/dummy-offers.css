@@ -245,6 +245,35 @@
   padding-top: 8px;
 }
 
+/* Home package cards: same green and gold as the app plans. */
+.do-card--package {
+  border-color: rgba(201, 165, 90, 0.5);
+  background:
+    radial-gradient(90% 70% at 100% 0%, rgba(228, 196, 122, 0.28), transparent 58%),
+    linear-gradient(180deg, #fffdf8 0%, #f6f0e4 100%);
+}
+.do-card--package .do-card__badge {
+  background: #0d614e;
+  color: #e4c47a;
+}
+.do-card--package .do-card__off {
+  background: linear-gradient(135deg, #f3e2b4, #c9a55a);
+  color: #0b4136;
+}
+.do-card--package .do-card__group { color: #8a6a32; font-weight: 700; }
+.do-card--package h3 {
+  font-family: var(--am-font-display);
+  font-size: 1.05rem;
+  letter-spacing: -0.015em;
+  color: #13231e;
+}
+.do-card--package .do-card__price strong { color: #0d614e; }
+.do-card--package .do-card__book {
+  border-radius: 999px;
+  background: linear-gradient(135deg, #0d614e, #0b4136);
+  letter-spacing: 0.04em;
+}
+
 .do-card--lab .do-card__book,
 .do-card--therapy .do-card__book {
   border: 1px solid var(--am-primary);
