@@ -830,11 +830,7 @@ export default function Home() {
             <h2 id="hm-services-title" className="am-sr-only">
               {T.servicesTitle}
             </h2>
-            {loading && serviceList.length === 0 ? (
-              <SectionHold label={T.servicesTitle} minHeight={140} scale="section" />
-            ) : (
-              <CategoryRow items={serviceList} renderItem={renderServiceItem} />
-            )}
+            <CategoryRow items={serviceList} renderItem={renderServiceItem} />
           </section>
 
           {/* Upcoming appointment + active diet plan share one row (stacks on mobile). */}
@@ -1051,7 +1047,7 @@ export default function Home() {
                       <ViewAll label={T.yogaTitle} onClick={() => navigate('/yoga')} />
                     ) : null}
                   </div>
-                  <Rail label={T.yogaTitle} auto interval={3000} motionOverride className="hm-yoga-rail">
+                  <Rail label={T.yogaTitle} auto interval={3000} motionOverride controls className="hm-yoga-rail">
                     {yogaSessions.map((item) => (
                       <RailItem key={item.id}>
                         <YogaSessionCard
@@ -1075,7 +1071,7 @@ export default function Home() {
                     </div>
                     <ViewAll label={T.dietTitle} onClick={() => navigate('/diet?view=all')} />
                   </div>
-                  <Rail label={T.dietTitle} auto>
+                  <Rail label={T.dietTitle} auto controls className="hm-diet-rail">
                     {dietProducts.filter((d, i, all) => all.findIndex((x) => x.id === d.id) === i).map((item) => (
                       <RailItem key={item.id}>
                         <DietPlanCard

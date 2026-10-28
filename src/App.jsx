@@ -7,9 +7,9 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { setNavigate } from "./navigation/nav";
+import { PRIMARY_NAV } from "./site/nav";
 import ToastHost from "./components/ToastHost";
 import GlobalLoadBar from "./components/GlobalLoadBar";
-import AdvanceLoad from "./components/ui/AdvanceLoad";
 import { Utils } from "./common/utils";
 import { getAccessLevel } from "./services/guestAuth";
 import { syncPushForSession } from "./services/pushNotificationService";
@@ -22,7 +22,6 @@ import Home from "./pages/Home";
 import NetworkError from "./pages/NetworkError";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
-import { STATIC_COPY } from "./content/static";
 
 const loadPage = (loader) => lazy(loader);
 const loadVideoCall = () => import("./pages/VideoCall");
@@ -222,16 +221,17 @@ function RouteErrorBoundary({ children }) {
   return <ErrorBoundary resetKey={pathname}>{children}</ErrorBoundary>;
 }
 
-function RouteLoader() {
-  return (
-    <AdvanceLoad
-      variant="page"
-      label={STATIC_COPY.pageLoading}
-      delayMs={0}
-      patience
-      className="am-route-loader"
-    />
-  );
+const HEADER_HOLD_PATHS = [...PRIMARY_NAV.map((item) => item.to), "/profile", "/cart", "/notifications", "/search"];
+
+/**
+ * Suspense fallback while a lazy page chunk loads. The header lives inside each page, so without
+ * this the top of the screen shows the bare page background. Renders a static bar in the header's
+ * own colours (no animation) so the header area looks the same before and after the page loads.
+ */
+function RouteFallback() {
+  const { pathname } = useLocation();
+  const holdsHeader = HEADER_HOLD_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+  return holdsHeader ? <div className="site-header-hold" aria-hidden="true" /> : null;
 }
 
 function ScrollToTop() {
@@ -258,7 +258,7 @@ export default function App() {
             <FloatingVideoOverlay />
             <NetworkGuard>
               <RouteErrorBoundary>
-              <Suspense fallback={<RouteLoader />}>
+              <Suspense fallback={<RouteFallback />}>
               <Routes>
                 <Route path="/" element={<Splash />} />
                 <Route path="/welcome" element={<WelcomePage />} />

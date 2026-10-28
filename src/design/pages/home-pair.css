@@ -210,11 +210,31 @@
   color: #fbf6ea;
 }
 
-/* Equal-height pair: the Yoga panel follows the Diet panel's height; cards fill it. */
+/* Yoga cards keep their own portrait size. They do not stretch to the diet column. */
 @media (min-width: 1080px) {
-  .hm-page .hm-wellness--pair .hm-well--move .am-rail.hm-yoga-rail { flex: 1 1 auto; min-height: 220px; align-items: stretch; }
-  .hm-page .hm-wellness--pair .hm-well--move .hm-pose__media { flex: 1 1 auto; aspect-ratio: auto; min-height: 0; height: 100%; }
-  .hm-page .hm-wellness--pair .hm-well--move .hm-pose__media img { position: absolute; inset: 0; }
+  .hm-page .hm-wellness--pair .hm-well--move .am-rail.hm-yoga-rail { align-items: flex-start; }
+  .hm-page .hm-wellness--pair .hm-well--move .hm-pose { height: auto; }
+  .hm-page .hm-wellness--pair .hm-well--move .hm-pose__media {
+    flex: none;
+    aspect-ratio: 5 / 7;
+    height: auto;
+    min-height: 0;
+  }
+  .hm-page .hm-wellness--pair .hm-well--move .hm-pose__media img {
+    position: static;
+    inset: auto;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .hm-page .hm-wellness--pair .hm-well--move .hm-pose__play {
+    width: 36px;
+    height: 36px;
+  }
+  .hm-page .hm-wellness--pair .hm-well--move .hm-pose__title {
+    font-size: 13px;
+    line-height: 1.25;
+  }
 }
 
 /* ===== T141: compact pair (~112px desktop) — upcoming appointment + active diet ===== */

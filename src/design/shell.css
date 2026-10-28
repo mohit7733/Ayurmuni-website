@@ -6,6 +6,8 @@
   min-height: 100vh;
   min-height: 100dvh;
   background: var(--am-bg);
+  /* Guard: nothing inside the shell may widen the document. clip (not hidden) keeps the sticky header working. */
+  overflow-x: clip;
 }
 
 .app-shell-body {
@@ -315,7 +317,7 @@
   width: 34px;
   height: 34px;
   overflow: hidden;
-  border: 2px solid var(--am-gold-500);
+  border: 0;
   border-radius: 50%;
   background: var(--am-green-800);
   color: #f6f1e6;
@@ -1163,9 +1165,6 @@
 .site-header.is-elevated .site-location-wrap.is-open .site-location {
   background: rgba(255, 255, 255, 0.1);
 }
-.site-header.is-elevated .site-account .site-avatar-fallback {
-  box-shadow: 0 0 0 2px rgba(228, 196, 122, 0.7);
-}
 
 @media (min-width: 1024px) {
   .site-header { background: linear-gradient(180deg, #fdfaf3 0%, #f8f3e8 100%); }
@@ -1438,4 +1437,15 @@
   .app-shell:not(.auth-shell):not(.is-logged-out) .site-footer {
     padding-bottom: calc(var(--am-tabbar-h) + 8px + env(safe-area-inset-bottom));
   }
+}
+
+/* Static stand-in for the header while a lazy page chunk loads (same colours as .site-header). */
+.site-header-hold {
+  position: sticky;
+  top: 0;
+  z-index: var(--am-z-header);
+  height: calc(var(--am-header-h) + env(safe-area-inset-top));
+  border-bottom: 1px solid rgba(203, 186, 150, 0.45);
+  background: linear-gradient(180deg, #fdfaf3 0%, #f8f3e8 100%);
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.7);
 }

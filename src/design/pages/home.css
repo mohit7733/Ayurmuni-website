@@ -976,7 +976,6 @@
   margin: 0;
   padding: 2px 0 8px;
   scroll-padding-inline: 0;
-  scrollbar-color: color-mix(in srgb, var(--am-gold-500) 55%, var(--am-line)) transparent;
 }
 
 .hm-showcase .am-rail__item--product {

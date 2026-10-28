@@ -34,10 +34,9 @@ function placeName(item) {
   return item?.city || item?.address_type_name || item?.address_line_1 || 'Saved address';
 }
 
-function headerPlace({ defaultAddress, deliveryLocation, loadingLocation, locationEnabled, currentAddress }) {
+function headerPlace({ defaultAddress, deliveryLocation, locationEnabled, currentAddress }) {
   if (defaultAddress?.city) return defaultAddress.city;
   if (deliveryLocation?.city) return deliveryLocation.city;
-  if (loadingLocation) return 'Detecting…';
   if (locationEnabled && currentAddress?.city) return currentAddress.city;
   if (defaultAddress) return placeName(defaultAddress);
   return 'Select';

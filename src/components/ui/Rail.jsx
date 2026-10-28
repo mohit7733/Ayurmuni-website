@@ -1,10 +1,52 @@
-import { useEffect, useRef } from 'react';
+import { Children, useEffect, useRef, useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import SectionHold from './SectionHold';
 import { cx } from './cx';
 
-export default function Rail({ label, className, children, auto = false, interval = 3200, motionOverride = false }) {
+function cardStep(el) {
+  const card = el.querySelector(':scope > .am-rail__item');
+  if (!card) return 0;
+  const styles = getComputedStyle(el);
+  const gap = Number.parseFloat(styles.columnGap || styles.gap) || 0;
+  return card.getBoundingClientRect().width + gap;
+}
+
+export default function Rail({ label, className, children, auto = false, interval = 3200, motionOverride = false, controls = false }) {
   const ref = useRef(null);
   const hold = useRef({ hover: false, drag: false });
+  const [edges, setEdges] = useState({ left: false, right: false });
+  const count = Children.count(children);
+
+  useEffect(() => {
+    if (!controls) return undefined;
+    const el = ref.current;
+    if (!el) return undefined;
+    const sync = () => {
+      const max = el.scrollWidth - el.clientWidth;
+      setEdges({
+        left: el.scrollLeft > 4,
+        right: max > 8 && el.scrollLeft < max - 4,
+      });
+    };
+    sync();
+    el.addEventListener('scroll', sync, { passive: true });
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(sync);
+    observer?.observe(el);
+    return () => {
+      el.removeEventListener('scroll', sync);
+      observer?.disconnect();
+    };
+  }, [controls, count]);
+
+  const nudge = (direction) => {
+    const el = ref.current;
+    if (!el) return;
+    const distance = cardStep(el);
+    if (!distance) return;
+    const max = el.scrollWidth - el.clientWidth;
+    const next = Math.max(0, Math.min(el.scrollLeft + direction * distance, max));
+    el.scrollTo({ left: next, behavior: 'smooth' });
+  };
 
   useEffect(() => {
     if (!auto) return undefined;
@@ -20,11 +62,8 @@ export default function Rail({ label, className, children, auto = false, interva
 
     const step = () => {
       if (hold.current.hover || hold.current.drag || !visible || document.hidden) return;
-      const card = el.querySelector(':scope > .am-rail__item');
-      if (!card) return;
-      const styles = getComputedStyle(el);
-      const gap = Number.parseFloat(styles.columnGap || styles.gap) || 0;
-      const distance = card.getBoundingClientRect().width + gap;
+      const distance = cardStep(el);
+      if (!distance) return;
       const max = el.scrollWidth - el.clientWidth;
       if (max <= 8) return;
       // At the end, loop to start; otherwise advance one card, clamped to the end so a short
@@ -62,12 +101,12 @@ export default function Rail({ label, className, children, auto = false, interva
     };
   }, [auto, interval, motionOverride]);
 
-  return (
+  const track = (
     <ul
       ref={ref}
       className={cx('am-rail', className)}
       aria-label={label}
-      aria-roledescription={auto ? 'carousel' : undefined}
+      aria-roledescription={auto || controls ? 'carousel' : undefined}
       onMouseEnter={() => {
         hold.current.hover = true;
       }}
@@ -98,6 +137,32 @@ export default function Rail({ label, className, children, auto = false, interva
     >
       {children}
     </ul>
+  );
+
+  if (!controls) return track;
+
+  return (
+    <div className="am-rail-scroller">
+      <button
+        type="button"
+        className="am-rail-scroller__btn am-rail-scroller__btn--prev"
+        aria-label={`Previous ${label}`}
+        disabled={!edges.left}
+        onClick={() => nudge(-1)}
+      >
+        <ChevronLeft size={18} aria-hidden />
+      </button>
+      {track}
+      <button
+        type="button"
+        className="am-rail-scroller__btn am-rail-scroller__btn--next"
+        aria-label={`Next ${label}`}
+        disabled={!edges.right}
+        onClick={() => nudge(1)}
+      >
+        <ChevronRight size={18} aria-hidden />
+      </button>
+    </div>
   );
 }
 
