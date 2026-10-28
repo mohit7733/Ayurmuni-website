@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import LogoSpinner from './LogoSpinner';
 import { SkeletonCard } from './Skeleton';
 import { cx } from './cx';
 
@@ -107,13 +108,15 @@ export function RailItem({ size, className, children }) {
 
 export function RailSkeleton({ count = 4, variant = 'product', size, label = 'Loading' }) {
   return (
-    <div className="am-rail" role="status">
-      <span className="am-sr-only">{label}</span>
-      {Array.from({ length: count }, (_, index) => (
-        <div key={index} className={cx('am-rail__item', size && `am-rail__item--${size}`)} aria-hidden>
-          <SkeletonCard variant={variant} />
-        </div>
-      ))}
+    <div className="am-rail-wrap" role="status">
+      <LogoSpinner scale="compact" label={label} />
+      <div className="am-rail" aria-hidden>
+        {Array.from({ length: count }, (_, index) => (
+          <div key={index} className={cx('am-rail__item', size && `am-rail__item--${size}`)}>
+            <SkeletonCard variant={variant} />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { X, Clock } from 'lucide-react';
 import AppShell from '../AppShell';
 import ProductCard from '../ProductCard';
 import { PremiumSearch } from '../ui';
+import AdvanceLoad from '../ui/AdvanceLoad';
 import useCategoryProducts from '../../hooks/useCategoryProducts';
 import { useGlobalSearch, useRecentSearches } from '../../hooks/useServerSearch';
 import {
@@ -299,7 +300,7 @@ export default function GlobalSearch() {
         ) : (
           <>
             {browse.loading && browse.products.length === 0 ? (
-              <p className="muted">Loading products…</p>
+              <AdvanceLoad variant="cards" count={4} label="Loading products" />
             ) : browse.products.length === 0 ? (
               <p className="empty-copy">No products found</p>
             ) : (

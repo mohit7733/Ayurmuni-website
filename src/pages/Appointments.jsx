@@ -11,6 +11,7 @@ import {
   Plus,
 } from "lucide-react";
 import AppShell from "../components/AppShell";
+import AdvanceLoad from "../components/ui/AdvanceLoad";
 import DietitianBadge from "../components/DietitianBadge";
 import PageHeader from "../components/PageHeader";
 import {
@@ -398,7 +399,7 @@ export default function Appointments() {
         <p className="muted appoint-count">{resultLabel}</p>
 
         {loading ? (
-          <p className="muted">Loading appointments…</p>
+          <AdvanceLoad variant="list" label="Loading appointments" onRetry={() => loadPage(1, "replace")} />
         ) : visible.length === 0 ? (
           <div className="empty-copy">
             <strong>

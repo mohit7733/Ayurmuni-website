@@ -33,6 +33,7 @@ import {
   SearchField,
   Skeleton,
   SkeletonText,
+  LogoSpinner,
   Tabs,
 } from '../components/ui';
 import {
@@ -182,6 +183,7 @@ export default function OrderHistory() {
 
             {loading ? (
               <div className="or-skel" aria-busy="true" aria-label={T.loading}>
+                <LogoSpinner scale="section" label={T.loading} />
                 <Skeleton style={{ height: 88, borderRadius: 'var(--am-radius-lg)' }} />
                 <Skeleton style={{ height: 88, borderRadius: 'var(--am-radius-lg)' }} />
                 <SkeletonText lines={2} />
@@ -253,6 +255,7 @@ export default function OrderHistory() {
             </div>
             {returnsLoading && !returnsLoaded ? (
               <div className="or-skel" aria-busy="true">
+                <LogoSpinner scale="section" label="Loading" />
                 <Skeleton style={{ height: 88, borderRadius: 'var(--am-radius-lg)' }} />
                 <SkeletonText lines={2} />
               </div>
@@ -297,6 +300,7 @@ export default function OrderHistory() {
           </>
         ) : requestsLoading ? (
           <div className="or-skel" aria-busy="true">
+            <LogoSpinner scale="section" label="Loading requests" />
             <Skeleton style={{ height: 88, borderRadius: 'var(--am-radius-lg)' }} />
             <SkeletonText lines={2} />
           </div>

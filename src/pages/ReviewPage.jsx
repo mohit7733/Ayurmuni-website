@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
+import AdvanceLoad from '../components/ui/AdvanceLoad';
 import PageHeader from '../components/PageHeader';
 import { getReviews } from '../services/productService';
 import {
@@ -107,7 +108,7 @@ export default function ReviewPage() {
           </button>
         ) : null}
         {loading && reviews.length === 0 ? (
-          <p className="muted">Loading reviews…</p>
+          <AdvanceLoad variant="list" count={3} label="Loading reviews" />
         ) : visible.length === 0 ? (
           <p className="empty-copy">No reviews yet</p>
         ) : (

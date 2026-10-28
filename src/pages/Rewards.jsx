@@ -29,6 +29,7 @@ import {
   Input,
   Modal,
   Skeleton,
+  LogoSpinner,
 } from '../components/ui';
 import { REWARDS_COPY as T, REWARD_THEMES } from '../content/rewards';
 import '../design/pages/rewards.css';
@@ -167,6 +168,7 @@ export default function Rewards() {
 
         {loading ? (
           <div className="rw-skel" aria-busy="true" aria-label={T.loading}>
+            <LogoSpinner scale="section" label={T.loading} />
             <Skeleton style={{ height: 160, borderRadius: 'var(--am-radius-lg)' }} />
             <Skeleton style={{ height: 160, borderRadius: 'var(--am-radius-lg)' }} />
             <Skeleton style={{ height: 160, borderRadius: 'var(--am-radius-lg)' }} />

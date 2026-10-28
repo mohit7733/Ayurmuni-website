@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ChevronRight } from 'lucide-react';
 import { cx } from '../ui/cx';
 import { Skeleton, SkeletonText } from '../ui';
+import LogoSpinner from '../ui/LogoSpinner';
 import '../../design/detail.css';
 
 export function DetailPage({ className, children }) {
@@ -313,7 +314,7 @@ export function ActionStack({ children }) {
 export function DetailSkeleton({ media = true, label = 'Loading' }) {
   return (
     <div className="dx-skeleton" role="status" aria-live="polite">
-      <span className="am-sr-only">{label}</span>
+      <LogoSpinner scale="feature" label={label} />
       <div className={cx('dx-hero', media && 'has-media')}>
         {media ? <Skeleton variant="rect" className="dx-hero__media" /> : null}
         <div className="dx-hero__body">

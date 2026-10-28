@@ -48,6 +48,7 @@ import {
   Modal,
   Skeleton,
   SkeletonText,
+  LogoSpinner,
   Tabs,
 } from "../components/ui";
 import { CART_COPY as T } from "../content/cart";
@@ -472,6 +473,7 @@ export default function Cart() {
 
         {loading && !sections.length ? (
           <div className="cp-skel" aria-busy="true" aria-label={T.loading}>
+            <LogoSpinner scale="feature" label={T.loading} />
             <Skeleton style={{ height: 88, borderRadius: 16 }} />
             <Skeleton style={{ height: 88, borderRadius: 16 }} />
             <SkeletonText lines={3} />

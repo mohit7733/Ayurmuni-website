@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
+import AdvanceLoad from '../components/ui/AdvanceLoad';
 import { requireAuth } from '../services/guestAuth';
 import { showSuccessToast } from '../config/key';
 import { UploadProfilePhoto } from '../services/profileService';
@@ -227,7 +228,7 @@ export default function MedicalRecords() {
         </div>
 
         {loading && records.length === 0 ? (
-          <p className="muted">Loading records…</p>
+          <AdvanceLoad variant="list" label="Loading records" />
         ) : filtered.length === 0 ? (
           <div className="empty-copy">
             <strong>No records yet</strong>

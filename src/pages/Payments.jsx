@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
+import AdvanceLoad from '../components/ui/AdvanceLoad';
 import { Button, Modal } from '../components/ui';
 import { formatRupee } from '../home/catalog';
 import useCustomerPaymentHistory from '../hooks/useCustomerPaymentHistory';
@@ -227,7 +228,7 @@ export default function Payments() {
         </div>
 
         {loading ? (
-          <p className="muted">Loading transactions…</p>
+          <AdvanceLoad variant="list" label="Loading transactions" />
         ) : sections.length === 0 ? (
           <div className="empty-copy">
             <strong>{activeFilterCount > 0 ? 'No matching transactions' : 'No transactions yet'}</strong>

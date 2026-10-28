@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Bell, CheckCheck, RefreshCw, Trash2 } from "lucide-react";
 import AppShell from "../components/AppShell";
+import AdvanceLoad from "../components/ui/AdvanceLoad";
 import { buildVideoCallNavParams } from "../consult/appointmentUtils";
 import { useNotifications } from "../hooks/useNotifications";
 import { handleNotificationNavigation } from "../notifications/router";
@@ -247,10 +248,7 @@ export default function Notifications() {
           </div>
 
           {loading ? (
-            <div className="nt-state" role="status" aria-live="polite">
-              <span className="nt-state__icon"><Bell size={20} aria-hidden="true" /></span>
-              <p>Loading your notifications…</p>
-            </div>
+            <AdvanceLoad variant="list" label="Loading your notifications" onRetry={refreshNotifications} />
           ) : sections.length === 0 ? (
             <div className="nt-state">
               <span className="nt-state__icon"><Bell size={20} aria-hidden="true" /></span>

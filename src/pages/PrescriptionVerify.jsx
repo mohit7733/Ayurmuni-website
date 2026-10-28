@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
+import AdvanceLoad from '../components/ui/AdvanceLoad';
 import PrescriptionFilePreview from '../components/PrescriptionFilePreview';
 import { showSuccessToast } from '../config/key';
 import { formatRupee } from '../home/catalog';
@@ -156,7 +157,7 @@ export default function PrescriptionVerify() {
     return (
       <AppShell tab="medicines">
         <section className="catalog-page">
-          <p className="empty-copy">Loading prescription request…</p>
+          <AdvanceLoad variant="detail" label="Loading prescription request" />
         </section>
       </AppShell>
     );

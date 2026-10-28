@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
+import AdvanceLoad from '../components/ui/AdvanceLoad';
 import { Utils } from '../common/utils';
 import { showSuccessToast } from '../config/key';
 import { requireAuth } from '../services/guestAuth';
@@ -122,7 +123,7 @@ export default function Patients() {
         </header>
 
         {loading && patients.length === 0 ? (
-          <p className="muted">Loading patients…</p>
+          <AdvanceLoad variant="list" label="Loading patients" />
         ) : (
           <>
             <div className="patient-hero">

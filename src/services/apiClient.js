@@ -1,5 +1,6 @@
 import { Utils } from '../common/utils';
 import { BaseUrl } from '../config/key';
+import { beginRequest, endRequest } from '../loading/requestActivity';
 
 let isRefreshing = false;
 let refreshPromise = null;
@@ -499,6 +500,7 @@ const apiRequest = async (
   const deadline = timeoutMs ?? (isRead ? DEFAULT_TIMEOUT_MS : isUpload ? UPLOAD_TIMEOUT_MS : 0);
   const link = linkSignal(callerSignal, deadline);
   const requestOptions = { ...fetchOptions, signal: link.signal };
+  beginRequest();
   try {
     let token = null;
     if (requireAuth) {
@@ -551,6 +553,7 @@ const apiRequest = async (
       message: error?.message || 'Network Error',
     };
   } finally {
+    endRequest();
     link.cleanup();
   }
 };

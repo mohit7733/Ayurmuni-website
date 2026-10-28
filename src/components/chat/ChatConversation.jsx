@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, Check, CheckCheck, Clock, Download, Loader2, Lock, Paperclip, SendHorizontal, X } from 'lucide-react';
 import './chat-conversation.css';
+import AdvanceLoad from '../ui/AdvanceLoad';
 import { formatMessageTime } from '../../chat/dateFormatter';
 import { getChatDisabledReason, shouldSuppressChatError } from '../../chat/chatAccessUtils';
 import { dedupeMessages, isTempMessage } from '../../chat/messageUtils';
@@ -293,7 +294,7 @@ export default function ChatConversation({
       </header>
 
       {isLoading && visibleMessages.length === 0 ? (
-        <p className="chat-loading">Loading messages…</p>
+        <AdvanceLoad variant="list" count={3} label="Loading messages" />
       ) : null}
 
       <div className="chat-list" ref={listRef}>

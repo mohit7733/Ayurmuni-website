@@ -8,6 +8,8 @@ import {
 } from "react-router-dom";
 import { setNavigate } from "./navigation/nav";
 import ToastHost from "./components/ToastHost";
+import GlobalLoadBar from "./components/GlobalLoadBar";
+import AdvanceLoad from "./components/ui/AdvanceLoad";
 import { Utils } from "./common/utils";
 import { getAccessLevel } from "./services/guestAuth";
 import { syncPushForSession } from "./services/pushNotificationService";
@@ -222,9 +224,13 @@ function RouteErrorBoundary({ children }) {
 
 function RouteLoader() {
   return (
-    <div className="am-route-loader" role="status" aria-label={STATIC_COPY.pageLoading}>
-      <span className="am-route-loader__ring" aria-hidden />
-    </div>
+    <AdvanceLoad
+      variant="page"
+      label={STATIC_COPY.pageLoading}
+      delayMs={0}
+      patience
+      className="am-route-loader"
+    />
   );
 }
 
@@ -247,6 +253,7 @@ export default function App() {
             <NavBinder />
             <ScrollToTop />
             <ToastHost />
+            <GlobalLoadBar />
             <PushSessionSync />
             <FloatingVideoOverlay />
             <NetworkGuard>

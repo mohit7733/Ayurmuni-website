@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
+import AdvanceLoad from '../components/ui/AdvanceLoad';
 import DietitianBadge from '../components/DietitianBadge';
 import {
   canOfferReschedule,
@@ -186,7 +187,7 @@ export default function ConsultHistory() {
         </div>
 
         {loading && history.length === 0 ? (
-          <p className="muted">Loading consultations…</p>
+          <AdvanceLoad variant="list" label="Loading consultations" />
         ) : filtered.length === 0 ? (
           <div className="empty-copy">
             <strong>{history.length === 0 ? 'No Appointments Yet' : 'Appointment Not Found'}</strong>

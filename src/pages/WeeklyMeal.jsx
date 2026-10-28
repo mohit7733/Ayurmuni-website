@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import AppShell from '../components/AppShell';
+import AdvanceLoad from '../components/ui/AdvanceLoad';
 import dietCoverImg from '/images/login/14.webp';
 import useDietPlans from '../diet/useDietPlans';
 import '../design/pages/weekly-meal.css';
@@ -115,7 +116,7 @@ export default function WeeklyMeal() {
         <h2 className="weekly-title">Your nutrition today</h2>
 
         {loadingDetail && resolvedId && !plan ? (
-          <p className="muted">Loading plan…</p>
+          <AdvanceLoad variant="detail" label="Loading plan" />
         ) : (
           <>
             <div className="weekly-energy">

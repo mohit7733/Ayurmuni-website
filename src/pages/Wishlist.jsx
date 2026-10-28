@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
+import AdvanceLoad from '../components/ui/AdvanceLoad';
 import ProductCard from '../components/ProductCard';
 import { mapCatalogProductItem, normalizeApiList } from '../home/catalog';
 import { requireAuth } from '../services/guestAuth';
@@ -58,7 +59,7 @@ export default function Wishlist() {
           </div>
         </header>
         {loading ? (
-          <p className="muted">Loading wishlist…</p>
+          <AdvanceLoad variant="cards" label="Loading wishlist" onRetry={() => load()} />
         ) : items.length === 0 ? (
           <div className="empty-copy">
             <strong>Wishlist is Empty</strong>

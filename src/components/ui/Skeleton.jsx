@@ -1,4 +1,5 @@
 import { cx } from './cx';
+import LogoSpinner from './LogoSpinner';
 
 export default function Skeleton({ variant = 'text', width, height, className }) {
   const style = {};
@@ -30,8 +31,8 @@ export function SkeletonCard({ variant = 'product' }) {
 
 export function SkeletonGrid({ count = 4, variant = 'product', label = 'Loading', className }) {
   return (
-    <div className={cx('am-skeleton-grid', className)} role="status" aria-live="polite">
-      <span className="am-sr-only">{label}</span>
+    <div className={cx('am-skeleton-grid', 'am-skeleton-grid--loading', className)} role="status" aria-live="polite">
+      <LogoSpinner scale="feature" label={label} />
       {Array.from({ length: count }, (_, i) => (
         <SkeletonCard key={i} variant={variant} />
       ))}
