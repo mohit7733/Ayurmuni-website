@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   CalendarDays,
   CalendarPlus,
@@ -9,23 +9,23 @@ import {
   Mail,
   MessageCircle,
   Share2,
-} from 'lucide-react';
-import AppShell from '../components/AppShell';
+} from "lucide-react";
+import AppShell from "../components/AppShell";
 import {
   CONSULT_BOOKING_KEY,
   doctorDisplayName,
   doctorImage,
   resolveDoctorSpecializations,
-} from '../consult/doctors';
+} from "../consult/doctors";
 import {
   formatDoctorDisplayName,
   getConsultationScheduleLabels,
-} from '../consult/appointmentUtils';
-import { getAppointmentShareMessage } from '../helper/shareMessage';
-import { formatRupee } from '../home/catalog';
-import { formatAppointmentId } from '../utils/formatDisplayId';
-import { showSuccessToast } from '../config/key';
-import { Utils } from '../common/utils';
+} from "../consult/appointmentUtils";
+import { getAppointmentShareMessage } from "../helper/shareMessage";
+import { formatRupee } from "../home/catalog";
+import { formatAppointmentId } from "../utils/formatDisplayId";
+import { showSuccessToast } from "../config/key";
+import { Utils } from "../common/utils";
 import {
   Badge,
   Button,
@@ -33,13 +33,13 @@ import {
   EmptyState,
   Modal,
   StepIndicator,
-} from '../components/ui';
+} from "../components/ui";
 import {
   BOOKING_COPY as T,
   BOOKING_STATUS_TONE,
   bookingStatusLabel,
-} from '../content/booking';
-import '../design/pages/booking.css';
+} from "../content/booking";
+import "../design/pages/booking.css";
 
 const pick = (...values) => {
   for (const value of values) {
@@ -47,14 +47,14 @@ const pick = (...values) => {
     const text = String(value).trim();
     if (text) return text;
   }
-  return '';
+  return "";
 };
 
 const SHARE_OPTIONS = [
-  { id: 'whatsapp', title: 'WhatsApp', icon: MessageCircle, color: '#25D366' },
-  { id: 'message', title: 'Messages', icon: Share2, color: '#0D614E' },
-  { id: 'email', title: 'Email', icon: Mail, color: '#D94841' },
-  { id: 'copy', title: 'Copy details', icon: Copy, color: '#8A6A1F' },
+  { id: "whatsapp", title: "WhatsApp", icon: MessageCircle, color: "#25D366" },
+  { id: "message", title: "Messages", icon: Share2, color: "#0D614E" },
+  { id: "email", title: "Email", icon: Mail, color: "#D94841" },
+  { id: "copy", title: "Copy details", icon: Copy, color: "#8A6A1F" },
 ];
 
 const bookingCode = (detail) =>
@@ -81,22 +81,26 @@ const MetaChip = ({ label, value }) => {
 };
 
 const shareByType = async (type, message) => {
-  if (type === 'copy') {
+  if (type === "copy") {
     await navigator.clipboard.writeText(message);
-    showSuccessToast('Copied appointment details', 'success');
+    showSuccessToast("Copied appointment details", "success");
     return;
   }
-  if (type === 'whatsapp') {
-    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
+  if (type === "whatsapp") {
+    window.open(
+      `https://wa.me/?text=${encodeURIComponent(message)}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
     return;
   }
-  if (type === 'email') {
-    window.location.href = `mailto:?subject=${encodeURIComponent('Appointment Details')}&body=${encodeURIComponent(message)}`;
+  if (type === "email") {
+    window.location.href = `mailto:?subject=${encodeURIComponent("Appointment Details")}&body=${encodeURIComponent(message)}`;
     return;
   }
-  if (type === 'message') {
+  if (type === "message") {
     if (navigator.share) {
-      await navigator.share({ title: 'Ayurmuni Appointment', text: message });
+      await navigator.share({ title: "Ayurmuni Appointment", text: message });
       return;
     }
     window.location.href = `sms:?body=${encodeURIComponent(message)}`;
@@ -106,11 +110,11 @@ const shareByType = async (type, message) => {
 export default function BookingConfirm() {
   const navigate = useNavigate();
   const [shareOpen, setShareOpen] = useState(false);
-  const [registeredPhone, setRegisteredPhone] = useState('');
+  const [registeredPhone, setRegisteredPhone] = useState("");
 
   const detail = useMemo(() => {
     try {
-      return JSON.parse(sessionStorage.getItem(CONSULT_BOOKING_KEY) || 'null');
+      return JSON.parse(sessionStorage.getItem(CONSULT_BOOKING_KEY) || "null");
     } catch {
       return null;
     }
@@ -119,7 +123,7 @@ export default function BookingConfirm() {
   useEffect(() => {
     let active = true;
     (async () => {
-      const info = await Utils.getData('_USER_INFO');
+      const info = await Utils.getData("_USER_INFO");
       if (!active) return;
       setRegisteredPhone(pick(info?.phone_number, info?.phone));
     })();
@@ -132,44 +136,79 @@ export default function BookingConfirm() {
     if (!detail) return null;
     const slot = detail.slot ?? detail.appointment ?? {};
     const info = detail.info ?? detail.doctor ?? {};
-    const dateRaw = pick(slot?.date, detail.date, detail.appointment_date, slot?.appointment_date);
-    const timeRaw = pick(slot?.slot_time, slot?.start_time, slot?.time, detail.slot_time, detail.start_time, detail.time);
+    const dateRaw = pick(
+      slot?.date,
+      detail.date,
+      detail.appointment_date,
+      slot?.appointment_date,
+    );
+    const timeRaw = pick(
+      slot?.slot_time,
+      slot?.start_time,
+      slot?.time,
+      detail.slot_time,
+      detail.start_time,
+      detail.time,
+    );
     const endTimeRaw = pick(slot?.end_time, detail.end_time);
     const labels = getConsultationScheduleLabels({
       date: dateRaw,
       time: timeRaw,
       end_time: endTimeRaw,
-      status: pick(detail.appointment_status, detail.status, slot?.appointment_status),
+      status: pick(
+        detail.appointment_status,
+        detail.status,
+        slot?.appointment_status,
+      ),
     });
     const specialization = Array.isArray(detail.doctor_specialization)
-      ? detail.doctor_specialization.filter(Boolean).join(', ')
+      ? detail.doctor_specialization.filter(Boolean).join(", ")
       : pick(
           detail.doctor_specialization,
           info?.specialization,
           info?.speciality,
-          resolveDoctorSpecializations(info).join(', '),
-          resolveDoctorSpecializations(detail.doctor).join(', '),
+          resolveDoctorSpecializations(info).join(", "),
+          resolveDoctorSpecializations(detail.doctor).join(", "),
         );
-    const timeRange = labels.endTimeLabel ? `${labels.timeLabel} – ${labels.endTimeLabel}` : labels.timeLabel;
-    const status = pick(detail.appointment_status, detail.status, slot?.appointment_status, 'CONFIRMED');
+    const timeRange = labels.endTimeLabel
+      ? `${labels.timeLabel} – ${labels.endTimeLabel}`
+      : labels.timeLabel;
+    const status = pick(
+      detail.appointment_status,
+      detail.status,
+      slot?.appointment_status,
+      "CONFIRMED",
+    );
     return {
       doctorName: formatDoctorDisplayName(
-        pick(info?.doctor_name, detail.doctor_name, doctorDisplayName(info), doctorDisplayName(detail.doctor), 'Doctor'),
+        pick(
+          info?.doctor_name,
+          detail.doctor_name,
+          doctorDisplayName(info),
+          doctorDisplayName(detail.doctor),
+          "Doctor",
+        ),
       ),
-      doctorImage: pick(detail.doctor_image, doctorImage(info), doctorImage(detail.doctor)),
+      doctorImage: pick(
+        detail.doctor_image,
+        doctorImage(info),
+        doctorImage(detail.doctor),
+      ),
       specialization,
       dateRaw,
       weekday: labels.weekday,
       dateLabel: labels.dateLabel,
       timeLabel: labels.timeLabel,
-      endTimeLabel: labels.endTimeLabel || '',
+      endTimeLabel: labels.endTimeLabel || "",
       timeRange,
       concern: pick(slot?.concern, detail.concern, detail.appointment?.concern),
       patientName: pick(
         detail.patient?.patient_name,
         detail.patient_name,
         detail.patient?.full_name,
-        [detail.patient?.first_name, detail.patient?.last_name].filter(Boolean).join(' '),
+        [detail.patient?.first_name, detail.patient?.last_name]
+          .filter(Boolean)
+          .join(" "),
         slot?.patient?.patient_name,
         detail.appointment?.patient?.patient_name,
       ),
@@ -181,11 +220,27 @@ export default function BookingConfirm() {
         detail.patient_phone,
         detail.appointment?.patient?.phone_number,
       ),
-      hospitalName: pick(detail.hospital_name, info?.hospital_name, info?.clinic_name, detail.clinic_name),
-      consultationMode: pick(detail.consultation_mode, detail.mode, slot?.consultation_mode, 'Video consultation'),
+      hospitalName: pick(
+        detail.hospital_name,
+        info?.hospital_name,
+        info?.clinic_name,
+        detail.clinic_name,
+      ),
+      consultationMode: pick(
+        detail.consultation_mode,
+        detail.mode,
+        slot?.consultation_mode,
+        "Video consultation",
+      ),
       bookingId: bookingCode(detail),
       status,
-      amount: pick(detail.amount, detail.consultation_fee, detail.total_amount, detail.summary?.total_payable_amount, slot?.amount),
+      amount: pick(
+        detail.amount,
+        detail.consultation_fee,
+        detail.total_amount,
+        detail.summary?.total_payable_amount,
+        slot?.amount,
+      ),
       startRaw: timeRaw,
       endRaw: endTimeRaw,
     };
@@ -200,10 +255,13 @@ export default function BookingConfirm() {
             description={T.missingText}
             action={
               <>
-                <Button variant="secondary" onClick={() => navigate('/consult')}>
+                <Button
+                  variant="secondary"
+                  onClick={() => navigate("/consult")}
+                >
                   {T.consultHome}
                 </Button>
-                <Button onClick={() => navigate('/home')}>{T.home}</Button>
+                <Button onClick={() => navigate("/home")}>{T.home}</Button>
               </>
             }
           />
@@ -213,10 +271,12 @@ export default function BookingConfirm() {
   }
 
   const statusKey = String(booking.status).toUpperCase();
-  const statusTone = BOOKING_STATUS_TONE[statusKey] || 'success';
+  const statusTone = BOOKING_STATUS_TONE[statusKey] || "success";
   const statusLabel = bookingStatusLabel(booking.status);
-  const dateDisplay = [booking.weekday, booking.dateLabel].filter(Boolean).join(', ');
-  const paidLabel = booking.amount ? formatRupee(booking.amount) : '';
+  const dateDisplay = [booking.weekday, booking.dateLabel]
+    .filter(Boolean)
+    .join(", ");
+  const paidLabel = booking.amount ? formatRupee(booking.amount) : "";
   const shareMessage = getAppointmentShareMessage({
     doctorName: booking.doctorName,
     patientPhone: booking.patientPhone || registeredPhone,
@@ -228,7 +288,7 @@ export default function BookingConfirm() {
   });
 
   const addToCalendar = () => {
-    navigate('/consult/add-calendar', {
+    navigate("/consult/add-calendar", {
       state: {
         appointment: {
           doctorName: booking.doctorName,
@@ -254,7 +314,7 @@ export default function BookingConfirm() {
     try {
       await shareByType(type, shareMessage);
     } catch {
-      showSuccessToast('Unable to share right now', 'error');
+      showSuccessToast("Unable to share right now", "error");
     } finally {
       setShareOpen(false);
     }
@@ -285,7 +345,10 @@ export default function BookingConfirm() {
           <div className="bk-main">
             <section className="bk-card">
               <div className="bk-doctor">
-                <span className="bk-doctor__photo" aria-hidden={!booking.doctorImage}>
+                <span
+                  className="bk-doctor__photo"
+                  aria-hidden={!booking.doctorImage}
+                >
                   {booking.doctorImage ? (
                     <img src={booking.doctorImage} alt="" />
                   ) : (
@@ -294,8 +357,12 @@ export default function BookingConfirm() {
                 </span>
                 <div className="bk-doctor__copy">
                   <strong>{booking.doctorName}</strong>
-                  {booking.specialization ? <p>{booking.specialization}</p> : null}
-                  {booking.hospitalName ? <small>{booking.hospitalName}</small> : null}
+                  {booking.specialization ? (
+                    <p>{booking.specialization}</p>
+                  ) : null}
+                  {booking.hospitalName ? (
+                    <small>{booking.hospitalName}</small>
+                  ) : null}
                 </div>
               </div>
               <div className="bk-meta-grid">
@@ -337,19 +404,34 @@ export default function BookingConfirm() {
             ) : null}
 
             <div className="bk-actions">
-              <Button variant="secondary" onClick={addToCalendar} leadingIcon={<CalendarPlus size={16} aria-hidden />}>
+              <Button
+                variant="secondary"
+                onClick={addToCalendar}
+                leadingIcon={<CalendarPlus size={16} aria-hidden />}
+              >
                 {T.calendar}
               </Button>
-              <Button variant="secondary" onClick={() => setShareOpen(true)} leadingIcon={<Share2 size={16} aria-hidden />}>
+              <Button
+                variant="secondary"
+                onClick={() => setShareOpen(true)}
+                leadingIcon={<Share2 size={16} aria-hidden />}
+              >
                 {T.share}
               </Button>
-              <Button variant="ghost" onClick={() => navigate('/profile/appointments')}>
+              <Button
+                variant="ghost"
+                onClick={() => navigate("/profile/appointments")}
+              >
                 {T.appointments}
               </Button>
             </div>
 
             <div className="bk-aside__cta">
-              <Button size="lg" block onClick={() => navigate('/home', { replace: true })}>
+              <Button
+                size="lg"
+                block
+                onClick={() => navigate("/home", { replace: true })}
+              >
                 {T.home}
               </Button>
             </div>
@@ -358,16 +440,29 @@ export default function BookingConfirm() {
         </div>
       </div>
 
-      <div className="bk-sticky bk-confirm-sticky" role="region" aria-label={T.home}>
-        <Button block onClick={() => navigate('/home', { replace: true })}>
+      <div
+        className="bk-sticky bk-confirm-sticky"
+        role="region"
+        aria-label={T.home}
+      >
+        <Button block onClick={() => navigate("/home", { replace: true })}>
           {T.home}
         </Button>
       </div>
 
-      <Modal open={shareOpen} onClose={() => setShareOpen(false)} title={T.shareTitle} description={T.shareLede} size="sm">
+      <Modal
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        title={T.shareTitle}
+        description={T.shareLede}
+        size="sm"
+      >
         <div className="bk-share-preview">
           <div className="bk-share-preview__doctor">
-            <span className="bk-doctor__photo" aria-hidden={!booking.doctorImage}>
+            <span
+              className="bk-doctor__photo"
+              aria-hidden={!booking.doctorImage}
+            >
               {booking.doctorImage ? (
                 <img src={booking.doctorImage} alt="" />
               ) : (
@@ -377,7 +472,9 @@ export default function BookingConfirm() {
             <div className="bk-share-preview__copy">
               <strong>{booking.doctorName}</strong>
               {booking.specialization ? <p>{booking.specialization}</p> : null}
-              {booking.hospitalName ? <small>{booking.hospitalName}</small> : null}
+              {booking.hospitalName ? (
+                <small>{booking.hospitalName}</small>
+              ) : null}
             </div>
           </div>
           <div className="bk-share-preview__schedule">
@@ -412,7 +509,7 @@ export default function BookingConfirm() {
                 key={item.id}
                 type="button"
                 className="bk-share-option"
-                style={{ '--bk-share-color': item.color }}
+                style={{ "--bk-share-color": item.color }}
                 onClick={() => onShare(item.id)}
               >
                 <span className="bk-share-option__icon" aria-hidden>

@@ -213,13 +213,6 @@ export default function Consult() {
             <p className="am-eyebrow">{T.eyebrow}</p>
             <h1 id="cs-hero-title">{T.heroTitle}</h1>
             <p className="cs-hero__lede">{T.heroLede}</p>
-            <SearchField
-              value={search}
-              onChange={setSearch}
-              onSubmit={(value) => setDebounced(String(value || "").trim())}
-              placeholder={T.searchPlaceholder}
-              label={T.searchLabel}
-            />
             <div className="cs-hero__ctas">
               <Button
                 size="lg"

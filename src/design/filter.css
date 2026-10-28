@@ -1,0 +1,396 @@
+/* ==========================================================
+   AYURMUNI — PRODUCT FILTER MODAL
+   File: st-filter-modal.css
+
+   Import this stylesheet wherever the product filter styles
+   are imported. Designed for the existing st-filter-* markup.
+   ========================================================== */
+
+.st-filter-modal {
+  --st-filter-ink: #173b31;
+  --st-filter-green: #0d614e;
+  --st-filter-green-hover: #094b3c;
+  --st-filter-muted: #6b7b74;
+  --st-filter-line: #e2e9e4;
+  --st-filter-soft: #f5f8f5;
+  --st-filter-soft-green: #edf6f1;
+  --st-filter-radius: 16px;
+  color: var(--st-filter-ink);
+}
+
+.st-filter-modal,
+.st-filter-modal *,
+.st-filter-modal *::before,
+.st-filter-modal *::after {
+  box-sizing: border-box;
+}
+
+.st-filter-modal .st-filter-content {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+  padding: 2px 1px;
+}
+
+/* ---------- Filter sections ---------- */
+
+.st-filter-modal .st-filter-section,
+.st-filter-modal .st-filter-stock {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--st-filter-line);
+  border-radius: var(--st-filter-radius);
+  background: #fff;
+}
+
+.st-filter-modal .st-filter-section__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-bottom: 18px;
+}
+
+.st-filter-modal .st-filter-section__heading h3 {
+  min-width: 0;
+  margin: 0;
+  color: var(--st-filter-ink);
+  font-size: 1rem;
+  font-weight: 750;
+  line-height: 1.4;
+  letter-spacing: -0.015em;
+}
+
+.st-filter-modal .st-filter-section__heading > span {
+  color: var(--st-filter-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: right;
+}
+
+/* ---------- Price range ---------- */
+
+.st-filter-modal .st-filter-section__heading #st-filter-price-title + span {
+  padding: 5px 10px;
+  border: 1px solid #d9e9df;
+  border-radius: 999px;
+  background: var(--st-filter-soft-green);
+  color: var(--st-filter-green);
+  font-size: 0.8125rem;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.st-filter-modal .st-filter-price {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: end;
+  gap: 12px;
+}
+
+.st-filter-modal .st-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  color: var(--st-filter-muted);
+  font-size: 0.8125rem;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.st-filter-modal .st-filter-field input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  padding: 0 13px;
+  border: 1px solid #dce5df;
+  border-radius: 11px;
+  outline: none;
+  background: #fbfcfb;
+  color: var(--st-filter-ink);
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.st-filter-modal .st-filter-field input:hover {
+  border-color: #b7cfc1;
+}
+
+.st-filter-modal .st-filter-field input:focus-visible {
+  border-color: var(--st-filter-green);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(13, 97, 78, 0.12);
+}
+
+.st-filter-modal .st-filter-field input::-webkit-inner-spin-button,
+.st-filter-modal .st-filter-field input::-webkit-outer-spin-button {
+  margin: 0;
+}
+
+.st-filter-modal .st-filter-field input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.st-filter-modal .st-filter-price__separator {
+  align-self: center;
+  padding-top: 24px;
+  color: #8b9891;
+  font-size: 0.8125rem;
+  font-weight: 650;
+}
+
+/* ---------- Customer rating ---------- */
+
+.st-filter-modal .st-filter-ratings {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.st-filter-modal .st-filter-rating {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 42px;
+  padding: 9px 8px;
+  border: 1px solid #dfe7e1;
+  border-radius: 10px;
+  background: #fff;
+  color: #52645b;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    color 160ms ease,
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.st-filter-modal .st-filter-rating:hover {
+  border-color: #a9cbb8;
+  background: #f6faf7;
+  color: var(--st-filter-green);
+}
+
+.st-filter-modal .st-filter-rating:active {
+  transform: scale(0.98);
+}
+
+.st-filter-modal .st-filter-rating.is-selected {
+  border-color: var(--st-filter-green);
+  background: var(--st-filter-green);
+  color: #fff;
+  box-shadow: 0 3px 9px rgba(13, 97, 78, 0.16);
+}
+
+.st-filter-modal .st-filter-rating:focus-visible {
+  outline: 3px solid rgba(13, 97, 78, 0.24);
+  outline-offset: 2px;
+}
+
+/* ---------- In-stock toggle ---------- */
+
+.st-filter-modal .st-filter-stock {
+  padding: 0;
+  background: var(--st-filter-soft);
+}
+
+.st-filter-modal .st-filter-stock__label {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+  padding: 18px 20px;
+  cursor: pointer;
+}
+
+.st-filter-modal .st-filter-stock__label > input[type="checkbox"] {
+  flex: 0 0 19px;
+  width: 19px;
+  height: 19px;
+  margin: 0;
+  accent-color: var(--st-filter-green);
+  cursor: pointer;
+}
+
+.st-filter-modal
+  .st-filter-stock__label
+  > input[type="checkbox"]:focus-visible {
+  outline: 3px solid rgba(13, 97, 78, 0.22);
+  outline-offset: 3px;
+}
+
+.st-filter-modal .st-filter-stock__label > span {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.st-filter-modal .st-filter-stock__label strong {
+  color: var(--st-filter-ink);
+  font-size: 0.9rem;
+  font-weight: 750;
+  line-height: 1.4;
+}
+
+.st-filter-modal .st-filter-stock__label small {
+  color: var(--st-filter-muted);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+/* ---------- Active filter summary ---------- */
+
+.st-filter-modal .st-filter-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 16px 18px;
+  border: 1px solid #d6e9dc;
+  border-radius: 14px;
+  background: linear-gradient(
+    135deg,
+    rgba(237, 246, 241, 0.96),
+    rgba(250, 252, 249, 0.98)
+  );
+}
+
+.st-filter-modal .st-filter-summary > strong {
+  color: var(--st-filter-ink);
+  font-size: 0.8125rem;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.st-filter-modal .st-filter-summary__items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  min-width: 0;
+}
+
+.st-filter-modal .st-filter-summary__items > span {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-height: 29px;
+  padding: 5px 10px;
+  border: 1px solid rgba(13, 97, 78, 0.12);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--st-filter-green);
+  font-size: 0.75rem;
+  font-weight: 650;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Modal footer buttons ---------- */
+
+.st-filter-modal button:focus-visible {
+  outline: 3px solid rgba(13, 97, 78, 0.22);
+  outline-offset: 3px;
+}
+
+/* ---------- Tablet ---------- */
+
+@media (max-width: 600px) {
+  .st-filter-modal .st-filter-content {
+    gap: 13px;
+  }
+
+  .st-filter-modal .st-filter-section {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .st-filter-modal .st-filter-section__heading {
+    gap: 7px 10px;
+    margin-bottom: 14px;
+  }
+
+  .st-filter-modal .st-filter-ratings {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .st-filter-modal .st-filter-stock__label {
+    padding: 16px;
+  }
+}
+
+/* ---------- Small phones ---------- */
+
+@media (max-width: 380px) {
+  .st-filter-modal .st-filter-section {
+    padding: 13px;
+  }
+
+  .st-filter-modal .st-filter-section__heading h3 {
+    font-size: 0.9375rem;
+  }
+
+  .st-filter-modal .st-filter-section__heading > span {
+    font-size: 0.75rem;
+  }
+
+  .st-filter-modal .st-filter-price {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .st-filter-modal .st-filter-price__separator {
+    display: none;
+  }
+
+  .st-filter-modal .st-filter-field input {
+    min-height: 44px;
+  }
+
+  .st-filter-modal .st-filter-ratings {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .st-filter-modal .st-filter-rating {
+    min-height: 40px;
+  }
+
+  .st-filter-modal .st-filter-stock__label {
+    gap: 10px;
+    padding: 13px;
+  }
+
+  .st-filter-modal .st-filter-summary {
+    padding: 13px;
+  }
+}
+
+/* ---------- Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .st-filter-modal .st-filter-field input,
+  .st-filter-modal .st-filter-rating {
+    transition: none;
+  }
+}

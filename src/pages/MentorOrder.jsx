@@ -1,27 +1,32 @@
-import { useNavigate } from 'react-router-dom';
-import AppShell from '../components/AppShell';
-import { formatRupee } from '../home/catalog';
-import { loadMentorBooking } from '../mentor/data';
-import '../design/pages/mentor-flow.css';
+import { useNavigate } from "react-router-dom";
+import AppShell from "../components/AppShell";
+import { formatRupee } from "../home/catalog";
+import { loadMentorBooking } from "../mentor/data";
+import "../design/pages/mentor-flow.css";
+import "../design/mentor-order.css";
 
 const TIMELINE = [
-  { title: 'Ordered', time: '12 Oct, 10:30 AM' },
-  { title: 'Packed', time: '12 Oct, 02:15 PM' },
-  { title: 'Shipped', time: '13 Oct, 09:00 AM' },
-  { title: 'Delivered', time: '14 Oct, 11:20 AM' },
+  { title: "Ordered", time: "12 Oct, 10:30 AM" },
+  { title: "Packed", time: "12 Oct, 02:15 PM" },
+  { title: "Shipped", time: "13 Oct, 09:00 AM" },
+  { title: "Delivered", time: "14 Oct, 11:20 AM" },
 ];
 
 export default function MentorOrder() {
   const navigate = useNavigate();
   const booking = loadMentorBooking();
-  const title = booking?.service?.title || 'Medicines Order';
+  const title = booking?.service?.title || "Medicines Order";
   const price = booking?.service?.price || 1240;
 
   return (
     <AppShell tab="consult">
       <section className="catalog-page mentor-order">
         <header className="catalog-head">
-          <button type="button" className="text-back" onClick={() => navigate('/mentor')}>
+          <button
+            type="button"
+            className="text-back"
+            onClick={() => navigate("/mentor")}
+          >
             ← Back
           </button>
           <div>
@@ -50,17 +55,21 @@ export default function MentorOrder() {
           <h3>Items in this order</h3>
           <p>
             <strong>{title}</strong>
-            <small> {booking?.service?.desc || 'Prescription Bundle · 1 Unit'}</small>
+            <small>
+              {" "}
+              {booking?.service?.desc || "Prescription Bundle · 1 Unit"}
+            </small>
           </p>
-          <p>
-            {formatRupee(price)} · QTY: 1
-          </p>
+          <p>{formatRupee(price)} · QTY: 1</p>
         </div>
 
         <div className="checkout-card mentor-flow__address">
           <h3>Delivery Address</h3>
           <p>Home · Default Address</p>
-          <p>42-B, Sanctuary Heights, Green Valley, Near Wellness Plaza, Mumbai - 400012</p>
+          <p>
+            42-B, Sanctuary Heights, Green Valley, Near Wellness Plaza, Mumbai -
+            400012
+          </p>
         </div>
 
         <div className="checkout-card mentor-flow__timeline-card">
@@ -77,10 +86,18 @@ export default function MentorOrder() {
           ))}
         </div>
 
-        <button type="button" className="ghost" onClick={() => navigate('/mentor/refund')}>
+        <button
+          type="button"
+          className="ghost"
+          onClick={() => navigate("/mentor/refund")}
+        >
           Return & Refund
         </button>
-        <button type="button" className="cta" onClick={() => navigate('/mentor/exchange')}>
+        <button
+          type="button"
+          className="cta"
+          onClick={() => navigate("/mentor/exchange")}
+        >
           Exchange
         </button>
       </section>

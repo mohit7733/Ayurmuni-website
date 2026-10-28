@@ -5009,11 +5009,10 @@ button.checkout-item {
 .date-chip.on {
   background: var(--am-primary);
   border-color: var(--am-primary);
-  color: #fff;
 }
 
 .date-chip.on small {
-  color: #d7efe8;
+  color: inherit;
 }
 
 .slot-grid {
@@ -8695,49 +8694,122 @@ button.rx-file-preview {
   background: #f8fffb;
 }
 
-.mentor-hero {
-  text-align: center;
-  padding: 20px 16px;
-  background: #f7faf9;
-  border-radius: 16px;
-  margin-bottom: 16px;
+/* =========================================================
+   MENTOR HERO, SERVICES & EMI — Enhanced UI
+   ========================================================= */
+
+.mentor-hero,
+.mentor-service,
+.mentor-emi,
+.mentor-cred,
+.mentor-review {
+  --mentor-radius-lg: 20px;
+  --mentor-radius-xl: 24px;
+  --mentor-shadow-soft:
+    0 1px 2px rgba(10, 40, 32, 0.05), 0 8px 22px rgba(10, 40, 32, 0.05);
+  --mentor-shadow-lift:
+    0 3px 8px rgba(10, 40, 32, 0.07), 0 16px 34px rgba(10, 40, 32, 0.09);
+  --mentor-focus: color-mix(in srgb, var(--am-primary) 74%, #0b2b22);
 }
 
+/* ── Hero ─────────────────────────────────────────────────── */
+
+.mentor-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  text-align: center;
+  padding: 26px 18px 24px;
+  border: 1px solid color-mix(in srgb, var(--am-primary) 10%, transparent);
+  border-radius: var(--mentor-radius-xl);
+  margin-bottom: 16px;
+  background:
+    radial-gradient(
+      circle at 88% 0%,
+      color-mix(in srgb, var(--am-primary) 9%, transparent),
+      transparent 42%
+    ),
+    radial-gradient(
+      circle at 0% 100%,
+      color-mix(in srgb, var(--am-primary-soft) 72%, transparent),
+      transparent 46%
+    ),
+    linear-gradient(160deg, #f8fbfa, #f7faf9 68%);
+  box-shadow: var(--mentor-shadow-soft);
+}
+
+.mentor-hero::after {
+  position: absolute;
+  z-index: -1;
+  right: -52px;
+  bottom: -72px;
+  width: 180px;
+  height: 180px;
+  border: 1px solid color-mix(in srgb, var(--am-primary) 14%, transparent);
+  border-radius: 50%;
+  content: "";
+  pointer-events: none;
+}
+
+/* ── Avatar ───────────────────────────────────────────────── */
+
 .mentor-avatar {
-  width: 88px;
-  height: 88px;
-  margin: 0 auto 10px;
-  border-radius: 28px;
-  background: var(--am-primary);
-  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32px;
+  width: 92px;
+  height: 92px;
+  margin: 0 auto 12px;
+  border: 4px solid #fff;
+  border-radius: 30px;
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--am-primary) 88%, #ffffff),
+    var(--am-primary)
+  );
+  color: #fff;
+  font-size: 33px;
   font-weight: 700;
+  letter-spacing: -0.02em;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--am-primary) 16%, transparent),
+    0 10px 24px rgba(13, 97, 78, 0.18);
 }
 
+/* ── Badge & Name ─────────────────────────────────────────── */
+
 .mentor-badge {
-  display: inline-block;
-  margin-bottom: 8px;
-  padding: 4px 10px;
-  border-radius: 20px;
-  background: var(--am-primary-soft);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 9px;
+  padding: 5px 11px;
+  border: 1px solid color-mix(in srgb, var(--am-primary) 18%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--am-primary-soft) 86%, #ffffff);
   color: #0b6b57;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
 }
 
 .mentor-hero h2 {
   margin: 0;
   color: #111827;
+  font-size: clamp(1.25rem, 2vw + 0.7rem, 1.55rem);
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  overflow-wrap: anywhere;
 }
+
+/* ── Stats ────────────────────────────────────────────────── */
 
 .mentor-stats {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  gap: 24px;
-  margin: 14px 0;
+  gap: 10px 22px;
+  margin: 16px 0;
 }
 
 .mentor-stats strong,
@@ -8745,82 +8817,174 @@ button.rx-file-preview {
   display: block;
 }
 
+.mentor-stats strong {
+  color: var(--am-primary);
+  font-size: 1.15rem;
+  line-height: 1.2;
+}
+
+.mentor-stats small {
+  margin-top: 2px;
+  color: var(--am-text-muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+/* ── Quote ────────────────────────────────────────────────── */
+
 .mentor-quote {
+  max-width: 58ch;
+  margin-inline: auto;
+  padding-top: 14px;
+  border-top: 1px solid color-mix(in srgb, var(--am-primary) 10%, transparent);
   color: var(--am-text-muted);
   font-size: 13px;
-  line-height: 20px;
+  line-height: 21px;
+  overflow-wrap: anywhere;
 }
+
+/* ── Credentials ──────────────────────────────────────────── */
 
 .mentor-creds {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
-  margin-top: 12px;
+  margin-top: 14px;
 }
 
 .mentor-cred {
-  padding: 12px;
+  padding: 13px;
   border: 1px solid var(--am-line);
-  border-radius: 14px;
+  border-radius: var(--mentor-radius-lg);
   background: #fff;
+  box-shadow: 0 1px 2px rgba(10, 40, 32, 0.04);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
 }
 
 .mentor-cred strong,
 .mentor-cred small {
   display: block;
+  overflow-wrap: anywhere;
 }
+
+.mentor-cred strong {
+  color: #111827;
+  font-size: 13px;
+}
+
+.mentor-cred small {
+  margin-top: 3px;
+  color: var(--am-text-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+/* ── Reviews ──────────────────────────────────────────────── */
 
 .mentor-review {
   margin-bottom: 12px;
+  padding: 14px;
+  border: 1px solid var(--am-line);
+  border-radius: var(--mentor-radius-lg);
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(10, 40, 32, 0.04);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
 }
 
 .mentor-review small {
-  color: #f59e0b;
+  color: #b45309;
+  font-weight: 650;
 }
+
+/* ── Service Cards ────────────────────────────────────────── */
 
 .mentor-service {
   position: relative;
   display: block;
   width: 100%;
-  text-align: left;
+  min-height: 72px;
   margin-bottom: 12px;
   padding: 18px;
   border: 1px solid var(--am-line);
-  border-radius: 24px;
+  border-radius: var(--mentor-radius-xl);
   background: #fff;
   color: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(10, 40, 32, 0.04);
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
 }
 
 .mentor-service.on {
-  border-color: #006b5f;
+  border-color: color-mix(in srgb, var(--am-primary) 48%, transparent);
   background: #0d614e0d;
+  box-shadow:
+    inset 3px 0 0 var(--am-primary),
+    0 4px 14px rgba(13, 97, 78, 0.1);
 }
 
 .mentor-service strong,
 .mentor-service small {
   display: block;
+  overflow-wrap: anywhere;
+}
+
+.mentor-service strong {
+  color: #111827;
+  font-size: 14px;
+}
+
+.mentor-service small {
+  margin-top: 4px;
+  color: var(--am-text-muted);
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .mentor-service em {
   position: absolute;
   top: 16px;
   right: 16px;
-  font-style: normal;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--am-primary) 10%, transparent);
   color: var(--am-primary);
+  font-size: 11px;
+  font-style: normal;
   font-weight: 700;
+  white-space: nowrap;
 }
+
+/* ── Summary / EMI Panel ──────────────────────────────────── */
 
 .mentor-summary {
   margin-top: 20px;
-  padding: 20px;
-  border-radius: 24px 24px 0 0;
-  background: #0d614e1a;
+  padding: 22px 18px;
+  border: 1px solid color-mix(in srgb, var(--am-primary) 12%, transparent);
+  border-bottom: 0;
+  border-radius: var(--mentor-radius-xl) var(--mentor-radius-xl) 0 0;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(13, 97, 78, 0.09), transparent 44%),
+    #0d614e1a;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .mentor-emi-amount {
   margin: 0 0 8px;
   color: var(--am-primary);
   text-align: center;
+  font-size: clamp(1.35rem, 3vw + 0.7rem, 1.75rem);
+  line-height: 1.15;
+  letter-spacing: -0.03em;
 }
 
 .mentor-secure {
@@ -8828,47 +8992,230 @@ button.rx-file-preview {
   color: var(--am-primary);
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
+
+/* ── EMI Options ──────────────────────────────────────────── */
 
 .mentor-emi {
   position: relative;
   display: flex;
+  align-items: center;
   justify-content: space-between;
+  gap: 12px;
   width: 100%;
+  min-height: 64px;
   margin: 12px 0;
   padding: 16px;
-  border: 1px solid transparent;
-  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--am-primary) 8%, transparent);
+  border-radius: var(--mentor-radius-lg);
   background: #f1f3f2;
-  text-align: left;
   color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
 }
 
 .mentor-emi.on {
+  border-color: color-mix(in srgb, var(--am-primary) 48%, transparent);
   background: #fff;
-  border-color: var(--am-primary);
+  box-shadow:
+    inset 3px 0 0 var(--am-primary),
+    0 4px 14px rgba(13, 97, 78, 0.1);
 }
 
 .mentor-emi em {
   position: absolute;
-  top: -8px;
+  top: -9px;
   right: 12px;
-  padding: 2px 8px;
-  border-radius: 12px;
+  padding: 3px 9px;
+  border-radius: 999px;
   background: var(--am-primary);
   color: #fff;
   font-size: 9px;
   font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  box-shadow: 0 3px 8px rgba(13, 97, 78, 0.22);
 }
 
 .mentor-emi b {
   color: var(--am-text);
+  font-size: 14px;
 }
 
 .mentor-emi.on b {
   color: var(--am-primary);
+}
+
+/* ── Timeline ─────────────────────────────────────────────── */
+
+.mentor-timeline {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.mentor-timeline span {
+  flex: 0 0 auto;
+  color: var(--am-primary);
+  font-weight: 700;
+}
+
+/* ── Interaction & Focus ──────────────────────────────────── */
+
+.mentor-service:focus-visible,
+.mentor-emi:focus-visible {
+  outline: 3px solid var(--mentor-focus);
+  outline-offset: 3px;
+}
+
+.mentor-service:focus:not(:focus-visible),
+.mentor-emi:focus:not(:focus-visible) {
+  outline: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mentor-cred:hover,
+  .mentor-review:hover {
+    border-color: color-mix(in srgb, var(--am-primary) 22%, var(--am-line));
+    box-shadow: 0 5px 16px rgba(10, 40, 32, 0.07);
+  }
+
+  .mentor-service:hover {
+    border-color: color-mix(in srgb, var(--am-primary) 32%, transparent);
+    background: color-mix(in srgb, #0d614e0d 55%, #ffffff);
+    box-shadow: var(--mentor-shadow-lift);
+    transform: translateY(-2px);
+  }
+
+  .mentor-emi:hover {
+    border-color: color-mix(in srgb, var(--am-primary) 30%, transparent);
+    background: #fff;
+    box-shadow: 0 5px 16px rgba(13, 97, 78, 0.09);
+    transform: translateY(-1px);
+  }
+}
+
+.mentor-service:active,
+.mentor-emi:active {
+  transform: scale(0.99);
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .mentor-hero {
+    padding: 20px 14px 18px;
+    border-radius: 18px;
+  }
+
+  .mentor-avatar {
+    width: 76px;
+    height: 76px;
+    border-radius: 24px;
+    border-width: 3px;
+    font-size: 27px;
+  }
+
+  .mentor-stats {
+    gap: 8px 16px;
+    margin: 13px 0;
+  }
+
+  .mentor-stats strong {
+    font-size: 1.05rem;
+  }
+
+  .mentor-stats small {
+    font-size: 10px;
+  }
+
+  .mentor-creds {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .mentor-cred,
+  .mentor-review {
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .mentor-service {
+    min-height: 64px;
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .mentor-service em {
+    top: 13px;
+    right: 12px;
+    font-size: 10px;
+  }
+
+  .mentor-summary {
+    padding: 18px 14px;
+    border-radius: 18px 18px 0 0;
+  }
+
+  .mentor-emi {
+    min-height: 58px;
+    padding: 13px;
+    border-radius: 16px;
+  }
+
+  .mentor-timeline {
+    padding: 9px 10px;
+  }
+}
+
+/* ── Forced Colors ────────────────────────────────────────── */
+
+@media (forced-colors: active) {
+  .mentor-hero,
+  .mentor-cred,
+  .mentor-review,
+  .mentor-service,
+  .mentor-emi,
+  .mentor-summary {
+    border: 1px solid CanvasText;
+  }
+
+  .mentor-service:focus-visible,
+  .mentor-emi:focus-visible {
+    outline: 3px solid Highlight;
+    outline-offset: 3px;
+  }
+}
+
+/* ── Reduced Motion ───────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .mentor-hero,
+  .mentor-cred,
+  .mentor-review,
+  .mentor-service,
+  .mentor-emi {
+    transition: none !important;
+  }
+
+  .mentor-service:hover,
+  .mentor-emi:hover,
+  .mentor-service:active,
+  .mentor-emi:active {
+    transform: none;
+  }
 }
 
 .status-card {
@@ -8882,18 +9229,6 @@ button.rx-file-preview {
   background: #0d614e0d;
   border: 1px solid #0d614e1a;
   color: var(--am-primary);
-}
-
-.mentor-timeline {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin-bottom: 12px;
-}
-
-.mentor-timeline span {
-  color: var(--am-primary);
-  font-weight: 700;
 }
 
 .rx-status-hero {

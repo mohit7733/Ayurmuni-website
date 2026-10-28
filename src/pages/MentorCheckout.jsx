@@ -1,20 +1,23 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import AppShell from '../components/AppShell';
-import { formatRupee } from '../home/catalog';
-import { EMI_PLANS, loadMentorBooking, MENTOR } from '../mentor/data';
-import { showSuccessToast } from '../config/key';
-import { getPatientList, listPatients } from '../services/patientService';
-import '../design/pages/mentor-flow.css';
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import AppShell from "../components/AppShell";
+import { formatRupee } from "../home/catalog";
+import { EMI_PLANS, loadMentorBooking, MENTOR } from "../mentor/data";
+import { showSuccessToast } from "../config/key";
+import { getPatientList, listPatients } from "../services/patientService";
+import "../design/pages/mentor-flow.css";
+import "../design/mentor-modal.css";
 
 const PAYMENTS = [
-  { id: '1', title: 'Credit Card', subtitle: '**** **** **** 4290' },
-  { id: '2', title: 'UPI ID', subtitle: 'PhonePe, Google Pay, Paytm...' },
-  { id: '3', title: 'EMI', subtitle: 'Flexible monthly installments' },
+  { id: "1", title: "Credit Card", subtitle: "**** **** **** 4290" },
+  { id: "2", title: "UPI ID", subtitle: "PhonePe, Google Pay, Paytm..." },
+  { id: "3", title: "EMI", subtitle: "Flexible monthly installments" },
 ];
 
 const patientName = (item) =>
-  `${item?.first_name ?? ''} ${item?.last_name ?? ''}`.trim() || item?.full_name || 'Patient';
+  `${item?.first_name ?? ""} ${item?.last_name ?? ""}`.trim() ||
+  item?.full_name ||
+  "Patient";
 
 export default function MentorCheckout() {
   const navigate = useNavigate();
@@ -23,12 +26,12 @@ export default function MentorCheckout() {
   const discount = 199;
   const total = Math.max(fee - discount, 0);
 
-  const [patients, setPatients] = useState(['John Deo', 'Jane Doe']);
-  const [selectedPatient, setSelectedPatient] = useState('John Deo');
+  const [patients, setPatients] = useState(["John Deo", "Jane Doe"]);
+  const [selectedPatient, setSelectedPatient] = useState("John Deo");
   const [openPatients, setOpenPatients] = useState(false);
-  const [activePay, setActivePay] = useState('1');
+  const [activePay, setActivePay] = useState("1");
   const [showEmi, setShowEmi] = useState(false);
-  const [emiPlan, setEmiPlan] = useState('3');
+  const [emiPlan, setEmiPlan] = useState("3");
 
   useEffect(() => {
     (async () => {
@@ -43,20 +46,24 @@ export default function MentorCheckout() {
   }, []);
 
   const confirmPlan = () => {
-    showSuccessToast('Plan confirmed', 'success');
-    navigate('/mentor/order');
+    showSuccessToast("Plan confirmed", "success");
+    navigate("/mentor/order");
   };
 
   return (
     <AppShell tab="consult">
       <section className="catalog-page mentor-pay">
         <header className="catalog-head">
-          <button type="button" className="text-back" onClick={() => navigate(-1)}>
+          <button
+            type="button"
+            className="text-back"
+            onClick={() => navigate(-1)}
+          >
             ← Back
           </button>
           <div>
             <h1>Checkout</h1>
-            <p>{booking?.service?.title || 'Mentor session'}</p>
+            <p>{booking?.service?.title || "Mentor session"}</p>
           </div>
         </header>
 
@@ -68,19 +75,24 @@ export default function MentorCheckout() {
             <h2>{MENTOR.name}</h2>
             <p>
               {MENTOR.role}
-              {booking?.date ? ` · ${booking.date}` : ''}
-              {booking?.time ? ` · ${booking.time}` : ''}
+              {booking?.date ? ` · ${booking.date}` : ""}
+              {booking?.time ? ` · ${booking.time}` : ""}
             </p>
           </div>
         </div>
 
         <h3 className="profile-section">Patient Details</h3>
-        <button type="button" className="menu-row" onClick={() => setOpenPatients((v) => !v)} aria-expanded={openPatients}>
+        <button
+          type="button"
+          className="menu-row"
+          onClick={() => setOpenPatients((v) => !v)}
+          aria-expanded={openPatients}
+        >
           <span>
             FULL NAME
             <small>{selectedPatient}</small>
           </span>
-          <em>{openPatients ? '▴' : '▾'}</em>
+          <em>{openPatients ? "▴" : "▾"}</em>
         </button>
         {openPatients
           ? patients.map((name) => (
@@ -98,7 +110,11 @@ export default function MentorCheckout() {
               </button>
             ))
           : null}
-        <button type="button" className="text-back" onClick={() => navigate('/profile/patients/new')}>
+        <button
+          type="button"
+          className="text-back"
+          onClick={() => navigate("/profile/patients/new")}
+        >
           + Add Patient
         </button>
 
@@ -107,7 +123,7 @@ export default function MentorCheckout() {
           <button
             key={item.id}
             type="button"
-            className={`menu-row ${activePay === item.id ? 'on' : ''}`}
+            className={`menu-row ${activePay === item.id ? "on" : ""}`}
             onClick={() => setActivePay(item.id)}
             aria-pressed={activePay === item.id}
           >
@@ -115,7 +131,7 @@ export default function MentorCheckout() {
               {item.title}
               <small>{item.subtitle}</small>
             </span>
-            <i className={`loc-radio ${activePay === item.id ? 'on' : ''}`} />
+            <i className={`loc-radio ${activePay === item.id ? "on" : ""}`} />
           </button>
         ))}
 
@@ -133,18 +149,31 @@ export default function MentorCheckout() {
             <span>Grand total</span>
             <strong>{formatRupee(total)}</strong>
           </div>
-          <button type="button" className="cta" onClick={() => setShowEmi(true)}>
+          <button
+            type="button"
+            className="cta"
+            onClick={() => setShowEmi(true)}
+          >
             Choose Plan
           </button>
         </div>
       </section>
 
       {showEmi ? (
-        <div className="web-modal mentor-flow__modal" role="dialog" aria-modal="true" aria-labelledby="mentor-payment-title">
+        <div
+          className="web-modal mentor-flow__modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="mentor-payment-title"
+        >
           <div className="web-modal-card loc-sheet-card">
             <div className="loc-sheet-head">
               <h3 id="mentor-payment-title">Payment Plan</h3>
-              <button type="button" className="text-back" onClick={() => setShowEmi(false)}>
+              <button
+                type="button"
+                className="text-back"
+                onClick={() => setShowEmi(false)}
+              >
                 Close
               </button>
             </div>
@@ -152,12 +181,14 @@ export default function MentorCheckout() {
             <h2 className="mentor-emi-amount">{formatRupee(total)}</h2>
             <p className="mentor-secure">Secure medical transaction</p>
             <h3>Select EMI Tenure</h3>
-            <p className="muted">Choose a plan that fits your recovery journey.</p>
+            <p className="muted">
+              Choose a plan that fits your recovery journey.
+            </p>
             {EMI_PLANS.map((item) => (
               <button
                 key={item.id}
                 type="button"
-                className={`mentor-emi ${emiPlan === item.id ? 'on' : ''}`}
+                className={`mentor-emi ${emiPlan === item.id ? "on" : ""}`}
                 onClick={() => setEmiPlan(item.id)}
                 aria-pressed={emiPlan === item.id}
               >
@@ -173,7 +204,8 @@ export default function MentorCheckout() {
               </button>
             ))}
             <p className="muted">
-              Your payment plan is encrypted. EMI conversion might take up to 3–4 working days depending on your bank’s policy.
+              Your payment plan is encrypted. EMI conversion might take up to
+              3–4 working days depending on your bank’s policy.
             </p>
             <button type="button" className="cta" onClick={confirmPlan}>
               Confirm Plan

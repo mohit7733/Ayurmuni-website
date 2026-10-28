@@ -1,0 +1,491 @@
+/* =========================================================
+   MENTOR PAYMENT PLAN MODAL
+   File: mentor-payment-modal.css
+   ========================================================= */
+
+.mentor-flow__modal {
+  --emi-radius-lg: 16px;
+  --emi-radius-xl: 22px;
+  --emi-line-brand: color-mix(in srgb, var(--am-primary) 12%, transparent);
+  --emi-line-active: color-mix(in srgb, var(--am-primary) 46%, transparent);
+  --emi-shadow-soft:
+    0 1px 2px rgba(10, 40, 32, 0.05), 0 10px 28px rgba(10, 40, 32, 0.08);
+  --emi-shadow-active: 0 4px 14px rgba(13, 97, 78, 0.12);
+  --emi-focus: color-mix(in srgb, var(--am-primary) 74%, #0b2b22);
+
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--am-space-4);
+  background: rgba(8, 27, 22, 0.52);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* ── Modal Card ───────────────────────────────────────────── */
+
+.mentor-flow__modal .web-modal-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--am-space-2);
+  width: min(520px, 100%);
+  max-height: min(88dvh, 760px);
+  padding: var(--am-space-6);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--emi-line-brand);
+  border-radius: var(--emi-radius-xl);
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      color-mix(in srgb, var(--am-primary) 8%, transparent),
+      transparent 46%
+    ),
+    linear-gradient(180deg, var(--am-surface), var(--am-surface-muted));
+  box-shadow: 0 24px 70px rgba(8, 27, 22, 0.28);
+  animation: mentor-emi-modal-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* ── Header ───────────────────────────────────────────────── */
+
+.mentor-flow__modal .loc-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--am-space-3);
+  margin-bottom: var(--am-space-2);
+  padding-bottom: var(--am-space-3);
+  border-bottom: 1px solid var(--emi-line-brand);
+}
+
+.mentor-flow__modal .loc-sheet-head h3 {
+  margin: 0;
+  color: var(--am-text);
+  font-family: var(--am-font-display);
+  font-size: var(--am-text-xl);
+  line-height: var(--am-leading-tight);
+  letter-spacing: -0.025em;
+  overflow-wrap: anywhere;
+}
+
+.mentor-flow__modal .loc-sheet-head .text-back {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 var(--am-space-3);
+  border: 1px solid var(--am-line-strong);
+  border-radius: var(--am-radius-pill);
+  background: var(--am-surface);
+  color: var(--am-primary-strong);
+  font-size: var(--am-text-xs);
+  font-weight: var(--am-weight-semibold);
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.mentor-flow__modal .loc-sheet-head .text-back:hover {
+  border-color: var(--emi-line-active);
+  background: var(--am-primary-soft);
+  color: var(--am-primary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(13, 97, 78, 0.12);
+}
+
+.mentor-flow__modal .loc-sheet-head .text-back:active {
+  transform: scale(0.97);
+}
+
+/* ── Amount Block ─────────────────────────────────────────── */
+
+.mentor-flow__modal .muted {
+  margin: 0;
+  color: var(--am-text-muted);
+  font-size: var(--am-text-xs);
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.mentor-flow__modal .mentor-emi-amount {
+  margin: var(--am-space-1) 0 var(--am-space-2);
+  color: var(--am-primary-strong);
+  font-family: var(--am-font-display);
+  font-size: clamp(2rem, 5vw, 2.6rem);
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  overflow-wrap: anywhere;
+}
+
+.mentor-flow__modal .mentor-secure {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  gap: 6px;
+  margin: 0 0 var(--am-space-4);
+  padding: 5px 12px;
+  border: 1px solid color-mix(in srgb, var(--am-primary) 16%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--am-primary-soft) 78%, transparent);
+  color: var(--am-primary-strong);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* ── Tenure Heading ───────────────────────────────────────── */
+
+.mentor-flow__modal > h3 {
+  margin: var(--am-space-2) 0 var(--am-space-1);
+  color: var(--am-text);
+  font-family: var(--am-font-display);
+  font-size: var(--am-text-lg);
+  line-height: var(--am-leading-snug);
+  letter-spacing: -0.015em;
+}
+
+.mentor-flow__modal > .muted {
+  margin-bottom: var(--am-space-3);
+}
+
+/* ── EMI Options ──────────────────────────────────────────── */
+
+.mentor-flow__modal .mentor-emi {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--am-space-3);
+  width: 100%;
+  min-height: 82px;
+  margin: 0 0 var(--am-space-2);
+  padding: var(--am-space-4);
+  border: 1px solid var(--am-line);
+  border-radius: var(--emi-radius-lg);
+  background: var(--am-surface);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: var(--am-shadow-xs);
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.mentor-flow__modal .mentor-emi:last-of-type {
+  margin-bottom: 0;
+}
+
+.mentor-flow__modal .mentor-emi > span {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.mentor-flow__modal .mentor-emi > span strong {
+  color: var(--am-text);
+  font-size: var(--am-text-sm);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.mentor-flow__modal .mentor-emi > span small,
+.mentor-flow__modal .mentor-emi > b small {
+  display: inline;
+  color: var(--am-text-muted);
+  font-size: var(--am-text-xs);
+  font-weight: var(--am-weight-regular);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.mentor-flow__modal .mentor-emi > b {
+  flex: 0 0 auto;
+  color: var(--am-primary-strong);
+  font-size: var(--am-text-base);
+  font-weight: var(--am-weight-bold);
+  white-space: nowrap;
+}
+
+.mentor-flow__modal .mentor-emi > b small {
+  margin-left: 2px;
+  color: var(--am-text-muted);
+  font-size: var(--am-text-xs);
+  font-weight: var(--am-weight-medium);
+}
+
+/* Recommended badge */
+.mentor-flow__modal .mentor-emi > em {
+  position: absolute;
+  top: -9px;
+  right: 14px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--am-primary);
+  color: var(--am-on-primary);
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  box-shadow: 0 3px 10px rgba(13, 97, 78, 0.22);
+}
+
+/* Selected plan */
+.mentor-flow__modal .mentor-emi.on {
+  border-color: var(--emi-line-active);
+  background: linear-gradient(
+    120deg,
+    var(--am-primary-soft),
+    var(--am-surface) 82%
+  );
+  box-shadow:
+    inset 3px 0 0 var(--am-primary),
+    var(--emi-shadow-active);
+}
+
+.mentor-flow__modal .mentor-emi.on > span strong {
+  color: var(--am-primary-strong);
+}
+
+.mentor-flow__modal .mentor-emi.on > b {
+  color: var(--am-primary);
+}
+
+/* ── Disclosure & CTA ─────────────────────────────────────── */
+
+.mentor-flow__modal > .muted:last-of-type {
+  margin-top: var(--am-space-3);
+  padding: var(--am-space-3);
+  border: 1px dashed var(--emi-line-brand);
+  border-radius: var(--emi-radius-lg);
+  background: color-mix(in srgb, var(--am-surface-muted) 82%, transparent);
+}
+
+.mentor-flow__modal .cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 52px;
+  margin-top: var(--am-space-3);
+  padding: 0 var(--am-space-5);
+  border: 1px solid transparent;
+  border-radius: var(--emi-radius-lg);
+  font-size: var(--am-text-base);
+  font-weight: var(--am-weight-semibold);
+  letter-spacing: 0.01em;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(13, 97, 78, 0.2);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    filter 160ms ease;
+}
+
+/* ── Interaction & Focus ──────────────────────────────────── */
+
+.mentor-flow__modal .mentor-emi:focus-visible,
+.mentor-flow__modal .text-back:focus-visible,
+.mentor-flow__modal .cta:focus-visible {
+  outline: 3px solid var(--emi-focus);
+  outline-offset: 3px;
+}
+
+.mentor-flow__modal .mentor-emi:focus:not(:focus-visible),
+.mentor-flow__modal .text-back:focus:not(:focus-visible),
+.mentor-flow__modal .cta:focus:not(:focus-visible) {
+  outline: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mentor-flow__modal .mentor-emi:hover {
+    border-color: color-mix(in srgb, var(--am-primary) 28%, var(--am-line));
+    background: var(--am-surface);
+    box-shadow: 0 5px 16px rgba(13, 97, 78, 0.09);
+    transform: translateY(-2px);
+  }
+
+  .mentor-flow__modal .mentor-emi.on:hover {
+    border-color: var(--emi-line-active);
+    background: linear-gradient(
+      120deg,
+      var(--am-primary-soft),
+      var(--am-surface) 82%
+    );
+  }
+
+  .mentor-flow__modal .cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(13, 97, 78, 0.3);
+    filter: brightness(1.04);
+  }
+}
+
+.mentor-flow__modal .mentor-emi:active {
+  transform: scale(0.99);
+}
+
+.mentor-flow__modal .cta:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 2px 8px rgba(13, 97, 78, 0.18);
+}
+
+/* ── Mobile ───────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .mentor-flow__modal {
+    align-items: flex-end;
+    padding: 10px;
+  }
+
+  .mentor-flow__modal .web-modal-card {
+    width: 100%;
+    max-width: 520px;
+    max-height: calc(92dvh - env(safe-area-inset-bottom));
+    padding: 16px;
+    border-radius: 20px 20px 0 0;
+    animation: mentor-emi-sheet-in 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .mentor-flow__modal .loc-sheet-head h3 {
+    font-size: 17px;
+  }
+
+  .mentor-flow__modal .loc-sheet-head .text-back {
+    min-height: 36px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+
+  .mentor-flow__modal .mentor-emi-amount {
+    font-size: 27px;
+  }
+
+  .mentor-flow__modal .mentor-secure {
+    font-size: 9px;
+  }
+
+  .mentor-flow__modal .mentor-emi {
+    min-height: 66px;
+    gap: 9px;
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .mentor-flow__modal .mentor-emi > span strong {
+    font-size: 13px;
+  }
+
+  .mentor-flow__modal .mentor-emi > span small,
+  .mentor-flow__modal .mentor-emi > b small {
+    font-size: 10px;
+  }
+
+  .mentor-flow__modal .mentor-emi > b {
+    font-size: 13px;
+  }
+
+  .mentor-flow__modal .mentor-emi > em {
+    top: -8px;
+    right: 10px;
+    padding: 2px 8px;
+    font-size: 8px;
+  }
+
+  .mentor-flow__modal .cta {
+    min-height: 48px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 380px) {
+  .mentor-flow__modal .web-modal-card {
+    padding: 13px;
+  }
+
+  .mentor-flow__modal .mentor-emi {
+    align-items: flex-start;
+  }
+}
+
+/* ── Forced Colors ────────────────────────────────────────── */
+
+@media (forced-colors: active) {
+  .mentor-flow__modal {
+    background: Canvas;
+  }
+
+  .mentor-flow__modal .web-modal-card,
+  .mentor-flow__modal .mentor-emi {
+    border: 1px solid CanvasText;
+  }
+
+  .mentor-flow__modal .mentor-emi:focus-visible,
+  .mentor-flow__modal .text-back:focus-visible,
+  .mentor-flow__modal .cta:focus-visible {
+    outline: 3px solid Highlight;
+    outline-offset: 3px;
+  }
+}
+
+/* ── Reduced Motion ───────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .mentor-flow__modal .web-modal-card,
+  .mentor-flow__modal .mentor-emi,
+  .mentor-flow__modal .text-back,
+  .mentor-flow__modal .cta {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .mentor-flow__modal .mentor-emi:hover,
+  .mentor-flow__modal .cta:hover,
+  .mentor-flow__modal .mentor-emi:active,
+  .mentor-flow__modal .cta:active {
+    transform: none;
+  }
+}
+
+/* ── Animations ───────────────────────────────────────────── */
+
+@keyframes mentor-emi-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes mentor-emi-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

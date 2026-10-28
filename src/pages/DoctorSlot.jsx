@@ -391,16 +391,18 @@ export default function DoctorSlot() {
                 )}
               </span>
               <div className="bk-doctor__copy">
-                {doctorRating(doctor) ? (
-                  <Rating value={doctorRating(doctor)} size="sm" />
-                ) : null}
                 <strong>{name}</strong>
                 {doctorQualification(doctor) ? (
                   <p>{doctorQualification(doctor)}</p>
                 ) : null}
-                {doctorExperience(doctor) ? (
-                  <small>{doctorExperience(doctor)}</small>
-                ) : null}
+                <div className="bk-doctor__meta">
+                  {doctorExperience(doctor) ? (
+                    <small>{doctorExperience(doctor)}</small>
+                  ) : null}
+                  {doctorRating(doctor) ? (
+                    <Rating value={doctorRating(doctor)} size="sm" />
+                  ) : null}
+                </div>
                 {feeLabel ? <p className="bk-doctor__fee">{feeLabel}</p> : null}
               </div>
             </div>

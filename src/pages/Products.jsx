@@ -34,6 +34,7 @@ import {
 } from "../components/ui";
 import { STORE_COPY as T } from "../content/store";
 import "../design/pages/store.css";
+import "../design/filter.css";
 
 export default function Products() {
   const navigate = useNavigate();
