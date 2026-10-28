@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Video } from 'lucide-react';
-import LogoSpinner from './ui/LogoSpinner';
 import {
   buildVideoCallNavParams,
   formatAppointmentDayShort,
@@ -134,16 +133,7 @@ export default function HomeJoinAppointments({ appointments, loading }) {
     if (id) navigate(`/profile/appointments/${id}`);
   };
 
-  if (loading && !next) {
-    return (
-      <section className="am-diet-active hm-appt is-loading" aria-busy="true" aria-label="Upcoming appointment">
-        <LogoSpinner scale="compact" label="Upcoming appointment" />
-        <span className="hm-appt__skel hm-appt__skel--media" />
-        <span className="hm-appt__skel hm-appt__skel--body" />
-        <span className="hm-appt__skel hm-appt__skel--strip" />
-      </section>
-    );
-  }
+  if (loading && !next) return null;
   if (!next) return null;
 
   const name = formatDoctorDisplayName(next.doctorName);

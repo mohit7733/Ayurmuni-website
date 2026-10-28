@@ -46,9 +46,7 @@ import {
   Button,
   Disclaimer,
   Modal,
-  Skeleton,
-  SkeletonText,
-  LogoSpinner,
+  SectionHold,
   Tabs,
 } from "../components/ui";
 import { CART_COPY as T } from "../content/cart";
@@ -472,12 +470,7 @@ export default function Cart() {
         </header>
 
         {loading && !sections.length ? (
-          <div className="cp-skel" aria-busy="true" aria-label={T.loading}>
-            <LogoSpinner scale="feature" label={T.loading} />
-            <Skeleton style={{ height: 88, borderRadius: 16 }} />
-            <Skeleton style={{ height: 88, borderRadius: 16 }} />
-            <SkeletonText lines={3} />
-          </div>
+          <SectionHold label={T.loading} minHeight={280} />
         ) : isEmpty && !showTabs ? (
           <div className="cp-empty">
             <span className="cp-empty__icon" aria-hidden>

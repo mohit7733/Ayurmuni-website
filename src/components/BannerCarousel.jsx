@@ -17,6 +17,21 @@ const SWIPE_MIN = 40;
 const HOVER_INTENT_MS = 180;
 const TRANSITION_MS = 600;
 
+const frameSources = (items) =>
+  (items || []).map((item) => item?.image).filter(Boolean);
+
+/** True when a banner image is already decoded, so the coverflow never flashes empty cards. */
+const framesCached = (items) => {
+  if (typeof window === 'undefined') return false;
+  const urls = frameSources(items);
+  if (!urls.length) return (items || []).some((item) => typeof item?.render === 'function');
+  return urls.some((src) => {
+    const img = new Image();
+    img.src = src;
+    return img.complete && img.naturalWidth > 0;
+  });
+};
+
 const canHoverPointer = () =>
   typeof window !== 'undefined' && Boolean(window.matchMedia?.('(hover: hover) and (pointer: fine)').matches);
 
@@ -53,6 +68,8 @@ export default function BannerCarousel({
   const startedAt = useRef(0);
   const shownIndex = useRef(index);
   const count = items?.length || 0;
+  const frameKey = frameSources(items).join('|');
+  const [frameReady, setFrameReady] = useState(() => framesCached(items));
   const active = count ? Math.min(index, count - 1) : 0;
   const paused = hoverPaused || userPaused;
   const auto = count > 1 && !reduced;
@@ -87,23 +104,43 @@ export default function BannerCarousel({
     };
   }, [active, auto, paused, count, interval]);
 
-  if (!count) {
-    return loading ? (
-      <div className={cx('am-banner am-banner--loading', className)} aria-hidden>
-        <div className="am-banner__stage">
-          {[-1, 1, 0].map((d) => (
-            <span
-              key={d}
-              className={cx('am-banner__slide am-banner__skeleton', d === 0 ? 'is-on' : d < 0 ? 'is-prev' : 'is-next')}
-              style={{ '--am-banner-offset': d }}
-            >
-              <span className="am-banner__shimmer" />
-            </span>
-          ))}
-        </div>
-      </div>
-    ) : null;
-  }
+  useEffect(() => {
+    if (!count) {
+      setFrameReady(false);
+      return undefined;
+    }
+    if (framesCached(items)) {
+      setFrameReady(true);
+      return undefined;
+    }
+    const urls = frameSources(items);
+    if (!urls.length) {
+      setFrameReady(items.some((item) => typeof item.render === 'function'));
+      return undefined;
+    }
+    let alive = true;
+    setFrameReady(false);
+    const mark = () => {
+      if (alive) setFrameReady(true);
+    };
+    const preloaders = urls.map((src) => {
+      const img = new Image();
+      img.onload = mark;
+      img.onerror = mark;
+      img.src = src;
+      if (img.complete) mark();
+      return img;
+    });
+    return () => {
+      alive = false;
+      preloaders.forEach((img) => {
+        img.onload = null;
+        img.onerror = null;
+      });
+    };
+  }, [count, frameKey, items]);
+
+  if (!count || loading || !frameReady) return null;
 
   const go = (step) => setIndex((prev) => (Math.min(prev, count - 1) + step + count) % count);
 

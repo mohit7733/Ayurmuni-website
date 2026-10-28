@@ -2145,6 +2145,8 @@
   object-fit: contain;
   object-position: center;
   pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
   -webkit-mask-image:
     linear-gradient(90deg, transparent 0, #000 12%, #000 88%, transparent 100%),
     linear-gradient(180deg, transparent 0, #000 3%, #000 97%, transparent 100%);
@@ -2153,6 +2155,10 @@
     linear-gradient(90deg, transparent 0, #000 12%, #000 88%, transparent 100%),
     linear-gradient(180deg, transparent 0, #000 3%, #000 97%, transparent 100%);
   mask-composite: intersect;
+}
+.hm-hero__bg-video.is-ready {
+  opacity: 1;
+  visibility: visible;
 }
 
 /* Legibility wash over the copy column, fading to clear video on the right. */
@@ -2652,6 +2658,61 @@
 .hm-page .hm-well__head .am-btn:hover svg { transform: translateX(2px); }
 
 /* Yoga cards */
+button.hm-pose {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  appearance: none;
+}
+.hm-pose__play,
+.hm-pose__level {
+  pointer-events: none;
+}
+.hm-pose__title {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  font-family: var(--am-font-display);
+  font-size: 14px;
+  font-weight: var(--am-weight-semibold);
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.hm-pose__time {
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  margin-top: 6px;
+  padding: 2px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(247, 244, 238, 0.9);
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+/* Yoga stays a sideways carousel. A short list must not collapse into a static grid. */
+.hm-page .am-rail.hm-yoga-rail,
+.hm-page .hm-wellness:not(.hm-wellness--pair) .hm-well .am-rail.hm-yoga-rail {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+}
+.hm-page .hm-yoga-rail > .am-rail__item,
+.hm-page .hm-wellness:not(.hm-wellness--pair) .hm-well .am-rail.hm-yoga-rail > .am-rail__item {
+  flex: 0 0 220px;
+  width: 220px;
+  min-width: 220px;
+  max-width: 220px;
+}
 .hm-page .hm-pose {
   border-radius: 18px;
   box-shadow: 0 1px 2px rgba(19, 35, 30, 0.06), 0 8px 20px rgba(19, 35, 30, 0.08);
@@ -3619,18 +3680,18 @@
    edge to edge as an equal-column grid with landscape media, so cards stay ~180-220px tall.
    More than 5 items keep the left-aligned swipe rail above. */
 @media (min-width: 640px) {
-  .hm-page .hm-wellness:not(.hm-wellness--pair) .hm-well .am-rail:not(:has(> :nth-child(6))) {
+  .hm-page .hm-wellness:not(.hm-wellness--pair) .hm-well .am-rail:not(.hm-yoga-rail):not(:has(> :nth-child(6))) {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     overflow: visible;
   }
-  .hm-page .hm-wellness:not(.hm-wellness--pair) .hm-well .am-rail:not(:has(> :nth-child(6))) > .am-rail__item {
+  .hm-page .hm-wellness:not(.hm-wellness--pair) .hm-well .am-rail:not(.hm-yoga-rail):not(:has(> :nth-child(6))) > .am-rail__item {
     flex: none;
     width: auto;
     min-width: 0;
     max-width: none;
   }
-  .hm-page .hm-wellness:not(.hm-wellness--pair) .hm-well .am-rail:not(:has(> :nth-child(6))) :is(.hm-pose__media, .hm-meal__media) {
+  .hm-page .hm-wellness:not(.hm-wellness--pair) .hm-well .am-rail:not(.hm-yoga-rail):not(:has(> :nth-child(6))) :is(.hm-pose__media, .hm-meal__media) {
     aspect-ratio: 16 / 9;
     height: auto;
     max-height: 220px;

@@ -194,6 +194,57 @@
   transform: scale(0.97);
 }
 
+.do-card--no-media {
+  background:
+    radial-gradient(90% 70% at 100% 0%, rgba(228, 196, 122, 0.34), transparent 58%),
+    linear-gradient(165deg, #fffdf8 0%, #f4efe3 100%);
+  border-color: rgba(201, 165, 90, 0.5);
+}
+
+.do-card--no-media .do-card__hit {
+  gap: 8px;
+  padding-top: 18px;
+}
+
+.do-card--no-media .do-card__rule {
+  display: block;
+  width: 42px;
+  height: 3px;
+  margin: 0 16px 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #c9a55a, #0d614e);
+}
+
+.do-card--no-media .do-card__flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 16px;
+}
+
+.do-card--no-media .do-card__badge,
+.do-card--no-media .do-card__off {
+  position: static;
+  box-shadow: none;
+}
+
+.do-card--no-media .do-card__group {
+  color: #8a6a32;
+  font-weight: 700;
+}
+
+.do-card--no-media h3 {
+  font-family: var(--am-font-display);
+  font-size: 1.2rem;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.do-card--no-media .do-card__price {
+  margin-top: auto;
+  padding-top: 8px;
+}
+
 .do-card--lab .do-card__book,
 .do-card--therapy .do-card__book {
   border: 1px solid var(--am-primary);

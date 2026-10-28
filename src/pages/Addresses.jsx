@@ -14,8 +14,7 @@ import {
   Button,
   Disclaimer,
   EmptyState,
-  Skeleton,
-  SkeletonText,
+  SectionHold,
 } from '../components/ui';
 import { PROFILE_COPY as T } from '../content/profile';
 import '../design/pages/profile.css';
@@ -117,10 +116,7 @@ export default function Addresses() {
         </button>
 
         {loading ? (
-          <div className="pf-skel" aria-busy="true" aria-label={T.loadingAddresses}>
-            <Skeleton style={{ height: 120, borderRadius: 'var(--am-radius-lg)' }} />
-            <SkeletonText lines={3} />
-          </div>
+          <SectionHold label={T.loadingAddresses} minHeight={220} />
         ) : items.length === 0 ? (
           <EmptyState
             title={T.emptyAddressesTitle}

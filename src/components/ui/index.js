@@ -22,6 +22,7 @@ export { default as Tile, TileGrid } from './Tile';
 export { default as ConcernCarousel } from './ConcernCarousel';
 export { default as Skeleton, SkeletonCard, SkeletonGrid, SkeletonText } from './Skeleton';
 export { default as LogoSpinner } from './LogoSpinner';
+export { default as SectionHold } from './SectionHold';
 export { default as AdvanceLoad } from './AdvanceLoad';
 export { default as StepIndicator } from './StepIndicator';
 export { default as Tabs } from './Tabs';

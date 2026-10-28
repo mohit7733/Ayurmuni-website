@@ -17,7 +17,7 @@ import { deleteAccount, update_Profile, UploadProfilePhoto } from '../services/p
 import useProfileDashboardStats from '../hooks/useProfileDashboardStats';
 import { LOGGED_OUT_STATS, buildPhotoOptions, buildProfilePayload } from '../profile/dashboardStats';
 import { useLocation as useDeliveryLocation } from '../context/LocationContext';
-import { Button, Disclaimer, Modal, Skeleton, SkeletonText, LogoSpinner } from '../components/ui';
+import { Button, Disclaimer, Modal, SectionHold } from '../components/ui';
 import {
   PROFILE_ACCOUNT,
   PROFILE_COPY as T,
@@ -170,12 +170,8 @@ export default function Profile() {
     return (
       <AppShell tab="profile">
         <section className="pf-page" aria-busy="true" aria-label={T.loading}>
-          <LogoSpinner scale="page" label={T.loading} />
           <PageHeader title={T.title} subtitle={T.subtitle} hideBack />
-          <div className="pf-skel">
-            <Skeleton style={{ height: 96, borderRadius: 'var(--am-radius-xl)' }} />
-            <SkeletonText lines={4} />
-          </div>
+          <SectionHold label={T.loading} minHeight={320} scale="page" />
         </section>
       </AppShell>
     );

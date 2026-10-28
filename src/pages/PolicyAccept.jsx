@@ -9,7 +9,7 @@ import {
   getRequiredPolicies,
 } from '../services/policyService';
 import { getPolicyDoc, isPolicyAccepted } from '../utils/policyUtils';
-import { Button, Disclaimer, EmptyState, Skeleton, SkeletonText } from '../components/ui';
+import { Button, Disclaimer, EmptyState, SectionHold } from '../components/ui';
 import { AUTH_COPY as T } from '../content/auth';
 import '../design/pages/auth.css';
 
@@ -126,10 +126,7 @@ export default function PolicyAccept() {
       </header>
 
       {loading ? (
-        <div aria-busy="true" aria-label={T.policyLoading}>
-          <SkeletonText lines={2} />
-          <Skeleton style={{ height: 160, borderRadius: 'var(--am-radius-lg)', marginTop: 16 }} />
-        </div>
+        <SectionHold label={T.policyLoading} minHeight={240} />
       ) : (
         <>
           <p className="au-policy__intro">{T.policyIntro}</p>

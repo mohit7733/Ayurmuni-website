@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Calendar, Check, CheckCircle2, Clock, ShieldCheck } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import AppShell from "../components/AppShell";
-import { Button, EmptyState, ErrorState } from "../components/ui";
+import { Button, EmptyState, ErrorState, SectionHold } from "../components/ui";
 import { formatRupee } from "../home/catalog";
 import PlanTransferModal from "../components/PlanTransferModal";
 import usePackagePurchase from "../hooks/usePackagePurchase";
@@ -91,7 +91,7 @@ export default function PackageDetails() {
           </div>
         </header>
 
-        {loading ? <div className="pd-skeleton" aria-busy="true" aria-label="Loading package" /> : null}
+        {loading ? <SectionHold label="Loading package" minHeight={320} /> : null}
 
         {!loading && needsLogin ? (
           <EmptyState

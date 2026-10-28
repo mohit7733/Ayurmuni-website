@@ -5,7 +5,7 @@ import PageHeader from '../components/PageHeader';
 import { Utils } from '../common/utils';
 import { showSuccessToast } from '../config/key';
 import { requireAuth } from '../services/guestAuth';
-import { Disclaimer, Skeleton, SkeletonText } from '../components/ui';
+import { Disclaimer, SectionHold } from '../components/ui';
 import '../design/pages/notification-settings.css';
 
 const NOTIFICATION_TYPES = [
@@ -164,12 +164,7 @@ export default function NotificationSettings() {
             subtitle="Manage your notification preferences"
             backTo="/settings"
           />
-          <div className="ns-skel">
-            <Skeleton style={{ height: 80, borderRadius: 'var(--am-radius-lg)' }} />
-            <Skeleton style={{ height: 80, borderRadius: 'var(--am-radius-lg)' }} />
-            <Skeleton style={{ height: 80, borderRadius: 'var(--am-radius-lg)' }} />
-            <SkeletonText lines={2} />
-          </div>
+          <SectionHold label="Loading notification settings" minHeight={280} />
         </section>
       </AppShell>
     );

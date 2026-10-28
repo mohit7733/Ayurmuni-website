@@ -28,8 +28,7 @@ import {
   EmptyState,
   Input,
   Modal,
-  Skeleton,
-  LogoSpinner,
+  SectionHold,
 } from '../components/ui';
 import { REWARDS_COPY as T, REWARD_THEMES } from '../content/rewards';
 import '../design/pages/rewards.css';
@@ -167,12 +166,7 @@ export default function Rewards() {
         </div>
 
         {loading ? (
-          <div className="rw-skel" aria-busy="true" aria-label={T.loading}>
-            <LogoSpinner scale="section" label={T.loading} />
-            <Skeleton style={{ height: 160, borderRadius: 'var(--am-radius-lg)' }} />
-            <Skeleton style={{ height: 160, borderRadius: 'var(--am-radius-lg)' }} />
-            <Skeleton style={{ height: 160, borderRadius: 'var(--am-radius-lg)' }} />
-          </div>
+          <SectionHold label={T.loading} minHeight={280} />
         ) : isEmptyAll ? (
           <EmptyState
             icon={<Gift size={28} />}

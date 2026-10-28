@@ -1,8 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ChevronRight } from 'lucide-react';
 import { cx } from '../ui/cx';
-import { Skeleton, SkeletonText } from '../ui';
-import LogoSpinner from '../ui/LogoSpinner';
+import SectionHold from '../ui/SectionHold';
 import '../../design/detail.css';
 
 export function DetailPage({ className, children }) {
@@ -311,23 +310,8 @@ export function ActionStack({ children }) {
   return <div className="dx-actions">{children}</div>;
 }
 
-export function DetailSkeleton({ media = true, label = 'Loading' }) {
-  return (
-    <div className="dx-skeleton" role="status" aria-live="polite">
-      <LogoSpinner scale="feature" label={label} />
-      <div className={cx('dx-hero', media && 'has-media')}>
-        {media ? <Skeleton variant="rect" className="dx-hero__media" /> : null}
-        <div className="dx-hero__body">
-          <Skeleton width="30%" />
-          <Skeleton width="70%" height={28} />
-          <SkeletonText lines={3} />
-        </div>
-      </div>
-      <div className="dx-card">
-        <SkeletonText lines={4} />
-      </div>
-    </div>
-  );
+export function DetailSkeleton({ label = 'Loading' }) {
+  return <SectionHold label={label} minHeight={360} />;
 }
 
 export function DetailEmpty({ icon: Icon, title, text, action }) {

@@ -9,7 +9,7 @@ import { useIdleReady } from '../../hooks/useLazySection';
 import useLoggedIn from '../../hooks/useLoggedIn';
 import ChatConversation from './ChatConversation';
 import ThreadAvatar from './ThreadAvatar';
-import Skeleton from '../ui/Skeleton';
+import SectionHold from '../ui/SectionHold';
 import '../../design/pages/chat-inbox.css';
 import '../../design/components/chat-launcher.css';
 
@@ -165,15 +165,7 @@ export default function ChatLauncher() {
 
               <div className="ci-pop__body">
                 {loading ? (
-                  Array.from({ length: 4 }, (_, i) => (
-                    <div key={i} className="ci-row is-skeleton" aria-hidden>
-                      <Skeleton variant="circle" width={44} height={44} />
-                      <div className="ci-row__body">
-                        <Skeleton width="55%" />
-                        <Skeleton width="85%" />
-                      </div>
-                    </div>
-                  ))
+                  <SectionHold label="Loading conversations" minHeight={220} scale="section" />
                 ) : threads.length === 0 ? (
                   <div className="ci-pop__empty">
                     <MessageCircle size={32} aria-hidden />

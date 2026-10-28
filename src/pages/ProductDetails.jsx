@@ -61,8 +61,7 @@ import {
   Modal,
   ReviewCard,
   SectionHeader,
-  Skeleton,
-  SkeletonText,
+  SectionHold,
 } from '../components/ui';
 import { PRODUCT_DETAIL_COPY as T } from '../content/productDetail';
 import '../design/pages/product-detail.css';
@@ -422,10 +421,7 @@ export default function ProductDetails({ medicine = false } = {}) {
             <span />
             {cartAction}
           </div>
-          <div className="pd-skel">
-            <Skeleton className="pd-skel-gallery" />
-            <SkeletonText lines={4} />
-          </div>
+          <SectionHold label={T.loading} minHeight={420} />
         </section>
       </AppShell>
     );

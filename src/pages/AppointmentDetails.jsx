@@ -27,7 +27,7 @@ import ShareButton from '../components/ShareButton';
 import DietitianBadge from '../components/DietitianBadge';
 import PaymentHistoryTimeline from '../components/PaymentHistoryTimeline';
 import { getPaymentHistory } from '../utils/paymentHistoryUtils';
-import { Button, Chip, Modal, SkeletonText, Textarea } from '../components/ui';
+import { Button, Chip, Modal, SectionHold, Textarea } from '../components/ui';
 import {
   DetailCard,
   DetailEmpty,
@@ -882,7 +882,7 @@ export default function AppointmentDetails() {
             ))}
           </div>
           {slotsLoading ? (
-            <SkeletonText lines={2} />
+            <SectionHold label="Loading slots" minHeight={140} scale="section" />
           ) : (
             (() => {
               const open = slots.filter((slot) => isSlotBookable(slot, slotDate));

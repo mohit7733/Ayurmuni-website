@@ -14,8 +14,7 @@ import {
   Button,
   Disclaimer,
   EmptyState,
-  Skeleton,
-  SkeletonText,
+  SectionHold,
 } from "../components/ui";
 import { STATIC_COPY as T } from "../content/static";
 import "../design/pages/static.css";
@@ -123,16 +122,7 @@ export default function PolicyDetail() {
       <PageHeader eyebrow="Policy document" onBack={handleBack} />
 
       {loading ? (
-        <div aria-busy="true" aria-label={T.policyLoading}>
-          <SkeletonText lines={2} />
-          <Skeleton
-            style={{
-              height: 200,
-              borderRadius: "var(--am-radius-lg)",
-              marginTop: 16,
-            }}
-          />
-        </div>
+        <SectionHold label={T.policyLoading} minHeight={280} />
       ) : error ? (
         <EmptyState
           title={error}

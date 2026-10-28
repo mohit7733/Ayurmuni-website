@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { formatRupee } from '../home/catalog';
 
 const CTA = {
@@ -7,6 +8,9 @@ const CTA = {
 };
 
 export default function DummyOfferCard({ item, kind = 'lab', onClick, cta }) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const image = String(item.image || '').trim();
+  const showImage = Boolean(image) && !imageFailed;
   const off =
     item.mrp && item.mrp > item.price
       ? Math.round(((item.mrp - item.price) / item.mrp) * 100)
@@ -23,15 +27,32 @@ export default function DummyOfferCard({ item, kind = 'lab', onClick, cta }) {
         ? item.description
         : item.tests;
   const group = kind === 'therapy' ? item.duration : item.group;
+  const flags = (
+    <>
+      {badge ? <span className="do-card__badge">{badge}</span> : null}
+      {off > 0 ? <span className="do-card__off">{off}% OFF</span> : null}
+    </>
+  );
 
   return (
-    <article className={`do-card do-card--${kind}`}>
+    <article className={`do-card do-card--${kind}${showImage ? '' : ' do-card--no-media'}`}>
       <button type="button" className="do-card__hit" onClick={onClick} aria-label={item.name}>
-        <div className="do-card__img">
-          {item.image ? <img src={item.image} alt="" loading="lazy" decoding="async" /> : null}
-          {badge ? <span className="do-card__badge">{badge}</span> : null}
-          {off > 0 ? <span className="do-card__off">{off}% OFF</span> : null}
-        </div>
+        {showImage ? (
+          <div className="do-card__img">
+            <img
+              src={image}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              onError={() => setImageFailed(true)}
+            />
+            {flags}
+          </div>
+        ) : badge || off > 0 ? (
+          <div className="do-card__flags">{flags}</div>
+        ) : (
+          <span className="do-card__rule" aria-hidden />
+        )}
         {group ? <p className="do-card__group">{group}</p> : null}
         <h3>{item.name}</h3>
         {meta ? <p className="do-card__meta">{meta}</p> : null}
@@ -46,3 +67,4 @@ export default function DummyOfferCard({ item, kind = 'lab', onClick, cta }) {
     </article>
   );
 }
+

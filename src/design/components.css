@@ -276,6 +276,20 @@
 .am-load--page {
   min-height: 68vh;
 }
+.am-hold {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.am-hold > .am-logo-spin {
+  position: static;
+  left: auto;
+  top: auto;
+  transform: none;
+}
 .am-logo-spin {
   --seal: 92px;
   position: relative;
@@ -2063,7 +2077,18 @@
   outline-offset: -4px;
 }
 
-/* ----- Skeleton ----- */
+/* ----- Waiting for banner data: seal only, no coverflow cards ----- */
+.am-banner--hold {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 180px;
+  overflow: hidden;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
 .am-banner--loading { padding-bottom: 12px; }
 .am-banner__skeleton {
   background: var(--am-surface-muted);

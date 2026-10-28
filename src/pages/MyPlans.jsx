@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import PageHeader from '../components/PageHeader';
-import { Button, Chip, EmptyState, ErrorState, SearchField, Skeleton } from '../components/ui';
+import { Button, Chip, EmptyState, ErrorState, SearchField, SectionHold } from '../components/ui';
 import { formatRupee } from '../home/catalog';
 import { requireAuth } from '../services/guestAuth';
 import { getMyPackages, isPlanExpired } from '../services/packageService';
@@ -339,10 +339,7 @@ export default function MyPlans() {
         </div>
 
         {loading ? (
-          <div className="or-skel" aria-busy="true" aria-label="Loading plans">
-            <Skeleton style={{ height: 150, borderRadius: 'var(--am-radius-lg)' }} />
-            <Skeleton style={{ height: 150, borderRadius: 'var(--am-radius-lg)' }} />
-          </div>
+          <SectionHold label="Loading plans" minHeight={280} />
         ) : !authed ? (
           <EmptyState
             icon={<Award size={28} />}

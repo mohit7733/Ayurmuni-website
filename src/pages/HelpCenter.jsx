@@ -10,8 +10,7 @@ import {
   Disclaimer,
   EmptyState,
   SearchField,
-  Skeleton,
-  SkeletonText,
+  SectionHold,
 } from '../components/ui';
 import { STATIC_COPY as T } from '../content/static';
 import '../design/pages/static.css';
@@ -87,11 +86,7 @@ export default function HelpCenter() {
         </div>
 
         {loading ? (
-          <div className="sx-help-loading" aria-busy="true" aria-label={T.faqLoading}>
-            <Skeleton style={{ height: 72, borderRadius: 'var(--am-radius-lg)' }} />
-            <Skeleton style={{ height: 72, borderRadius: 'var(--am-radius-lg)' }} />
-            <SkeletonText lines={2} />
-          </div>
+          <SectionHold label={T.faqLoading} minHeight={220} />
         ) : filtered.length === 0 ? (
           <EmptyState
             icon={<HelpCircle size={28} />}

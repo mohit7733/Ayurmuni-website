@@ -5,7 +5,7 @@ import AppShell from '../components/AppShell';
 import PageHeader from '../components/PageHeader';
 import ChatConversation from '../components/chat/ChatConversation';
 import ThreadAvatar from '../components/chat/ThreadAvatar';
-import { Button, EmptyState, Skeleton } from '../components/ui';
+import { Button, EmptyState, SectionHold } from '../components/ui';
 import { formatListTime, previewText } from '../chat/inboxFormat';
 import { formatDoctorDisplayName } from '../consult/appointmentUtils';
 import { useChatInbox } from '../hooks/useChatInbox';
@@ -30,18 +30,6 @@ function useIsDesktop() {
     return () => media.removeEventListener('change', onChange);
   }, []);
   return isDesktop;
-}
-
-function ThreadSkeleton() {
-  return (
-    <div className="ci-row is-skeleton" aria-hidden>
-      <Skeleton variant="circle" width={48} height={48} />
-      <div className="ci-row__body">
-        <Skeleton width="55%" />
-        <Skeleton width="85%" />
-      </div>
-    </div>
-  );
 }
 
 export default function ChatInbox() {
@@ -94,11 +82,7 @@ export default function ChatInbox() {
   const renderList = () => {
     if (loading) {
       return (
-        <div className="ci-list" role="status" aria-label="Loading conversations">
-          {Array.from({ length: 5 }, (_, i) => (
-            <ThreadSkeleton key={i} />
-          ))}
-        </div>
+        <SectionHold label="Loading conversations" minHeight={280} />
       );
     }
     if (error && !threads.length) {

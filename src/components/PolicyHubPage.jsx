@@ -5,7 +5,7 @@ import PageHeader from './PageHeader';
 import PolicyHubList from './PolicyHubList';
 import { getPoliciesList, getPoliciesForViewer } from '../services/policyService';
 import { getPolicyDoc } from '../utils/policyUtils';
-import { Disclaimer, Skeleton, SkeletonText } from './ui';
+import { Disclaimer, SectionHold } from './ui';
 import { STATIC_COPY as T } from '../content/static';
 import '../design/pages/static.css';
 
@@ -65,10 +65,7 @@ export default function PolicyHubPage({
           onBack={() => navigate(-1)}
         />
         {loading ? (
-          <div aria-busy="true" aria-label={T.hubLoading}>
-            <SkeletonText lines={2} />
-            <Skeleton style={{ height: 160, borderRadius: 'var(--am-radius-lg)', marginTop: 16 }} />
-          </div>
+          <SectionHold label={T.hubLoading} minHeight={240} />
         ) : (
           <PolicyHubList
             policies={policies}

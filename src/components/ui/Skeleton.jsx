@@ -1,5 +1,5 @@
 import { cx } from './cx';
-import LogoSpinner from './LogoSpinner';
+import SectionHold from './SectionHold';
 
 export default function Skeleton({ variant = 'text', width, height, className }) {
   const style = {};
@@ -29,13 +29,6 @@ export function SkeletonCard({ variant = 'product' }) {
   );
 }
 
-export function SkeletonGrid({ count = 4, variant = 'product', label = 'Loading', className }) {
-  return (
-    <div className={cx('am-skeleton-grid', 'am-skeleton-grid--loading', className)} role="status" aria-live="polite">
-      <LogoSpinner scale="feature" label={label} />
-      {Array.from({ length: count }, (_, i) => (
-        <SkeletonCard key={i} variant={variant} />
-      ))}
-    </div>
-  );
+export function SkeletonGrid({ label = 'Loading' }) {
+  return <SectionHold label={label} minHeight={280} />;
 }

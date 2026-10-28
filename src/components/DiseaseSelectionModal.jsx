@@ -8,7 +8,7 @@ import { Utils } from '../common/utils';
 import { showSuccessToast } from '../config/key';
 import EmptyState from './ui/EmptyState';
 import Modal from './ui/Modal';
-import Skeleton from './ui/Skeleton';
+import SectionHold from './ui/SectionHold';
 import '../design/personalize-modal.css';
 
 export default function DiseaseSelectionModal({
@@ -175,11 +175,7 @@ export default function DiseaseSelectionModal({
 
           <div className="pz-body">
             {loading ? (
-              <div className="pz-chips" aria-busy="true">
-                {Array.from({ length: 12 }, (_, i) => (
-                  <Skeleton key={i} variant="rect" height={44} width={100 + ((i * 37) % 70)} className="pz-skel" />
-                ))}
-              </div>
+              <SectionHold label="Loading concerns" minHeight={180} scale="section" />
             ) : options.length === 0 ? (
               <EmptyState compact icon={<Leaf size={24} />} title="No health concerns found" />
             ) : filtered.length === 0 ? (

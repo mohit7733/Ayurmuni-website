@@ -64,9 +64,9 @@ import {
   Modal,
   Rail,
   RailItem,
-  RailSkeleton,
   Reveal,
   SectionHeader,
+  SectionHold,
   Tile,
   ConcernCarousel,
 } from '../components/ui';
@@ -112,6 +112,7 @@ const HERO_VIDEO = '/videos/hero-herbal-wellness.mp4';
 function HeroBackgroundVideo() {
   const videoRef = useRef(null);
   const [src, setSrc] = useState('');
+  const [ready, setReady] = useState(false);
   const [reduced] = useState(
     () => typeof window !== 'undefined' && Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches),
   );
@@ -126,6 +127,7 @@ function HeroBackgroundVideo() {
   }, []);
 
   useEffect(() => {
+    setReady(false);
     const video = videoRef.current;
     if (!video || !src) return;
     video.muted = true;
@@ -138,7 +140,7 @@ function HeroBackgroundVideo() {
       {src ? (
         <video
           ref={videoRef}
-          className="hm-hero__bg-video"
+          className={`hm-hero__bg-video${ready ? ' is-ready' : ''}`}
           src={reduced ? `${src}#t=0.1` : src}
           autoPlay={!reduced}
           muted
@@ -147,6 +149,7 @@ function HeroBackgroundVideo() {
           preload={reduced ? 'metadata' : 'auto'}
           disablePictureInPicture
           tabIndex={-1}
+          onCanPlay={() => setReady(true)}
         />
       ) : null}
     </div>
@@ -207,16 +210,7 @@ function CategoryRow({ items, renderItem }) {
         .join(' ')}
       aria-roledescription={carousel ? 'carousel' : undefined}
     >
-      {items.length
-        ? items.map((item) => renderItem(item))
-        : Array.from({ length: 7 }).map((_, index) => (
-            <li key={`service-skel-${index}`}>
-              <div className="hm-service is-skeleton" aria-hidden>
-                <span className="hm-service__tile" />
-                <span className="hm-service__label" />
-              </div>
-            </li>
-          ))}
+      {items.map((item) => renderItem(item))}
     </ul>
   );
 }
@@ -345,8 +339,8 @@ function YogaSessionCard({ item, onClick }) {
   const duration = shortLabel(item.duration);
 
   return (
-    <article className="hm-pose">
-      <div className="hm-pose__media">
+    <button type="button" className="hm-pose" onClick={onClick}>
+      <span className="hm-pose__media">
         {item.thumbnail_url ? (
           <img src={item.thumbnail_url} alt="" loading="lazy" decoding="async" />
         ) : (
@@ -356,16 +350,12 @@ function YogaSessionCard({ item, onClick }) {
           <Play size={16} fill="currentColor" />
         </span>
         {level ? <span className="hm-pose__level">{level}</span> : null}
-      </div>
-      <div className="hm-pose__copy">
-        <h3>
-          <button type="button" className="am-stretched" onClick={onClick}>
-            {item.title}
-          </button>
-        </h3>
-        {duration ? <p>{duration}</p> : null}
-      </div>
-    </article>
+      </span>
+      <span className="hm-pose__copy">
+        <span className="hm-pose__title">{item.title}</span>
+        {duration ? <span className="hm-pose__time">{duration}</span> : null}
+      </span>
+    </button>
   );
 }
 
@@ -840,7 +830,11 @@ export default function Home() {
             <h2 id="hm-services-title" className="am-sr-only">
               {T.servicesTitle}
             </h2>
-            <CategoryRow items={serviceList} renderItem={renderServiceItem} />
+            {loading && serviceList.length === 0 ? (
+              <SectionHold label={T.servicesTitle} minHeight={140} scale="section" />
+            ) : (
+              <CategoryRow items={serviceList} renderItem={renderServiceItem} />
+            )}
           </section>
 
           {/* Upcoming appointment + active diet plan share one row (stacks on mobile). */}
@@ -865,7 +859,7 @@ export default function Home() {
           </div>
           ) : null}
 
-          <LazyBlock blockRef={concernsRef} done={isSectionDone('concerns')} minHeight={240} skeleton={<RailSkeleton />}>
+          <LazyBlock blockRef={concernsRef} done={isSectionDone('concerns')} minHeight={120} skeleton={<SectionHold label={T.concernsTitle} minHeight={120} scale="section" />}>
           {healthConcerns.length > 0 ? (
             <Reveal as="section" className="hm-section hm-panel hm-concerns-panel" aria-labelledby="hm-concerns-title">
               <SectionHeader
@@ -897,7 +891,7 @@ export default function Home() {
           ) : null}
           </LazyBlock>
 
-          <LazyBlock blockRef={ourDocsRef} done={ourDoctorsDone} minHeight={320} skeleton={<RailSkeleton variant="doctor" />}>
+          <LazyBlock blockRef={ourDocsRef} done={ourDoctorsDone} minHeight={120} skeleton={<SectionHold label="Our doctors" minHeight={120} scale="section" />}>
           {ourDoctors.length > 0 ? (
             <Reveal as="section" className="hm-section hm-panel hm-odocs" aria-labelledby="hm-odocs-title">
               <SectionHeader
@@ -925,7 +919,7 @@ export default function Home() {
           ) : null}
           </LazyBlock>
 
-          <LazyBlock blockRef={brandsRef} done={brandsSeen && !brandsLoading} minHeight={180} skeleton={<RailSkeleton />}>
+          <LazyBlock blockRef={brandsRef} done={brandsSeen && !brandsLoading} minHeight={120} skeleton={<SectionHold label={T.brandsTitle} minHeight={120} scale="section" />}>
           {brands.length > 0 ? (
             <Reveal as="section" className="hm-section hm-panel hm-brands-panel" aria-labelledby="hm-brands-title">
               <SectionHeader
@@ -966,7 +960,7 @@ export default function Home() {
                     description={T.visitedText}
                     onViewAll={() => navigate('/consult')}
                   />
-                  <RailSkeleton variant="doctor" />
+                  <SectionHold label={T.visitedTitle} minHeight={120} scale="section" />
                 </section>
               ) : null}
 
@@ -995,7 +989,7 @@ export default function Home() {
                     description={T.doctorsText}
                     onViewAll={() => navigate('/consult/doctors')}
                   />
-                  <RailSkeleton variant="doctor" />
+                  <SectionHold label={T.doctorsTitle} minHeight={120} scale="section" />
                 </section>
               ) : null}
 
@@ -1015,7 +1009,7 @@ export default function Home() {
           ) : null}
           </LazyBlock>
 
-          <LazyBlock blockRef={productsRef} done={isSectionDone('products')} minHeight={420} skeleton={<div className="hm-product-row hm-product-grid"><section className="hm-section hm-products" aria-busy="true"><DoctorRailHeader title={T.medicinesTitle} onViewAll={() => navigate('/medicines')} /><RailSkeleton /></section><section className="hm-section hm-products" aria-busy="true"><DoctorRailHeader title={T.productsTitle} onViewAll={() => navigate('/products')} /><RailSkeleton /></section></div>}>
+          <LazyBlock blockRef={productsRef} done={isSectionDone('products')} minHeight={140} skeleton={<SectionHold label={T.productsTitle} minHeight={140} scale="section" />}>
           {productPanels.length ? (
             <div className="hm-product-row hm-product-grid">
               {productPanels.map((panel) => (
@@ -1038,7 +1032,7 @@ export default function Home() {
           ) : null}
           </LazyBlock>
 
-          <LazyBlock blockRef={wellnessRef} done={isSectionDone('yoga') && isSectionDone('diet')} minHeight={360} skeleton={<section className="hm-section hm-panel" aria-busy="true"><RailSkeleton /></section>}>
+          <LazyBlock blockRef={wellnessRef} done={isSectionDone('yoga') && isSectionDone('diet')} minHeight={140} skeleton={<SectionHold label={T.yogaTitle} minHeight={140} scale="section" />}>
 
           {yogaSessions.length > 0 || dietProducts.length > 0 ? (
             <div

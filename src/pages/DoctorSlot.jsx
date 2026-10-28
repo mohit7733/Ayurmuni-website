@@ -52,7 +52,7 @@ import {
   Disclaimer,
   EmptyState,
   IconButton,
-  Skeleton,
+  SectionHold,
   StepIndicator,
   Textarea,
 } from '../components/ui';
@@ -386,12 +386,7 @@ export default function DoctorSlot() {
               </div>
 
               {loading ? (
-                <div className="bk-slot-grid" aria-busy="true">
-                  {Array.from({ length: 8 }, (_, i) => (
-                    <Skeleton key={i} variant="rect" height={44} />
-                  ))}
-                  <span className="am-sr-only">{T.loadingSlots}</span>
-                </div>
+                <SectionHold label={T.loadingSlots} minHeight={180} scale="section" />
               ) : grouped.length === 0 ? (
                 <EmptyState
                   compact

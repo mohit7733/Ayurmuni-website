@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
-import LogoSpinner from './LogoSpinner';
-import { SkeletonCard } from './Skeleton';
+import SectionHold from './SectionHold';
 import { cx } from './cx';
 
 export default function Rail({ label, className, children, auto = false, interval = 3200, motionOverride = false }) {
@@ -47,7 +46,7 @@ export default function Rail({ label, className, children, auto = false, interva
       visible = Boolean(entry?.isIntersecting);
       if (visible) start();
       else stop();
-    }, { threshold: 0.35 });
+    }, { threshold: 0.05 });
     observer.observe(el);
 
     const onHide = () => {
@@ -106,17 +105,6 @@ export function RailItem({ size, className, children }) {
   return <li className={cx('am-rail__item', size && `am-rail__item--${size}`, className)}>{children}</li>;
 }
 
-export function RailSkeleton({ count = 4, variant = 'product', size, label = 'Loading' }) {
-  return (
-    <div className="am-rail-wrap" role="status">
-      <LogoSpinner scale="compact" label={label} />
-      <div className="am-rail" aria-hidden>
-        {Array.from({ length: count }, (_, index) => (
-          <div key={index} className={cx('am-rail__item', size && `am-rail__item--${size}`)}>
-            <SkeletonCard variant={variant} />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+export function RailSkeleton({ label = 'Loading' }) {
+  return <SectionHold label={label} minHeight={200} />;
 }

@@ -31,9 +31,7 @@ import {
   Disclaimer,
   EmptyState,
   SearchField,
-  Skeleton,
-  SkeletonText,
-  LogoSpinner,
+  SectionHold,
   Tabs,
 } from '../components/ui';
 import {
@@ -182,12 +180,7 @@ export default function OrderHistory() {
             </div>
 
             {loading ? (
-              <div className="or-skel" aria-busy="true" aria-label={T.loading}>
-                <LogoSpinner scale="section" label={T.loading} />
-                <Skeleton style={{ height: 88, borderRadius: 'var(--am-radius-lg)' }} />
-                <Skeleton style={{ height: 88, borderRadius: 'var(--am-radius-lg)' }} />
-                <SkeletonText lines={2} />
-              </div>
+              <SectionHold label={T.loading} minHeight={240} />
             ) : list.length === 0 ? (
               <EmptyState
                 icon={<Package size={28} />}
@@ -254,11 +247,7 @@ export default function OrderHistory() {
               </div>
             </div>
             {returnsLoading && !returnsLoaded ? (
-              <div className="or-skel" aria-busy="true">
-                <LogoSpinner scale="section" label="Loading" />
-                <Skeleton style={{ height: 88, borderRadius: 'var(--am-radius-lg)' }} />
-                <SkeletonText lines={2} />
-              </div>
+              <SectionHold label="Loading returns" minHeight={220} />
             ) : returnList.length === 0 ? (
               <EmptyState
                 icon={<RefreshCw size={28} />}
@@ -299,11 +288,7 @@ export default function OrderHistory() {
             )}
           </>
         ) : requestsLoading ? (
-          <div className="or-skel" aria-busy="true">
-            <LogoSpinner scale="section" label="Loading requests" />
-            <Skeleton style={{ height: 88, borderRadius: 'var(--am-radius-lg)' }} />
-            <SkeletonText lines={2} />
-          </div>
+          <SectionHold label="Loading requests" minHeight={220} />
         ) : requests.length === 0 ? (
           <EmptyState
             icon={<FileText size={28} />}

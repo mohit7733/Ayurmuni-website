@@ -32,7 +32,7 @@ import {
   SearchField,
   searchSuggestions,
   SectionHeader,
-  Skeleton,
+  SectionHold,
   SkeletonGrid,
 } from '../components/ui';
 import { CONSULT_COPY as T } from '../content/consult';
@@ -314,11 +314,7 @@ export default function CategoryDoctor() {
               {T.conditions}
             </h2>
             {diseasesLoading && diseases.length === 0 ? (
-              <div className="cs-chip-row" aria-hidden>
-                {Array.from({ length: 5 }, (_, i) => (
-                  <Skeleton key={i} variant="rect" width={96} height={40} />
-                ))}
-              </div>
+              <SectionHold label={T.conditions} minHeight={88} scale="section" />
             ) : (
               <div className="cs-chip-row">
                 <Chip selected={!selectedDiseaseId} onClick={() => setSelectedDiseaseId(null)}>
