@@ -1,242 +1,559 @@
+/* =========================================
+   PRAKRITI PROFILE — VISUAL ENHANCEMENTS
+   Ayurmuni brand: #0d614e
+========================================= */
+
+/* ---------- Page background ---------- */
+
 .prakriti-page {
-  min-height: 100vh;
-  padding: clamp(var(--am-space-4), 3vw, var(--am-space-7)) 0 var(--am-space-8);
+  --prakriti-brand: #0d614e;
+  --prakriti-brand-dark: #084638;
+  --prakriti-brand-light: #e7f2ec;
+  --prakriti-text: #19382f;
+  --prakriti-muted: #687b72;
+  --prakriti-border: rgba(13, 97, 78, 0.12);
+
+  position: relative;
+  isolation: isolate;
+  min-height: 100%;
+  overflow: hidden;
+  color: var(--prakriti-text);
+
   background:
-    radial-gradient(ellipse at 8% 8%, rgba(73, 155, 129, 0.1), transparent 32rem),
-    radial-gradient(ellipse at 92% 22%, rgba(114, 148, 194, 0.09), transparent 38rem),
-    linear-gradient(145deg, #f7faf8 0%, #eef4f2 52%, #eff3f8 100%);
+    radial-gradient(
+      ellipse at 8% 8%,
+      rgba(174, 214, 184, 0.3),
+      transparent 34%
+    ),
+    radial-gradient(
+      ellipse at 95% 24%,
+      rgba(231, 183, 115, 0.17),
+      transparent 30%
+    ),
+    radial-gradient(
+      ellipse at 55% 100%,
+      rgba(13, 97, 78, 0.08),
+      transparent 42%
+    ),
+    linear-gradient(145deg, #f8fbf7 0%, #f2f7f1 48%, #fbf8f1 100%);
 }
+
+/* Soft ambient light in the background */
+
+.prakriti-page::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 100px;
+  left: -130px;
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  pointer-events: none;
+
+  background: rgba(111, 177, 139, 0.12);
+  filter: blur(75px);
+
+  animation: prakritiGlow 12s ease-in-out infinite alternate;
+}
+
+.prakriti-page::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  right: -140px;
+  top: 42%;
+  width: 350px;
+  height: 350px;
+  border-radius: 50%;
+  pointer-events: none;
+
+  background: rgba(231, 183, 115, 0.13);
+  filter: blur(85px);
+
+  animation: prakritiGlow 15s ease-in-out infinite alternate-reverse;
+}
+
+/* Keep actual page content above the ambient background */
+
+.prakriti-page > * {
+  position: relative;
+}
+
+/* ---------- Page header ---------- */
 
 .prakriti-page .prakriti-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--am-space-3);
-  width: var(--prakriti-w);
-  margin: 0 auto var(--am-space-5);
-  padding: var(--am-space-3) var(--am-space-4);
-  border: 1px solid color-mix(in srgb, var(--am-primary-tint) 72%, white);
-  border-radius: 18px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(242, 250, 245, 0.92));
-  box-shadow: 0 5px 16px rgba(16, 61, 48, 0.055);
+  position: relative;
+  z-index: 2;
+  gap: 16px;
 }
 
-.prakriti-page .prakriti-content {
-  gap: var(--am-space-6);
+.prakriti-page .prakriti-head h1 {
+  color: var(--prakriti-brand-dark);
+  letter-spacing: -0.035em;
+  line-height: 1.2;
 }
+
+.prakriti-page .onboard-back {
+  transition:
+    transform 220ms ease,
+    background-color 220ms ease,
+    box-shadow 220ms ease;
+}
+
+.prakriti-page .onboard-back:hover {
+  transform: translateX(-3px);
+}
+
+/* ---------- Main content spacing ---------- */
+
+.prakriti-page .prakriti-content {
+  position: relative;
+  z-index: 1;
+  gap: 24px;
+}
+
+.prakriti-page .prakriti-body {
+  gap: 22px;
+  align-content: start;
+}
+
+/* ---------- Shared card styling ---------- */
 
 .prakriti-page .prakriti-hero,
 .prakriti-page .dosha-card,
 .prakriti-page .essence-card,
-.prakriti-page .guide-card {
-  overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--am-primary-tint) 72%, white);
-  border-radius: 24px;
-  box-shadow: 0 7px 20px rgba(16, 61, 48, 0.07), 0 18px 36px rgba(16, 61, 48, 0.06);
+.prakriti-page .guide-card,
+.prakriti-page .secondary-row > * {
+  min-width: 0;
+  border-radius: 22px;
+  transition:
+    transform 280ms ease,
+    box-shadow 280ms ease,
+    border-color 280ms ease;
 }
+
+/* Staggered entrance animation */
 
 .prakriti-page .prakriti-hero {
-  background:
-    radial-gradient(70% 90% at 100% 0%, rgba(255, 210, 143, 0.35), transparent 62%),
-    linear-gradient(145deg, #eaf7ef, #fff 82%);
-}
-
-.prakriti-page .prakriti-content > .prakriti-hero,
-.prakriti-page .prakriti-content > .dosha-card,
-.prakriti-page .prakriti-content > .essence-card,
-.prakriti-page .prakriti-content > .guide-card {
-  box-sizing: border-box;
-  min-width: 0;
-  padding: clamp(var(--am-space-5), 2.5vw, var(--am-space-7));
-}
-
-.prakriti-page .prakriti-hero,
-.prakriti-page .prakriti-hero :is(.hero-badge, .hero-copy, .hero-copy small, .hero-copy h2, .hero-copy p, .hero-meta span) {
-  color: var(--am-text);
-}
-
-.prakriti-page .prakriti-hero .hero-badge {
-  width: fit-content;
-  padding: 7px 12px;
-  border-color: color-mix(in srgb, var(--am-primary) 18%, white);
-  border-radius: var(--am-radius-pill);
-  background: rgba(255, 255, 255, 0.72);
-}
-
-.prakriti-page .prakriti-hero .hero-copy small {
-  color: var(--am-text-muted);
-}
-
-.prakriti-page .prakriti-hero .hero-copy p {
-  line-height: 1.65;
-}
-
-.prakriti-page .prakriti-hero .hero-meta {
-  gap: var(--am-space-2);
-  margin-top: var(--am-space-4);
-}
-
-.prakriti-page .prakriti-hero .hero-meta span {
-  padding: 8px 12px;
-  border-color: color-mix(in srgb, var(--am-primary-tint) 70%, white);
-  background: rgba(255, 255, 255, 0.68);
-}
-
-.prakriti-page .essence-card {
-  background:
-    radial-gradient(90% 100% at 100% 0%, rgba(211, 226, 255, 0.48), transparent 66%),
-    linear-gradient(145deg, #fff, #f2f7ff);
-  color: var(--am-text);
-}
-
-.prakriti-page .essence-card :is(small, h3, p) {
-  color: var(--am-text);
-}
-
-.prakriti-page .essence-card small {
-  margin-bottom: var(--am-space-2);
-  color: var(--am-primary);
-}
-
-.prakriti-page .essence-card h3 {
-  line-height: 1.3;
-}
-
-.prakriti-page .essence-card p {
-  color: var(--am-text-soft);
+  animation: prakritiEnter 650ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
 }
 
 .prakriti-page .dosha-card {
-  background:
-    radial-gradient(100% 90% at 100% 0%, rgba(255, 225, 181, 0.28), transparent 62%),
-    linear-gradient(145deg, #fff, #f8fbf8);
+  animation: prakritiEnter 650ms 100ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
 }
 
-.prakriti-page .prakriti-content > .dosha-card {
-  padding: var(--am-space-6);
-}
-
-.prakriti-page .dosha-card .section-headline {
-  align-items: flex-start;
-  flex-wrap: wrap;
-  margin-bottom: var(--am-space-5);
-}
-
-.prakriti-page .dosha-card .section-headline h3 {
-  color: var(--am-text);
-}
-
-.prakriti-page .dosha-card .meter {
-  min-width: 0;
-  padding-inline: var(--am-space-1);
+.prakriti-page .essence-card {
+  animation: prakritiEnter 650ms 180ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
 }
 
 .prakriti-page .guide-card.good {
-  background: linear-gradient(145deg, #edf8f0, #fff 88%);
+  animation: prakritiEnter 650ms 260ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
 }
 
 .prakriti-page .guide-card.caution {
-  background: linear-gradient(145deg, #fff5e8, #fff 88%);
+  animation: prakritiEnter 650ms 340ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
 }
 
-.prakriti-page .prakriti-hero,
-.prakriti-page .dosha-card,
-.prakriti-page .essence-card,
-.prakriti-page .guide-card {
-  padding: clamp(var(--am-space-5), 2.5vw, var(--am-space-7));
+.prakriti-page .secondary-row {
+  animation: prakritiEnter 650ms 400ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+}
+
+/* Gentle hover lift on larger screens */
+
+@media (hover: hover) and (pointer: fine) {
+  .prakriti-page .dosha-card:hover,
+  .prakriti-page .essence-card:hover,
+  .prakriti-page .guide-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 42px rgba(24, 66, 49, 0.1);
+  }
+}
+
+/* ---------- Hero card ---------- */
+
+.prakriti-page .prakriti-hero {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.prakriti-page .prakriti-hero::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+
+  background: linear-gradient(
+    115deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.1) 48%,
+    transparent 72%
+  );
+
+  transform: translateX(-100%);
+  animation: prakritiShimmer 1.4s 700ms ease-out both;
+}
+
+.prakriti-page .hero-main {
+  align-items: center;
+  gap: 24px;
 }
 
 .prakriti-page .hero-copy {
-  gap: var(--am-space-3);
+  min-width: 0;
+  text-align: left;
 }
 
-.prakriti-page .section-headline {
-  gap: var(--am-space-4);
-  margin-bottom: var(--am-space-5);
+.prakriti-page .hero-copy small {
+  display: inline-block;
+  margin-bottom: 10px;
+  line-height: 1.5;
 }
 
-.prakriti-page .meter {
-  gap: var(--am-space-3) var(--am-space-5);
-  margin-top: var(--am-space-5);
+.prakriti-page .hero-copy h2 {
+  margin-block: 0 12px;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
 }
 
-.prakriti-page .meter small {
-  margin-top: var(--am-space-1);
+.prakriti-page .hero-copy p {
+  margin: 0;
+  max-width: 60ch;
+  line-height: 1.75;
+  text-wrap: pretty;
+}
+
+.prakriti-page .hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  margin-top: 18px;
+}
+
+.prakriti-page .hero-badge {
+  width: fit-content;
+  max-width: 100%;
+}
+
+/* ---------- Dosha card ---------- */
+
+.prakriti-page .dosha-card {
+  text-align: left;
+}
+
+.prakriti-page .dosha-card .section-headline {
+  text-align: left;
+  margin-bottom: 22px;
+}
+
+.prakriti-page .dosha-card .meter {
+  flex-direction: column;
+  border-bottom: 1px solid var(--prakriti-border);
+}
+
+.prakriti-page .dosha-card .meter:last-child {
+  border-bottom: 0;
+}
+
+.prakriti-page .dosha-card .meter > div:first-child {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.prakriti-page .dosha-card .meter strong {
+  line-height: 1.4;
+}
+
+.prakriti-page .dosha-card .meter small {
+  color: var(--prakriti-muted);
+  line-height: 1.5;
+}
+
+.prakriti-page .dosha-card .meter b {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.prakriti-page .dosha-card .meter-track {
+  width: 100%;
+  height: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(13, 97, 78, 0.09);
+}
+
+.prakriti-page .dosha-card .meter-track i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  transform-origin: left center;
+  animation: prakritiMeterFill 1s 350ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+/* ---------- Essence card ---------- */
+
+.prakriti-page .essence-card {
+  text-align: left;
+}
+
+.prakriti-page .essence-card .section-headline {
+  text-align: left;
+  margin-bottom: 16px;
 }
 
 .prakriti-page .essence-card p {
-  margin-top: var(--am-space-4);
+  max-width: 62ch;
+  margin-block: 0 14px;
   line-height: 1.75;
+  text-wrap: pretty;
 }
 
-.prakriti-page .guide-card h3 {
-  margin: 0;
+.prakriti-page .essence-card p:last-child {
+  margin-bottom: 0;
 }
 
-.prakriti-page .guide-card ul {
-  display: grid;
-  gap: var(--am-space-2);
-  margin-top: var(--am-space-4);
+/* ---------- Lifestyle guide cards ---------- */
+
+.prakriti-page .guide-card {
+  text-align: left;
+}
+
+.prakriti-page .guide-card .section-headline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  margin-bottom: 18px;
+}
+
+.prakriti-page .guide-card p {
+  line-height: 1.7;
+}
+
+.prakriti-page .guide-card ul,
+.prakriti-page .guide-card ol {
+  padding-left: 22px;
+  margin-block: 12px 0;
 }
 
 .prakriti-page .guide-card li {
+  padding-left: 4px;
+  margin-bottom: 11px;
+  line-height: 1.7;
+  text-align: left;
+}
+
+.prakriti-page .guide-card li:last-child {
   margin-bottom: 0;
-  line-height: 1.65;
+}
+
+.prakriti-page .guide-card li::marker {
+  color: var(--prakriti-brand);
+}
+
+/* ---------- Section headings ---------- */
+
+.prakriti-page .section-headline {
+  color: var(--prakriti-brand-dark);
+  line-height: 1.35;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+/* ---------- Secondary actions ---------- */
+
+.prakriti-page .secondary-row {
+  gap: 14px;
+  align-items: stretch;
 }
 
 .prakriti-page .secondary-row > * {
-  border: 1px solid color-mix(in srgb, var(--am-primary-tint) 68%, white);
-  border-radius: 18px;
-  background: linear-gradient(145deg, #fff, #f4faf6);
-  box-shadow: 0 5px 14px rgba(16, 61, 48, 0.055);
+  min-width: 0;
 }
+
+.prakriti-page .cta {
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    background-color 220ms ease;
+}
+
+.prakriti-page .cta:hover {
+  transform: translateY(-2px);
+}
+
+.prakriti-page .cta:focus-visible,
+.prakriti-page .onboard-back:focus-visible {
+  outline: 3px solid rgba(13, 97, 78, 0.35);
+  outline-offset: 4px;
+}
+
+/* ---------- Empty state ---------- */
 
 .prakriti-page .empty-prakriti {
-  width: min(560px, var(--prakriti-w));
-  margin: auto;
-  padding: clamp(var(--am-space-6), 7vw, var(--am-space-10));
-  border: 1px solid color-mix(in srgb, var(--am-primary-tint) 72%, white);
-  border-radius: 28px;
-  background: linear-gradient(145deg, #fff, #f2faf5);
-  box-shadow: 0 12px 34px rgba(16, 61, 48, 0.09);
+  max-width: 560px;
+  margin-inline: auto;
+  padding: 28px;
   text-align: center;
+  border: 1px solid var(--prakriti-border);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 12px 36px rgba(24, 66, 49, 0.06);
 }
 
-@media (max-width: 630px) {
-  .prakriti-page {
-    padding-top: var(--am-space-3);
+/* ---------- Footer ---------- */
+
+.prakriti-page .policy-footer {
+  color: var(--prakriti-muted);
+  text-align: center;
+  line-height: 1.7;
+}
+
+/* ---------- Loading state ---------- */
+
+.prakriti-page .quest-loader {
+  animation: prakritiPulse 1.6s ease-in-out infinite;
+}
+
+/* =========================================
+   ANIMATION KEYFRAMES
+========================================= */
+
+@keyframes prakritiEnter {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
   }
 
-  .prakriti-page .prakriti-head {
-    margin-bottom: var(--am-space-4);
-    padding: var(--am-space-2) var(--am-space-3);
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes prakritiGlow {
+  from {
+    transform: translate3d(0, 0, 0) scale(0.92);
+    opacity: 0.65;
   }
 
+  to {
+    transform: translate3d(28px, 22px, 0) scale(1.12);
+    opacity: 1;
+  }
+}
+
+@keyframes prakritiShimmer {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes prakritiMeterFill {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes prakritiPulse {
+  0%,
+  100% {
+    opacity: 0.65;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ---------- Tablet ---------- */
+
+@media (max-width: 1023px) {
   .prakriti-page .prakriti-content {
-    gap: var(--am-space-4);
+    gap: 20px;
+  }
+
+  .prakriti-page .prakriti-body {
+    gap: 18px;
+  }
+
+  .prakriti-page .hero-main {
+    gap: 20px;
+  }
+}
+
+/* ---------- Mobile ---------- */
+
+@media (max-width: 639px) {
+  .prakriti-page .prakriti-content {
+    gap: 16px;
+  }
+
+  .prakriti-page .prakriti-body {
+    gap: 16px;
   }
 
   .prakriti-page .prakriti-hero,
   .prakriti-page .dosha-card,
   .prakriti-page .essence-card,
   .prakriti-page .guide-card {
-    border-radius: 20px;
+    border-radius: 18px;
   }
 
-  .prakriti-page .prakriti-hero,
-  .prakriti-page .dosha-card,
-  .prakriti-page .essence-card,
-  .prakriti-page .guide-card {
-    padding: var(--am-space-5);
+  .prakriti-page .hero-main {
+    gap: 16px;
   }
 
-  .prakriti-page .prakriti-content > .dosha-card {
-    padding: var(--am-space-5);
+  .prakriti-page .hero-copy h2 {
+    font-size: clamp(1.35rem, 5vw, 1.8rem);
   }
 
-  .prakriti-page .section-headline {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: var(--am-space-2);
+  .prakriti-page .hero-copy p,
+  .prakriti-page .essence-card p,
+  .prakriti-page .guide-card li {
+    line-height: 1.7;
+  }
+
+  .prakriti-page .hero-meta {
+    gap: 8px 12px;
+    margin-top: 14px;
+  }
+
+  .prakriti-page .dosha-card .meter {
+    padding-block: 12px;
+  }
+
+  .prakriti-page .secondary-row {
+    gap: 12px;
+  }
+}
+
+/* ---------- Accessibility: reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .prakriti-page *,
+  .prakriti-page *::before,
+  .prakriti-page *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }

@@ -4,7 +4,6 @@ import {
   BadgeCheck,
   BriefcaseMedical,
   CalendarClock,
-  ExternalLink,
   Heart,
   Languages,
   MapPin,
@@ -474,7 +473,6 @@ export default function DoctorProfile() {
                       variant="secondary"
                       size="sm"
                       onClick={() => openSocial(item.url)}
-                      trailingIcon={<ExternalLink size={14} aria-hidden />}
                     >
                       {item.label}
                     </Button>

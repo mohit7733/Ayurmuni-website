@@ -1,19 +1,21 @@
-import { useMemo, useState } from 'react';
-import { formatRupee } from '../home/catalog';
-import { showSuccessToast } from '../config/key';
+import { useMemo, useState } from "react";
+import { Check, ChevronDown, ChevronUp, Clipboard, Tag, X } from "lucide-react";
+import { formatRupee } from "../home/catalog";
+import { showSuccessToast } from "../config/key";
 import {
   calcCouponDiscount,
   couponMatchesScope,
   couponMinNote,
   couponOfferTitle,
   couponSavingsLabel,
-} from '../rewards/utils';
+} from "../rewards/utils";
+import "../design/coupon-apply-card.css";
 
 export default function CouponApplyCard({
   coupons = [],
   eligibleCoupons,
   cartAmount = 0,
-  loading,
+  loading = false,
   applied,
   discount,
   payable,
@@ -22,45 +24,63 @@ export default function CouponApplyCard({
   onApply,
   onRemove,
 }) {
-  const [code, setCode] = useState('');
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [code, setCode] = useState("");
+  const [offersOpen, setOffersOpen] = useState(false);
   const [applying, setApplying] = useState(false);
 
   const scopedCoupons = useMemo(() => {
     if (!checkoutScope) return coupons;
+
     return coupons.filter((item) => couponMatchesScope(item, checkoutScope));
   }, [coupons, checkoutScope]);
 
-  const preview = useMemo(() => {
-    const eligible =
-      eligibleCoupons != null
-        ? eligibleCoupons.filter((item) =>
-            checkoutScope ? couponMatchesScope(item, checkoutScope) : true,
-          )
-        : scopedCoupons.filter((item) => calcCouponDiscount(item, cartAmount).ok);
-    return eligible.slice(0, 2);
-  }, [eligibleCoupons, scopedCoupons, cartAmount, checkoutScope]);
+  const eligibleList = useMemo(() => {
+    const source = eligibleCoupons != null ? eligibleCoupons : scopedCoupons;
 
-  const submit = async (raw) => {
-    const next = String(raw ?? code)
+    return source.filter((item) => {
+      if (checkoutScope && !couponMatchesScope(item, checkoutScope)) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [eligibleCoupons, scopedCoupons, checkoutScope]);
+
+  const preview = useMemo(
+    () =>
+      eligibleList
+        .filter((item) => calcCouponDiscount(item, cartAmount).ok)
+        .slice(0, 2),
+    [eligibleList, cartAmount],
+  );
+
+  const submit = async (raw = code) => {
+    const next = String(raw ?? "")
       .trim()
       .toUpperCase();
+
     if (!next) {
-      showSuccessToast('Enter a coupon code', 'error');
+      showSuccessToast("Enter a coupon code", "error");
       return;
     }
-    if (applying) return;
+
+    if (applying || typeof onApply !== "function") return;
+
     setApplying(true);
+
     try {
       const result = await onApply(next);
-      const ok = result === true || (typeof result === 'object' && result?.ok);
+      const ok = result === true || (typeof result === "object" && result?.ok);
+
       if (ok) {
-        setCode('');
-        setSheetOpen(false);
-        showSuccessToast(`Coupon ${next} applied`, 'success');
-      } else if (typeof result === 'object' && result?.error) {
-        showSuccessToast(result.error, 'error');
+        setCode("");
+        setOffersOpen(false);
+        showSuccessToast(`Coupon ${next} applied`, "success");
+      } else if (typeof result === "object" && result?.error) {
+        showSuccessToast(result.error, "error");
       }
+    } catch {
+      showSuccessToast("Unable to apply coupon. Please try again.", "error");
     } finally {
       setApplying(false);
     }
@@ -69,124 +89,224 @@ export default function CouponApplyCard({
   const pasteCode = async () => {
     try {
       const text = await navigator.clipboard.readText();
-      const next = String(text || '').trim().toUpperCase();
+      const next = String(text || "")
+        .trim()
+        .toUpperCase();
+
       if (!next) {
-        showSuccessToast('Clipboard is empty', 'error');
+        showSuccessToast("Clipboard is empty", "error");
         return;
       }
+
       setCode(next);
     } catch {
-      showSuccessToast('Could not paste code', 'error');
+      showSuccessToast("Could not paste code", "error");
     }
   };
 
+  const offerCount = scopedCoupons.length;
+  const isConsultation = checkoutScope === "consultation";
+
   return (
-    <div className="coupon-card">
-      <header className="coupon-card-head">
-        <div>
-          <h3>Apply coupon</h3>
+    <section className="cac" aria-labelledby="cac-title">
+      <header className="cac__header">
+        <span className="cac__icon" aria-hidden="true">
+          <Tag size={19} />
+        </span>
+
+        <div className="cac__heading">
+          <h3 id="cac-title">Apply coupon</h3>
           <p>
-            {checkoutScope === 'consultation'
-              ? scopedCoupons.length
-                ? `${scopedCoupons.length} consult offer${scopedCoupons.length > 1 ? 's' : ''}`
-                : 'No consultation coupons available'
-              : scopedCoupons.length
-                ? `${scopedCoupons.length} order offer${scopedCoupons.length > 1 ? 's' : ''}`
-                : 'Enter a code or browse offers'}
+            {loading
+              ? "Finding the best offers for you…"
+              : offerCount
+                ? `${offerCount} ${isConsultation ? "consultation" : "available"} offer${offerCount === 1 ? "" : "s"}`
+                : "Have a coupon code? Apply it here."}
           </p>
         </div>
-        <button type="button" className="text-back" onClick={() => setSheetOpen(true)}>
-          View all
-        </button>
+
+        {applied ? (
+          <span className="cac__applied-indicator" title="Coupon applied">
+            <Check size={16} />
+          </span>
+        ) : null}
       </header>
 
       {applied ? (
-        <div className="coupon-applied">
-          <div>
+        <div className="cac__applied">
+          <span className="cac__applied-check" aria-hidden="true">
+            <Check size={16} />
+          </span>
+
+          <div className="cac__applied-copy">
             <strong>{applied.code}</strong>
             <p>
-              You save {formatRupee(discount, { decimals: 2 })}
-              {Number(payable) > 0 ? ` · Payable ${formatRupee(payable, { decimals: 2 })}` : ''}
+              Saving {formatRupee(discount, { decimals: 2 })}
+              {Number(payable) > 0
+                ? ` · Payable ${formatRupee(payable, { decimals: 2 })}`
+                : ""}
             </p>
           </div>
-          <button type="button" className="text-back" onClick={onRemove}>
-            Remove
+
+          <button
+            type="button"
+            className="cac__remove"
+            onClick={onRemove}
+            disabled={applying}
+          >
+            <X size={14} />
+            <span>Remove</span>
           </button>
         </div>
       ) : (
         <>
-          <div className="coupon-input-row">
-            <input
-              value={code}
-              onChange={(event) => setCode(event.target.value.toUpperCase())}
-              placeholder="Enter coupon code"
-              autoCapitalize="characters"
-            />
-            <button type="button" className="ghost" onClick={pasteCode}>
-              Paste
-            </button>
-            <button type="button" className="cta" disabled={applying} onClick={() => submit()}>
-              {applying ? 'Applying…' : 'Apply'}
-            </button>
-          </div>
-          {error ? <p className="coupon-error">{error}</p> : null}
-          {loading ? <p className="muted">Loading offers…</p> : null}
-          {preview.map((item) => (
+          <form
+            className="cac__form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              submit();
+            }}
+          >
+            <label className="cac__input-wrap">
+              <span className="cac__sr-only">Coupon code</span>
+              <input
+                value={code}
+                onChange={(event) => setCode(event.target.value.toUpperCase())}
+                placeholder="Enter coupon code"
+                autoCapitalize="characters"
+                autoComplete="off"
+                spellCheck={false}
+                aria-describedby={error ? "cac-error" : undefined}
+              />
+            </label>
+
             <button
-              key={item.id || item.code}
               type="button"
-              className="coupon-preview"
-              onClick={() => submit(item.code)}
-              disabled={applying}
+              className="cac__paste"
+              onClick={pasteCode}
+              aria-label="Paste coupon code"
+              title="Paste coupon code"
             >
-              <strong>{item.code}</strong>
-              <span>{couponSavingsLabel(item)}</span>
-              {couponMinNote(item) ? <small>{couponMinNote(item)}</small> : null}
+              <Clipboard size={15} />
+              <span>Paste</span>
             </button>
-          ))}
+
+            <button
+              type="submit"
+              className="cac__apply"
+              disabled={applying || !code.trim()}
+            >
+              {applying ? "Applying…" : "Apply"}
+            </button>
+          </form>
+
+          {error ? (
+            <p className="cac__error" id="cac-error" role="alert">
+              {error}
+            </p>
+          ) : null}
+
+          {preview.length > 0 ? (
+            <div className="cac__quick-offers">
+              {preview.map((item) => (
+                <button
+                  key={item.id || item.code}
+                  type="button"
+                  className="cac__quick-offer"
+                  onClick={() => submit(item.code)}
+                  disabled={applying}
+                >
+                  <span className="cac__code">{item.code}</span>
+                  <span className="cac__quick-copy">
+                    <strong>{couponSavingsLabel(item)}</strong>
+                    {couponMinNote(item) ? (
+                      <small>{couponMinNote(item)}</small>
+                    ) : null}
+                  </span>
+                  <span className="cac__quick-action">Apply</span>
+                </button>
+              ))}
+            </div>
+          ) : null}
         </>
       )}
 
-      {sheetOpen ? (
-        <div className="web-modal" role="dialog" onClick={() => setSheetOpen(false)}>
-          <div className="web-modal-card coupon-sheet" onClick={(event) => event.stopPropagation()}>
-            <header className="coupon-card-head">
-              <div>
-                <h3>Available offers</h3>
-                <p>{scopedCoupons.length} coupon{scopedCoupons.length === 1 ? '' : 's'}</p>
-              </div>
-              <button type="button" className="text-back" onClick={() => setSheetOpen(false)}>
-                Close
-              </button>
-            </header>
-            {scopedCoupons.length ? (
-              scopedCoupons.map((item) => {
-                const gate = calcCouponDiscount(item, cartAmount);
-                return (
-                  <article key={item.id || item.code} className="coupon-offer">
-                    <div>
-                      <strong>{item.code}</strong>
-                      <p>{couponOfferTitle(item)}</p>
-                      {couponMinNote(item) ? <small>{couponMinNote(item)}</small> : null}
-                      {!gate.ok && gate.error ? <small className="coupon-error">{gate.error}</small> : null}
+      <div className="cac__offers-toggle">
+        <span>
+          {offersOpen ? "Choose an offer" : "Looking for a better deal?"}
+        </span>
+
+        <button
+          type="button"
+          className="cac__view-all"
+          onClick={() => setOffersOpen((open) => !open)}
+          aria-expanded={offersOpen}
+          aria-controls="cac-offer-list"
+        >
+          {offersOpen ? "Show less" : "View all offers"}
+          {offersOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        </button>
+      </div>
+
+      {offersOpen ? (
+        <div className="cac__offers" id="cac-offer-list">
+          {loading ? (
+            <p className="cac__empty">Loading available offers…</p>
+          ) : scopedCoupons.length ? (
+            scopedCoupons.map((item) => {
+              const gate = calcCouponDiscount(item, cartAmount);
+              const isApplied =
+                String(applied?.code || "").toUpperCase() ===
+                String(item.code || "").toUpperCase();
+
+              return (
+                <article
+                  key={item.id || item.code}
+                  className={`cac__offer${isApplied ? " is-applied" : ""}${!gate.ok ? " is-ineligible" : ""}`}
+                >
+                  <div className="cac__offer-mark" aria-hidden="true">
+                    {isApplied ? <Check size={17} /> : <Tag size={17} />}
+                  </div>
+
+                  <div className="cac__offer-content">
+                    <div className="cac__offer-top">
+                      <strong className="cac__code">{item.code}</strong>
+                      {isApplied ? (
+                        <span className="cac__status">Applied</span>
+                      ) : null}
                     </div>
-                    <button
-                      type="button"
-                      className="cta"
-                      disabled={applying || !gate.ok}
-                      onClick={() => submit(item.code)}
-                    >
-                      Apply
-                    </button>
-                  </article>
-                );
-              })
-            ) : (
-              <p className="muted">No coupons available right now.</p>
-            )}
-          </div>
+
+                    <p className="cac__offer-title">{couponOfferTitle(item)}</p>
+
+                    {couponMinNote(item) ? (
+                      <small className="cac__offer-note">
+                        {couponMinNote(item)}
+                      </small>
+                    ) : null}
+
+                    {!gate.ok && gate.error ? (
+                      <small className="cac__offer-reason">{gate.error}</small>
+                    ) : null}
+                  </div>
+
+                  <button
+                    type="button"
+                    className={`cac__offer-button${isApplied ? " is-applied" : ""}`}
+                    disabled={applying || !gate.ok || isApplied}
+                    onClick={() => submit(item.code)}
+                  >
+                    {isApplied ? "Applied" : "Apply"}
+                  </button>
+                </article>
+              );
+            })
+          ) : (
+            <p className="cac__empty">
+              No coupons are available for this booking right now.
+            </p>
+          )}
         </div>
       ) : null}
-    </div>
+    </section>
   );
 }
