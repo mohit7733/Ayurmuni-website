@@ -545,7 +545,9 @@ export default function ProductDetails() {
                       variant="secondary"
                       size="sm"
                       onClick={async () => {
-                        if (!(await requireAuth("Please login to write a review")))
+                        if (
+                          !(await requireAuth("Please login to write a review"))
+                        )
                           return;
                         setShowReviewModal(true);
                       }}
@@ -580,7 +582,7 @@ export default function ProductDetails() {
                   trackClassName="pd-review-list"
                   itemClassName="pd-review-item"
                 >
-                  {reviews.slice(0, 8).map((item, index) => {
+                  {reviews.map((item, index) => {
                     const media = (item.image_urls || []).map((url) => ({
                       url,
                       type: isReviewVideoUrl(url) ? "video" : "image",
@@ -613,7 +615,6 @@ export default function ProductDetails() {
                 />
               )}
             </section>
-
           </div>
         </div>
 
