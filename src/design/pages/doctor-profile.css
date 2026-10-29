@@ -443,8 +443,9 @@
 /* Reviews */
 .dp-reviews {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--am-space-3);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  align-items: stretch;
 }
 
 /* Fee panel */
@@ -698,7 +699,7 @@
   }
 
   .dp-reviews {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -1343,4 +1344,121 @@
   .dp-avail {
     transition: none !important;
   }
+}
+
+.dp-reviews .am-review {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.06);
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* Header: avatar, name/date, rating */
+.am-review__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.am-review__avatar {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 600;
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.am-review__who {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.am-review__name {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.am-review__date {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+/* Keep rating aligned right without shrinking */
+.am-review__head > :last-child {
+  flex: 0 0 auto;
+}
+
+/* Review text */
+.am-review__text {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: #374151;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Media thumbnails */
+.am-review__media {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.am-review__media li {
+  width: 68px;
+  height: 68px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.am-review__media button {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.am-review__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.am-review__video {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
 }

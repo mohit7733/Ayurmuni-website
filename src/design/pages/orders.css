@@ -1,85 +1,82 @@
 /* =========================================================
-   AYURMUNI ORDERS — COMPLETE ENHANCED UI
+   AYURMUNI ORDERS — REFINED PREMIUM UI
    Confirmation · History · Details
    File: orders.css
    ========================================================= */
 
-/* ── Design Contract ─────────────────────────────────────── */
+/* ── Design system ──────────────────────────────────────── */
 
 .or-page {
-  /* Layout */
   --or-container: var(--am-container, 1120px);
   --or-gutter: var(--am-gutter, 16px);
 
-  /* Radii */
+  --or-green: #0d614e;
+  --or-green-dark: #094b3c;
+  --or-green-soft: rgba(13, 97, 78, 0.07);
+  --or-green-light: #e8f4ef;
+  --or-green-pale: #f4f9f6;
+  --or-gold: #b7791f;
+
   --or-radius-sm: var(--am-radius-sm, 8px);
   --or-radius-md: var(--am-radius-md, 12px);
   --or-radius-lg: var(--am-radius-lg, 16px);
   --or-radius-xl: var(--am-radius-xl, 20px);
-  --or-radius-pill: var(--am-radius-pill, 999px);
+  --or-radius-pill: 999px;
 
-  /* Brand lines */
-  --or-line: var(--am-line, #e5e9e7);
-  --or-line-brand: color-mix(in srgb, var(--am-primary) 12%, transparent);
-  --or-line-brand-strong: color-mix(
-    in srgb,
-    var(--am-primary) 32%,
-    transparent
-  );
-  --or-line-success: color-mix(in srgb, var(--am-success) 20%, transparent);
-  --or-line-danger: color-mix(
-    in srgb,
-    var(--am-danger, #dc2626) 20%,
-    transparent
-  );
+  --or-line: var(--am-line, #e2e9e5);
+  --or-line-brand: rgba(13, 97, 78, 0.14);
+  --or-line-brand-strong: rgba(13, 97, 78, 0.3);
+  --or-line-success: rgba(22, 132, 91, 0.24);
+  --or-line-danger: rgba(220, 38, 38, 0.22);
 
-  /* Elevation */
-  --or-shadow-xs: 0 1px 2px rgba(10, 40, 32, 0.05);
-  --or-shadow-soft:
-    0 1px 2px rgba(10, 40, 32, 0.05), 0 8px 22px rgba(10, 40, 32, 0.05);
-  --or-shadow-lift:
-    0 3px 8px rgba(10, 40, 32, 0.07), 0 16px 34px rgba(10, 40, 32, 0.09);
-  --or-shadow-success: 0 6px 18px rgba(13, 97, 78, 0.12);
+  --or-shadow-xs: 0 1px 2px rgba(17, 48, 37, 0.05);
+  --or-shadow-sm:
+    0 2px 6px rgba(17, 48, 37, 0.05), 0 10px 26px rgba(17, 48, 37, 0.05);
+  --or-shadow-lg:
+    0 6px 14px rgba(17, 48, 37, 0.06), 0 22px 44px rgba(17, 48, 37, 0.1);
+  --or-shadow-success: 0 10px 26px rgba(13, 97, 78, 0.14);
 
-  /* Focus */
-  --or-focus: color-mix(in srgb, var(--am-primary) 74%, #0b2b22);
+  --or-focus: #0d614e;
+  --or-ease: cubic-bezier(0.2, 0, 0, 1);
+  --or-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --or-fast: 140ms;
+  --or-base: 200ms;
 
-  /* Motion */
-  --or-ease: var(--am-ease-standard, cubic-bezier(0.2, 0, 0, 1));
-  --or-ease-out: var(--am-ease-out, cubic-bezier(0.2, 0.8, 0.2, 1));
-  --or-fast: var(--am-dur-fast, 140ms);
-  --or-base: var(--am-dur-base, 200ms);
-
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: var(--am-space-5);
-  width: 100%;
-  max-width: var(--or-container);
+  gap: clamp(18px, 2.4vw, 26px);
+  width: min(100%, var(--or-container));
   min-width: 0;
-  margin: 0 auto;
-  padding: var(--am-space-5) var(--or-gutter) var(--am-space-10);
-  color: var(--am-text);
-  overflow-wrap: break-word;
+  margin-inline: auto;
+  padding: clamp(20px, 3vw, 32px) var(--or-gutter)
+    calc(40px + env(safe-area-inset-bottom, 0px));
+  color: var(--am-text, #1e293b);
+  overflow-wrap: anywhere;
+}
+
+.or-page *,
+.or-page *::before,
+.or-page *::after {
+  box-sizing: border-box;
 }
 
 .or-page > .am-page-header {
   margin-bottom: 0;
 }
 
-/* =========================================================
-   CONFIRMATION
-   ========================================================= */
+/* ── Confirmation page ──────────────────────────────────── */
 
 .or-confirm {
   align-items: center;
+  padding-top: clamp(18px, 4vw, 40px);
   text-align: center;
-  padding-top: var(--am-space-8);
 }
 
 .or-confirm__layout {
   display: flex;
   flex-direction: column;
-  gap: var(--am-space-5);
+  gap: clamp(18px, 2.5vw, 26px);
   width: 100%;
   min-width: 0;
 }
@@ -91,131 +88,121 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--am-space-4);
+  gap: 16px;
   width: 100%;
   min-width: 0;
-  padding: var(--am-space-7) var(--am-space-5);
+  padding: clamp(28px, 5vw, 46px) clamp(18px, 4vw, 38px);
   border: 1px solid var(--or-line-brand);
   border-radius: var(--or-radius-xl);
   background:
     radial-gradient(
-      circle at 88% 0%,
-      color-mix(in srgb, var(--am-primary) 8%, transparent),
-      transparent 44%
+      620px 260px at 88% -40px,
+      rgba(13, 97, 78, 0.1),
+      transparent 70%
     ),
     radial-gradient(
-      circle at 0% 100%,
-      color-mix(in srgb, var(--am-success) 7%, transparent),
-      transparent 48%
+      520px 240px at -10% 110%,
+      rgba(16, 185, 129, 0.07),
+      transparent 70%
     ),
-    linear-gradient(160deg, var(--am-mist-50, #f7faf9), var(--am-surface) 74%);
-  box-shadow: var(--or-shadow-soft);
-}
-
-.or-confirm__main::after {
-  position: absolute;
-  z-index: -1;
-  right: -64px;
-  bottom: -88px;
-  width: 210px;
-  height: 210px;
-  border: 1px solid var(--or-line-brand);
-  border-radius: 50%;
-  content: "";
-  pointer-events: none;
+    linear-gradient(160deg, #f7fbf9 0%, #ffffff 58%, #f8fbf9 100%);
+  box-shadow: var(--or-shadow-sm);
 }
 
 .or-confirm__side {
   display: flex;
   flex-direction: column;
-  gap: var(--am-space-4);
+  gap: 16px;
   width: 100%;
   min-width: 0;
 }
 
-/* Success badge */
 .or-confirm__badge {
   display: grid;
   place-items: center;
-  width: 80px;
-  height: 80px;
-  margin-bottom: var(--am-space-2);
-  border: 1px solid var(--or-line-success);
+  width: 78px;
+  height: 78px;
+  margin-bottom: 2px;
+  border: 1px solid rgba(13, 97, 78, 0.18);
   border-radius: 50%;
   background:
     radial-gradient(
-      circle at 30% 25%,
-      rgba(255, 255, 255, 0.58),
+      circle at 30% 20%,
+      rgba(255, 255, 255, 0.9),
       transparent 58%
     ),
-    color-mix(in srgb, var(--am-success) 16%, var(--am-surface));
-  color: var(--am-success);
+    linear-gradient(145deg, #e4f4ec, #cbe9db);
+  color: var(--or-green);
   box-shadow:
-    0 0 0 6px color-mix(in srgb, var(--am-success) 7%, transparent),
+    0 0 0 7px rgba(13, 97, 78, 0.05),
     var(--or-shadow-success);
 }
 
 .or-confirm__badge svg {
   width: 34px;
   height: 34px;
+  stroke-width: 2.2;
 }
 
-/* Headline */
 .or-confirm h1 {
   margin: 0;
-  color: var(--am-text);
-  font-family: var(--am-font-display);
-  font-size: clamp(1.85rem, 3vw + 0.7rem, 2.4rem);
-  line-height: var(--am-leading-tight);
+  color: var(--am-text, #1e293b);
+  font-family: var(--am-font-display, inherit);
+  font-size: clamp(1.75rem, 3vw + 0.4rem, 2.5rem);
+  font-weight: 750;
+  line-height: 1.14;
   letter-spacing: -0.035em;
   overflow-wrap: anywhere;
 }
 
 .or-confirm__lead {
+  max-width: 36rem;
   margin: 0;
-  max-width: 30rem;
-  color: var(--am-text-soft);
-  font-size: var(--am-text-base);
-  line-height: 1.65;
-  overflow-wrap: anywhere;
+  color: var(--am-text-soft, #53645d);
+  font-size: clamp(14px, 1.2vw, 15.5px);
+  line-height: 1.7;
 }
 
-/* Order code */
 .or-confirm__code {
   display: inline-flex;
   align-items: center;
-  gap: var(--am-space-2);
-  margin: 0;
-  padding: var(--am-space-2) var(--am-space-4);
-  border: 1px dashed var(--or-line-brand-strong);
+  justify-content: center;
+  gap: 9px;
+  max-width: 100%;
+  margin: 2px 0;
+  padding: 10px 17px;
+  border: 1px dashed rgba(13, 97, 78, 0.34);
   border-radius: var(--or-radius-pill);
-  background: color-mix(in srgb, var(--am-primary-soft) 74%, transparent);
-  color: var(--am-primary-strong);
-  font-family: var(--am-font-display);
-  font-size: var(--am-text-lg);
-  font-weight: 600;
+  background: linear-gradient(135deg, #edf7f1, #f8fbf9);
+  color: var(--or-green-dark);
+  font-family: var(--am-font-display, inherit);
+  font-size: clamp(13.5px, 1.2vw, 16px);
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
   overflow-wrap: anywhere;
 }
 
-/* Confirmation actions */
 .or-confirm__actions {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: var(--am-space-3);
+  gap: 10px;
   width: 100%;
-  max-width: 30rem;
+  max-width: 32rem;
+  margin-top: 4px;
 }
 
 .or-confirm__actions .am-btn {
+  display: inline-flex;
   flex: 1 1 10rem;
+  align-items: center;
+  justify-content: center;
   min-width: 0;
-  min-height: 50px;
+  min-height: 48px;
+  padding: 12px 18px;
   border-radius: var(--or-radius-lg);
-  font-weight: var(--am-weight-semibold);
-  letter-spacing: 0.01em;
+  font-weight: 650;
   transition:
     transform var(--or-base) var(--or-ease-out),
     box-shadow var(--or-base) var(--or-ease),
@@ -224,9 +211,7 @@
     background-color var(--or-fast) var(--or-ease);
 }
 
-/* =========================================================
-   SHARED CARDS
-   ========================================================= */
+/* ── Shared cards ───────────────────────────────────────── */
 
 .or-card {
   position: relative;
@@ -234,14 +219,14 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: var(--am-space-4);
+  gap: 16px;
   width: 100%;
   min-width: 0;
-  padding: var(--am-space-5);
+  padding: clamp(18px, 2.2vw, 24px);
   border: 1px solid var(--or-line);
   border-radius: var(--or-radius-xl);
-  background: var(--am-surface);
-  box-shadow: var(--or-shadow-soft);
+  background: #fff;
+  box-shadow: var(--or-shadow-sm);
   text-align: left;
   transition:
     border-color var(--or-base) var(--or-ease),
@@ -256,7 +241,8 @@
   background: linear-gradient(
     90deg,
     transparent,
-    color-mix(in srgb, var(--am-primary) 22%, transparent),
+    rgba(13, 97, 78, 0.42),
+    rgba(16, 185, 129, 0.24),
     transparent
   );
   content: "";
@@ -267,31 +253,31 @@
 
 .or-card h2 {
   margin: 0;
-  color: var(--am-text);
-  font-family: var(--am-font-display);
-  font-size: var(--am-text-md);
-  font-weight: var(--am-weight-semibold);
-  line-height: var(--am-leading-snug);
+  color: var(--am-text, #1e293b);
+  font-family: var(--am-font-display, inherit);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.4;
   letter-spacing: -0.015em;
-  overflow-wrap: anywhere;
 }
 
-/* =========================================================
-   ORDER ITEMS
-   ========================================================= */
+/* ── Order items ────────────────────────────────────────── */
 
 .or-item {
   display: grid;
   grid-template-columns: 60px minmax(0, 1fr) auto;
-  gap: var(--am-space-3);
   align-items: center;
+  gap: 14px;
   min-width: 0;
-  padding: var(--am-space-1) 0;
+  padding: 14px 0;
+}
+
+.or-item:first-of-type {
+  padding-top: 0;
 }
 
 .or-item + .or-item {
-  padding-top: var(--am-space-3);
-  border-top: 1px dashed var(--or-line);
+  border-top: 1px solid var(--or-line);
 }
 
 .or-item--no-price {
@@ -306,41 +292,36 @@
   height: 60px;
   overflow: hidden;
   border: 1px solid var(--or-line-brand);
-  border-radius: var(--or-radius-md);
+  border-radius: 14px;
   background:
-    radial-gradient(
-      circle at 72% 18%,
-      color-mix(in srgb, var(--am-primary) 8%, transparent),
-      transparent 58%
-    ),
-    var(--am-surface-muted);
-  color: var(--am-primary);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+    radial-gradient(circle at 75% 15%, rgba(13, 97, 78, 0.08), transparent 55%),
+    linear-gradient(145deg, #f8fbf9, #edf3ef);
+  color: var(--or-green);
 }
 
 .or-item__thumb img {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: contain;
 }
 
 .or-item__name {
+  min-width: 0;
   margin: 0;
-  color: var(--am-text);
-  font-size: var(--am-text-sm);
-  font-weight: var(--am-weight-semibold);
+  color: var(--am-text, #1e293b);
+  font-size: 14px;
+  font-weight: 650;
   line-height: 1.45;
-  overflow-wrap: anywhere;
 }
 
 .or-item__name small {
   display: block;
-  margin-top: var(--am-space-1);
-  color: var(--am-text-muted);
-  font-size: var(--am-text-xs);
-  font-weight: var(--am-weight-regular);
+  margin-top: 4px;
+  color: var(--am-text-muted, #6b7a72);
+  font-size: 12px;
+  font-weight: 450;
   line-height: 1.5;
-  overflow-wrap: anywhere;
 }
 
 .or-item__action {
@@ -349,19 +330,17 @@
 
 .or-item__action .am-btn {
   min-height: 36px;
-  padding-inline: var(--am-space-3);
+  padding: 8px 13px;
   border-radius: var(--or-radius-pill);
-  font-size: var(--am-text-xs);
+  font-size: 12px;
 }
 
-/* =========================================================
-   ORDER HISTORY
-   ========================================================= */
+/* ── History toolbar ────────────────────────────────────── */
 
 .or-toolbar {
   display: flex;
   flex-direction: column;
-  gap: var(--am-space-4);
+  gap: 16px;
   min-width: 0;
 }
 
@@ -370,25 +349,16 @@
   min-width: 0;
 }
 
-.or-page > .am-tabs .am-tab {
-  transition:
-    color var(--or-fast) var(--or-ease),
-    background-color var(--or-fast) var(--or-ease),
-    border-color var(--or-fast) var(--or-ease);
-}
-
-/* Filters */
 .or-filters {
   display: flex;
   flex-wrap: nowrap;
-  gap: var(--am-space-2);
+  gap: 8px;
   max-width: 100%;
-  padding: 2px 1px 8px;
+  padding: 2px 2px 8px;
   overflow-x: auto;
   overscroll-behavior-inline: contain;
   scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--am-primary) 28%, transparent)
-    transparent;
+  scrollbar-color: rgba(13, 97, 78, 0.28) transparent;
   scroll-snap-type: x proximity;
   -webkit-overflow-scrolling: touch;
 }
@@ -402,15 +372,17 @@
 .or-filters > button,
 .or-filters > .chip {
   min-height: 38px;
+  padding-inline: 14px;
   border-radius: var(--or-radius-pill);
   white-space: nowrap;
 }
 
-/* Order list */
+/* ── Order history rows ─────────────────────────────────── */
+
 .or-list {
   display: flex;
   flex-direction: column;
-  gap: var(--am-space-3);
+  gap: 12px;
   min-width: 0;
 }
 
@@ -418,19 +390,19 @@
   position: relative;
   display: grid;
   grid-template-columns: 56px minmax(0, 1fr) auto;
-  gap: var(--am-space-3);
   align-items: center;
+  gap: 14px;
   width: 100%;
   min-width: 0;
-  padding: var(--am-space-4);
+  padding: 15px;
   border: 1px solid var(--or-line);
   border-radius: var(--or-radius-lg);
-  background: var(--am-surface);
+  background: #fff;
   box-shadow: var(--or-shadow-xs);
+  color: inherit;
+  font: inherit;
   text-align: left;
   cursor: pointer;
-  font: inherit;
-  color: inherit;
   transition:
     border-color var(--or-fast) var(--or-ease),
     background-color var(--or-fast) var(--or-ease),
@@ -440,28 +412,13 @@
 
 .or-row::before {
   position: absolute;
-  inset: 0 auto 0 0;
+  inset: 14px auto 14px 0;
   width: 3px;
-  border-radius: 3px 0 0 3px;
-  background: var(--am-primary);
+  border-radius: 0 4px 4px 0;
+  background: linear-gradient(180deg, #0d614e, #24a57d);
   content: "";
   opacity: 0;
   transition: opacity var(--or-fast) var(--or-ease);
-}
-
-.or-row:hover {
-  border-color: var(--or-line-brand-strong);
-  background: color-mix(in srgb, var(--am-primary-soft) 44%, var(--am-surface));
-  box-shadow: var(--or-shadow-lift);
-  transform: translateY(-2px);
-}
-
-.or-row:hover::before {
-  opacity: 1;
-}
-
-.or-row:active {
-  transform: translateY(0) scale(0.99);
 }
 
 .or-row__thumb {
@@ -472,18 +429,15 @@
   height: 56px;
   overflow: hidden;
   border: 1px solid var(--or-line-brand);
-  border-radius: var(--or-radius-md);
+  border-radius: 14px;
   background:
-    radial-gradient(
-      circle at 72% 18%,
-      color-mix(in srgb, var(--am-primary) 8%, transparent),
-      transparent 58%
-    ),
-    var(--am-surface-muted);
-  color: var(--am-primary);
+    radial-gradient(circle at 75% 15%, rgba(13, 97, 78, 0.08), transparent 55%),
+    linear-gradient(145deg, #f8fbf9, #edf3ef);
+  color: var(--or-green);
 }
 
 .or-row__thumb img {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: contain;
@@ -492,153 +446,136 @@
 .or-row__body {
   display: flex;
   flex-direction: column;
-  gap: var(--am-space-1);
+  gap: 4px;
   min-width: 0;
-  overflow-wrap: anywhere;
 }
 
 .or-row__title {
   margin: 0;
-  color: var(--am-text);
-  font-size: var(--am-text-sm);
-  font-weight: var(--am-weight-semibold);
+  color: var(--am-text, #1e293b);
+  font-size: 14px;
+  font-weight: 650;
   line-height: 1.45;
-  overflow-wrap: anywhere;
 }
 
 .or-row__meta {
   margin: 0;
-  color: var(--am-text-muted);
-  font-size: var(--am-text-xs);
-  line-height: 1.5;
-  overflow-wrap: anywhere;
+  color: var(--am-text-muted, #6b7a72);
+  font-size: 12px;
+  line-height: 1.55;
 }
 
 .or-row__aside {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: var(--am-space-2);
+  gap: 8px;
   min-width: 0;
 }
 
 .or-row__amount {
-  color: var(--am-text);
-  font-family: var(--am-font-display);
-  font-size: var(--am-text-sm);
-  font-weight: var(--am-weight-semibold);
+  color: var(--or-green-dark);
+  font-family: var(--am-font-display, inherit);
+  font-size: 14.5px;
+  font-weight: 750;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
   white-space: nowrap;
 }
 
-/* =========================================================
-   ORDER DETAILS
-   ========================================================= */
+/* ── Detail layout ──────────────────────────────────────── */
 
 .or-detail {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--am-space-5);
   align-items: start;
+  gap: 18px;
   min-width: 0;
 }
 
 .or-aside {
   display: flex;
   flex-direction: column;
-  gap: var(--am-space-4);
+  gap: 16px;
   min-width: 0;
 }
 
-/* Status block */
+/* ── Status card ────────────────────────────────────────── */
+
 .or-status-block {
   position: relative;
   isolation: isolate;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: var(--am-space-2);
-  padding: var(--am-space-5);
+  gap: 10px;
+  padding: 20px;
   border: 1px solid var(--or-line-brand);
   border-radius: var(--or-radius-xl);
   background:
     radial-gradient(
-      circle at 100% 0%,
-      color-mix(in srgb, var(--am-primary) 8%, transparent),
-      transparent 48%
+      420px 180px at 100% 0%,
+      rgba(13, 97, 78, 0.09),
+      transparent 70%
     ),
-    var(--am-surface);
-  box-shadow: var(--or-shadow-soft);
-}
-
-.or-status-block::after {
-  position: absolute;
-  z-index: -1;
-  right: -48px;
-  bottom: -70px;
-  width: 160px;
-  height: 160px;
-  border: 1px solid var(--or-line-brand);
-  border-radius: 50%;
-  content: "";
-  pointer-events: none;
+    linear-gradient(160deg, #fff, #f6faf8);
+  box-shadow: var(--or-shadow-sm);
 }
 
 .or-status-block__label {
   margin: 0;
-  color: var(--am-text-muted);
-  font-size: var(--am-text-xs);
-  font-weight: var(--am-weight-bold);
+  color: var(--am-text-muted, #6b7a72);
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
-/* Delivery */
+/* ── Delivery ───────────────────────────────────────────── */
+
 .or-delivery h2 {
   display: flex;
   align-items: center;
-  gap: var(--am-space-2);
+  gap: 10px;
   margin: 0;
-  color: var(--am-text);
-  font-family: var(--am-font-display);
-  font-size: var(--am-text-md);
-  line-height: var(--am-leading-snug);
-  overflow-wrap: anywhere;
+  color: var(--am-text, #1e293b);
+  font-size: 17px;
+  line-height: 1.4;
 }
 
 .or-delivery p {
   margin: 0;
-  color: var(--am-text-soft);
-  font-size: var(--am-text-sm);
-  line-height: var(--am-leading-relaxed);
-  overflow-wrap: anywhere;
+  color: var(--am-text-soft, #53645d);
+  font-size: 14px;
+  line-height: 1.7;
 }
 
-/* Total */
+/* ── Total ──────────────────────────────────────────────── */
+
 .or-total {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--am-space-3);
+  gap: 14px;
   margin: 0;
-  padding-top: var(--am-space-3);
-  border-top: 1px dashed var(--or-line-brand);
-  color: var(--am-text);
-  font-size: var(--am-text-base);
-  font-weight: var(--am-weight-semibold);
+  padding-top: 15px;
+  border-top: 1px solid var(--or-line-brand);
+  color: var(--am-text, #1e293b);
+  font-size: 15px;
+  font-weight: 650;
 }
 
 .or-total span:last-child {
-  color: var(--am-primary-strong);
-  font-family: var(--am-font-display);
-  font-size: var(--am-text-lg);
+  color: var(--or-green-dark);
+  font-family: var(--am-font-display, inherit);
+  font-size: clamp(18px, 2vw, 21px);
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
 }
 
 .or-hero-actions {
-  gap: var(--am-space-4);
+  gap: 14px;
 }
 
 .or-status-block--inline {
@@ -648,18 +585,14 @@
   box-shadow: none;
 }
 
-.or-status-block--inline::after {
-  display: none;
-}
-
 .or-action-row {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--am-space-2);
+  gap: 10px;
 }
 
 .or-action-row .am-btn {
-  min-height: 46px;
+  min-height: 45px;
   border-radius: var(--or-radius-lg);
 }
 
@@ -667,20 +600,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--am-space-3);
+  gap: 12px;
   min-width: 0;
-  margin-bottom: var(--am-space-2);
+  margin-bottom: 12px;
 }
 
 .or-section-head h2,
 .or-card h2 {
   margin: 0;
-  font-size: var(--am-text-md);
+  font-size: 17px;
 }
 
-/* =========================================================
-   TRACKING TIMELINE
-   ========================================================= */
+/* ── Tracking timeline ──────────────────────────────────── */
 
 .or-track {
   display: flex;
@@ -694,9 +625,9 @@
   position: relative;
   display: grid;
   grid-template-columns: 20px minmax(0, 1fr);
-  gap: var(--am-space-3);
-  padding-bottom: var(--am-space-4);
-  color: var(--am-text-muted);
+  gap: 13px;
+  padding-bottom: 18px;
+  color: var(--am-text-muted, #6b7a72);
 }
 
 .or-track__step:last-child {
@@ -707,11 +638,11 @@
   z-index: 1;
   width: 14px;
   height: 14px;
-  margin-top: 4px;
-  border: 2px solid var(--am-surface);
+  margin-top: 3px;
+  border: 2px solid #fff;
   border-radius: 50%;
-  background: var(--or-line);
-  box-shadow: 0 0 0 1px var(--or-line);
+  background: #dce5df;
+  box-shadow: 0 0 0 1px #dce5df;
   transition:
     background-color var(--or-base) var(--or-ease),
     box-shadow var(--or-base) var(--or-ease);
@@ -719,7 +650,7 @@
 
 .or-track__step::before {
   position: absolute;
-  top: 20px;
+  top: 19px;
   bottom: 0;
   left: 6px;
   width: 2px;
@@ -734,70 +665,61 @@
 
 .or-track__step.is-done .or-track__dot,
 .or-track__step.is-active .or-track__dot {
-  border-color: color-mix(in srgb, var(--am-primary) 24%, transparent);
-  background: var(--am-primary);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--am-primary) 10%, transparent);
+  border-color: #d8eee3;
+  background: var(--or-green);
+  box-shadow: 0 0 0 4px rgba(13, 97, 78, 0.09);
 }
 
 .or-track__step.is-active .or-track__dot {
   box-shadow:
-    0 0 0 4px color-mix(in srgb, var(--am-primary) 14%, transparent),
-    0 0 0 8px color-mix(in srgb, var(--am-primary) 6%, transparent);
+    0 0 0 4px rgba(13, 97, 78, 0.13),
+    0 0 0 8px rgba(13, 97, 78, 0.05);
 }
 
 .or-track__step.is-cancelled .or-track__dot {
-  border-color: var(--or-line-danger);
+  border-color: #fce7e7;
   background: var(--am-danger, #dc2626);
-  box-shadow: 0 0 0 4px
-    color-mix(in srgb, var(--am-danger, #dc2626) 10%, transparent);
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.09);
 }
 
 .or-track__step.is-done,
 .or-track__step.is-active {
-  color: var(--am-text);
+  color: var(--am-text, #1e293b);
 }
 
 .or-track__step div {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   min-width: 0;
 }
 
 .or-track__step strong {
   color: inherit;
+  font-size: 14px;
+  font-weight: 650;
   line-height: 1.4;
-  overflow-wrap: anywhere;
 }
 
 .or-track__step small {
-  color: var(--am-text-muted);
-  font-size: var(--am-text-xs);
-  line-height: 1.5;
-  overflow-wrap: anywhere;
+  color: var(--am-text-muted, #6b7a72);
+  font-size: 12px;
+  line-height: 1.55;
 }
 
-/* =========================================================
-   ETA & DELIVERY AGENT
-   ========================================================= */
+/* ── ETA and agent ──────────────────────────────────────── */
 
 .or-eta,
 .or-agent {
   position: relative;
   display: flex;
   align-items: center;
-  gap: var(--am-space-3);
-  margin-top: var(--am-space-3);
-  padding: var(--am-space-4);
+  gap: 12px;
+  margin-top: 12px;
+  padding: 14px;
   border: 1px solid var(--or-line-brand);
   border-radius: var(--or-radius-lg);
-  background:
-    radial-gradient(
-      circle at 100% 0%,
-      color-mix(in srgb, var(--am-primary) 6%, transparent),
-      transparent 52%
-    ),
-    color-mix(in srgb, var(--am-surface-muted) 84%, transparent);
+  background: linear-gradient(135deg, #f6faf8, #fff);
   box-shadow: var(--or-shadow-xs);
 }
 
@@ -806,62 +728,57 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   min-width: 0;
 }
 
 .or-eta strong,
 .or-agent strong {
-  color: var(--am-text);
-  font-size: var(--am-text-sm);
+  color: var(--am-text, #1e293b);
+  font-size: 14px;
   line-height: 1.4;
-  overflow-wrap: anywhere;
 }
 
 .or-eta small,
 .or-agent small {
-  color: var(--am-text-muted);
-  font-size: var(--am-text-xs);
-  line-height: 1.5;
-  overflow-wrap: anywhere;
+  color: var(--am-text-muted, #6b7a72);
+  font-size: 12px;
+  line-height: 1.55;
 }
 
-/* =========================================================
-   INFORMATION ROWS
-   ========================================================= */
+/* ── Info rows ──────────────────────────────────────────── */
 
 .or-info-row {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: var(--am-space-3);
+  gap: 14px;
   margin: 0;
-  padding: var(--am-space-2) 0;
-  font-size: var(--am-text-sm);
+  padding: 12px 0;
+  font-size: 14px;
   line-height: 1.5;
 }
 
 .or-info-row + .or-info-row {
-  border-top: 1px dashed var(--or-line);
+  border-top: 1px solid var(--or-line);
 }
 
 .or-info-row span {
-  color: var(--am-text-muted);
-  overflow-wrap: anywhere;
+  color: var(--am-text-muted, #6b7a72);
 }
 
 .or-info-row strong {
-  color: var(--am-text);
+  color: var(--am-text, #1e293b);
+  font-weight: 650;
   text-align: right;
   font-variant-numeric: tabular-nums;
-  overflow-wrap: anywhere;
 }
 
 .or-reason-list {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--am-space-2);
-  margin-bottom: var(--am-space-3);
+  gap: 8px;
+  margin-bottom: 14px;
 }
 
 .or-row--static {
@@ -874,39 +791,36 @@
 
 .or-row--static:hover {
   border-color: var(--or-line);
-  background: var(--am-surface);
+  background: #fff;
   box-shadow: var(--or-shadow-xs);
   transform: none;
 }
 
-/* =========================================================
-   SKELETONS
-   ========================================================= */
+/* ── Skeleton loading ───────────────────────────────────── */
 
 .or-skel {
   display: flex;
   flex-direction: column;
-  gap: var(--am-space-3);
+  gap: 12px;
   min-width: 0;
 }
 
 .or-skel > * {
-  min-height: 72px;
+  min-height: 74px;
   border: 1px solid var(--or-line);
   border-radius: var(--or-radius-lg);
   background: linear-gradient(
-    90deg,
-    var(--am-surface-muted) 0%,
-    color-mix(in srgb, var(--am-surface) 88%, #ffffff) 45%,
-    var(--am-surface-muted) 100%
+    100deg,
+    #f0f4f1 15%,
+    #fafcfb 38%,
+    #eaf1ec 62%,
+    #f0f4f1 85%
   );
   background-size: 220% 100%;
-  animation: or-skeleton-shimmer 1.4s ease-in-out infinite;
+  animation: or-skeleton-shimmer 1.5s ease-in-out infinite;
 }
 
-/* =========================================================
-   FOCUS & INTERACTION
-   ========================================================= */
+/* ── Focus and interaction ──────────────────────────────── */
 
 .or-row:focus-visible,
 .or-confirm__actions .am-btn:focus-visible,
@@ -916,25 +830,14 @@
 .or-filters > button:focus-visible,
 .or-filters > .chip:focus-visible,
 .or-page > .am-tabs .am-tab:focus-visible {
-  outline: 3px solid var(--or-focus);
-  outline-offset: 3px;
-}
-
-.or-row:focus:not(:focus-visible),
-.or-confirm__actions .am-btn:focus:not(:focus-visible),
-.or-item__action .am-btn:focus:not(:focus-visible),
-.or-action-row .am-btn:focus:not(:focus-visible),
-.or-filters > .am-btn:focus:not(:focus-visible),
-.or-filters > button:focus:not(:focus-visible),
-.or-filters > .chip:focus:not(:focus-visible),
-.or-page > .am-tabs .am-tab:focus:not(:focus-visible) {
-  outline: none;
+  outline: 2px solid var(--or-focus);
+  outline-offset: 2px;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .or-card:hover {
-    border-color: color-mix(in srgb, var(--am-primary) 24%, var(--or-line));
-    box-shadow: var(--or-shadow-lift);
+    border-color: var(--or-line-brand-strong);
+    box-shadow: var(--or-shadow-lg);
     transform: translateY(-2px);
   }
 
@@ -942,23 +845,34 @@
     opacity: 1;
   }
 
+  .or-row:hover {
+    border-color: var(--or-line-brand-strong);
+    background: #fbfdfc;
+    box-shadow: var(--or-shadow-sm);
+    transform: translateY(-1px);
+  }
+
+  .or-row:hover::before {
+    opacity: 1;
+  }
+
   .or-confirm__actions .am-btn:hover,
   .or-action-row .am-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--or-shadow-lift);
-    filter: brightness(1.03);
+    transform: translateY(-1px);
+    box-shadow: var(--or-shadow-lg);
+    filter: brightness(1.02);
   }
 
   .or-filters > .am-btn:hover,
   .or-filters > button:hover,
   .or-filters > .chip:hover {
     border-color: var(--or-line-brand-strong);
-    background: var(--am-primary-soft);
-    color: var(--am-primary-strong);
+    background: var(--or-green-light);
+    color: var(--or-green-dark);
   }
 
   .or-page > .am-tabs .am-tab:hover {
-    color: var(--am-primary-strong);
+    color: var(--or-green-dark);
   }
 }
 
@@ -967,19 +881,219 @@
 .or-item__action .am-btn:active,
 .or-filters > .am-btn:active,
 .or-filters > button:active,
-.or-filters > .chip:active {
-  transform: scale(0.98);
+.or-filters > .chip:active,
+.or-row:active {
+  transform: scale(0.985);
 }
 
-/* =========================================================
-   MOBILE — UP TO 480PX
-   ========================================================= */
+/* ── Tablet and mobile ──────────────────────────────────── */
+
+@media (max-width: 767px) {
+  .or-page {
+    gap: 16px;
+    padding: 18px var(--or-gutter) calc(28px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .or-confirm {
+    padding-top: 16px;
+  }
+
+  .or-confirm__main {
+    gap: 14px;
+    padding: 26px 18px;
+    border-radius: 18px;
+  }
+
+  .or-confirm__badge {
+    width: 66px;
+    height: 66px;
+  }
+
+  .or-confirm__badge svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .or-confirm h1 {
+    font-size: clamp(23px, 6vw, 30px);
+  }
+
+  .or-confirm__lead {
+    font-size: 13.5px;
+    line-height: 1.6;
+  }
+
+  .or-confirm__code {
+    padding: 9px 13px;
+    font-size: 13.5px;
+  }
+
+  .or-confirm__actions .am-btn {
+    min-height: 46px;
+  }
+
+  .or-card {
+    gap: 14px;
+    padding: 16px;
+    border-radius: 17px;
+  }
+
+  .or-card h2,
+  .or-section-head h2 {
+    font-size: 15.5px;
+  }
+
+  .or-item {
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+    gap: 10px;
+    padding: 12px 0;
+  }
+
+  .or-item--no-price {
+    grid-template-columns: 48px minmax(0, 1fr);
+  }
+
+  .or-item__thumb {
+    width: 48px;
+    height: 48px;
+    border-radius: 11px;
+  }
+
+  .or-item__name {
+    font-size: 13px;
+  }
+
+  .or-item__name small {
+    font-size: 11px;
+  }
+
+  .or-item__action .am-btn {
+    min-height: 34px;
+    padding-inline: 10px;
+    font-size: 11px;
+  }
+
+  .or-row {
+    grid-template-columns: 46px minmax(0, 1fr);
+    align-items: start;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 15px;
+  }
+
+  .or-row__thumb {
+    width: 46px;
+    height: 46px;
+    border-radius: 11px;
+  }
+
+  .or-row__title {
+    font-size: 13px;
+  }
+
+  .or-row__meta {
+    font-size: 11px;
+  }
+
+  .or-row__aside {
+    grid-column: 2;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 7px 10px;
+  }
+
+  .or-row__aside .am-badge {
+    max-width: 100%;
+    white-space: normal;
+  }
+
+  .or-row__amount {
+    margin-left: auto;
+    font-size: 13px;
+  }
+
+  .or-detail {
+    gap: 14px;
+  }
+
+  .or-aside {
+    gap: 13px;
+  }
+
+  .or-status-block {
+    gap: 8px;
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .or-total {
+    padding-top: 12px;
+    font-size: 14px;
+  }
+
+  .or-total span:last-child {
+    font-size: 18px;
+  }
+
+  .or-action-row {
+    gap: 8px;
+  }
+
+  .or-action-row .am-btn {
+    min-height: 43px;
+  }
+
+  .or-track__step {
+    grid-template-columns: 17px minmax(0, 1fr);
+    gap: 10px;
+    padding-bottom: 14px;
+  }
+
+  .or-track__dot {
+    width: 12px;
+    height: 12px;
+    margin-top: 3px;
+  }
+
+  .or-track__step::before {
+    top: 16px;
+    left: 5px;
+  }
+
+  .or-track__step strong {
+    font-size: 13px;
+  }
+
+  .or-track__step small {
+    font-size: 11px;
+  }
+
+  .or-eta,
+  .or-agent {
+    gap: 10px;
+    padding: 12px;
+    border-radius: 13px;
+  }
+
+  .or-info-row {
+    gap: 10px;
+    font-size: 13px;
+  }
+
+  .or-skel > * {
+    min-height: 60px;
+  }
+}
+
+/* ── Small phones ───────────────────────────────────────── */
 
 @media (max-width: 480px) {
   .or-page {
-    gap: var(--am-space-4);
-    padding-top: var(--am-space-4);
-    padding-bottom: calc(var(--am-space-8) + env(safe-area-inset-bottom));
+    gap: 14px;
+    padding-top: 14px;
+    padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
   }
 
   .or-page > .am-page-header .am-page-header__row {
@@ -995,28 +1109,24 @@
     flex: 1 1 0;
     justify-content: center;
     min-width: 0;
-    padding-inline: var(--am-space-2);
+    padding-inline: 7px;
     white-space: normal;
     text-align: center;
   }
 
-  .or-confirm {
-    padding-top: var(--am-space-6);
-  }
-
   .or-confirm__main {
-    padding: var(--am-space-6) var(--am-space-4);
-    border-radius: 18px;
+    padding: 24px 15px;
+    border-radius: 16px;
   }
 
   .or-confirm__badge {
-    width: 66px;
-    height: 66px;
+    width: 60px;
+    height: 60px;
   }
 
   .or-confirm__badge svg {
-    width: 28px;
-    height: 28px;
+    width: 25px;
+    height: 25px;
   }
 
   .or-confirm h1 {
@@ -1024,111 +1134,109 @@
   }
 
   .or-confirm__lead {
-    font-size: 14px;
-    line-height: 1.55;
+    font-size: 13px;
   }
 
   .or-confirm__code {
-    padding: 7px 12px;
-    font-size: 15px;
+    padding: 8px 11px;
+    font-size: 12.5px;
+  }
+
+  .or-confirm__actions {
+    gap: 8px;
   }
 
   .or-confirm__actions .am-btn {
     flex: 1 1 100%;
-    min-height: 48px;
+    min-height: 45px;
   }
 
   .or-card {
+    gap: 12px;
     padding: 14px;
-    border-radius: 17px;
+    border-radius: 15px;
+  }
+
+  .or-card h2,
+  .or-section-head h2 {
+    font-size: 15px;
   }
 
   .or-item {
-    grid-template-columns: 48px minmax(0, 1fr) auto;
-    gap: 10px;
+    grid-template-columns: 42px minmax(0, 1fr) auto;
+    gap: 9px;
   }
 
   .or-item--no-price {
-    grid-template-columns: 48px minmax(0, 1fr);
+    grid-template-columns: 42px minmax(0, 1fr);
   }
 
   .or-item__thumb {
-    width: 48px;
-    height: 48px;
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
   }
 
   .or-item__name {
-    font-size: 12px;
+    font-size: 12.5px;
   }
 
   .or-item__name small {
-    font-size: 10px;
+    margin-top: 3px;
+    font-size: 10.5px;
   }
 
   .or-item__action .am-btn {
-    min-height: 34px;
-    padding-inline: 9px;
-    font-size: 10px;
+    min-height: 32px;
+    padding-inline: 8px;
+    font-size: 10.5px;
   }
 
   .or-row {
-    grid-template-columns: 46px minmax(0, 1fr);
-    gap: 10px;
-    padding: 12px;
-    align-items: start;
+    grid-template-columns: 42px minmax(0, 1fr);
+    gap: 9px;
+    padding: 11px;
+    border-radius: 13px;
   }
 
   .or-row__thumb {
-    width: 46px;
-    height: 46px;
-  }
-
-  .or-row__aside {
-    grid-column: 2;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: var(--am-space-2);
-  }
-
-  .or-row__aside .am-badge {
-    max-width: 100%;
-    white-space: normal;
-  }
-
-  .or-row__amount {
-    margin-left: auto;
+    width: 42px;
+    height: 42px;
   }
 
   .or-row__title {
-    line-height: var(--am-leading-snug);
+    font-size: 12.5px;
+  }
+
+  .or-row__meta {
+    font-size: 10.5px;
+  }
+
+  .or-row__amount {
+    font-size: 12.5px;
   }
 
   .or-status-block {
     padding: 14px;
-    border-radius: 17px;
+    border-radius: 15px;
+  }
+
+  .or-total {
+    font-size: 13px;
   }
 
   .or-total span:last-child {
     font-size: 17px;
   }
 
+  .or-action-row .am-btn {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
   .or-track__step {
-    grid-template-columns: 16px minmax(0, 1fr);
     gap: 9px;
     padding-bottom: 12px;
-  }
-
-  .or-track__dot {
-    width: 12px;
-    height: 12px;
-    margin-top: 3px;
-  }
-
-  .or-track__step::before {
-    top: 16px;
-    left: 5px;
   }
 
   .or-eta,
@@ -1139,7 +1247,8 @@
   .or-info-row {
     flex-direction: column;
     align-items: flex-start;
-    gap: 2px;
+    gap: 3px;
+    padding: 10px 0;
   }
 
   .or-info-row strong {
@@ -1147,41 +1256,21 @@
   }
 
   .or-skel > * {
-    min-height: 62px;
+    min-height: 56px;
   }
 }
 
-/* =========================================================
-   MOBILE — UP TO 639PX
-   ========================================================= */
-
-@media (max-width: 639px) {
-  .or-page {
-    padding-bottom: 0;
-  }
-}
-
-/* =========================================================
-   TABLET — 768PX+
-   ========================================================= */
+/* ── Desktop layouts ────────────────────────────────────── */
 
 @media (min-width: 768px) {
-  .or-page {
-    gap: var(--am-space-6);
-  }
-
-  .or-confirm {
-    padding-top: var(--am-space-10);
-  }
-
   .or-confirm__badge {
-    width: 88px;
-    height: 88px;
+    width: 84px;
+    height: 84px;
   }
 
   .or-confirm__badge svg {
-    width: 38px;
-    height: 38px;
+    width: 35px;
+    height: 35px;
   }
 
   .or-confirm__actions .am-btn {
@@ -1190,15 +1279,7 @@
   }
 }
 
-/* =========================================================
-   DESKTOP — 1024PX+
-   ========================================================= */
-
 @media (min-width: 1024px) {
-  .or-page {
-    padding-top: var(--am-space-8);
-  }
-
   .or-confirm {
     align-items: stretch;
     text-align: left;
@@ -1206,28 +1287,19 @@
 
   .or-confirm__layout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(340px, 0.7fr);
-    gap: var(--am-space-8);
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 0.72fr);
     align-items: start;
-    width: 100%;
+    gap: clamp(22px, 3vw, 34px);
   }
 
   .or-confirm__main {
-    display: flex;
-    flex-direction: column;
     align-items: flex-start;
-    gap: var(--am-space-4);
-    padding: var(--am-space-10) var(--am-space-8);
-  }
-
-  .or-confirm__main .or-confirm__badge {
-    width: 88px;
-    height: 88px;
-    margin-bottom: var(--am-space-2);
+    gap: 18px;
+    padding: clamp(30px, 3.5vw, 44px);
   }
 
   .or-confirm__main h1 {
-    font-size: var(--am-text-3xl);
+    font-size: clamp(30px, 3vw, 42px);
   }
 
   .or-confirm__actions {
@@ -1236,27 +1308,53 @@
   }
 
   .or-confirm__side {
-    display: flex;
-    flex-direction: column;
-    gap: var(--am-space-4);
     position: sticky;
-    top: calc(var(--am-header-h) + var(--am-space-4));
+    top: calc(var(--am-header-h, 76px) + 20px);
+    gap: 16px;
   }
 
   .or-detail {
-    grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.7fr);
-    gap: var(--am-space-8);
+    grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.72fr);
+    gap: clamp(20px, 3vw, 32px);
   }
 
   .or-aside {
     position: sticky;
-    top: calc(var(--am-header-h) + var(--am-space-4));
+    top: calc(var(--am-header-h, 76px) + 20px);
   }
 }
 
-/* =========================================================
-   FORCED COLORS
-   ========================================================= */
+/* ── Reduced motion ─────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .or-card,
+  .or-row,
+  .or-confirm__actions .am-btn,
+  .or-item__action .am-btn,
+  .or-action-row .am-btn,
+  .or-filters > .am-btn,
+  .or-filters > button,
+  .or-filters > .chip,
+  .or-page > .am-tabs .am-tab,
+  .or-track__dot,
+  .or-skel > * {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .or-card:hover,
+  .or-row:hover,
+  .or-row:active,
+  .or-confirm__actions .am-btn:hover,
+  .or-confirm__actions .am-btn:active,
+  .or-action-row .am-btn:hover,
+  .or-action-row .am-btn:active {
+    transform: none !important;
+    filter: none;
+  }
+}
+
+/* ── Forced colors ──────────────────────────────────────── */
 
 @media (forced-colors: active) {
   .or-confirm__main,
@@ -1288,40 +1386,7 @@
   }
 }
 
-/* =========================================================
-   REDUCED MOTION
-   ========================================================= */
-
-@media (prefers-reduced-motion: reduce) {
-  .or-card,
-  .or-row,
-  .or-confirm__actions .am-btn,
-  .or-item__action .am-btn,
-  .or-action-row .am-btn,
-  .or-filters > .am-btn,
-  .or-filters > button,
-  .or-filters > .chip,
-  .or-page > .am-tabs .am-tab,
-  .or-track__dot,
-  .or-skel > * {
-    animation: none !important;
-    transition: none !important;
-  }
-
-  .or-card:hover,
-  .or-row:hover,
-  .or-row:active,
-  .or-confirm__actions .am-btn:hover,
-  .or-confirm__actions .am-btn:active,
-  .or-action-row .am-btn:hover,
-  .or-action-row .am-btn:active {
-    transform: none;
-  }
-}
-
-/* =========================================================
-   ANIMATIONS
-   ========================================================= */
+/* ── Skeleton animation ─────────────────────────────────── */
 
 @keyframes or-skeleton-shimmer {
   0% {

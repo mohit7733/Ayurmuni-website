@@ -504,7 +504,7 @@ export default function DoctorProfile() {
               </div>
               {reviews.length > 0 ? (
                 <div className="dp-reviews">
-                  {reviews.slice(0, 3).map((item, index) => {
+                  {reviews.slice(0, 6).map((item, index) => {
                     const media = (item.image_urls || []).map((url) => ({
                       url,
                       type: isReviewVideoUrl(url) ? "video" : "image",

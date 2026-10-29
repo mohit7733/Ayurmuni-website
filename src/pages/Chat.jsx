@@ -1,44 +1,59 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { formatMessageTime } from '../chat/dateFormatter';
-import { getChatDisabledReason, shouldSuppressChatError } from '../chat/chatAccessUtils';
-import { dedupeMessages, isTempMessage } from '../chat/messageUtils';
-import { formatDoctorDisplayName } from '../consult/appointmentUtils';
-import { doctorDisplayName, doctorImage, getDoctorId } from '../consult/doctors';
-import { useChat } from '../hooks/useChat';
-import { requireAuth } from '../services/guestAuth';
-import { chatService } from '../services/chatService';
-import { getAppointmentDetail } from '../services/consultService';
-import AppShell from '../components/AppShell';
-import '../design/pages/chat.css';
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Navigate,
+  useLocation,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
+import { formatMessageTime } from "../chat/dateFormatter";
+import {
+  getChatDisabledReason,
+  shouldSuppressChatError,
+} from "../chat/chatAccessUtils";
+import { dedupeMessages, isTempMessage } from "../chat/messageUtils";
+import { formatDoctorDisplayName } from "../consult/appointmentUtils";
+import {
+  doctorDisplayName,
+  doctorImage,
+  getDoctorId,
+} from "../consult/doctors";
+import { useChat } from "../hooks/useChat";
+import { requireAuth } from "../services/guestAuth";
+import { chatService } from "../services/chatService";
+import { getAppointmentDetail } from "../services/consultService";
+import AppShell from "../components/AppShell";
+import "../design/pages/chat.css";
 
 let globalInputSendLock = false;
-const CHAT_META_KEY = 'ayurmuni_chat_meta';
+const CHAT_META_KEY = "ayurmuni_chat_meta";
 
 const readChatMeta = (appointmentId, extras) => {
   let stored = {};
   try {
-    const all = JSON.parse(sessionStorage.getItem(CHAT_META_KEY) || '{}');
+    const all = JSON.parse(sessionStorage.getItem(CHAT_META_KEY) || "{}");
     stored = all?.[appointmentId] || {};
   } catch {
     stored = {};
   }
   return {
-    role: extras.role === 'doctor' || stored.role === 'doctor' ? 'doctor' : 'patient',
-    doctorName: extras.doctorName || stored.doctorName || 'Doctor',
-    patientName: extras.patientName || stored.patientName || 'Patient',
-    doctorAvatar: extras.doctorAvatar || stored.doctorAvatar || '',
-    patientAvatar: extras.patientAvatar || stored.patientAvatar || '',
-    appointmentDate: extras.appointmentDate || stored.appointmentDate || '',
+    role:
+      extras.role === "doctor" || stored.role === "doctor"
+        ? "doctor"
+        : "patient",
+    doctorName: extras.doctorName || stored.doctorName || "Doctor",
+    patientName: extras.patientName || stored.patientName || "Patient",
+    doctorAvatar: extras.doctorAvatar || stored.doctorAvatar || "",
+    patientAvatar: extras.patientAvatar || stored.patientAvatar || "",
+    appointmentDate: extras.appointmentDate || stored.appointmentDate || "",
     chatContext: extras.chatContext || stored.chatContext || null,
-    doctorId: extras.doctorId || stored.doctorId || '',
+    doctorId: extras.doctorId || stored.doctorId || "",
   };
 };
 
 const writeChatMeta = (appointmentId, meta) => {
   if (!appointmentId) return;
   try {
-    const all = JSON.parse(sessionStorage.getItem(CHAT_META_KEY) || '{}');
+    const all = JSON.parse(sessionStorage.getItem(CHAT_META_KEY) || "{}");
     all[appointmentId] = meta;
     sessionStorage.setItem(CHAT_META_KEY, JSON.stringify(all));
   } catch {
@@ -48,24 +63,24 @@ const writeChatMeta = (appointmentId, meta) => {
 
 const formatChatDay = (value) => {
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '';
+  if (Number.isNaN(date.getTime())) return "";
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const day = new Date(date);
   day.setHours(0, 0, 0, 0);
   const diff = Math.round((today.getTime() - day.getTime()) / 86400000);
-  if (diff === 0) return 'Today';
-  if (diff === 1) return 'Yesterday';
-  return date.toLocaleDateString('en-IN', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
+  if (diff === 0) return "Today";
+  if (diff === 1) return "Yesterday";
+  return date.toLocaleDateString("en-IN", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
   });
 };
 
 export default function Chat() {
-  const { appointmentId = '' } = useParams();
+  const { appointmentId = "" } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const extras = location.state || {};
@@ -88,26 +103,33 @@ export default function Chat() {
   const fileRef = useRef(null);
   const inputRef = useRef(null);
   const markedReadRef = useRef(new Set());
-  const [text, setText] = useState('');
+  const [text, setText] = useState("");
   const [pickedFile, setPickedFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState('');
+  const [previewUrl, setPreviewUrl] = useState("");
   const [isSending, setIsSending] = useState(false);
-  const [lightbox, setLightbox] = useState('');
+  const [lightbox, setLightbox] = useState("");
 
   const visibleMessages = useMemo(() => dedupeMessages(messages), [messages]);
-  const disabledReason = getChatDisabledReason(chatAccess, meta.appointmentDate, meta.chatContext);
+  const disabledReason = getChatDisabledReason(
+    chatAccess,
+    meta.appointmentDate,
+    meta.chatContext,
+  );
   const visibleError =
-    error && !shouldSuppressChatError(error, visibleMessages.length) ? error : null;
+    error && !shouldSuppressChatError(error, visibleMessages.length)
+      ? error
+      : null;
   const canInteract = isChatEnabled && !isSending && !globalInputSendLock;
   const hasContent = !!text.trim() || !!pickedFile;
   const headerTitle =
-    participantRole === 'doctor'
-      ? meta.patientName || 'Patient'
+    participantRole === "doctor"
+      ? meta.patientName || "Patient"
       : formatDoctorDisplayName(meta.doctorName);
-  const headerAvatar = participantRole === 'doctor' ? meta.patientAvatar : meta.doctorAvatar;
-  const roleLabel = participantRole === 'doctor' ? 'Doctor' : 'Patient';
+  const headerAvatar =
+    participantRole === "doctor" ? meta.patientAvatar : meta.doctorAvatar;
+  const roleLabel = participantRole === "doctor" ? "Doctor" : "Patient";
   const statusLine = !isChatEnabled
-    ? 'Chat closed — read only'
+    ? "Chat closed — read only"
     : isConnected
       ? `Connected • ${roleLabel}`
       : `Connecting • ${roleLabel}`;
@@ -122,7 +144,7 @@ export default function Chat() {
 
   useEffect(() => {
     (async () => {
-      if (!(await requireAuth('Please login to open chat'))) return;
+      if (!(await requireAuth("Please login to open chat"))) return;
       if (!appointmentId) return;
       const res = await getAppointmentDetail(appointmentId);
       if (!res?.success) return;
@@ -132,17 +154,27 @@ export default function Chat() {
       const patient = appointment.patient || {};
       setMeta((prev) => ({
         ...prev,
-        doctorName: prev.doctorName && prev.doctorName !== 'Doctor' ? prev.doctorName : doctorDisplayName(doctor),
+        doctorName:
+          prev.doctorName && prev.doctorName !== "Doctor"
+            ? prev.doctorName
+            : doctorDisplayName(doctor),
         doctorAvatar: prev.doctorAvatar || doctorImage(doctor),
-        patientName: prev.patientName && prev.patientName !== 'Patient' ? prev.patientName : patient.patient_name || prev.patientName,
-        patientAvatar: prev.patientAvatar || patient.patient_image || '',
-        appointmentDate: prev.appointmentDate || appointment.appointment_date || '',
+        patientName:
+          prev.patientName && prev.patientName !== "Patient"
+            ? prev.patientName
+            : patient.patient_name || prev.patientName,
+        patientAvatar: prev.patientAvatar || patient.patient_image || "",
+        appointmentDate:
+          prev.appointmentDate || appointment.appointment_date || "",
         doctorId: prev.doctorId || getDoctorId(doctor),
         chatContext: prev.chatContext || {
           call_status: appointment.call_status,
           appointment_status: appointment.appointment_status,
           appointment_date: appointment.appointment_date,
-          follow_up: appointment.follow_up || data.prescription?.follow_up || data.follow_up,
+          follow_up:
+            appointment.follow_up ||
+            data.prescription?.follow_up ||
+            data.follow_up,
         },
       }));
     })();
@@ -180,7 +212,7 @@ export default function Chat() {
 
   const handlePickImage = (event) => {
     const file = event.target.files?.[0];
-    event.target.value = '';
+    event.target.value = "";
     if (!file || !canInteract) return;
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPickedFile(file);
@@ -190,7 +222,7 @@ export default function Chat() {
   const removePicked = () => {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPickedFile(null);
-    setPreviewUrl('');
+    setPreviewUrl("");
   };
 
   const handleSend = async () => {
@@ -203,19 +235,22 @@ export default function Chat() {
     setIsSending(true);
     const asset = pickedFile;
     const toSend = trimmed;
-    setText('');
+    setText("");
     removePicked();
 
     try {
       if (!asset) {
         await sendMessage(toSend);
       } else {
-        const url = await chatService.uploadAttachment(asset, asset.name || 'image.jpg');
+        const url = await chatService.uploadAttachment(
+          asset,
+          asset.name || "image.jpg",
+        );
         await sendMessage(toSend, [
           {
             file_url: url,
-            file_type: 'image',
-            file_name: asset.name || 'image.jpg',
+            file_type: "image",
+            file_name: asset.name || "image.jpg",
           },
         ]);
       }
@@ -233,7 +268,7 @@ export default function Chat() {
   };
 
   const onComposerKeyDown = (event) => {
-    if (event.key === 'Enter' && !event.shiftKey) {
+    if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       handleSend();
     }
@@ -253,13 +288,23 @@ export default function Chat() {
             onClick={() => navigate(-1)}
             aria-label="Back"
           >
-            ←
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+              <path
+                d="M15 5l-7 7 7 7"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
           </button>
+
           <button
             type="button"
             className="chat-avatar-wrap"
             onClick={() => {
-              if (participantRole === 'patient' && meta.doctorId) {
+              if (participantRole === "patient" && meta.doctorId) {
                 navigate(`/consult/doctors/${meta.doctorId}`);
               }
             }}
@@ -268,12 +313,17 @@ export default function Chat() {
             {headerAvatar ? (
               <img src={headerAvatar} alt="" />
             ) : (
-              <span>{String(headerTitle || '?').charAt(0).toUpperCase()}</span>
+              <span>
+                {String(headerTitle || "?")
+                  .charAt(0)
+                  .toUpperCase()}
+              </span>
             )}
-            <i className={isConnected && isChatEnabled ? 'on' : ''} />
+            <i className={isConnected && isChatEnabled ? "on" : ""} />
           </button>
-          <div>
-            <strong>{headerTitle || 'Unknown'}</strong>
+
+          <div className="chat-header__details">
+            <strong>{headerTitle || "Unknown"}</strong>
             <small>{statusLine}</small>
           </div>
         </header>
@@ -282,38 +332,58 @@ export default function Chat() {
           <p className="chat-loading">Loading messages…</p>
         ) : null}
 
-        <div className="chat-list" ref={listRef}>
+        <div
+          className="chat-list"
+          ref={listRef}
+          aria-label="Conversation messages"
+        >
           {!isLoading && visibleMessages.length === 0 ? (
             <div className="chat-empty">
               <strong>No messages yet</strong>
-              <p>Start a conversation when chat is open, or check back later for history.</p>
+              <p>
+                Start a conversation when chat is open, or check back later for
+                history.
+              </p>
             </div>
           ) : (
             visibleMessages.map((item, index) => {
               const prev = index > 0 ? visibleMessages[index - 1] : null;
-              const showDate = !prev || formatChatDay(item.created_at) !== formatChatDay(prev.created_at);
+              const showDate =
+                !prev ||
+                formatChatDay(item.created_at) !==
+                  formatChatDay(prev.created_at);
               const isOwn = item.sender_role === participantRole;
               const pending = isTempMessage(item);
+
               return (
-                <div key={`${item.id}-${index}`}>
+                <div key={`${item.id}-${index}`} className="chat-message-group">
                   {showDate ? (
                     <div className="chat-date">
                       <span>{formatChatDay(item.created_at)}</span>
                     </div>
                   ) : null}
-                  <article className={`chat-bubble ${isOwn ? 'own' : 'other'}`}>
-                    {!isOwn ? <em>{item.sender_name || 'Unknown'}</em> : null}
-                    <div>
+
+                  <article className={`chat-bubble ${isOwn ? "own" : "other"}`}>
+                    {!isOwn ? <em>{item.sender_name || "Unknown"}</em> : null}
+
+                    <div className="chat-bubble__body">
                       {item.text ? <p>{item.text}</p> : null}
+
                       {(item.attachments || []).map((attachment, idx) =>
-                        attachment.file_type === 'image' ? (
+                        attachment.file_type === "image" ? (
                           <button
                             key={`${attachment.file_url}-${idx}`}
                             type="button"
                             className="chat-image-btn"
                             onClick={() => setLightbox(attachment.file_url)}
+                            aria-label="Open image"
                           >
-                            <img src={attachment.file_url} alt={attachment.file_name || 'Attachment'} />
+                            <img
+                              src={attachment.file_url}
+                              alt={attachment.file_name || "Attachment"}
+                              loading="lazy"
+                              decoding="async"
+                            />
                           </button>
                         ) : (
                           <a
@@ -323,16 +393,37 @@ export default function Chat() {
                             rel="noreferrer"
                             className="chat-file"
                           >
-                            📎 {attachment.file_name || 'Download'}
+                            <svg
+                              viewBox="0 0 24 24"
+                              width="15"
+                              height="15"
+                              aria-hidden="true"
+                            >
+                              <path
+                                d="M20.5 11.5l-8.1 8.1a5 5 0 01-7.1-7.1l8.5-8.5a3.4 3.4 0 014.8 4.8l-8.2 8.2a1.8 1.8 0 01-2.5-2.5l7.4-7.4"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1.8"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                            {attachment.file_name || "Download"}
                           </a>
                         ),
                       )}
                     </div>
-                    <small>
+
+                    <small className="chat-bubble__meta">
                       {formatMessageTime(item.created_at).toUpperCase()}
+
                       {isOwn ? (
-                        <b className={item.is_seen ? 'seen' : pending ? 'pending' : ''}>
-                          {pending ? '…' : item.is_seen ? '✓✓' : '✓'}
+                        <b
+                          className={
+                            item.is_seen ? "seen" : pending ? "pending" : ""
+                          }
+                        >
+                          {pending ? "…" : item.is_seen ? "✓✓" : "✓"}
                         </b>
                       ) : null}
                     </small>
@@ -343,17 +434,25 @@ export default function Chat() {
           )}
         </div>
 
-        {!isChatEnabled && disabledReason ? <p className="chat-disabled">{disabledReason}</p> : null}
+        {!isChatEnabled && disabledReason ? (
+          <p className="chat-disabled">{disabledReason}</p>
+        ) : null}
 
         <div className="chat-composer">
           {previewUrl ? (
             <div className="chat-preview">
-              <img src={previewUrl} alt="" />
-              <button type="button" onClick={removePicked} disabled={isSending}>
+              <img src={previewUrl} alt="Selected attachment preview" />
+              <button
+                type="button"
+                onClick={removePicked}
+                disabled={isSending}
+                aria-label="Remove selected image"
+              >
                 ×
               </button>
             </div>
           ) : null}
+
           <div className="chat-input-row">
             <button
               type="button"
@@ -362,31 +461,69 @@ export default function Chat() {
               onClick={() => fileRef.current?.click()}
               aria-label="Attach image"
             >
-              📎
+              <svg
+                viewBox="0 0 24 24"
+                width="19"
+                height="19"
+                aria-hidden="true"
+              >
+                <path
+                  d="M20.5 11.5l-8.1 8.1a5 5 0 01-7.1-7.1l8.5-8.5a3.4 3.4 0 014.8 4.8l-8.2 8.2a1.8 1.8 0 01-2.5-2.5l7.4-7.4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
             </button>
-            <input ref={fileRef} type="file" accept="image/*" hidden onChange={handlePickImage} />
+
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={handlePickImage}
+            />
+
             <textarea
               ref={inputRef}
               value={text}
               onChange={(event) => setText(event.target.value)}
               onKeyDown={onComposerKeyDown}
-              placeholder={isChatEnabled ? 'Type a message...' : 'Chat closed — read only'}
+              placeholder={
+                isChatEnabled ? "Type a message..." : "Chat closed — read only"
+              }
               disabled={!canInteract}
               rows={1}
+              aria-label="Message"
             />
+
             <button
               type="button"
               className="chat-send"
               disabled={!hasContent || !canInteract}
               onClick={handleSend}
+              aria-label={isSending ? "Sending message" : "Send message"}
             >
-              {isSending ? '…' : '➤'}
+              {isSending ? (
+                <span className="chat-send-spinner" aria-hidden="true" />
+              ) : (
+                <svg
+                  viewBox="0 0 24 24"
+                  width="19"
+                  height="19"
+                  aria-hidden="true"
+                >
+                  <path d="M4 12l16-8-6 16-3.2-6.4L4 12z" fill="currentColor" />
+                </svg>
+              )}
             </button>
           </div>
         </div>
 
         {visibleError ? (
-          <div className="chat-error">
+          <div className="chat-error" role="alert">
             <span>{visibleError}</span>
             <button type="button" onClick={() => loadMessages()}>
               Retry
@@ -395,9 +532,14 @@ export default function Chat() {
         ) : null}
 
         {lightbox ? (
-          <div className="chat-lightbox" role="dialog" onClick={() => setLightbox('')}>
-            <img src={lightbox} alt="" />
-            <button type="button" onClick={() => setLightbox('')}>
+          <div
+            className="chat-lightbox"
+            role="dialog"
+            aria-modal="true"
+            onClick={() => setLightbox("")}
+          >
+            <img src={lightbox} alt="Attachment" />
+            <button type="button" onClick={() => setLightbox("")}>
               Close
             </button>
           </div>
