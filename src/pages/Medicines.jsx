@@ -33,6 +33,7 @@ import {
   Tile,
 } from '../components/ui';
 import { CatalogPageSkeleton } from '../components/skeletons';
+import { filterItemsByQuery } from '../home/concernCatalog';
 import { getProductStockQty } from '../product/stock';
 import { getCatalogPrice, getCatalogRating, toProductApiSort } from '../utils/productSearchUtils';
 import { HOME_COPY as H } from '../content/home';
@@ -89,13 +90,19 @@ export default function Medicines() {
   const [recent, setRecent] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [query, setQuery] = useState('');
+  // Page search filters this page in place (debounced while typing; Search/Enter applies now).
+  useEffect(() => {
+    const timer = setTimeout(() => setQuery(search.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [brandNames, setBrandNames] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
   const moreRef = useRef(null);
 
   const filteredProducts = useMemo(() => {
-    let filtered = products.filter((product) => {
+    let filtered = filterItemsByQuery(products, query).filter((product) => {
       const price = getCatalogPrice(product);
       if (Number.isFinite(price) && (price < priceRange[0] || price > priceRange[1])) return false;
 
@@ -139,7 +146,7 @@ export default function Medicines() {
     });
 
     return filtered;
-  }, [products, priceRange, minRating, inStockOnly, sortBy, brandIds, brandNames]);
+  }, [products, query, priceRange, minRating, inStockOnly, sortBy, brandIds, brandNames]);
 
   const hasActiveFilters =
     priceRange[0] !== 0 ||
@@ -148,7 +155,8 @@ export default function Medicines() {
     inStockOnly ||
     sortBy !== 'relevance' ||
     brandIds.length > 0 ||
-    brandNames.length > 0;
+    brandNames.length > 0 ||
+    Boolean(query);
 
   const clearFilters = () => {
     setPriceRange([0, 10000]);
@@ -157,12 +165,11 @@ export default function Medicines() {
     setSortBy('relevance');
     setBrandIds([]);
     setBrandNames([]);
+    setSearch('');
+    setQuery('');
   };
 
-  const goSearch = (value) => {
-    const query = String(value || search || '').trim();
-    navigate(`/search?mode=product${query ? `&q=${encodeURIComponent(query)}` : ''}`);
-  };
+  const goSearch = (value) => setQuery(String(value ?? search).trim());
 
   useEffect(() => {
     let alive = true;
@@ -303,9 +310,8 @@ export default function Medicines() {
           value={search}
           onChange={setSearch}
           onSubmit={goSearch}
-          placeholder={H.searchPlaceholder}
+          placeholder="Search medicines"
           label="Search medicines"
-          includeRecent
         suggestions={searchSuggestions(concerns, brands)}
         />
       </PageBar>

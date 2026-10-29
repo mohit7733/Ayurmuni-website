@@ -32,6 +32,7 @@ import {
   SectionHeader,
 } from "../components/ui";
 import { CatalogPageSkeleton } from "../components/skeletons";
+import { filterItemsByQuery } from "../home/concernCatalog";
 import { STORE_COPY as T } from "../content/store";
 import "../design/pages/store.css";
 import "../design/brand.css";
@@ -77,6 +78,12 @@ export default function Products() {
   const [recentProducts, setRecentProducts] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [query, setQuery] = useState("");
+  // Page search filters this page in place (debounced while typing; Search/Enter applies now).
+  useEffect(() => {
+    const timer = setTimeout(() => setQuery(search.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   // Filter & Sort States
   const [sortBy, setSortBy] = useState("relevance");
@@ -153,7 +160,7 @@ export default function Products() {
 
   // Apply client-side filters and sorting
   const filteredAndSortedProducts = useMemo(() => {
-    let filtered = [...listProducts];
+    let filtered = [...filterItemsByQuery(listProducts, query)];
 
     // Filter by price range (items without a numeric price are kept)
     filtered = filtered.filter((product) => {
@@ -201,7 +208,7 @@ export default function Products() {
     });
 
     return filtered;
-  }, [listProducts, priceRange, minRating, inStockOnly, sortBy]);
+  }, [listProducts, query, priceRange, minRating, inStockOnly, sortBy]);
 
   const hasActiveFilters =
     priceRange[0] !== 0 ||
@@ -209,7 +216,8 @@ export default function Products() {
     minRating > 0 ||
     inStockOnly ||
     sortBy !== "relevance" ||
-    Boolean(selectedCategoryId);
+    Boolean(selectedCategoryId) ||
+    Boolean(query);
 
   const clearFilters = () => {
     setPriceRange([0, 10000]);
@@ -217,6 +225,8 @@ export default function Products() {
     setInStockOnly(false);
     setSortBy("relevance");
     setSelectedCategoryId("");
+    setSearch("");
+    setQuery("");
   };
 
   const showSkeleton = listLoading && listProducts.length === 0;
@@ -238,12 +248,7 @@ export default function Products() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const goSearch = (value) => {
-    const query = String(value || search || "").trim();
-    navigate(
-      `/search?mode=product${query ? `&q=${encodeURIComponent(query)}` : ""}`,
-    );
-  };
+  const goSearch = (value) => setQuery(String(value ?? search).trim());
 
   const placeBar = showSkeleton ? 'top' : 'all';
   const searchBar = (
@@ -254,7 +259,6 @@ export default function Products() {
           onSubmit={goSearch}
           placeholder={T.productsSearch}
           label={T.productsSearch}
-          includeRecent
           suggestions={searchSuggestions(productCategories, listProducts)}
         />
       </PageBar>

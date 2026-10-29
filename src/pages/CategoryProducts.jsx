@@ -24,6 +24,7 @@ import {
   toProductApiSort,
 } from '../utils/productSearchUtils';
 import { STORE_COPY as T } from '../content/store';
+import { filterItemsByQuery } from '../home/concernCatalog';
 import '../design/pages/store.css';
 import '../design/brand.css';
 import '../design/product-card-home.css';
@@ -66,6 +67,12 @@ export default function CategoryProducts() {
   const activeCategoryId = selectedCategoryId === 'all' ? null : selectedCategoryId;
   const [healthCategories, setHealthCategories] = useState([]);
   const [search, setSearch] = useState('');
+  const [query, setQuery] = useState('');
+  // Page search filters this page in place (debounced while typing; Search/Enter applies now).
+  useEffect(() => {
+    const timer = setTimeout(() => setQuery(search.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
   
   // Filter & Sort States
   const [sortBy, setSortBy] = useState('relevance');
@@ -183,7 +190,7 @@ export default function CategoryProducts() {
         })
       : products;
     let filtered = applyProductFilters({
-      products: scoped,
+      products: filterItemsByQuery(scoped, query),
       sortBy: catalogSort,
       brandIds: !brandId && brandIds.length > 0 ? brandIds : null,
       brandNames: brandNames.length > 0 ? brandNames : null,
@@ -222,7 +229,7 @@ export default function CategoryProducts() {
     }
 
     return filtered;
-  }, [products, priceRange, minRating, inStockOnly, sortBy, brandIds, brandNames, brandId, brandTitleKey]);
+  }, [products, query, priceRange, minRating, inStockOnly, sortBy, brandIds, brandNames, brandId, brandTitleKey]);
 
   const categoryList = brandId
     ? []
@@ -242,7 +249,8 @@ export default function CategoryProducts() {
     dosha !== 'all' ||
     inStockOnly ||
     sortBy !== 'relevance' ||
-    hasBrandFilter;
+    hasBrandFilter ||
+    Boolean(query);
 
   const clearFilters = () => {
     setPriceRange([0, 10000]);
@@ -252,13 +260,11 @@ export default function CategoryProducts() {
     setSortBy('relevance');
     setBrandIds(brandId ? [brandId] : []);
     setBrandNames([]);
+    setSearch('');
+    setQuery('');
   };
 
-  const goSearch = (value) => {
-    const query = String(value || search || '').trim();
-    const searchMode = mode === 'health' ? 'health' : 'product';
-    navigate(`/search?mode=${searchMode}${query ? `&q=${encodeURIComponent(query)}` : ''}`);
-  };
+  const goSearch = (value) => setQuery(String(value ?? search).trim());
 
   const selectCategory = (id) => {
     setSelectedCategoryId(id);
@@ -289,8 +295,7 @@ export default function CategoryProducts() {
               onChange={setSearch}
               onSubmit={goSearch}
               placeholder={T.searchCollection}
-              label={T.searchCollection}
-              includeRecent
+              label={T.searchCollection}
             suggestions={searchSuggestions(subcategories, topCategories)}
             />
             <kbd className="cp-kbd" aria-hidden>/</kbd>
