@@ -25,7 +25,7 @@ import {
   DetailTop,
   MetaChip,
 } from '../components/detail/Detail';
-import { Button, Disclaimer, Input, Textarea } from '../components/ui';
+import { Button, Input, Textarea } from '../components/ui';
 import { showSuccessToast } from '../config/key';
 import { formatRupee, resolveImageUrl } from '../home/catalog';
 import { requireAuth } from '../services/guestAuth';
@@ -650,7 +650,6 @@ export default function ReturnRequest() {
           />
         ) : null}
 
-        <Disclaimer />
       </DetailPage>
     </AppShell>
   );

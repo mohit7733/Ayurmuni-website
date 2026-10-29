@@ -643,6 +643,7 @@ html:has(.pd-page) {
 }
 
 .pd-auto-rail {
+  position: relative;
   display: grid;
   grid-template-columns: 36px minmax(0, 1fr) 36px;
   align-items: center;
@@ -650,6 +651,30 @@ html:has(.pd-page) {
   width: 100%;
   min-width: 0;
 }
+.pd-auto-rail__bar {
+  position: absolute;
+  left: 44px;
+  right: 44px;
+  bottom: 0;
+  height: 2px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: rgba(201, 165, 90, 0.28);
+  pointer-events: none;
+}
+.pd-auto-rail__bar::after {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform: scaleX(0);
+  transform-origin: left center;
+  background: linear-gradient(90deg, #0d614e, #e4c47a);
+  animation: pd-rail-bar 3000ms linear infinite;
+}
+.pd-auto-rail:hover .pd-auto-rail__bar::after,
+.pd-auto-rail__bar.is-paused::after { animation-play-state: paused; }
+@keyframes pd-rail-bar { to { transform: scaleX(1); } }
 
 .pd-auto-rail.is-static {
   display: block;

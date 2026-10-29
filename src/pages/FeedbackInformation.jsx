@@ -2,7 +2,6 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronRight, CircleHelp, FileText, Scale, Shield } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import PageHeader from '../components/PageHeader';
-import { Disclaimer } from '../components/ui';
 import { STATIC_COPY as T } from '../content/static';
 import '../design/pages/static.css';
 import '../design/pages/feedback-information.css';
@@ -61,7 +60,6 @@ export default function FeedbackInformation() {
             <div className="sx-feedback-grid">{legalItems.map(renderItem)}</div>
           </section>
         ) : null}
-        <Disclaimer />
       </section>
     </AppShell>
   );

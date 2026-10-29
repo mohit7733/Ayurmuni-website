@@ -30,10 +30,11 @@ import {
   Reveal,
   SearchField,
   searchSuggestions,
-  SkeletonGrid,
   Tile,
 } from '../components/ui';
+import { CatalogPageSkeleton } from '../components/skeletons';
 import { getProductStockQty } from '../product/stock';
+import { getCatalogPrice, getCatalogRating, toProductApiSort } from '../utils/productSearchUtils';
 import { HOME_COPY as H } from '../content/home';
 import { STORE_COPY as T } from '../content/store';
 import '../design/pages/store.css';
@@ -62,12 +63,21 @@ export default function Medicines() {
     null,
     medicineCategoryId,
   );
+  const [sortBy, setSortBy] = useState('relevance');
+  const [priceRange, setPriceRange] = useState([0, 10000]);
+  const [minRating, setMinRating] = useState(0);
+  const [brandIds, setBrandIds] = useState([]);
   const productFilter = useMemo(() => {
     const next = {};
     if (medicineCategoryId) next.service_category_id = medicineCategoryId;
     if (categoryId) next.id = categoryId;
+    if (priceRange[0] > 0) next.min_price = priceRange[0];
+    if (priceRange[1] < 10000) next.max_price = priceRange[1];
+    if (minRating > 0) next.min_rating = minRating;
+    const sort = toProductApiSort(sortBy);
+    if (sort) next.sort = sort;
     return next;
-  }, [medicineCategoryId, categoryId]);
+  }, [medicineCategoryId, categoryId, priceRange, minRating, sortBy]);
   const { products, loading, loadingMore, hasMore, loadMore } = useCategoryProducts(
     productFilter,
     [],
@@ -79,26 +89,20 @@ export default function Medicines() {
   const [recent, setRecent] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [sortBy, setSortBy] = useState('relevance');
-  const [priceRange, setPriceRange] = useState([0, 10000]);
-  const [minRating, setMinRating] = useState(0);
   const [inStockOnly, setInStockOnly] = useState(false);
-  const [brandIds, setBrandIds] = useState([]);
   const [brandNames, setBrandNames] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
   const moreRef = useRef(null);
 
   const filteredProducts = useMemo(() => {
     let filtered = products.filter((product) => {
-      const price = Number(product.selling_price ?? product.price);
+      const price = getCatalogPrice(product);
       if (Number.isFinite(price) && (price < priceRange[0] || price > priceRange[1])) return false;
 
-      if (minRating > 0) {
-        const rating = Number(product.rating || product.average_rating || 0);
-        if (rating < minRating) return false;
-      }
+      if (minRating > 0 && getCatalogRating(product) < minRating) return false;
 
       if (inStockOnly) {
+        if (product.out_of_stock === true) return false;
         const qty = getProductStockQty(product);
         const stock = qty ?? Number(product.stock || product.in_stock || 0);
         if (!(stock > 0)) return false;
@@ -116,10 +120,10 @@ export default function Medicines() {
     });
 
     filtered.sort((a, b) => {
-      const priceA = Number(a.price || a.selling_price || 0);
-      const priceB = Number(b.price || b.selling_price || 0);
-      const ratingA = Number(a.rating || a.average_rating || 0);
-      const ratingB = Number(b.rating || b.average_rating || 0);
+      const priceA = getCatalogPrice(a);
+      const priceB = getCatalogPrice(b);
+      const ratingA = getCatalogRating(a);
+      const ratingB = getCatalogRating(b);
       switch (sortBy) {
         case 'price_low':
           return priceA - priceB;
@@ -312,10 +316,8 @@ export default function Medicines() {
       <div className="hm-page svc-page">
         <div className="hm-body">
 
-          {placeBar === 'top' ? searchBar : null}
-
           {showSkeleton ? (
-            <SkeletonGrid count={8} className="svc-catalog" label="Loading medicines" />
+            <CatalogPageSkeleton count={8} label="Loading medicines" />
           ) : (
             <>
               <div className="hm-doctor-row">
@@ -425,7 +427,7 @@ export default function Medicines() {
                     <div className="st-controls st-controls--search-only">{searchBar}</div>
                   ) : null}
                   {catalogLoading ? (
-                    <SkeletonGrid count={8} className="svc-catalog" label="Loading medicines" />
+                    <CatalogPageSkeleton count={8} label="Loading medicines" />
                   ) : filteredProducts.length === 0 ? (
                     <EmptyState
                       icon={<Leaf size={28} />}

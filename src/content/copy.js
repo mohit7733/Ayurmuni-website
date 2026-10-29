@@ -4,9 +4,6 @@ export const COPY = {
   brandMission:
     'Consult verified Ayurvedic doctors, shop authentic remedies, and follow diet and yoga plans made for your prakriti.',
   skipToContent: 'Skip to main content',
-  healthDisclaimer: 'This is not a substitute for professional medical advice.',
-  healthDisclaimerLong:
-    'This is not a substitute for professional medical advice, diagnosis or treatment. Always consult a qualified doctor about any health condition. In an emergency, call 112.',
   trust: [
     { id: 'doctors', title: 'Verified doctors', text: 'Qualified BAMS & MD Ayurveda practitioners' },
     { id: 'secure', title: 'Secure payments', text: 'Encrypted checkout via Cashfree' },

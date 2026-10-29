@@ -55,7 +55,39 @@
 }
 
 .cn-panel .am-rail__item--product {
-  flex-basis: min(46%, 176px);
+  flex: 0 0 200px;
+  width: 200px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.cn-panel .am-rail__item--product > .am-product-card {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+}
+
+.cn-panel .am-rail__item--product .am-product-card__media {
+  aspect-ratio: 4 / 3;
+  width: 100%;
+}
+
+.cn-panel .am-rail__item--product .am-product-card__media img {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  padding: 0;
+  object-fit: cover;
+  object-position: center;
+}
+
+.cn-panel .am-rail__item--product .am-product-card__name {
+  min-height: 2.6em;
+  line-height: 1.3;
+}
+
+.cn-panel .am-rail__item--product .am-product-card__action {
+  margin-top: auto;
 }
 
 .cn-panel .am-rail__item--wide {
@@ -87,7 +119,8 @@
   }
 
   .cn-panel .am-rail__item--product {
-    flex-basis: 176px;
+    flex: 0 0 200px;
+    width: 200px;
   }
 
   .cn-panel .am-rail__item--wide {
@@ -98,3 +131,37 @@
 .hm-page.cn-home { display: flex; flex-direction: column; gap: var(--am-space-4); padding-bottom: 0; min-width: 0; }
 .hm-page.cn-home:empty { display: none; }
 
+
+/* Concern page: one container edge for header, search and sections; compact rhythm. */
+.cs-page.cs-concern {
+  gap: 12px;
+  padding: 12px max(16px, var(--am-gutter)) var(--am-space-8);
+  box-sizing: border-box;
+}
+.cs-concern > .am-page-header { gap: 8px; margin: 0; padding: 0; }
+.cs-concern > .am-page-header .am-page-header__copy { gap: 2px; }
+.cs-concern > .am-page-header .am-page-header__copy .am-eyebrow { margin: 0; }
+.cs-concern > .am-page-header .am-page-header__title { margin: 0; line-height: 1.15; }
+.cs-concern > .am-page-header .am-page-header__subtitle { margin: 2px 0 0; line-height: 1.35; }
+.cs-concern > .am-page-header .am-page-header__extra { margin-top: 4px; }
+.cs-concern .cn-stack,
+.cs-concern .cn-pair,
+.cs-concern .hm-page.cn-home { gap: 12px; }
+.cs-concern .hm-page.cn-home,
+.cs-concern .hm-page.cn-home > .hm-section,
+.cs-concern .cn-panel { margin-inline: 0; padding-bottom: 0; }
+.cs-concern .hm-page.cn-home { --hm-panel-pad: 14px; --hm-gutter: 0px; padding-inline: 0; }
+.cs-concern .hm-section.hm-panel,
+.cs-concern .cn-panel { padding: 14px; }
+.cs-concern .am-section-header { margin-bottom: 10px; }
+.cs-concern .cs-about,
+.cs-concern .cs-conditions { margin: 0; }
+@media (min-width: 768px) {
+  .cs-page.cs-concern { gap: 18px; padding-top: 18px; }
+  .cs-concern .cn-stack,
+  .cs-concern .cn-pair,
+  .cs-concern .hm-page.cn-home { gap: 18px; }
+  .cs-concern .hm-page.cn-home { --hm-panel-pad: 18px; }
+  .cs-concern .hm-section.hm-panel,
+  .cs-concern .cn-panel { padding: 18px 20px; }
+}

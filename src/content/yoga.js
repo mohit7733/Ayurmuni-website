@@ -33,12 +33,11 @@ export const YOGA_COPY = {
   quickFacts: 'At a glance',
   benefits: 'Why you will love it',
   focus: 'Focus areas',
-  precautions: 'Practise safely',
+  precautions: 'Precautions',
   before: 'Before you begin',
   steps: 'Step-by-step flow',
   stepsHint: 'Tap a step to jump to it in the video',
   stepsEmpty: 'Follow the guided video - pose-by-pose steps will appear here when available.',
-  safetyNote: 'Listen to your body. Stop if anything hurts, and check with a doctor if you are pregnant, injured or have a medical condition.',
   unavailableTitle: 'This session has taken a pause',
   unavailableText: 'We could not load this practice right now. Explore our other guided sessions instead.',
 };

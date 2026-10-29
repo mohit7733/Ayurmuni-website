@@ -133,12 +133,30 @@
   }
 }
 
-/* Shop by category: vertical filter panel */
+/* Shop by category: vertical filter panel.
+   The panel stays the full row width for every filter. A short list
+   (one Skin Care card) must not shrink the box or grow the cards. */
+.hm-doctor-row > .hm-section.st-page--products,
+.hm-page .hm-doctor-row > .hm-section.st-page--products {
+  width: 100%;
+  justify-self: stretch;
+}
 .st-page--products .st-catalog {
   display: grid;
+  width: 100%;
   grid-template-columns: minmax(0, 1fr);
   gap: 18px;
   align-items: start;
+}
+.st-page--products .st-catalog__main {
+  width: 100%;
+  min-width: 0;
+}
+.st-page--products .svc-catalog,
+.st-page--products .am-product-grid {
+  width: 100%;
+  grid-template-columns: repeat(auto-fill, minmax(172px, 1fr));
+  justify-content: start;
 }
 @media (min-width: 900px) {
   .st-page--products .st-catalog {
@@ -421,7 +439,8 @@
 @media (max-width: 639px) {
   .st-page--products { gap: var(--am-space-5); }
   .st-page--products .st-hero__row { flex-wrap: nowrap; }
-  .st-page--products .am-product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .st-page--products .am-product-grid,
+  .st-page--products .svc-catalog { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .st-page--products .st-controls { gap: 10px; }
 }
 

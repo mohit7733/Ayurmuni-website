@@ -226,3 +226,35 @@ export function SkeletonFor({ variant = 'block', label, minHeight, count, classN
       return <BlockSkeleton label={label} minHeight={minHeight} />;
   }
 }
+/** Products / Medicines first load: mirrors the real catalog (header, filter sidebar, toolbar, grid). */
+export function CatalogPageSkeleton({ label = 'Loading products', count = 6, className }) {
+  return (
+    <SkeletonRegion label={label} className={cx('st-section st-panel am-skel-catalog', className)}>
+      <div className="am-skel-catalog__head">
+        <Skeleton width={180} height={22} />
+        <Skeleton width={260} />
+      </div>
+      <div className="st-catalog">
+        <div className="st-cat-col am-skel-catalog__side" aria-hidden>
+          <Skeleton width={60} />
+          <Skeleton width="70%" height={18} />
+          {range(6).map((i) => (
+            <span key={i} className="am-skel-catalog__cat">
+              <Skeleton variant="rect" width={32} height={32} />
+              <Skeleton width="60%" />
+            </span>
+          ))}
+        </div>
+        <div className="st-catalog__main">
+          <div className="am-skel-catalog__bar" aria-hidden>
+            <Skeleton width={90} />
+            <Skeleton variant="rect" width={140} height={34} />
+          </div>
+          <div className="am-product-grid">
+            {range(count).map((i) => <ProductCardSkeleton key={i} />)}
+          </div>
+        </div>
+      </div>
+    </SkeletonRegion>
+  );
+}

@@ -12,7 +12,6 @@ import { isPolicyAccepted } from "../utils/policyUtils";
 import { readAuthenticated } from "../services/guestAuth";
 import {
   Button,
-  Disclaimer,
   EmptyState,
   SectionHold,
 } from "../components/ui";
@@ -170,7 +169,6 @@ export default function PolicyDetail() {
               </div>
             </div>
           ) : null}
-          <Disclaimer />
         </>
       )}
     </section>

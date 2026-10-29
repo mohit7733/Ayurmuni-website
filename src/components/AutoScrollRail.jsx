@@ -10,7 +10,28 @@ export default function AutoScrollRail({
 }) {
   const railRef = useRef(null);
   const [paused, setPaused] = useState(false);
-  const shouldScroll = Children.count(children) > 4;
+  const [overflows, setOverflows] = useState(false);
+  const count = Children.count(children);
+
+  useEffect(() => {
+    const rail = railRef.current;
+    if (!rail || count < 2) return undefined;
+    const sync = () => setOverflows(rail.scrollWidth > rail.clientWidth + 8);
+    sync();
+    const frame = window.requestAnimationFrame(sync);
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(sync);
+    observer?.observe(rail);
+    Array.from(rail.children).forEach((child) => observer?.observe(child));
+    window.addEventListener('resize', sync);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      observer?.disconnect();
+      window.removeEventListener('resize', sync);
+    };
+  }, [count]);
+
+  const wantsRail = count > 1;
+  const shouldScroll = wantsRail && overflows;
 
   const moveRail = useCallback((direction, wrap = false) => {
     const rail = railRef.current;
@@ -21,9 +42,13 @@ export default function AutoScrollRail({
 
     const gap = Number.parseFloat(window.getComputedStyle(rail).columnGap) || 0;
     const distance = items[0].getBoundingClientRect().width + gap;
-    const maxScroll = rail.scrollWidth - rail.clientWidth;
-    const nextScroll = rail.scrollLeft + direction * distance;
-    const target = wrap && nextScroll > maxScroll ? 0 : Math.max(0, Math.min(nextScroll, maxScroll));
+    const maxScroll = Math.max(0, rail.scrollWidth - rail.clientWidth);
+    const atEnd = rail.scrollLeft >= maxScroll - 8;
+    const atStart = rail.scrollLeft <= 8;
+    let target = rail.scrollLeft + direction * distance;
+    if (wrap && direction > 0 && atEnd) target = 0;
+    else if (wrap && direction < 0 && atStart) target = maxScroll;
+    else target = Math.max(0, Math.min(target, maxScroll));
 
     rail.scrollTo({ left: target, behavior: 'smooth' });
   }, []);
@@ -43,7 +68,7 @@ export default function AutoScrollRail({
   const track = (
     <ul
       ref={railRef}
-      className={`${trackClassName}${shouldScroll ? '' : ' is-static'}`}
+      className={`${trackClassName}${wantsRail ? '' : ' is-static'}`}
       aria-label={label}
       tabIndex={shouldScroll ? 0 : undefined}
     >
@@ -51,7 +76,7 @@ export default function AutoScrollRail({
     </ul>
   );
 
-  if (!shouldScroll) {
+  if (!wantsRail) {
     return <div className={`${className} is-static`}>{track}</div>;
   }
 
@@ -69,6 +94,7 @@ export default function AutoScrollRail({
         type="button"
         className={`${className}__control`}
         aria-label={`Scroll ${label} left`}
+        disabled={!shouldScroll}
         onClick={() => moveRail(-1)}
       >
         <ChevronLeft size={20} aria-hidden />
@@ -78,10 +104,12 @@ export default function AutoScrollRail({
         type="button"
         className={`${className}__control`}
         aria-label={`Scroll ${label} right`}
+        disabled={!shouldScroll}
         onClick={() => moveRail(1)}
       >
         <ChevronRight size={20} aria-hidden />
       </button>
+      {shouldScroll ? <span className={`${className}__bar${paused ? ' is-paused' : ''}`} aria-hidden /> : null}
     </div>
   );
 }

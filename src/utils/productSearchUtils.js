@@ -21,6 +21,13 @@ export const DOSHA_OPTIONS = [
   { key: 'Kapha', label: 'Kapha' },
 ];
 
+/** Catalogue rows use `selling_price` and `avg_rating` (not `price` / `rating`). */
+export const getCatalogPrice = (item) =>
+  Number(item?.selling_price ?? item?.price ?? 0);
+
+export const getCatalogRating = (item) =>
+  Number(item?.avg_rating ?? item?.average_rating ?? item?.rating ?? 0);
+
 /** UI sort -> `sort` query param on `customers/products/` (null = server default). */
 export const toProductApiSort = (sortBy) => {
   switch (sortBy) {

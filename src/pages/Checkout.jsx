@@ -29,7 +29,7 @@ import { getAddresses, listAddresses, user_profile } from '../services/profileSe
 import { formatOrderStockError } from '../product/stock';
 import { showSuccessToast } from '../config/key';
 import { requireAuth } from '../services/guestAuth';
-import { Badge, Button, Disclaimer, EmptyState } from '../components/ui';
+import { Badge, Button, EmptyState } from '../components/ui';
 import { CHECKOUT_COPY as T } from '../content/checkout';
 import '../design/pages/checkout.css';
 import {
@@ -776,7 +776,6 @@ export default function Checkout() {
           </aside>
         </div>
 
-        <Disclaimer />
       </section>
 
       {verifying ? (

@@ -9,7 +9,7 @@ import {
   getRequiredPolicies,
 } from '../services/policyService';
 import { getPolicyDoc, isPolicyAccepted } from '../utils/policyUtils';
-import { Button, Disclaimer, EmptyState, SectionHold } from '../components/ui';
+import { Button, EmptyState, SectionHold } from '../components/ui';
 import { AUTH_COPY as T } from '../content/auth';
 import '../design/pages/auth.css';
 
@@ -197,7 +197,6 @@ export default function PolicyAccept() {
             </div>
           </div>
 
-          <Disclaimer />
         </>
       )}
     </section>

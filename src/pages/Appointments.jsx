@@ -1,16 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
-  Check,
   CalendarDays,
   Clock,
-  Layers,
   RefreshCw,
-  Repeat,
-  SlidersHorizontal,
   Plus,
 } from "lucide-react";
 import AppShell from "../components/AppShell";
+import { Chip, Tabs } from "../components/ui";
 import AdvanceLoad from "../components/ui/AdvanceLoad";
 import DietitianBadge from "../components/DietitianBadge";
 import PageHeader from "../components/PageHeader";
@@ -132,22 +129,6 @@ const itemHasPrescription = (item) => {
   );
 };
 
-const ChipRow = ({ items, activeKey, onChange }) => (
-  <div className="home-rail subcat-rail ap-chips">
-    {items.map((item) => (
-      <button
-        key={item.key}
-        type="button"
-        aria-pressed={activeKey === item.key}
-        className={`chip ${activeKey === item.key ? "on" : ""}`}
-        onClick={() => onChange(item.key)}
-      >
-        {activeKey === item.key ? <Check size={13} aria-hidden /> : null}
-        {item.label}
-      </button>
-    ))}
-  </div>
-);
 
 export default function Appointments() {
   const navigate = useNavigate();
@@ -340,63 +321,59 @@ export default function Appointments() {
         />
 
         {!upcomingOnly ? (
-          <div className="appoint-filters">
-            <div className="filter-group">
-              <span><Layers size={13} aria-hidden /> When</span>
-              <div className="filter-chips">
-                {[
-                  { key: "upcoming", label: "Upcoming" },
-                  { key: "past", label: "Past" },
-                ].map((item) => (
-                  <button
-                    key={item.key}
-                    type="button"
-                    className={`chip ${tab === item.key ? "on" : ""}`}
-                    onClick={() => handleTabChange(item.key)}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
+          <Tabs
+            label="When"
+            className="ap-when-tabs"
+            value={tab}
+            onChange={handleTabChange}
+            items={[
+              { id: "upcoming", label: "Upcoming" },
+              { id: "past", label: "Past" },
+            ]}
+          />
+        ) : null}
+        <div className="ap-toolbar" role="toolbar" aria-label="Filter appointments">
+          <div className="ap-toolbar__chips">
+            <div className="ap-toolbar__group" role="group" aria-label="Visit type">
+              {FOLLOW_UP_FILTERS.map((item) => (
+                <Chip
+                  key={item.key}
+                  selected={followUpFilter === item.key}
+                  onClick={() => setFollowUpFilter(item.key)}
+                >
+                  {item.label}
+                </Chip>
+              ))}
             </div>
-            <div className="filter-group">
-              <span><Repeat size={13} aria-hidden /> Follow-up</span>
-              <ChipRow
-                items={FOLLOW_UP_FILTERS}
-                activeKey={followUpFilter}
-                onChange={setFollowUpFilter}
-              />
-            </div>
-            <div className="filter-group">
-              <span><SlidersHorizontal size={13} aria-hidden /> Status</span>
-              <ChipRow
-                items={statusChips}
-                activeKey={statusFilter}
-                onChange={setStatusFilter}
-              />
-            </div>
-          </div>
-        ) : (
-          <div className="appoint-filters">
-            <div className="filter-group">
-              <span><Repeat size={13} aria-hidden /> Follow-up</span>
-              <ChipRow
-                items={FOLLOW_UP_FILTERS}
-                activeKey={followUpFilter}
-                onChange={setFollowUpFilter}
-              />
-            </div>
-            <div className="filter-group">
-              <span><SlidersHorizontal size={13} aria-hidden /> Status</span>
-              <ChipRow
-                items={statusChips}
-                activeKey={statusFilter}
-                onChange={setStatusFilter}
-              />
+            <span className="ap-toolbar__sep" aria-hidden />
+            <div className="ap-toolbar__group" role="group" aria-label="Status">
+              {statusChips.map((item) => (
+                <Chip
+                  key={item.key}
+                  selected={statusFilter === item.key}
+                  onClick={() => setStatusFilter(item.key)}
+                >
+                  {item.label}
+                </Chip>
+              ))}
             </div>
           </div>
-        )}
-        <p className="muted appoint-count">{resultLabel}</p>
+          <div className="ap-toolbar__meta">
+            <span className="ap-toolbar__count" aria-live="polite">{resultLabel}</span>
+            {followUpFilter !== "all" || statusFilter !== "all" ? (
+              <button
+                type="button"
+                className="ap-toolbar__clear"
+                onClick={() => {
+                  setFollowUpFilter("all");
+                  setStatusFilter("all");
+                }}
+              >
+                Clear filters
+              </button>
+            ) : null}
+          </div>
+        </div>
 
         {loading ? (
           <AdvanceLoad variant="list" label="Loading appointments" onRetry={() => loadPage(1, "replace")} />

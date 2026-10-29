@@ -68,7 +68,6 @@ import {
 } from '../components/ui';
 import { HOME_COPY as T } from '../content/home';
 // TEMP hidden per Rohit — DUMMY_LAB_TESTS, DUMMY_PANCHAKARMA unused while Lab/Panchakarma are hidden
-import { DUMMY_CONSULT_PACKAGES } from '../data/homeDummySections';
 import { loadConsultPackages } from '../services/packageService';
 import '../design/pages/home.css';
 import '../design/pages/dummy-offers.css';
@@ -385,7 +384,7 @@ export default function Home() {
     fetchCustomerData,
   } = useHomeData();
   const secondaryReady = !loading;
-  const [consultPackages, setConsultPackages] = useState(DUMMY_CONSULT_PACKAGES);
+  const [consultPackages, setConsultPackages] = useState([]);
   useEffect(() => {
     let cancelled = false;
     loadConsultPackages()
@@ -785,7 +784,7 @@ export default function Home() {
                 description={T.concernsText}
                 action={healthConcerns.length > 1 ? <ViewAll label={T.concernsTitle} onClick={() => navigate('/consult')} /> : null}
               />
-              <ConcernCarousel label={T.concernsTitle}>
+              <ConcernCarousel label={T.concernsTitle} marquee>
                 {healthConcerns.map((item) => (
                   <Tile
                     cutout
@@ -1007,6 +1006,7 @@ export default function Home() {
           ) : null}
           </LazyBlock>
 
+          {consultPackages.length ? (
           <Reveal as="section" className="hm-section hm-panel" aria-labelledby="hm-packages-title">
             <SectionHeader
               id="hm-packages-title"
@@ -1034,6 +1034,7 @@ export default function Home() {
               </Rail>
             </div>
           </Reveal>
+          ) : null}
 
           {/* TEMP hidden per Rohit — Health Lab (Home collection) + Panchakarma (Classical therapies) sections
           <Reveal as="section" className="hm-section hm-panel hm-lab" aria-labelledby="hm-lab-title">

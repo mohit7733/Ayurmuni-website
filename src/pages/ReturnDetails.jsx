@@ -14,7 +14,7 @@ import {
   StatusPill,
   Timeline,
 } from '../components/detail/Detail';
-import { Button, Disclaimer } from '../components/ui';
+import { Button } from '../components/ui';
 import { formatRupee, resolveImageUrl } from '../home/catalog';
 import { requireAuth } from '../services/guestAuth';
 import {
@@ -338,7 +338,6 @@ export default function ReturnDetails() {
           </>
         )}
 
-        <Disclaimer />
       </DetailPage>
     </AppShell>
   );

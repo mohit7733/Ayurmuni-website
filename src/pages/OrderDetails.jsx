@@ -71,7 +71,7 @@ import {
   SUPPORT_EMAIL,
   TRACKING_ALLOWED,
 } from '../utils/orderDetailUtils';
-import { Button, Chip, Disclaimer, Modal, Textarea } from '../components/ui';
+import { Button, Chip, Modal, Textarea } from '../components/ui';
 import { ORDERS_COPY as T, orderStatusLabel } from '../content/orders';
 import '../design/pages/orders.css';
 import '../design/pages/returns.css';
@@ -649,7 +649,6 @@ export default function OrderDetails() {
           ) : null}
         </Modal>
 
-        <Disclaimer />
       </DetailPage>
     </AppShell>
   );

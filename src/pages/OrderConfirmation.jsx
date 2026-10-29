@@ -4,7 +4,7 @@ import { Check, Leaf, Package } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import { formatRupee } from '../home/catalog';
 import { ORDER_RESULT_KEY } from '../cart/mapCart';
-import { Button, Disclaimer, EmptyState } from '../components/ui';
+import { Button, EmptyState } from '../components/ui';
 import { ORDERS_COPY as T } from '../content/orders';
 import '../design/pages/orders.css';
 
@@ -98,7 +98,6 @@ export default function OrderConfirmation() {
           ) : null}
         </div>
 
-        <Disclaimer />
       </section>
     </AppShell>
   );

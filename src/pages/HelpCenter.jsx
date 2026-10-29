@@ -7,7 +7,6 @@ import { FAQ_CATEGORIES, getFaqList } from '../services/faqService';
 import {
   Button,
   Chip,
-  Disclaimer,
   EmptyState,
   SearchField,
   SectionHold,
@@ -129,7 +128,6 @@ export default function HelpCenter() {
           </Button>
         </div>
 
-        <Disclaimer />
       </section>
     </AppShell>
   );

@@ -5,7 +5,7 @@ import PageHeader from './PageHeader';
 import PolicyHubList from './PolicyHubList';
 import { getPoliciesList, getPoliciesForViewer } from '../services/policyService';
 import { getPolicyDoc } from '../utils/policyUtils';
-import { Disclaimer, SectionHold } from './ui';
+import { SectionHold } from './ui';
 import { STATIC_COPY as T } from '../content/static';
 import '../design/pages/static.css';
 
@@ -76,7 +76,6 @@ export default function PolicyHubPage({
             description={listDescription}
           />
         )}
-        <Disclaimer />
       </section>
     </AppShell>
   );

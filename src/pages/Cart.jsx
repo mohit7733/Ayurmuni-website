@@ -44,7 +44,6 @@ import { showSuccessToast } from "../config/key";
 import {
   Badge,
   Button,
-  Disclaimer,
   Modal,
   SectionHold,
   Tabs,
@@ -660,7 +659,6 @@ export default function Cart() {
                   {selectedProducts.length ? ` (${selectedProducts.length})` : ""}
                   <ArrowRight size={16} aria-hidden />
                 </button>
-                <Disclaimer />
               </aside>
             ) : null}
           </div>

@@ -12,7 +12,6 @@ import { savedAddressToParsed } from '../services/locationService';
 import {
   Badge,
   Button,
-  Disclaimer,
   EmptyState,
   SectionHold,
 } from '../components/ui';
@@ -167,7 +166,6 @@ export default function Addresses() {
           </div>
         )}
 
-        <Disclaimer />
       </section>
     </AppShell>
   );

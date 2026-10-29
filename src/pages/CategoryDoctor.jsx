@@ -5,6 +5,7 @@ import AppShell from '../components/AppShell';
 import ConcernPanel from '../components/ConcernPanel';
 import { HomeOurDoctors, HomeProductPanels } from '../components/HomeSections';
 import { HomeDoctorsSkeleton, HomeProductsSkeleton } from '../components/skeletons';
+import OurDoctorCard from '../components/OurDoctorCard';
 import YogaCard from '../components/yoga/YogaCard';
 import PageHeader from '../components/PageHeader';
 import ProductCard from '../components/ProductCard';
@@ -35,7 +36,6 @@ import {
 import {
   Button,
   Chip,
-  Disclaimer,
   MediaCard,
   Rail,
   RailItem,
@@ -47,6 +47,7 @@ import { CONCERN_COPY as C } from '../content/concern';
 import { CONSULT_COPY as T } from '../content/consult';
 import '../design/pages/consult.css';
 import '../design/pages/concern.css';
+import '../design/product-card-home.css';
 
 const PREVIEW = 6;
 const NO_ITEMS = [];
@@ -56,7 +57,7 @@ function DoctorRail({ items, label, onOpen }) {
   return (
     <div className="hm-odocs">
       <Rail label={label} controls>
-        {items.map((item, index) => {
+        {(Array.isArray(items) ? items : []).filter(Boolean).map((item, index) => {
           const id = getDoctorId(item);
           return (
             <RailItem key={id || item.full_name}>
@@ -72,7 +73,7 @@ function DoctorRail({ items, label, onOpen }) {
 function ProductRail({ items, label }) {
   return (
     <Rail label={label} controls>
-      {items.map((item) => (
+      {(Array.isArray(items) ? items : []).filter(Boolean).map((item) => (
         <RailItem key={item.variant_id || item.id} size="product">
           <ProductCard item={item} />
         </RailItem>
@@ -433,7 +434,7 @@ export default function CategoryDoctor() {
   }
 
   return (    <AppShell tab="consult">
-      <div className="cs-page">
+      <div className="cs-page cs-concern">
         <PageHeader title={categoryName} subtitle={C.subtitle} eyebrow={T.concernsEyebrow}>
           <SearchField
             value={search}
@@ -551,9 +552,6 @@ export default function CategoryDoctor() {
           {suggestedLast.map((key) => suggestedBlocks[key])}
         </div>
 
-        <footer className="cs-foot">
-          <Disclaimer variant="banner" />
-        </footer>
       </div>
     </AppShell>
   );

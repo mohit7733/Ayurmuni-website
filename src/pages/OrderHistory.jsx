@@ -4,7 +4,7 @@ import { ChevronRight, FileText, Leaf, Package, RefreshCw } from 'lucide-react';
 import { buildRequestViewRoute } from '../cart/rxGroups';
 import AppShell from '../components/AppShell';
 import PageHeader from '../components/PageHeader';
-import { formatRupee } from '../home/catalog';
+import { formatRupee, resolveImageUrl } from '../home/catalog';
 import { mapOrderToListItem } from '../profile/map';
 import { requireAuth } from '../services/guestAuth';
 import { getOrders, normalizeOrdersList } from '../services/orderService';
@@ -28,10 +28,8 @@ import {
   Badge,
   Button,
   Chip,
-  Disclaimer,
   EmptyState,
   SearchField,
-  SectionHold,
   Tabs,
 } from '../components/ui';
 import {
@@ -41,6 +39,7 @@ import {
 } from '../content/orders';
 import { formatOrderId } from '../utils/formatDisplayId';
 import { formatOrderDateTime } from '../utils/orderDetailUtils';
+import Skeleton from '../components/skeletons/Block';
 import '../design/pages/orders.css';
 
 const requestTone = (item) => {
@@ -48,6 +47,59 @@ const requestTone = (item) => {
   if (isPrescriptionRejected(item)) return 'danger';
   return 'warning';
 };
+
+const lineTitle = (line) => line?.variant?.variant_title || line?.product_name || line?.name || '';
+const lineQty = (line) => Number(line?.quantity ?? line?.qty ?? 1) || 1;
+const paymentLabel = (raw) => {
+  const value = String(raw?.payment_method || raw?.payment_mode || '').trim();
+  if (!value) return '';
+  return /^cod$|cash/i.test(value) ? 'Cash on delivery' : value.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
+};
+
+/** Thumbnail stack: main image, up to two mini thumbs, and a +N count for the rest. */
+function OrderThumbs({ items = [], image, Icon = Leaf }) {
+  const extras = items.slice(1);
+  const minis = extras.slice(0, 2).map((line) => resolveImageUrl(line?.variant || line));
+  const rest = extras.length - minis.length;
+  return (
+    <span className="or-row__thumbs" aria-hidden>
+      <span className="or-row__thumb">
+        {image ? <img src={image} alt="" loading="lazy" decoding="async" /> : <Icon size={22} />}
+      </span>
+      {minis.length ? (
+        <span className="or-row__minis">
+          {minis.map((src, i) => (
+            <span key={i} className="or-row__mini">
+              {src ? <img src={src} alt="" loading="lazy" decoding="async" /> : <Leaf size={12} />}
+            </span>
+          ))}
+          {rest > 0 ? <span className="or-row__mini or-row__mini--more">+{rest}</span> : null}
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
+function OrderListSkeleton({ label, count = 4 }) {
+  return (
+    <div className="or-list" role="status" aria-busy="true" aria-label={label}>
+      <span className="am-sr-only">{label}</span>
+      {Array.from({ length: count }, (_, i) => (
+        <div key={i} className="or-row or-row--static or-row--skel" aria-hidden>
+          <span className="or-row__thumbs"><span className="or-row__thumb"><Skeleton variant="rect" className="am-skel-fill" /></span></span>
+          <div className="or-row__body">
+            <Skeleton width="55%" height={14} />
+            <Skeleton width="38%" height={12} />
+          </div>
+          <div className="or-row__aside">
+            <Skeleton width={72} height={20} />
+            <Skeleton width={56} height={14} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function OrderHistory() {
   const navigate = useNavigate();
@@ -139,7 +191,7 @@ export default function OrderHistory() {
 
   return (
     <AppShell tab="profile">
-      <section className="or-page">
+      <section className="or-page or-page--history">
         <PageHeader title={T.historyTitle} subtitle={T.historySubtitle} backTo="/profile" />
 
         <Tabs
@@ -180,7 +232,7 @@ export default function OrderHistory() {
             </div>
 
             {loading ? (
-              <SectionHold label={T.loading} minHeight={240} />
+              <OrderListSkeleton label={T.loading} />
             ) : list.length === 0 ? (
               <EmptyState
                 icon={<Package size={28} />}
@@ -201,17 +253,27 @@ export default function OrderHistory() {
                     className="or-row"
                     onClick={() => navigate(`/profile/orders/${item.id}`)}
                   >
-                    <span className="or-row__thumb">
-                      {item.image ? (
-                        <img src={item.image} alt="" loading="lazy" decoding="async" />
-                      ) : (
-                        <Leaf size={22} aria-hidden />
-                      )}
-                    </span>
+                    <OrderThumbs items={item.items} image={item.image} />
                     <div className="or-row__body">
-                      <p className="or-row__title">{item.title}</p>
-                      <p className="or-row__meta">#{item.orderCode}</p>
-                      <p className="or-row__meta">{item.date}</p>
+                      <p className="or-row__title">
+                        {lineTitle(item.items?.[0]) || item.title}
+                        {item.items?.length > 1 ? (
+                          <span className="or-row__more"> +{item.items.length - 1} more</span>
+                        ) : null}
+                      </p>
+                      <p className="or-row__meta or-row__meta--line">
+                        <span>#{item.orderCode}</span>
+                        {item.date ? <span>{item.date}</span> : null}
+                        {item.items?.length ? (
+                          <span>
+                            {(() => {
+                              const n = item.items.reduce((sum, line) => sum + lineQty(line), 0);
+                              return `${n} item${n === 1 ? '' : 's'}`;
+                            })()}
+                          </span>
+                        ) : null}
+                        {paymentLabel(item.raw) ? <span>{paymentLabel(item.raw)}</span> : null}
+                      </p>
                     </div>
                     <div className="or-row__aside">
                       <Badge tone={orderStatusTone(item.status)}>
@@ -219,6 +281,7 @@ export default function OrderHistory() {
                       </Badge>
                       <strong className="or-row__amount">{item.amount}</strong>
                     </div>
+                    <ChevronRight className="or-row__chev" size={18} aria-hidden />
                   </button>
                 ))}
               </div>
@@ -247,7 +310,7 @@ export default function OrderHistory() {
               </div>
             </div>
             {returnsLoading && !returnsLoaded ? (
-              <SectionHold label="Loading returns" minHeight={220} />
+              <OrderListSkeleton label="Loading returns" count={3} />
             ) : returnList.length === 0 ? (
               <EmptyState
                 icon={<RefreshCw size={28} />}
@@ -266,9 +329,7 @@ export default function OrderHistory() {
                       className="or-row"
                       onClick={() => navigate(`/profile/returns/${ret.id}`, { state: { returnRequest: ret.raw } })}
                     >
-                      <span className="or-row__thumb">
-                        <RefreshCw size={22} aria-hidden />
-                      </span>
+                      <OrderThumbs Icon={RefreshCw} />
                       <div className="or-row__body">
                         <p className="or-row__title">
                           Order #{formatOrderId(ret.orderCode || ret.orderId)}
@@ -281,6 +342,7 @@ export default function OrderHistory() {
                       <div className="or-row__aside">
                         <Badge tone={meta.tone}>{meta.label}</Badge>
                       </div>
+                      <ChevronRight className="or-row__chev" size={18} aria-hidden />
                     </button>
                   );
                 })}
@@ -288,7 +350,7 @@ export default function OrderHistory() {
             )}
           </>
         ) : requestsLoading ? (
-          <SectionHold label="Loading requests" minHeight={220} />
+          <OrderListSkeleton label="Loading requests" count={3} />
         ) : requests.length === 0 ? (
           <EmptyState
             icon={<FileText size={28} />}
@@ -307,9 +369,7 @@ export default function OrderHistory() {
               const itemCount = variants.reduce((sum, row) => sum + row.quantity, 0);
               return (
                 <div key={item.id} className="or-row or-row--static">
-                  <span className="or-row__thumb">
-                    <FileText size={22} aria-hidden />
-                  </span>
+                  <OrderThumbs Icon={FileText} />
                   <div className="or-row__body">
                     <p className="or-row__title">{item.patient_name || 'Prescription request'}</p>
                     <p className="or-row__meta">
@@ -343,7 +403,6 @@ export default function OrderHistory() {
           </div>
         )}
 
-        <Disclaimer />
       </section>
     </AppShell>
   );

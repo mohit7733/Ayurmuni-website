@@ -39,3 +39,10 @@
   .am-skel-region .am-skeleton,
   .am-skeleton { animation: none !important; }
 }
+/* Catalog page skeleton (Products / Medicines first load) */
+.am-skel-catalog { display: flex; flex-direction: column; gap: 14px; }
+.am-skel-catalog__head { display: flex; flex-direction: column; gap: 6px; }
+.am-skel-catalog__side { display: flex; flex-direction: column; gap: 10px; }
+.am-skel-catalog__cat { display: flex; align-items: center; gap: 10px; }
+.am-skel-catalog__bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+@media (max-width: 1023px) { .am-skel-catalog__side { display: none; } }

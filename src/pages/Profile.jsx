@@ -17,7 +17,7 @@ import { deleteAccount, update_Profile, UploadProfilePhoto } from '../services/p
 import useProfileDashboardStats from '../hooks/useProfileDashboardStats';
 import { LOGGED_OUT_STATS, buildPhotoOptions, buildProfilePayload } from '../profile/dashboardStats';
 import { useLocation as useDeliveryLocation } from '../context/LocationContext';
-import { Button, Disclaimer, Modal, SectionHold } from '../components/ui';
+import { Button, Modal, SectionHold } from '../components/ui';
 import {
   PROFILE_ACCOUNT,
   PROFILE_COPY as T,
@@ -365,7 +365,6 @@ export default function Profile() {
           <p className="pf-version">{T.version}</p>
         </div>
 
-        <Disclaimer />
       </section>
 
       <Modal

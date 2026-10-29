@@ -102,6 +102,45 @@ export const WATER_GOAL_OPTIONS = [
 export const getWaterGlassCount = (goalMl) =>
   Math.max(1, Math.ceil((Number(goalMl) || 0) / WATER_GLASS_ML));
 
+/** End volume of each glass. The last glass stops at the goal, not the next full glass. */
+export const getWaterGlassEnds = (goalMl) => {
+  const goal = Math.max(0, Number(goalMl) || 0);
+  if (goal <= 0) return [];
+  const count = getWaterGlassCount(goal);
+  return Array.from({ length: count }, (_, index) =>
+    Math.min(goal, (index + 1) * WATER_GLASS_ML),
+  );
+};
+
+export const countFilledWaterGlasses = (intakeMl, goalMl) => {
+  const intake = Math.max(0, Number(intakeMl) || 0);
+  return getWaterGlassEnds(goalMl).filter((endMl) => intake + 0.001 >= endMl).length;
+};
+
+/**
+ * Rows of glasses for the log modal. Each row is one liter (4 × 250 ml), and the
+ * last row is only the remainder of daily_water_intake_goal. Labels are the
+ * cumulative amount at the end of the row, so a 1.5 L goal is "1 L" then "1.5 L".
+ */
+export const buildWaterLiterGroups = (goalMl) => {
+  const ends = getWaterGlassEnds(goalMl);
+  const perGroup = Math.max(1, Math.round(WATER_LITER_ML / WATER_GLASS_ML));
+  const groups = [];
+  for (let start = 0; start < ends.length; start += perGroup) {
+    const slice = ends.slice(start, start + perGroup);
+    const endMl = slice[slice.length - 1];
+    groups.push({
+      id: `${start}-${endMl}`,
+      label: formatWaterLiters(endMl),
+      glasses: slice.map((glassEndMl, offset) => ({
+        index: start + offset,
+        endMl: glassEndMl,
+      })),
+    });
+  }
+  return groups;
+};
+
 export const parseWaterProgressJson = (plan) => {
   const raw =
     plan?.daily_water_intake_progress_json ??
@@ -146,8 +185,13 @@ export const buildWaterProgressPatch = (
   [String(dayKey || 'day_1').toLowerCase()]: Math.max(0, intakeMl),
 });
 
-export const formatWaterLiters = (ml) =>
-  `${((Number(ml) || 0) / 1000).toFixed(1)} L`;
+/** Liters label from ml. Keeps quarter-glasses exact (0.25, 0.75, 1.25) and drops trailing zeros. */
+export const formatWaterLiters = (ml) => {
+  const liters = (Number(ml) || 0) / WATER_LITER_ML;
+  const rounded = Math.round(liters * 100) / 100;
+  if (!Number.isFinite(rounded)) return '0 L';
+  return `${rounded.toFixed(2).replace(/\.?0+$/, '')} L`;
+};
 
 
 const FALLBACK_MEAL_IMAGE = "";

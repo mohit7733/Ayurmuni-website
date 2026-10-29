@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { BookOpen, CalendarClock, HelpCircle, ListChecks, Mail, MessageCircle } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import { FAQ_CATEGORIES, formatFaqUpdatedLabel, getFaqDetail } from '../services/faqService';
-import { Button, Disclaimer } from '../components/ui';
+import { Button } from '../components/ui';
 import {
   ActionStack,
   DetailCard,
@@ -123,7 +123,6 @@ export default function FaqDetail() {
                   </div>
                 </DetailCard>
               ) : null}
-              <Disclaimer />
             </DetailLayout>
           </>
         )}

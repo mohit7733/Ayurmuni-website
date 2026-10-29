@@ -5,7 +5,7 @@ import PageHeader from '../components/PageHeader';
 import { Utils } from '../common/utils';
 import { showSuccessToast } from '../config/key';
 import { requireAuth } from '../services/guestAuth';
-import { Disclaimer, SectionHold } from '../components/ui';
+import { SectionHold } from '../components/ui';
 import '../design/pages/notification-settings.css';
 
 const NOTIFICATION_TYPES = [
@@ -250,7 +250,6 @@ export default function NotificationSettings() {
           </p>
         </div>
 
-        <Disclaimer />
       </section>
     </AppShell>
   );

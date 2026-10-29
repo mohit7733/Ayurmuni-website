@@ -12,7 +12,7 @@ import PageHeader from '../components/PageHeader';
 import { Utils } from '../common/utils';
 import { showSuccessToast } from '../config/key';
 import { useLocation as useDeliveryLocation } from '../context/LocationContext';
-import { Button, Disclaimer } from '../components/ui';
+import { Button } from '../components/ui';
 import { PROFILE_COPY as T } from '../content/profile';
 import '../design/pages/profile.css';
 
@@ -146,7 +146,6 @@ export default function Settings() {
           </Button>
         </div>
 
-        <Disclaimer />
       </section>
     </AppShell>
   );

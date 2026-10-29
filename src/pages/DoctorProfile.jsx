@@ -64,7 +64,6 @@ import {
 } from '../utils/reviewUtils';
 import {
   Button,
-  Disclaimer,
   EmptyState,
   ErrorState,
   FavButton,
@@ -504,7 +503,6 @@ export default function DoctorProfile() {
             )}
           </DetailCard>
 
-          <Disclaimer variant="banner" />
         </DetailLayout>
       </DetailPage>
 

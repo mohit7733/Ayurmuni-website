@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   WATER_GLASS_ML,
-  WATER_LITER_ML,
+  buildWaterLiterGroups,
+  countFilledWaterGlasses,
   formatWaterLiters,
   getWaterGlassCount,
+  getWaterGlassEnds,
 } from './utils';
 
 export function WaterGlass({ filled, fillRatio, size = 'sm', disabled, onClick, label }) {
@@ -34,27 +36,16 @@ export default function WaterLog({ waterMl, waterGoalMl, dayLabel, updating, onS
   }, [open]);
 
   const totalGlasses = getWaterGlassCount(waterGoalMl);
-  const cardFilled = Math.floor(waterMl / WATER_GLASS_ML);
+  const glassEnds = useMemo(() => getWaterGlassEnds(waterGoalMl), [waterGoalMl]);
+  const literGroups = useMemo(() => buildWaterLiterGroups(waterGoalMl), [waterGoalMl]);
+  const cardFilled = countFilledWaterGlasses(waterMl, waterGoalMl);
   const cardPct = Math.min(100, waterGoalMl > 0 ? Math.round((waterMl / waterGoalMl) * 100) : 0);
   const goalReached = waterMl >= waterGoalMl && waterGoalMl > 0;
   const cardFill = waterGoalMl > 0 ? Math.min(1, waterMl / waterGoalMl) : 0;
 
-  const filledGlasses = Math.floor(draftMl / WATER_GLASS_ML);
+  const filledGlasses = countFilledWaterGlasses(draftMl, waterGoalMl);
   const progressPct = Math.min(100, waterGoalMl > 0 ? Math.round((draftMl / waterGoalMl) * 100) : 0);
   const fillRatio = waterGoalMl > 0 ? Math.min(1, draftMl / waterGoalMl) : 0;
-  const literCount = Math.ceil((Number(waterGoalMl) || 0) / WATER_LITER_ML);
-
-  const literGroups = useMemo(() => {
-    const groups = [];
-    for (let liter = 1; liter <= literCount; liter += 1) {
-      const startIndex = (liter - 1) * 4;
-      const endIndex = Math.min(startIndex + 4, totalGlasses);
-      const glasses = [];
-      for (let i = startIndex; i < endIndex; i += 1) glasses.push(i);
-      if (glasses.length) groups.push({ liter, glasses });
-    }
-    return groups;
-  }, [literCount, totalGlasses]);
 
   const applyIntake = (nextMl) => {
     const next = Math.max(0, Math.min(nextMl, waterGoalMl));
@@ -64,13 +55,21 @@ export default function WaterLog({ waterMl, waterGoalMl, dayLabel, updating, onS
 
   const onGlassPress = (glassIndex) => {
     if (updating) return;
-    const targetMl = (glassIndex + 1) * WATER_GLASS_ML;
-    applyIntake(draftMl >= targetMl ? targetMl - WATER_GLASS_ML : targetMl);
+    const endMl = glassEnds[glassIndex];
+    if (endMl == null) return;
+    const previousMl = glassIndex === 0 ? 0 : glassEnds[glassIndex - 1];
+    applyIntake(draftMl + 0.001 >= endMl ? previousMl : endMl);
   };
 
   const onStep = (direction) => {
     if (updating) return;
-    applyIntake(draftMl + direction * WATER_GLASS_ML);
+    if (direction > 0) {
+      const next = glassEnds.find((endMl) => endMl > draftMl + 0.001);
+      applyIntake(next == null ? waterGoalMl : next);
+      return;
+    }
+    const previous = [...glassEnds].reverse().find((endMl) => endMl < draftMl - 0.001);
+    applyIntake(previous == null ? 0 : previous);
   };
 
   return (
@@ -149,24 +148,24 @@ export default function WaterLog({ waterMl, waterGoalMl, dayLabel, updating, onS
             <div className="water-log-liters">
               {literGroups.map((group) => {
                 const literFilled = group.glasses.filter(
-                  (glassIndex) => draftMl >= (glassIndex + 1) * WATER_GLASS_ML,
+                  (glass) => draftMl + 0.001 >= glass.endMl,
                 ).length;
                 return (
-                  <div key={group.liter} className="water-log-liter">
+                  <div key={group.id} className="water-log-liter">
                     <div>
-                      <strong>{group.liter} L</strong>
+                      <strong>{group.label}</strong>
                       <small>
                         {literFilled}/{group.glasses.length}
                       </small>
                     </div>
                     <div className="water-log-glasses">
-                      {group.glasses.map((glassIndex) => (
+                      {group.glasses.map((glass) => (
                         <WaterGlass
-                          key={glassIndex}
-                          filled={draftMl >= (glassIndex + 1) * WATER_GLASS_ML}
+                          key={glass.index}
+                          filled={draftMl + 0.001 >= glass.endMl}
                           disabled={updating}
-                          label={`Glass ${glassIndex + 1}`}
-                          onClick={() => onGlassPress(glassIndex)}
+                          label={`Glass ${glass.index + 1}, ${formatWaterLiters(glass.endMl)}`}
+                          onClick={() => onGlassPress(glass.index)}
                         />
                       ))}
                     </div>

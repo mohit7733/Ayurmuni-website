@@ -24,7 +24,6 @@ import {
   Badge,
   Button,
   Chip,
-  Disclaimer,
   EmptyState,
   Input,
   Modal,
@@ -252,7 +251,6 @@ export default function Rewards() {
           </div>
         )}
 
-        <Disclaimer />
       </section>
 
       <Modal

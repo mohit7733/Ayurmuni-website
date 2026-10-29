@@ -99,6 +99,7 @@ export default function ProductDetails({ medicine = false } = {}) {
   const [qty, setQty] = useState(1);
   const [wish, setWish] = useState(false);
   const [imageIndex, setImageIndex] = useState(0);
+  const [galleryHold, setGalleryHold] = useState(false);
   const [reviewTarget, setReviewTarget] = useState(null);
   const [reviewLookupBusy, setReviewLookupBusy] = useState(false);
   const [zoomOpen, setZoomOpen] = useState(false);
@@ -163,6 +164,29 @@ export default function ProductDetails({ medicine = false } = {}) {
   const cartQty = variantQuantities[cartVariantId] ?? 0;
   const adding = addingVariantId === cartVariantId;
   const images = galleryFromProduct(product, active);
+  const galleryPaused = galleryHold || zoomOpen;
+
+  useEffect(() => {
+    if (images.length < 2 || galleryPaused) return undefined;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return undefined;
+    const timer = window.setTimeout(() => {
+      setImageIndex((current) => (current + 1) % images.length);
+    }, 4500);
+    return () => window.clearTimeout(timer);
+  }, [imageIndex, images.length, galleryPaused]);
+
+  useEffect(() => {
+    const thumb = galleryMainRef.current?.parentElement?.querySelector('.pd-thumb.is-on');
+    const strip = thumb?.parentElement;
+    if (!thumb || !strip) return;
+    const left = thumb.offsetLeft - (strip.clientWidth - thumb.offsetWidth) / 2;
+    strip.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+  }, [imageIndex]);
+
+  const stepGallery = (direction) => {
+    if (images.length < 2) return;
+    setImageIndex((current) => (current + direction + images.length) % images.length);
+  };
   const needsRx = isPrescriptionRequired(active) || isPrescriptionRequired(product);
   const out = isProductOutOfStock(active);
   const lowStock = isProductLowStock(active);
@@ -481,10 +505,20 @@ export default function ProductDetails({ medicine = false } = {}) {
 
         <div className="pd-layout">
           <div className="pd-gallery">
-            <div className="pd-gallery__main" ref={galleryMainRef}>
+            <div
+              className={`pd-gallery__main${images.length > 1 ? ' is-carousel' : ''}${galleryPaused ? ' is-paused' : ''}`}
+              ref={galleryMainRef}
+              onMouseEnter={() => setGalleryHold(true)}
+              onMouseLeave={() => setGalleryHold(false)}
+              onFocus={() => setGalleryHold(true)}
+              onBlur={(event) => {
+                if (!event.currentTarget.contains(event.relatedTarget)) setGalleryHold(false);
+              }}
+            >
               {images[imageIndex] ? (
                 <button
                   type="button"
+                  key={images[imageIndex]}
                   className="pd-gallery__zoom"
                   onClick={() => setZoomOpen(true)}
                   aria-label="Zoom product image"
@@ -498,6 +532,27 @@ export default function ProductDetails({ medicine = false } = {}) {
                   <Leaf size={48} />
                 </span>
               )}
+              {images.length > 1 ? (
+                <>
+                  <button
+                    type="button"
+                    className="pd-gallery__nav pd-gallery__nav--prev"
+                    aria-label="Previous image"
+                    onClick={() => stepGallery(-1)}
+                  >
+                    <ChevronLeft size={18} aria-hidden />
+                  </button>
+                  <button
+                    type="button"
+                    className="pd-gallery__nav pd-gallery__nav--next"
+                    aria-label="Next image"
+                    onClick={() => stepGallery(1)}
+                  >
+                    <ChevronRight size={18} aria-hidden />
+                  </button>
+                  <span className={`pd-gallery__progress${galleryPaused ? ' is-paused' : ''}`} key={imageIndex} />
+                </>
+              ) : null}
               <div className="pd-gallery__badges">
                 {discount > 0 ? <span className="pd-badge">{discount}% off</span> : null}
                 {needsRx ? (

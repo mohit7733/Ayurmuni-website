@@ -71,7 +71,6 @@ import {
 } from "../payment/cashfree";
 import {
   Button,
-  Disclaimer,
   EmptyState,
   StepIndicator,
 } from "../components/ui";
@@ -977,7 +976,6 @@ export default function ConsultPay() {
                 {paying ? T.starting : T.payNow}
               </Button>
             </div>
-            <Disclaimer />
           </aside>
         </div>
       </div>

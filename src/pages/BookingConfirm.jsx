@@ -20,7 +20,6 @@ import { Utils } from '../common/utils';
 import {
   Badge,
   Button,
-  Disclaimer,
   EmptyState,
   Modal,
   StepIndicator,
@@ -364,7 +363,6 @@ export default function BookingConfirm() {
                 {T.home}
               </Button>
             </div>
-            <Disclaimer />
           </aside>
         </div>
       </div>

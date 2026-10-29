@@ -279,8 +279,8 @@ export default function YogaSession() {
                 )}
               </DetailCard>
 
-              <DetailCard id="yoga-safety" title={Y.precautions} icon={AlertTriangle}>
-                {view?.precautions.length ? (
+              {view?.precautions?.length ? (
+                <DetailCard id="yoga-safety" title={Y.precautions} icon={AlertTriangle}>
                   <ul className="yg-list yg-list--caution">
                     {view.precautions.map((c) => (
                       <li key={c}>
@@ -288,9 +288,8 @@ export default function YogaSession() {
                       </li>
                     ))}
                   </ul>
-                ) : null}
-                <p className="dx-prose yg-safety">{Y.safetyNote}</p>
-              </DetailCard>
+                </DetailCard>
+              ) : null}
             </DetailLayout>
 
           </>

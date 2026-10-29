@@ -18,6 +18,137 @@
   max-width: none;
 }
 
+/* Splash: full-screen while the app checks the session.
+   Leaves stay in the corners. Without this they flow in the page
+   and push the brand off the bottom of the window. */
+.sx-splash {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 28px 20px;
+  overflow: hidden;
+  color: var(--am-green-900, #0a3328);
+}
+.sx-splash__leaf {
+  position: absolute;
+  z-index: 0;
+  width: min(28vw, 160px);
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+}
+.sx-splash__leaf--tl {
+  top: 8%;
+  left: 12px;
+}
+.sx-splash__leaf--br {
+  right: 12px;
+  bottom: 10%;
+}
+.sx-splash__layout {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 28px;
+  width: min(1100px, 100%);
+  text-align: center;
+}
+.sx-splash__kicker,
+.sx-splash__tagline,
+.sx-splash__prep {
+  margin: 0;
+}
+.sx-splash__kicker {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--am-ink-500, #5d6b66);
+}
+.sx-splash__brand {
+  margin: 8px 0 0;
+  font-size: clamp(32px, 5vw, 64px);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 1.05;
+}
+.sx-splash__rule {
+  width: 48px;
+  height: 2px;
+  margin: 14px auto;
+}
+.sx-splash__tagline {
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.sx-splash__progress {
+  width: 140px;
+  margin: 18px auto 8px;
+  overflow: hidden;
+  border-radius: 999px;
+}
+.sx-splash__progress-fill {
+  width: 40%;
+  height: 100%;
+  border-radius: inherit;
+  animation: splash-bar 1.4s ease-in-out infinite alternate;
+}
+.sx-splash__prep {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--am-ink-500, #5d6b66);
+}
+.sx-splash__logo-wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 200px;
+  height: 200px;
+  flex: none;
+}
+.sx-splash__pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+}
+.sx-splash__logo {
+  position: relative;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  overflow: hidden;
+}
+.sx-splash__logo img {
+  width: 72%;
+  height: auto;
+}
+@media (min-width: 768px) {
+  .sx-splash { padding: 40px 56px; }
+  .sx-splash__layout {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    text-align: left;
+    gap: 48px;
+  }
+  .sx-splash__rule,
+  .sx-splash__progress { margin-left: 0; margin-right: auto; }
+  .sx-splash__logo-wrap { width: 240px; height: 240px; }
+  .sx-splash__leaf--tl { top: 32px; left: 28px; }
+  .sx-splash__leaf--br { right: 28px; bottom: 28px; }
+}
+
 /* Splash */
 .sx-splash {
   background:

@@ -49,7 +49,6 @@ import { UploadProfilePhoto } from '../services/profileService';
 import { extractUploadUrl } from '../services/prescriptionService';
 import {
   Button,
-  Disclaimer,
   EmptyState,
   IconButton,
   SectionHold,
@@ -552,7 +551,6 @@ export default function DoctorSlot() {
               </div>
             </section>
 
-            <Disclaimer />
           </aside>
         </div>
       </div>

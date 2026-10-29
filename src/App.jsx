@@ -128,6 +128,7 @@ import FloatingVideoOverlay from "./components/FloatingVideoOverlay";
 import ChatLauncher from "./components/chat/ChatLauncher";
 import CartFloat from "./components/CartFloat";
 import AuthShell from "./components/AuthShell";
+import AppShell from "./components/AppShell";
 import NetworkGuard from "./components/NetworkGuard";
 import RequireAuth from "./components/RequireAuth";
 import "./design/tokens.css";
@@ -179,10 +180,14 @@ const PatientFaqPage = withAuthChrome(PatientFAQ, {
   welcomeMode: false,
   className: 'auth-shell--assessment',
 });
-const PrakritiProfilePage = withAuthChrome(PrakritiProfile, {
-  hideFooter: true,
-  welcomeMode: false,
-});
+// Result page: full site navbar (data, cart, profile). Quiz steps keep the minimal AuthShell header.
+function PrakritiProfilePage() {
+  return (
+    <AppShell tab="profile" hideFooter>
+      <PrakritiProfile />
+    </AppShell>
+  );
+}
 const CompleteDetailsPage = withAuthChrome(CompleteDetails);
 
 // Push for already-logged-in users (they never went through OTP after push shipped).

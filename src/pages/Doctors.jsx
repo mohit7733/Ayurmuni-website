@@ -11,7 +11,6 @@ import { getDoctorId, listDoctors } from '../consult/doctors';
 import {
   Button,
   Chip,
-  Disclaimer,
   EmptyState,
   ErrorState,
   Modal,
@@ -376,7 +375,6 @@ export default function Doctors() {
               </ul>
             )}
 
-            <Disclaimer className="cs-disclaimer" />
           </div>
         </div>
       </div>

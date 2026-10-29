@@ -275,3 +275,65 @@
   .appointments-page.ap-premium .appoint-filters { padding: 8px 12px; }
   .appointments-page.ap-premium .ap-card { padding: 12px 12px 12px 16px; }
 }
+
+/* Appointments: segmented "When" tabs + one compact filter toolbar. */
+.appointments-page .ap-when-tabs { margin: 0; }
+.appointments-page .ap-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  min-width: 0;
+}
+.appointments-page .ap-toolbar__chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-block: 2px;
+}
+.appointments-page .ap-toolbar__chips::-webkit-scrollbar { display: none; }
+.appointments-page .ap-toolbar__group { display: flex; gap: 6px; flex-shrink: 0; }
+.appointments-page .ap-toolbar__group .am-chip { flex-shrink: 0; }
+.appointments-page .ap-toolbar__sep {
+  flex-shrink: 0;
+  width: 1px;
+  height: 20px;
+  margin-inline: 4px;
+  background: var(--am-border, rgba(0, 0, 0, 0.12));
+}
+.appointments-page .ap-toolbar__meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  font-size: var(--am-text-sm, 13px);
+  color: var(--am-text-muted, #6b6b6b);
+  white-space: nowrap;
+}
+.appointments-page .ap-toolbar__clear {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--am-primary, #0b6b4f);
+  cursor: pointer;
+}
+.appointments-page .ap-toolbar__clear:hover { text-decoration: underline; }
+@media (max-width: 767px) {
+  .appointments-page .ap-toolbar { flex-direction: column; align-items: stretch; }
+  .appointments-page .ap-toolbar__chips { margin-inline: calc(-1 * var(--am-gutter, 16px)); padding-inline: var(--am-gutter, 16px); }
+  .appointments-page .ap-toolbar__meta { justify-content: space-between; }
+}
+/* Breathing room between the filter toolbar and the appointment list. */
+.appointments-page .ap-toolbar { margin-bottom: 16px; }
+@media (max-width: 767px) {
+  .appointments-page .ap-toolbar { margin-bottom: 12px; }
+}

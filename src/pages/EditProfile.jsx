@@ -6,7 +6,7 @@ import { Utils } from '../common/utils';
 import { showSuccessToast } from '../config/key';
 import { persistProfileAndSyncAccess, requireAuth } from '../services/guestAuth';
 import { update_Profile, UploadProfilePhoto, user_profile } from '../services/profileService';
-import { Button, Chip, Disclaimer, Input } from '../components/ui';
+import { Button, Chip, Input } from '../components/ui';
 import { PROFILE_COPY as T } from '../content/profile';
 import '../design/pages/profile.css';
 
@@ -179,7 +179,6 @@ export default function EditProfile() {
           </div>
         </div>
 
-        <Disclaimer />
       </section>
     </AppShell>
   );
