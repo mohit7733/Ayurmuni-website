@@ -1,0 +1,1041 @@
+/* =========================================
+   MEDICAL RECORDS
+   Professional Ayurmuni styling
+========================================= */
+
+.records-page {
+  --records-brand: #0d614e;
+  --records-brand-dark: #094d3e;
+  --records-brand-light: #edf5f0;
+  --records-text: #20382e;
+  --records-muted: #77877e;
+  --records-border: #e2e9e4;
+
+  width: 100%;
+  max-width: 1240px;
+  margin-inline: auto;
+  padding: 24px 16px 45px;
+  box-sizing: border-box;
+  animation: records-enter 0.3s ease both;
+}
+
+@keyframes records-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================================
+   PAGE HEADER
+========================================= */
+
+.records-page .catalog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.records-page .catalog-head > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.records-page .text-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  margin-bottom: 13px;
+  border: 1px solid var(--records-border);
+  border-radius: 8px;
+  color: #607469;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color 0.18s ease,
+    background-color 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.records-page .text-back:hover {
+  color: var(--records-brand);
+  border-color: #b9d0c3;
+  background: #f5f9f6;
+}
+
+.records-page .catalog-head h1 {
+  margin: 0;
+  color: var(--records-text);
+  font-size: clamp(27px, 3vw, 34px);
+  font-weight: 750;
+  letter-spacing: -0.7px;
+  line-height: 1.25;
+}
+
+.records-page .catalog-head p {
+  margin: 8px 0 0;
+  color: var(--records-muted);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* =========================================
+   SEARCH FORM
+========================================= */
+
+.records-page .search-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 6px;
+  border: 1px solid var(--records-border);
+  border-radius: 11px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(26, 65, 47, 0.035);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.records-page .search-form:focus-within {
+  border-color: #8bb5a2;
+  box-shadow: 0 0 0 3px rgba(13, 97, 78, 0.08);
+}
+
+.records-page .search-form input {
+  flex: 1;
+  min-width: 0;
+  height: 43px;
+  padding: 0 14px;
+  border: 0;
+  outline: none;
+  color: var(--records-text);
+  background: transparent;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.records-page .search-form input::placeholder {
+  color: #9aa79f;
+}
+
+.records-page .search-form .cta {
+  min-width: 105px;
+  min-height: 43px;
+  padding: 0 20px;
+  border: 1px solid var(--records-brand);
+  border-radius: 8px;
+  color: #fff;
+  background: var(--records-brand);
+  font-size: 14px;
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.cta:disabled:hover {
+  color: inherit;
+  background-color: inherit;
+}
+
+.records-page .search-form .cta:active {
+  background: #073e32;
+}
+
+.records-page .search-form .cta:active:not(:disabled) {
+  background: var(--records-brand-dark);
+  border-color: var(--records-brand-dark);
+}
+
+/* =========================================
+   CATEGORY CHIPS
+========================================= */
+
+.records-page .diet-chips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-bottom: 25px;
+}
+
+.records-page .diet-chips .chip {
+  min-height: 41px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 0 14px;
+  border: 1px solid #dfe8e2;
+  border-radius: 9px;
+  color: #607469;
+  background: #fff;
+  font-size: 14px;
+  font-weight: 650;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(30, 65, 47, 0.025);
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+/* Inactive hover */
+
+.records-page .diet-chips .chip:hover:not(.on):not(:disabled) {
+  color: var(--records-brand);
+  background: #f1f7f3;
+  border-color: #a9c8b7;
+  box-shadow: 0 2px 6px rgba(13, 97, 78, 0.07);
+}
+
+/* Active state */
+
+.records-page .diet-chips .chip.on,
+.records-page .diet-chips .chip.on:hover {
+  color: #fff;
+  background: var(--records-brand);
+  border-color: var(--records-brand);
+  box-shadow: 0 2px 7px rgba(13, 97, 78, 0.15);
+}
+
+/* Active press */
+
+.records-page .diet-chips .chip:active:not(:disabled) {
+  background: var(--records-brand-dark);
+  border-color: var(--records-brand-dark);
+}
+
+/* Count badge */
+
+.records-page .diet-chips .chip-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 23px;
+  height: 23px;
+  padding: 0 6px;
+  box-sizing: border-box;
+  border: 1px solid #e2ebe5;
+  border-radius: 50px;
+  color: #47685d;
+  background: #edf2f0;
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+/* Active count badge */
+
+.records-page .diet-chips .chip.on .chip-count {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.17);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Keyboard focus */
+
+.records-page .diet-chips .chip:focus-visible {
+  outline: 3px solid rgba(13, 97, 78, 0.18);
+  outline-offset: 3px;
+}
+
+/* Disabled */
+
+.records-page .diet-chips .chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* =========================================
+   UPLOAD AREA
+========================================= */
+
+.records-page .record-upload {
+  position: relative;
+  min-height: 118px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 22px;
+  margin-bottom: 30px;
+  overflow: hidden;
+  border: 1.5px dashed #a9c8b8;
+  border-radius: 12px;
+  background: #f8fbf9;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.records-page .record-upload:hover {
+  border-color: var(--records-brand);
+  background: #f1f7f3;
+}
+
+.records-page .record-upload:focus-within {
+  outline: 3px solid rgba(13, 97, 78, 0.13);
+  outline-offset: 2px;
+}
+
+.records-page .record-upload strong {
+  position: relative;
+  color: var(--records-brand);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.records-page .record-upload small {
+  position: relative;
+  color: #74867b;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* =========================================
+   DOCUMENT SECTION HEADER
+========================================= */
+
+.records-page .home-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 16px;
+}
+
+.records-page .home-section-head h2 {
+  margin: 0;
+  color: var(--records-text);
+  font-size: 21px;
+  font-weight: 750;
+  letter-spacing: -0.35px;
+}
+
+.records-page .home-section-head .muted {
+  padding: 5px 10px;
+  border: 1px solid #e3eae5;
+  border-radius: 7px;
+  color: #708177;
+  background: #f8faf8;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+/* =========================================
+   RECORD ROWS
+========================================= */
+
+.records-page .record-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 88px;
+  padding: 13px 15px;
+  margin-bottom: 11px;
+  border: 1px solid #e3eae5;
+  border-radius: 11px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(30, 65, 47, 0.025);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+  animation: record-row-enter 0.3s ease both;
+}
+
+@keyframes record-row-enter {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.records-page .record-row:hover {
+  border-color: #c4d7ca;
+  box-shadow: 0 3px 9px rgba(30, 65, 47, 0.055);
+}
+
+.records-page .record-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.records-page .record-main img {
+  width: 61px;
+  height: 61px;
+  flex-shrink: 0;
+  object-fit: cover;
+  border: 1px solid #e1e9e3;
+  border-radius: 9px;
+  background: #f4f7f5;
+}
+
+.records-page .record-main > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.records-page .record-main strong {
+  display: block;
+  overflow: hidden;
+  color: #294438;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.18s ease;
+}
+
+.records-page .record-main:hover strong {
+  color: var(--records-brand);
+}
+
+.records-page .record-main small {
+  color: #7e8e84;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+/* File icon for PDF and other documents */
+
+.records-page .record-file {
+  width: 61px;
+  height: 61px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #dce9e1;
+  border-radius: 9px;
+  color: var(--records-brand);
+  background: #f0f6f2;
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: 0.4px;
+}
+
+/* =========================================
+   ROW ACTION BUTTONS
+========================================= */
+
+.records-page .record-row > .ghost {
+  min-width: 72px;
+  min-height: 37px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0 12px;
+  border: 1px solid #d4e3d9;
+  border-radius: 8px;
+  color: var(--records-brand);
+  background: #fff;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    color 0.18s ease,
+    background-color 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.records-page .record-row > .ghost:hover {
+  color: #fff;
+  border-color: var(--records-brand);
+  background: var(--records-brand);
+}
+
+.records-page .record-row > .ghost:active {
+  color: #fff;
+  border-color: var(--records-brand-dark);
+  background: var(--records-brand-dark);
+}
+
+.records-page .record-row > .ghost:last-child {
+  color: #b4534e;
+  border-color: #eadbd8;
+  background: #fff;
+}
+
+.records-page .record-row > .ghost:last-child:hover {
+  color: #fff;
+  border-color: #b94c47;
+  background: #b94c47;
+}
+
+.records-page .record-row > .ghost:last-child:active {
+  color: #fff;
+  border-color: #963b37;
+  background: #963b37;
+}
+
+/* =========================================
+   EMPTY STATE
+========================================= */
+
+.records-page .empty-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 210px;
+  padding: 32px 22px;
+  border: 1px solid var(--records-border);
+  border-radius: 12px;
+  background: #fff;
+  text-align: center;
+}
+
+.records-page .empty-copy strong {
+  color: #294438;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.records-page .empty-copy p {
+  max-width: 370px;
+  margin: 8px 0 0;
+  color: var(--records-muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.records-page > .muted {
+  padding: 32px 15px;
+  color: var(--records-muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+/* =========================================
+   MODAL OVERLAY
+   Scoped to avoid affecting other app modals
+========================================= */
+
+body:has(.records-page) .web-modal {
+  background: rgba(15, 30, 23, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: records-overlay 0.2s ease both;
+}
+
+@keyframes records-overlay {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* =========================================
+   MODAL CARD
+========================================= */
+
+.web-modal .web-modal-card {
+  width: min(100%, 510px);
+  max-height: min(88vh, 760px);
+  padding: 26px;
+  overflow-y: auto;
+  border: 1px solid #e6ece8;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.15);
+  animation: records-modal-enter 0.22s ease both;
+}
+
+@keyframes records-modal-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.web-modal .web-modal-card h3 {
+  margin: 0 0 9px;
+  color: #203c30;
+  font-size: 21px;
+  font-weight: 750;
+  letter-spacing: -0.3px;
+}
+
+.web-modal .web-modal-card > p.muted {
+  margin: 0 0 21px;
+  padding: 11px 13px;
+  overflow-wrap: anywhere;
+  border: 1px solid #e4ebe6;
+  border-radius: 8px;
+  color: #63796b;
+  background: #f7faf8;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* =========================================
+   MODAL FORM FIELDS
+========================================= */
+
+.web-modal .form-field {
+  display: block;
+  margin-bottom: 20px;
+  color: #334d40;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.web-modal .form-field input {
+  width: 100%;
+  height: 46px;
+  padding: 0 13px;
+  margin-top: 8px;
+  box-sizing: border-box;
+  border: 1px solid #dce6df;
+  border-radius: 8px;
+  outline: none;
+  color: #294237;
+  background: #fff;
+  font-size: 14px;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.web-modal .form-field input:focus {
+  border-color: var(--records-brand);
+  box-shadow: 0 0 0 3px rgba(13, 97, 78, 0.09);
+}
+
+.web-modal .form-field input::placeholder {
+  color: #9ba9a0;
+}
+
+/* =========================================
+   RECORD TYPE CHIPS
+========================================= */
+
+.web-modal .variant-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 10px;
+}
+
+.web-modal .variant-row .chip {
+  min-height: 41px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 15px;
+  border: 1px solid #dfe8e2;
+  border-radius: 8px;
+  color: #607469;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    color 0.18s ease,
+    background-color 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.web-modal .variant-row .chip:hover:not(.on) {
+  color: var(--records-brand);
+  border-color: #a9c8b7;
+  background: #f5f9f6;
+}
+
+.web-modal .variant-row .chip.on,
+.web-modal .variant-row .chip.on:hover {
+  color: var(--records-brand);
+  border-color: var(--records-brand);
+  background: #edf5f0;
+}
+
+/* =========================================
+   MODAL ACTIONS
+========================================= */
+
+.web-modal .detail-cta {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 18px;
+  margin-top: 21px;
+  border-top: 1px solid #e9efeb;
+}
+
+.web-modal .detail-cta button,
+.web-modal .web-modal-card > button.ghost {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18px;
+  border: 1px solid #dce6df;
+  border-radius: 8px;
+  color: #5e7166;
+  background: #fff;
+  font-size: 14px;
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    color 0.18s ease,
+    background-color 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.web-modal .detail-cta button.ghost:hover,
+.web-modal .web-modal-card > button.ghost:hover {
+  color: var(--records-brand);
+  border-color: #b5cdbd;
+  background: #f4f8f5;
+}
+
+.web-modal .detail-cta button.cta {
+  color: #fff;
+  border-color: var(--records-brand);
+}
+
+.web-modal .detail-cta button.cta:hover {
+  background: var(--am-danger, #dc2626);
+  color: #fff;
+}
+
+.web-modal .detail-cta button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* =========================================
+   DOCUMENT PREVIEW
+========================================= */
+
+.web-modal .record-preview {
+  max-width: 850px;
+  padding: 24px;
+}
+
+.web-modal .record-preview h3 {
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e9efeb;
+}
+
+.web-modal .record-preview > img {
+  display: block;
+  max-width: 100%;
+  max-height: 65vh;
+  margin: 10px auto 20px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #f4f6f4;
+}
+
+.web-modal .record-preview-pdf {
+  min-height: 210px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  margin: 15px 0;
+  border: 1px dashed #b9d0c1;
+  border-radius: 11px;
+  color: var(--records-brand);
+  background: #f7faf8;
+}
+
+.web-modal .record-preview-pdf strong {
+  font-size: 16px;
+}
+
+.web-modal .record-preview-pdf a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 41px;
+  padding: 0 18px;
+  border: 1px solid var(--records-brand);
+  border-radius: 8px;
+  color: #fff;
+  background: var(--records-brand);
+  font-size: 14px;
+  font-weight: 650;
+  text-decoration: none;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.web-modal .record-preview-pdf a:hover {
+  color: #fff;
+  border-color: var(--records-brand-dark);
+  background: var(--records-brand-dark);
+}
+
+/* =========================================
+   CONSISTENT BUTTON INTERACTIONS
+========================================= */
+
+.records-page button,
+.web-modal button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.records-page button:focus-visible,
+.records-page input:focus-visible,
+.web-modal button:focus-visible,
+.web-modal input:focus-visible {
+  outline: 3px solid rgba(13, 97, 78, 0.18);
+  outline-offset: 2px;
+}
+
+.records-page button:disabled,
+.web-modal button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Prevent hover styles from overriding disabled states */
+
+.records-page button:disabled:hover,
+.web-modal button:disabled:hover {
+  color: inherit;
+  background-color: inherit;
+  border-color: inherit;
+  box-shadow: none;
+  transform: none;
+  cursor: not-allowed;
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 768px) {
+  .records-page {
+    padding: 20px 12px 35px;
+  }
+
+  .records-page .catalog-head {
+    margin-bottom: 21px;
+  }
+
+  .records-page .catalog-head h1 {
+    font-size: 27px;
+  }
+
+  .records-page .catalog-head p {
+    font-size: 14px;
+  }
+
+  .records-page .record-upload {
+    min-height: 108px;
+    padding: 18px 14px;
+  }
+
+  .records-page .record-upload strong {
+    font-size: 15px;
+  }
+
+  .records-page .record-upload small {
+    font-size: 13px;
+  }
+
+  .records-page .record-row {
+    gap: 8px;
+    padding: 11px;
+  }
+
+  .records-page .record-main {
+    gap: 11px;
+  }
+
+  .records-page .record-main img,
+  .records-page .record-file {
+    width: 49px;
+    height: 49px;
+  }
+
+  .records-page .record-main strong {
+    font-size: 14px;
+  }
+
+  .records-page .record-main small {
+    font-size: 12px;
+  }
+
+  .records-page .record-row > .ghost {
+    min-width: 60px;
+    min-height: 35px;
+    padding: 0 9px;
+    font-size: 12px;
+  }
+
+  .web-modal .web-modal-card {
+    padding: 22px;
+  }
+}
+
+@media (max-width: 480px) {
+  .records-page {
+    padding: 18px 10px 30px;
+  }
+
+  .records-page .catalog-head h1 {
+    font-size: 25px;
+  }
+
+  .records-page .text-back {
+    margin-bottom: 11px;
+  }
+
+  .records-page .search-form {
+    gap: 5px;
+    padding: 5px;
+  }
+
+  .records-page .search-form input {
+    height: 41px;
+    padding: 0 9px;
+    font-size: 14px;
+  }
+
+  .records-page .search-form .cta {
+    min-width: 76px;
+    min-height: 40px;
+    padding: 0 10px;
+    font-size: 13px;
+  }
+
+  .records-page .diet-chips {
+    gap: 7px;
+    margin-bottom: 21px;
+  }
+
+  .records-page .diet-chips .chip {
+    min-height: 37px;
+    padding: 0 11px;
+    font-size: 12px;
+  }
+
+  .records-page .home-section-head h2 {
+    font-size: 19px;
+  }
+
+  .records-page .record-row {
+    gap: 7px;
+    padding: 9px;
+  }
+
+  .records-page .record-main {
+    gap: 9px;
+  }
+
+  .records-page .record-main img,
+  .records-page .record-file {
+    width: 43px;
+    height: 43px;
+    border-radius: 8px;
+  }
+
+  .records-page .record-main strong {
+    font-size: 13px;
+  }
+
+  .records-page .record-main small {
+    font-size: 11px;
+  }
+
+  .records-page .record-row > .ghost {
+    min-width: 0;
+    min-height: 33px;
+    padding: 0 8px;
+    font-size: 11px;
+  }
+
+  .web-modal .web-modal-card {
+    padding: 19px;
+    border-radius: 12px;
+  }
+
+  .web-modal .web-modal-card h3 {
+    font-size: 19px;
+  }
+
+  .web-modal .detail-cta {
+    gap: 8px;
+  }
+
+  .web-modal .detail-cta button {
+    flex: 1;
+    padding: 0 10px;
+  }
+
+  .web-modal .variant-row .chip {
+    min-height: 39px;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+}
+
+/* =========================================
+   ACCESSIBILITY
+========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .records-page,
+  .records-page *,
+  .web-modal,
+  .web-modal * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

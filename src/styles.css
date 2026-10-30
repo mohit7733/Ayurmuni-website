@@ -5794,8 +5794,8 @@ button.checkout-item {
   border-radius: 16px;
   overflow: hidden;
   background: var(--am-bg);
-  margin-bottom: 12px;
-  height: 220px;
+  width: auto;
+  height: auto;
 }
 
 .diet-nutrition {
@@ -6613,51 +6613,6 @@ button.rx-file-preview {
   color: var(--am-warning);
 }
 
-.txn-item {
-  grid-template-columns: 52px 1fr auto;
-}
-
-.txn-icon {
-  flex-shrink: 0;
-  font-weight: 700;
-}
-
-.txn-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-  margin-left: auto;
-}
-
-.txn-right strong {
-  color: var(--am-text);
-}
-
-.txn-status {
-  font-style: normal;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.txn-status.paid,
-.txn-status.success {
-  color: #16a34a;
-}
-
-.txn-status.failed,
-.txn-status.refunded {
-  color: var(--am-danger);
-}
-
-.txn-status.pending {
-  color: #f59e0b;
-}
-
-.txn-credit {
-  color: #15803d;
-}
-
 .pay-month {
   margin: 8px 0 4px;
   font-size: 13px;
@@ -6691,73 +6646,6 @@ button.rx-file-preview {
   padding: 8px 10px;
   border: 1px solid var(--am-line, #e2e8f0);
   border-radius: 10px;
-}
-
-.txn-hero {
-  text-align: center;
-}
-
-.txn-hero .txn-icon {
-  margin: 0 auto 10px;
-}
-
-.txn-hero strong {
-  display: block;
-  font-size: 28px;
-  color: var(--am-text);
-}
-
-.txn-hero small {
-  display: block;
-  margin-top: 8px;
-  color: var(--am-text-subtle);
-}
-
-.txn-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 8px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.txn-pill i {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-}
-
-.txn-detail-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 7px 0;
-  border-bottom: 1px solid var(--am-line);
-  font-size: 12px;
-}
-
-.txn-detail-row span {
-  color: var(--am-text-subtle);
-}
-
-.txn-detail-row strong {
-  text-align: right;
-  color: var(--am-text);
-  font-weight: 600;
-}
-
-.txn-link {
-  margin-top: 10px;
-  width: 100%;
-  border: 0;
-  border-radius: 10px;
-  padding: 10px;
-  background: var(--am-primary-soft);
-  color: var(--am-primary);
-  font-weight: 700;
 }
 
 .video-call-page {
@@ -10818,4 +10706,369 @@ button.rx-file-preview {
 
 .history-page .search-form input::-webkit-search-cancel-button {
   cursor: pointer;
+}
+
+/* ==========================================================
+   Transaction Details – wide, professional receipt layout
+   Scoped to .txn-page: append after your global CSS.
+   JSX is unchanged.
+   ========================================================== */
+
+/* ---------- Page width: ~90% of the screen on desktop ---------- */
+.txn-page.catalog-page {
+  width: 100%;
+  max-width: none;
+  margin-inline: auto;
+  padding: 20px 16px 48px;
+}
+
+@media (min-width: 900px) {
+  .txn-page.catalog-page {
+    width: 90%;
+    max-width: 1600px;
+    padding: 28px 0 56px;
+  }
+}
+
+@media (min-width: 1500px) {
+  .txn-page.catalog-page {
+    width: 84%;
+  }
+}
+
+/* ---------- Header ---------- */
+.txn-page .catalog-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 14px;
+  margin: 0 0 24px;
+}
+
+.txn-page .catalog-head .text-back {
+  min-height: 38px;
+  margin: 0;
+  padding: 0 16px;
+  border: 1px solid var(--am-line);
+  border-radius: 999px;
+  background: var(--am-surface, #fff);
+  color: var(--am-text);
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: none;
+  cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.txn-page .catalog-head .text-back:hover:not(:disabled) {
+  border-color: var(--am-primary);
+  background: var(--am-surface, #fff);
+  color: var(--am-primary);
+  box-shadow: none;
+  transform: none;
+}
+
+.txn-page .catalog-head h1 {
+  margin: 0;
+  color: var(--am-text);
+  font-size: clamp(26px, 3vw, 34px);
+  font-weight: 750;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.txn-page .catalog-head p {
+  margin: 6px 0 0;
+  color: var(--am-text-subtle);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Cards ---------- */
+.txn-page .checkout-card {
+  margin: 0 0 20px;
+  padding: 24px 28px;
+  border: 1px solid var(--am-line);
+  border-radius: 20px;
+  background: var(--am-surface, #fff);
+  box-shadow: 0 1px 2px rgb(10 40 32 / 4%);
+}
+
+.txn-page .checkout-card h3 {
+  margin: 0 0 4px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--am-line);
+  color: var(--am-text);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* ---------- Hero (amount summary) ---------- */
+.txn-page .txn-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  padding: 36px 28px 26px;
+  text-align: center;
+  background: linear-gradient(
+    180deg,
+    var(--am-primary-soft) 0,
+    var(--am-surface, #fff) 140px
+  );
+}
+
+.txn-page .txn-hero .txn-icon {
+  display: grid;
+  width: 64px;
+  height: 64px;
+  margin: 0 0 20px;
+  place-items: center;
+  border: 1px solid var(--am-primary-tint, var(--am-line));
+  border-radius: 20px;
+  background: var(--am-surface, #fff);
+  color: var(--am-primary);
+  font-size: 24px;
+  font-weight: 700;
+  box-shadow: 0 6px 16px rgb(13 97 78 / 10%);
+}
+
+.txn-page .txn-hero strong {
+  display: block;
+  color: var(--am-text);
+  font-size: clamp(34px, 5vw, 46px);
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+}
+
+.txn-page .txn-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+  margin-top: 16px;
+  padding: 0 14px;
+  border: 1px solid color-mix(in srgb, currentColor 24%, transparent);
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.txn-page .txn-pill i {
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.txn-page .txn-hero small {
+  display: block;
+  width: 100%;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px dashed var(--am-line-strong, var(--am-line));
+  color: var(--am-text-subtle);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  overflow-wrap: anywhere;
+  user-select: all; /* one tap/click selects the reference for copying */
+}
+
+/* ---------- Detail rows ---------- */
+.txn-page .txn-detail-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 14px 0;
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--am-line) 65%, transparent);
+  font-size: 14px;
+}
+
+/* first row (right after the title) has no top line */
+.txn-page .checkout-card > h3 + .txn-detail-row {
+  border-top: 0;
+}
+
+.txn-page .txn-detail-row span {
+  flex: 0 0 auto;
+  color: var(--am-text-subtle);
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+.txn-page .txn-detail-row strong {
+  min-width: 0;
+  max-width: 62%;
+  color: var(--am-text);
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  text-align: right;
+  text-transform: none;
+}
+
+/* ---------- Link buttons ---------- */
+.txn-page .txn-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 48px;
+  margin: 16px 0 0;
+  padding: 0 18px;
+  border: 1px solid var(--am-primary-tint, var(--am-line));
+  border-radius: 12px;
+  background: var(--am-primary-soft);
+  color: var(--am-primary);
+  font-size: 14px;
+  font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.txn-page .txn-link::after {
+  content: "›";
+  font-size: 22px;
+  line-height: 1;
+}
+
+.txn-page .txn-link:hover {
+  border-color: var(--am-primary);
+  background: var(--am-primary);
+  color: var(--am-on-primary, #fff);
+}
+
+/* standalone link (View Appointment) sits between cards */
+.txn-page > .txn-link {
+  margin: 0 0 20px;
+  background: var(--am-surface, #fff);
+  border-color: var(--am-line);
+}
+
+.txn-page > .txn-link:hover {
+  border-color: var(--am-primary);
+  background: var(--am-primary);
+}
+
+.txn-page .txn-link:focus-visible,
+.txn-page .text-back:focus-visible {
+  outline: 2px solid var(--am-primary);
+  outline-offset: 2px;
+}
+
+/* ---------- Not found ---------- */
+.txn-page > .empty-copy {
+  padding: 56px 16px;
+  border: 1px dashed var(--am-line-strong, var(--am-line));
+  border-radius: 20px;
+  background: var(--am-surface, #fff);
+}
+
+/* ---------- Desktop: summary left, details right ---------- */
+@media (min-width: 900px) {
+  .txn-page.catalog-page {
+    display: grid;
+    grid-template-columns: 340px minmax(0, 1fr);
+    column-gap: 28px;
+    row-gap: 0;
+    align-content: start;
+    align-items: start;
+  }
+
+  .txn-page > .catalog-head,
+  .txn-page > .empty-copy {
+    grid-column: 1 / -1;
+  }
+
+  .txn-page > .txn-hero {
+    grid-column: 1;
+    grid-row: 2 / span 8;
+    position: sticky;
+    top: calc(var(--header-h, 64px) + 16px);
+  }
+
+  .txn-page > :not(.catalog-head):not(.txn-hero):not(.empty-copy) {
+    grid-column: 2;
+  }
+}
+
+/* ---------- Wide desktop: rows flow in two columns inside each card ---------- */
+@media (min-width: 1200px) {
+  .txn-page.catalog-page {
+    grid-template-columns: 400px minmax(0, 1fr);
+    column-gap: 32px;
+  }
+
+  .txn-page .checkout-card:not(.txn-hero) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 56px;
+  }
+
+  .txn-page .checkout-card:not(.txn-hero) > h3,
+  .txn-page .checkout-card:not(.txn-hero) > .txn-link {
+    grid-column: 1 / -1;
+  }
+
+  /* first two rows (both columns) have no top line */
+  .txn-page .checkout-card > h3 + .txn-detail-row + .txn-detail-row {
+    border-top: 0;
+  }
+}
+
+@media (hover: hover) {
+  .txn-page .txn-detail-row {
+    transition: background 0.15s ease;
+  }
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 480px) {
+  .txn-page.catalog-page {
+    padding: 14px 14px 36px;
+  }
+
+  .txn-page .checkout-card {
+    padding: 18px;
+    border-radius: 16px;
+  }
+
+  .txn-page .txn-hero {
+    padding: 26px 18px 20px;
+  }
+
+  .txn-page .txn-detail-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .txn-page .txn-detail-row strong {
+    max-width: 100%;
+    text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .txn-page * {
+    transition: none !important;
+  }
 }

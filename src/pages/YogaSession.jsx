@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import AppShell from '../components/AppShell';
-import ShareButton from '../components/ShareButton';
-import yogaPosterImg from '/images/login/8.png';
-import { getYogaSessionDetail } from '../services/yogaService';
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import AppShell from "../components/AppShell";
+import ShareButton from "../components/ShareButton";
+import yogaPosterImg from "/images/login/8.png";
+import { getYogaSessionDetail } from "../services/yogaService";
 import {
   getYogaInstructor,
   getYogaSessionBreakdown,
@@ -11,7 +11,8 @@ import {
   normalizeYogaSessionList,
   resolveYogaThumbnailUri,
   resolveYogaVideoUri,
-} from '../yoga/utils';
+} from "../yoga/utils";
+import "../design/yoga-session.css";
 
 export default function YogaSession() {
   const navigate = useNavigate();
@@ -49,7 +50,7 @@ export default function YogaSession() {
       }
     })();
     return () => {
-      cancelled = true;
+      cancelled = false;
     };
   }, [sessionId, routeItem?.id]);
 
@@ -61,12 +62,15 @@ export default function YogaSession() {
   const breakdown = useMemo(() => getYogaSessionBreakdown(session), [session]);
   const instructor = useMemo(() => getYogaInstructor(session), [session]);
   const difficulty = String(
-    session?.difficulty || session?.level || session?.production_level || '',
+    session?.difficulty || session?.level || session?.production_level || "",
   ).trim();
-  const durationLabel = String(session?.duration || session?.duration_minutes || '').trim();
+  const durationLabel = String(
+    session?.duration || session?.duration_minutes || "",
+  ).trim();
   const notes = String(
-    session?.notes || session?.instruction || session?.instructions || '',
+    session?.notes || session?.instruction || session?.instructions || "",
   ).trim();
+  const description = session?.short_description || session?.description || "";
 
   const onPickStep = (index, startSeconds) => {
     setActiveIndex(index);
@@ -82,16 +86,21 @@ export default function YogaSession() {
       <section className="catalog-page yoga-session-page">
         <header className="catalog-head">
           <div>
-            <button type="button" className="text-back" onClick={() => navigate(-1)}>
+            <button
+              type="button"
+              className="text-back"
+              onClick={() => navigate(-1)}
+            >
               ← Back
             </button>
             <h1>Yoga Session</h1>
             <p>Guided practice</p>
           </div>
+
           {session ? (
             <ShareButton
-              title={`${session.title || session.name || 'Yoga session'} - Ayurmuni`}
-              text={session.short_description || session.description || 'A guided yoga session on Ayurmuni.'}
+              title={`${session.title || session.name || "Yoga session"} - Ayurmuni`}
+              text={description || "A guided yoga session on Ayurmuni."}
               url={`${window.location.origin}/yoga/${session.id || sessionId}`}
               variant="soft"
               size="sm"
@@ -99,95 +108,135 @@ export default function YogaSession() {
           ) : null}
         </header>
 
-        {loading && !session ? (
-          <p className="muted">Loading session…</p>
-        ) : !session ? (
-          <div className="empty-copy">
-            <strong>Session unavailable</strong>
-            <p>This yoga session could not be loaded.</p>
-          </div>
-        ) : (
-          <>
-            <div className="yoga-player">
-              {videoUri ? (
-                <video
-                  ref={videoRef}
-                  src={videoUri}
-                  poster={posterUri}
-                  controls
-                  playsInline
-                  preload="metadata"
-                />
-              ) : (
-                <img src={posterUri} alt="" />
-              )}
+        <div className="yoga-session-content">
+          {loading && !session ? (
+            <p className="yoga-session-loading">Loading session…</p>
+          ) : !session ? (
+            <div className="yoga-session-empty">
+              <strong>Session unavailable</strong>
+              <p>This yoga session could not be loaded.</p>
             </div>
-
-            <div className="yoga-badges">
-              {difficulty ? <span className="yoga-badge level">{difficulty.toUpperCase()}</span> : null}
-              {durationLabel ? <span className="yoga-badge">{durationLabel}</span> : null}
-            </div>
-
-            <h2 className="yoga-title">{session.title || session.name || 'Yoga Session'}</h2>
-            {session.short_description || session.description ? (
-              <p className="yoga-subtitle">{session.short_description || session.description}</p>
-            ) : null}
-
-            {notes ? (
-              <div className="yoga-notes">
-                <strong>Notes</strong>
-                <p>{notes}</p>
-              </div>
-            ) : null}
-
-            <h3 className="yoga-section">Session Breakdown</h3>
-            {!breakdown.length ? (
-              <p className="muted">
-                Pose-by-pose timing will appear here when this session includes a breakdown.
-              </p>
-            ) : (
-              <ol className="yoga-steps">
-                {breakdown.map((item, index) => (
-                  <li key={item.id}>
-                    <button
-                      type="button"
-                      className={index === activeIndex ? 'on' : ''}
-                      onClick={() => onPickStep(index, item.startSeconds)}
-                    >
-                      <span className="yoga-step-num">{index + 1}</span>
-                      <span className="yoga-step-copy">
-                        <strong>{item.title}</strong>
-                        <small>{item.time}</small>
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ol>
-            )}
-
-            {instructor ? (
-              <button
-                type="button"
-                className="yoga-mentor"
-                onClick={() => navigate('/mentor/consult')}
-              >
-                {instructor.imageUri ? (
-                  <img src={instructor.imageUri} alt="" />
+          ) : (
+            <>
+              <div className="yoga-player">
+                {videoUri ? (
+                  <video
+                    ref={videoRef}
+                    src={videoUri}
+                    poster={posterUri}
+                    controls
+                    playsInline
+                    preload="metadata"
+                  />
                 ) : (
-                  <span className="yoga-mentor-fallback">🧘</span>
+                  <img src={posterUri} alt="" />
                 )}
-                <div>
-                  <strong>{instructor.name}</strong>
-                  <small>{instructor.subtitle || 'Yoga Mentor'}</small>
-                  <p>
-                    {instructor.description ||
-                      'Guided alignment and breathwork for a complete session.'}
-                  </p>
+              </div>
+
+              <section
+                className="yoga-session-meta"
+                aria-label="Session details"
+              >
+                <div className="yoga-session-meta-head">
+                  <h2 className="yoga-title">
+                    {session.title || session.name || "Yoga Session"}
+                  </h2>
+
+                  <div className="yoga-session-tags">
+                    {difficulty ? (
+                      <span className="yoga-session-tag level">
+                        <i aria-hidden="true" />
+                        {difficulty.toUpperCase()}
+                      </span>
+                    ) : null}
+
+                    {durationLabel ? (
+                      <span className="yoga-session-tag">
+                        <i aria-hidden="true" />
+                        {durationLabel}
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
-              </button>
-            ) : null}
-          </>
-        )}
+
+                {description ? (
+                  <p className="yoga-subtitle">{description}</p>
+                ) : null}
+              </section>
+
+              {notes ? (
+                <section className="yoga-notes" aria-label="Session notes">
+                  <strong>Notes</strong>
+                  <p>{notes}</p>
+                </section>
+              ) : null}
+
+              <section
+                className="yoga-breakdown-card"
+                aria-label="Session breakdown"
+              >
+                <div className="yoga-breakdown-head">
+                  <div>
+                    <h3>Session Breakdown</h3>
+                    <p>Pose-by-pose guidance and timing</p>
+                  </div>
+                </div>
+
+                {!breakdown.length ? (
+                  <div className="yoga-breakdown-empty">
+                    <span aria-hidden="true">🧘</span>
+                    <p>
+                      Pose-by-pose timing will appear here when this session
+                      includes a breakdown.
+                    </p>
+                  </div>
+                ) : (
+                  <ol className="yoga-steps">
+                    {breakdown.map((item, index) => (
+                      <li key={item.id}>
+                        <button
+                          type="button"
+                          className={index === activeIndex ? "on" : ""}
+                          onClick={() => onPickStep(index, item.startSeconds)}
+                        >
+                          <span className="yoga-step-num">{index + 1}</span>
+
+                          <span className="yoga-step-copy">
+                            <strong>{item.title}</strong>
+                            <small>{item.time}</small>
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ol>
+                )}
+              </section>
+
+              {instructor ? (
+                <button
+                  type="button"
+                  className="yoga-mentor"
+                  onClick={() => navigate("/mentor/consult")}
+                >
+                  {instructor.imageUri ? (
+                    <img src={instructor.imageUri} alt="" />
+                  ) : (
+                    <span className="yoga-mentor-fallback">🧘</span>
+                  )}
+
+                  <div>
+                    <strong>{instructor.name}</strong>
+                    <small>{instructor.subtitle || "Yoga Mentor"}</small>
+                    <p>
+                      {instructor.description ||
+                        "Guided alignment and breathwork for a complete session."}
+                    </p>
+                  </div>
+                </button>
+              ) : null}
+            </>
+          )}
+        </div>
       </section>
     </AppShell>
   );

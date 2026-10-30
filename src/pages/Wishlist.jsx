@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import AppShell from '../components/AppShell';
-import ProductCard from '../components/ProductCard';
-import { mapCatalogProductItem, normalizeApiList } from '../home/catalog';
-import { requireAuth } from '../services/guestAuth';
-import { getProducts } from '../services/productService';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import AppShell from "../components/AppShell";
+import ProductCard from "../components/ProductCard";
+import { mapCatalogProductItem, normalizeApiList } from "../home/catalog";
+import { requireAuth } from "../services/guestAuth";
+import { getProducts } from "../services/productService";
 
 export default function Wishlist() {
   const navigate = useNavigate();
@@ -23,7 +23,7 @@ export default function Wishlist() {
 
   useEffect(() => {
     (async () => {
-      if (!(await requireAuth('Please login to view wishlist'))) return;
+      if (!(await requireAuth("Please login to view wishlist"))) return;
       load();
     })();
   }, []);
@@ -32,7 +32,11 @@ export default function Wishlist() {
     <AppShell tab="profile">
       <section className="catalog-page wishlist-page">
         <header className="catalog-head">
-          <button type="button" className="text-back" onClick={() => navigate('/profile')}>
+          <button
+            type="button"
+            className="text-back"
+            onClick={() => navigate("/profile")}
+          >
             ← Back
           </button>
           <div>

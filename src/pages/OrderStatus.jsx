@@ -1,21 +1,21 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import AppShell from '../components/AppShell';
-import { formatRupee } from '../home/catalog';
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import AppShell from "../components/AppShell";
+import { formatRupee } from "../home/catalog";
 import {
   extractPrescriptionRequest,
   getPrescribedItems,
   getPrescriptionRequests,
   isPrescriptionApproved,
   mapPrescribedItem,
-} from '../services/prescriptionService';
-import '../design/pages/order-status-rx.css';
+} from "../services/prescriptionService";
+import "../design/pages/order-status-rx.css";
 
-const RX_STATUS_KEY = 'ayurmuni_rx_status';
+const RX_STATUS_KEY = "ayurmuni_rx_status";
 
 const readStored = () => {
   try {
-    return JSON.parse(sessionStorage.getItem(RX_STATUS_KEY) || 'null');
+    return JSON.parse(sessionStorage.getItem(RX_STATUS_KEY) || "null");
   } catch {
     return null;
   }
@@ -27,13 +27,14 @@ export default function OrderStatus() {
   const stored = useMemo(() => readStored(), []);
   const incoming = location.state?.request || stored?.request || null;
   const [request, setRequest] = useState(incoming);
-  const notes = location.state?.notes || stored?.notes || incoming?.notes || '';
+  const notes = location.state?.notes || stored?.notes || incoming?.notes || "";
   const routeItems = Array.isArray(location.state?.prescribedItems)
     ? location.state.prescribedItems
     : stored?.prescribedItems;
 
   const [secondsLeft, setSecondsLeft] = useState(5);
-  const approved = isPrescriptionApproved(request) || Boolean(routeItems?.length);
+  const approved =
+    isPrescriptionApproved(request) || Boolean(routeItems?.length);
 
   const orderData = useMemo(() => {
     if (Array.isArray(routeItems) && routeItems.length > 0) return routeItems;
@@ -77,7 +78,7 @@ export default function OrderStatus() {
       setSecondsLeft((prev) => Math.max(0, prev - 1));
     }, 1000);
     const redirect = setTimeout(() => {
-      navigate('/cart', { replace: true });
+      navigate("/cart", { replace: true });
     }, 5000);
     return () => {
       clearInterval(tick);
@@ -85,7 +86,7 @@ export default function OrderStatus() {
     };
   }, [navigate]);
 
-  const goCart = () => navigate('/cart', { replace: true });
+  const goCart = () => navigate("/cart", { replace: true });
 
   return (
     <AppShell tab="medicines">
@@ -96,40 +97,49 @@ export default function OrderStatus() {
           </button>
           <div>
             <h1>Order Status</h1>
-            <p>{approved ? 'Prescription approved' : 'Request received'}</p>
+            <p>{approved ? "Prescription approved" : "Request received"}</p>
           </div>
         </header>
 
         <div className="rx-status-hero">
           <div className="rx-status-check">✓</div>
-          <h2>{approved ? 'Prescription approved' : 'Request received'}</h2>
+          <h2>{approved ? "Prescription approved" : "Request received"}</h2>
           <p>
             {approved
-              ? 'Your prescription is approved. Taking you to cart shortly.'
-              : 'We received your request. Redirecting to cart shortly.'}
+              ? "Your prescription is approved. Taking you to cart shortly."
+              : "We received your request. Redirecting to cart shortly."}
           </p>
           <span className="rx-status-chip">Opening cart in {secondsLeft}s</span>
         </div>
 
         {notes ? (
-          <div className="checkout-card rx-order-card">
-            <p className="muted">Notes</p>
-            <p>{notes}</p>
-          </div>
+          <section className="rx-notes" aria-label="Prescription notes">
+            <div className="rx-notes-head">
+              <div>
+                <h2>Prescription notes</h2>
+                <p>Instructions shared with your order</p>
+              </div>
+            </div>
+
+            <p className="rx-notes-body">{notes}</p>
+          </section>
         ) : null}
 
         <div className="checkout-card rx-order-card rx-order-items">
           <div className="receipt-price">
             <span>
               <small>Request ID</small>
-              <strong>#{String(request?.id || 'RX').slice(0, 10)}</strong>
+              <strong>#{String(request?.id || "RX").slice(0, 10)}</strong>
             </span>
-            <em className="rx-status-pill">{approved ? 'Approved' : 'Submitted'}</em>
+            <em className="rx-status-pill">
+              {approved ? "Approved" : "Submitted"}
+            </em>
           </div>
           <h3>Prescribed items</h3>
           {orderData.length === 0 ? (
             <p className="muted">
-              Items from your outsourced prescription will appear in cart after matching.
+              Items from your outsourced prescription will appear in cart after
+              matching.
             </p>
           ) : (
             orderData.map((item) => (
@@ -137,9 +147,11 @@ export default function OrderStatus() {
                 {item.image ? <img src={item.image} alt="" /> : <span>Rx</span>}
                 <p>
                   {item.name}
-                  <small>{item.desc || 'From outsourced prescription'}</small>
+                  <small>{item.desc || "From outsourced prescription"}</small>
                 </p>
-                {item.price != null ? <strong>{formatRupee(item.price)}</strong> : null}
+                {item.price != null ? (
+                  <strong>{formatRupee(item.price)}</strong>
+                ) : null}
               </div>
             ))
           )}

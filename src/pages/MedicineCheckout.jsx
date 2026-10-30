@@ -1,24 +1,25 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import AppShell from '../components/AppShell';
-import { formatRupee } from '../home/catalog';
-import { showSuccessToast } from '../config/key';
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import AppShell from "../components/AppShell";
+import { formatRupee } from "../home/catalog";
+import { showSuccessToast } from "../config/key";
 import {
   getPrescribedItems,
   isPrescriptionApproved,
   mapPrescribedItem,
-} from '../services/prescriptionService';
+} from "../services/prescriptionService";
+import "../design/medicine-checkout.css";
 
 export default function MedicineCheckout() {
   const navigate = useNavigate();
   const location = useLocation();
   const request = location.state?.request || null;
-  const notes = location.state?.notes || request?.notes || '';
+  const notes = location.state?.notes || request?.notes || "";
   const routeItems = Array.isArray(location.state?.prescribedItems)
     ? location.state.prescribedItems
     : null;
   const approved = location.state?.approved || isPrescriptionApproved(request);
-  const [selectedSpeed, setSelectedSpeed] = useState('standard');
+  const [selectedSpeed, setSelectedSpeed] = useState("standard");
 
   const orderData = useMemo(() => {
     if (Array.isArray(routeItems) && routeItems.length > 0) return routeItems;
@@ -29,21 +30,21 @@ export default function MedicineCheckout() {
     () => orderData.reduce((sum, item) => sum + (Number(item?.price) || 0), 0),
     [orderData],
   );
-  const deliveryFee = selectedSpeed === 'express' ? 9.99 : 0;
+  const deliveryFee = selectedSpeed === "express" ? 9.99 : 0;
   const total = subtotal + deliveryFee;
 
   useEffect(() => {
     if (!approved) {
       showSuccessToast(
-        'Finalize order is available only after prescription is approved.',
-        'error',
+        "Finalize order is available only after prescription is approved.",
+        "error",
       );
       navigate(-1);
     }
   }, [approved, navigate]);
 
   const continueNext = () => {
-    navigate('/medicines/order-status', {
+    navigate("/medicines/order-status", {
       state: {
         request,
         prescribedItems: orderData,
@@ -58,7 +59,11 @@ export default function MedicineCheckout() {
     <AppShell tab="medicines">
       <section className="catalog-page rx-checkout">
         <header className="catalog-head">
-          <button type="button" className="text-back" onClick={() => navigate(-1)}>
+          <button
+            type="button"
+            className="text-back"
+            onClick={() => navigate(-1)}
+          >
             ← Back
           </button>
           <div>
@@ -73,26 +78,36 @@ export default function MedicineCheckout() {
 
         <div className="rx-trust">
           <span>Secure checkout</span>
-          <span>{approved ? 'Rx approved' : 'Rx under review'}</span>
+          <span>{approved ? "Rx approved" : "Rx under review"}</span>
         </div>
 
         {notes ? (
-          <div className="checkout-card">
-            <p className="muted">Prescription notes</p>
-            <p>{notes}</p>
-          </div>
+          <section className="rx-notes" aria-label="Prescription notes">
+            <div className="rx-notes-head">
+              <div>
+                <h2>Prescription notes</h2>
+                <p>Instructions shared with your order</p>
+              </div>
+            </div>
+
+            <p className="rx-notes-body">{notes}</p>
+          </section>
         ) : null}
 
         <div className="home-section-head">
           <h2>Order summary</h2>
-          <button type="button" className="text-back" onClick={() => navigate('/medicines')}>
+          <button
+            type="button"
+            className="text-back"
+            onClick={() => navigate("/medicines")}
+          >
             + Add items
           </button>
         </div>
         <p className="muted">
           {orderData.length
-            ? 'Items from your outsourced prescription'
-            : 'Items will appear here once your prescription is approved.'}
+            ? "Items from your outsourced prescription"
+            : "Items will appear here once your prescription is approved."}
         </p>
 
         <div className="checkout-card">
@@ -109,7 +124,9 @@ export default function MedicineCheckout() {
                   <small>{item.desc}</small>
                   {item.notes ? <small>{item.notes}</small> : null}
                 </p>
-                {item.price != null ? <strong>{formatRupee(item.price)}</strong> : null}
+                {item.price != null ? (
+                  <strong>{formatRupee(item.price)}</strong>
+                ) : null}
               </div>
             ))
           )}
@@ -119,8 +136,8 @@ export default function MedicineCheckout() {
         <div className="rx-speed">
           <button
             type="button"
-            className={selectedSpeed === 'standard' ? 'on' : ''}
-            onClick={() => setSelectedSpeed('standard')}
+            className={selectedSpeed === "standard" ? "on" : ""}
+            onClick={() => setSelectedSpeed("standard")}
           >
             <strong>Standard</strong>
             <small>2–3 business days</small>
@@ -128,8 +145,8 @@ export default function MedicineCheckout() {
           </button>
           <button
             type="button"
-            className={selectedSpeed === 'express' ? 'on' : ''}
-            onClick={() => setSelectedSpeed('express')}
+            className={selectedSpeed === "express" ? "on" : ""}
+            onClick={() => setSelectedSpeed("express")}
           >
             <strong>Express</strong>
             <small>Within 24 hours</small>
@@ -145,7 +162,7 @@ export default function MedicineCheckout() {
             </div>
             <div className="receipt-price">
               <span>Delivery fee</span>
-              <strong>{selectedSpeed === 'standard' ? 'Free' : '₹9.99'}</strong>
+              <strong>{selectedSpeed === "standard" ? "Free" : "₹9.99"}</strong>
             </div>
             <div className="receipt-total">
               <span>Total amount</span>
@@ -155,7 +172,7 @@ export default function MedicineCheckout() {
         ) : null}
 
         <button type="button" className="cta" onClick={continueNext}>
-          {approved && orderData.length > 0 ? 'Place order' : 'Track request'}
+          {approved && orderData.length > 0 ? "Place order" : "Track request"}
         </button>
       </section>
     </AppShell>

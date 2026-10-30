@@ -1,10 +1,10 @@
 /* =========================================================
-   AYURMUNI ORDERS — REFINED PREMIUM UI
+   AYURMUNI ORDERS — PREMIUM REFINED UI
    Confirmation · History · Details
    File: orders.css
    ========================================================= */
 
-/* ── Design system ──────────────────────────────────────── */
+/* ── Design system ─────────────────────────────────────── */
 
 .or-page {
   --or-container: var(--am-container, 1120px);
@@ -26,15 +26,14 @@
   --or-line: var(--am-line, #e2e9e5);
   --or-line-brand: rgba(13, 97, 78, 0.14);
   --or-line-brand-strong: rgba(13, 97, 78, 0.3);
-  --or-line-success: rgba(22, 132, 91, 0.24);
-  --or-line-danger: rgba(220, 38, 38, 0.22);
 
-  --or-shadow-xs: 0 1px 2px rgba(17, 48, 37, 0.05);
+  --or-shadow-xs: 0 1px 3px rgba(17, 48, 37, 0.04);
   --or-shadow-sm:
-    0 2px 6px rgba(17, 48, 37, 0.05), 0 10px 26px rgba(17, 48, 37, 0.05);
+    0 2px 6px rgba(17, 48, 37, 0.04), 0 10px 26px rgba(17, 48, 37, 0.045);
+  --or-shadow-md:
+    0 5px 14px rgba(17, 48, 37, 0.06), 0 16px 34px rgba(17, 48, 37, 0.07);
   --or-shadow-lg:
-    0 6px 14px rgba(17, 48, 37, 0.06), 0 22px 44px rgba(17, 48, 37, 0.1);
-  --or-shadow-success: 0 10px 26px rgba(13, 97, 78, 0.14);
+    0 8px 20px rgba(17, 48, 37, 0.07), 0 24px 48px rgba(17, 48, 37, 0.1);
 
   --or-focus: #0d614e;
   --or-ease: cubic-bezier(0.2, 0, 0, 1);
@@ -45,7 +44,7 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: clamp(18px, 2.4vw, 26px);
+  gap: clamp(20px, 2.5vw, 28px);
   width: min(100%, var(--or-container));
   min-width: 0;
   margin-inline: auto;
@@ -65,7 +64,7 @@
   margin-bottom: 0;
 }
 
-/* ── Confirmation page ──────────────────────────────────── */
+/* ── Confirmation page ─────────────────────────────────── */
 
 .or-confirm {
   align-items: center;
@@ -105,7 +104,7 @@
       rgba(16, 185, 129, 0.07),
       transparent 70%
     ),
-    linear-gradient(160deg, #f7fbf9 0%, #ffffff 58%, #f8fbf9 100%);
+    linear-gradient(160deg, #f7fbf9 0%, #fff 58%, #f8fbf9 100%);
   box-shadow: var(--or-shadow-sm);
 }
 
@@ -125,17 +124,11 @@
   margin-bottom: 2px;
   border: 1px solid rgba(13, 97, 78, 0.18);
   border-radius: 50%;
-  background:
-    radial-gradient(
-      circle at 30% 20%,
-      rgba(255, 255, 255, 0.9),
-      transparent 58%
-    ),
-    linear-gradient(145deg, #e4f4ec, #cbe9db);
+  background: linear-gradient(145deg, #e4f4ec, #cbe9db);
   color: var(--or-green);
   box-shadow:
     0 0 0 7px rgba(13, 97, 78, 0.05),
-    var(--or-shadow-success);
+    0 10px 26px rgba(13, 97, 78, 0.14);
 }
 
 .or-confirm__badge svg {
@@ -206,12 +199,10 @@
   transition:
     transform var(--or-base) var(--or-ease-out),
     box-shadow var(--or-base) var(--or-ease),
-    filter var(--or-fast) var(--or-ease),
-    border-color var(--or-fast) var(--or-ease),
-    background-color var(--or-fast) var(--or-ease);
+    filter var(--or-fast) var(--or-ease);
 }
 
-/* ── Shared cards ───────────────────────────────────────── */
+/* ── Shared cards ──────────────────────────────────────── */
 
 .or-card {
   position: relative;
@@ -261,7 +252,7 @@
   letter-spacing: -0.015em;
 }
 
-/* ── Order items ────────────────────────────────────────── */
+/* ── Order items ───────────────────────────────────────── */
 
 .or-item {
   display: grid;
@@ -293,9 +284,7 @@
   overflow: hidden;
   border: 1px solid var(--or-line-brand);
   border-radius: 14px;
-  background:
-    radial-gradient(circle at 75% 15%, rgba(13, 97, 78, 0.08), transparent 55%),
-    linear-gradient(145deg, #f8fbf9, #edf3ef);
+  background: linear-gradient(145deg, #f8fbf9, #edf3ef);
   color: var(--or-green);
 }
 
@@ -335,30 +324,135 @@
   font-size: 12px;
 }
 
-/* ── History toolbar ────────────────────────────────────── */
+/* ── History toolbar ───────────────────────────────────── */
 
 .or-toolbar {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 15px;
   min-width: 0;
 }
 
+/* ── Main navigation tabs ──────────────────────────────── */
+
+/*
+   Styled as a proper segmented tab interface.
+   The component's existing .am-tabs and .am-tab classes
+   are retained; no JSX changes are required.
+*/
+
 .or-page > .am-tabs {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 5px;
+  width: fit-content;
   max-width: 100%;
   min-width: 0;
+  padding: 5px;
+  border: 1px solid #e2ebe5;
+  border-radius: 15px;
+  background: #f1f6f3;
+  box-shadow:
+    inset 0 1px 2px rgba(17, 48, 37, 0.035),
+    0 2px 5px rgba(17, 48, 37, 0.025);
 }
+
+.or-page > .am-tabs .am-tab {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 43px;
+  min-width: 130px;
+  padding: 10px 19px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: transparent;
+  color: #64746c;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 650;
+  line-height: 1.35;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color var(--or-fast) var(--or-ease),
+    background-color var(--or-fast) var(--or-ease),
+    border-color var(--or-fast) var(--or-ease),
+    box-shadow var(--or-base) var(--or-ease);
+}
+
+/* Active tab — supports common component state attributes. */
+.or-page > .am-tabs .am-tab[aria-selected="true"],
+.or-page > .am-tabs .am-tab[aria-current="page"],
+.or-page > .am-tabs .am-tab.is-active,
+.or-page > .am-tabs .am-tab.active,
+.or-page > .am-tabs .am-tab[data-state="active"] {
+  border-color: rgba(13, 97, 78, 0.13);
+  background: #fff;
+  color: var(--or-green-dark);
+  box-shadow:
+    0 2px 5px rgba(13, 97, 78, 0.07),
+    0 1px 2px rgba(17, 48, 37, 0.04);
+}
+
+/* Small active accent. */
+.or-page > .am-tabs .am-tab[aria-selected="true"]::after,
+.or-page > .am-tabs .am-tab[aria-current="page"]::after,
+.or-page > .am-tabs .am-tab.is-active::after,
+.or-page > .am-tabs .am-tab.active::after,
+.or-page > .am-tabs .am-tab[data-state="active"]::after {
+  position: absolute;
+  right: 22px;
+  bottom: 4px;
+  left: 22px;
+  height: 2px;
+  border-radius: 10px;
+  background: var(--or-green);
+  content: "";
+  opacity: 0.85;
+}
+
+.or-page > .am-tabs .am-tab:focus-visible {
+  outline: 2px solid var(--or-focus);
+  outline-offset: 3px;
+}
+
+/* ── Search field ──────────────────────────────────────── */
+
+.or-page .or-toolbar > *:first-child {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.or-page .or-toolbar input {
+  transition:
+    border-color var(--or-fast) var(--or-ease),
+    box-shadow var(--or-fast) var(--or-ease),
+    background-color var(--or-fast) var(--or-ease);
+}
+
+.or-page .or-toolbar input:focus {
+  border-color: rgba(13, 97, 78, 0.5);
+  box-shadow: 0 0 0 4px rgba(13, 97, 78, 0.075);
+  outline: none;
+}
+
+/* ── Status filters ────────────────────────────────────── */
 
 .or-filters {
   display: flex;
   flex-wrap: nowrap;
   gap: 8px;
   max-width: 100%;
-  padding: 2px 2px 8px;
+  padding: 2px 2px 9px;
   overflow-x: auto;
   overscroll-behavior-inline: contain;
   scrollbar-width: thin;
-  scrollbar-color: rgba(13, 97, 78, 0.28) transparent;
+  scrollbar-color: rgba(13, 97, 78, 0.25) transparent;
   scroll-snap-type: x proximity;
   -webkit-overflow-scrolling: touch;
 }
@@ -371,13 +465,43 @@
 .or-filters > .am-btn,
 .or-filters > button,
 .or-filters > .chip {
-  min-height: 38px;
-  padding-inline: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 37px;
+  padding: 8px 15px;
+  border: 1px solid #e3eae5;
   border-radius: var(--or-radius-pill);
+  background: #fff;
+  color: #64746c;
+  font-size: 12.5px;
+  font-weight: 600;
   white-space: nowrap;
+  transition:
+    border-color var(--or-fast) var(--or-ease),
+    background-color var(--or-fast) var(--or-ease),
+    color var(--or-fast) var(--or-ease),
+    box-shadow var(--or-fast) var(--or-ease);
 }
 
-/* ── Order history rows ─────────────────────────────────── */
+/* Selected filter chip. */
+.or-filters > .am-btn[aria-pressed="true"],
+.or-filters > button[aria-pressed="true"],
+.or-filters > .chip[aria-pressed="true"],
+.or-filters > .am-btn.is-selected,
+.or-filters > button.is-selected,
+.or-filters > .chip.is-selected,
+.or-filters > .am-btn.selected,
+.or-filters > button.selected,
+.or-filters > .chip.selected {
+  border-color: rgba(13, 97, 78, 0.3);
+  background: #e8f4ef;
+  color: var(--or-green-dark);
+  box-shadow: 0 2px 5px rgba(13, 97, 78, 0.055);
+}
+
+/* ── Order history list ────────────────────────────────── */
 
 .or-list {
   display: flex;
@@ -386,33 +510,29 @@
   min-width: 0;
 }
 
+/* ── Individual order / prescription card ──────────────── */
+
 .or-row {
   position: relative;
   display: grid;
-  grid-template-columns: 56px minmax(0, 1fr) auto;
+  grid-template-columns: 60px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
   width: 100%;
   min-width: 0;
-  padding: 15px;
-  border: 1px solid var(--or-line);
-  border-radius: var(--or-radius-lg);
+  padding: 17px;
+  border: 1px solid #e5ebe7;
+  border-radius: 17px;
   background: #fff;
   box-shadow: var(--or-shadow-xs);
   color: inherit;
   font: inherit;
   text-align: left;
-  cursor: pointer;
-  transition:
-    border-color var(--or-fast) var(--or-ease),
-    background-color var(--or-fast) var(--or-ease),
-    box-shadow var(--or-base) var(--or-ease),
-    transform var(--or-base) var(--or-ease-out);
 }
 
 .or-row::before {
   position: absolute;
-  inset: 14px auto 14px 0;
+  inset: 13px auto 13px 0;
   width: 3px;
   border-radius: 0 4px 4px 0;
   background: linear-gradient(180deg, #0d614e, #24a57d);
@@ -425,11 +545,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 56px;
+  width: 60px;
+  height: 60px;
   overflow: hidden;
-  border: 1px solid var(--or-line-brand);
-  border-radius: 14px;
+  border: 1px solid rgba(13, 97, 78, 0.12);
+  border-radius: 15px;
   background:
     radial-gradient(circle at 75% 15%, rgba(13, 97, 78, 0.08), transparent 55%),
     linear-gradient(145deg, #f8fbf9, #edf3ef);
@@ -446,44 +566,64 @@
 .or-row__body {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
   min-width: 0;
 }
 
 .or-row__title {
   margin: 0;
-  color: var(--am-text, #1e293b);
+  color: #1e293b;
   font-size: 14px;
-  font-weight: 650;
+  font-weight: 700;
   line-height: 1.45;
+  letter-spacing: -0.01em;
 }
 
 .or-row__meta {
   margin: 0;
-  color: var(--am-text-muted, #6b7a72);
+  color: #738178;
   font-size: 12px;
-  line-height: 1.55;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .or-row__aside {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 8px;
+  gap: 9px;
   min-width: 0;
 }
 
 .or-row__amount {
   color: var(--or-green-dark);
   font-family: var(--am-font-display, inherit);
-  font-size: 14.5px;
+  font-size: 15px;
   font-weight: 750;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
   white-space: nowrap;
 }
 
-/* ── Detail layout ──────────────────────────────────────── */
+/* Prescription rows are informational, not clickable. */
+.or-row--static {
+  cursor: default;
+  background: linear-gradient(145deg, #fff, #fcfefd);
+}
+
+.or-row--static::before {
+  display: none;
+}
+
+.or-row--static .or-row__thumb {
+  background: linear-gradient(145deg, #edf7f1, #f5f9f6);
+}
+
+.or-row--static .or-row__body {
+  gap: 5px;
+}
+
+/* ── Detail layout ─────────────────────────────────────── */
 
 .or-detail {
   display: grid;
@@ -500,7 +640,7 @@
   min-width: 0;
 }
 
-/* ── Status card ────────────────────────────────────────── */
+/* ── Status card ───────────────────────────────────────── */
 
 .or-status-block {
   position: relative;
@@ -531,7 +671,7 @@
   text-transform: uppercase;
 }
 
-/* ── Delivery ───────────────────────────────────────────── */
+/* ── Delivery ──────────────────────────────────────────── */
 
 .or-delivery h2 {
   display: flex;
@@ -550,7 +690,7 @@
   line-height: 1.7;
 }
 
-/* ── Total ──────────────────────────────────────────────── */
+/* ── Total ─────────────────────────────────────────────── */
 
 .or-total {
   display: flex;
@@ -611,7 +751,7 @@
   font-size: 17px;
 }
 
-/* ── Tracking timeline ──────────────────────────────────── */
+/* ── Tracking timeline ─────────────────────────────────── */
 
 .or-track {
   display: flex;
@@ -707,7 +847,7 @@
   line-height: 1.55;
 }
 
-/* ── ETA and agent ──────────────────────────────────────── */
+/* ── ETA and agent ─────────────────────────────────────── */
 
 .or-eta,
 .or-agent {
@@ -746,7 +886,7 @@
   line-height: 1.55;
 }
 
-/* ── Info rows ──────────────────────────────────────────── */
+/* ── Information rows ──────────────────────────────────── */
 
 .or-info-row {
   display: flex;
@@ -781,22 +921,7 @@
   margin-bottom: 14px;
 }
 
-.or-row--static {
-  cursor: default;
-}
-
-.or-row--static::before {
-  display: none;
-}
-
-.or-row--static:hover {
-  border-color: var(--or-line);
-  background: #fff;
-  box-shadow: var(--or-shadow-xs);
-  transform: none;
-}
-
-/* ── Skeleton loading ───────────────────────────────────── */
+/* ── Skeleton loading ──────────────────────────────────── */
 
 .or-skel {
   display: flex;
@@ -820,7 +945,7 @@
   animation: or-skeleton-shimmer 1.5s ease-in-out infinite;
 }
 
-/* ── Focus and interaction ──────────────────────────────── */
+/* ── Focus states ──────────────────────────────────────── */
 
 .or-row:focus-visible,
 .or-confirm__actions .am-btn:focus-visible,
@@ -828,11 +953,12 @@
 .or-action-row .am-btn:focus-visible,
 .or-filters > .am-btn:focus-visible,
 .or-filters > button:focus-visible,
-.or-filters > .chip:focus-visible,
-.or-page > .am-tabs .am-tab:focus-visible {
+.or-filters > .chip:focus-visible {
   outline: 2px solid var(--or-focus);
-  outline-offset: 2px;
+  outline-offset: 3px;
 }
+
+/* ── Hover interactions ────────────────────────────────── */
 
 @media (hover: hover) and (pointer: fine) {
   .or-card:hover {
@@ -845,14 +971,14 @@
     opacity: 1;
   }
 
-  .or-row:hover {
+  .or-row:not(.or-row--static):hover {
     border-color: var(--or-line-brand-strong);
     background: #fbfdfc;
-    box-shadow: var(--or-shadow-sm);
-    transform: translateY(-1px);
+    box-shadow: var(--or-shadow-md);
+    transform: translateY(-2px);
   }
 
-  .or-row:hover::before {
+  .or-row:not(.or-row--static):hover::before {
     opacity: 1;
   }
 
@@ -863,6 +989,12 @@
     filter: brightness(1.02);
   }
 
+  .or-page > .am-tabs .am-tab:not([aria-selected="true"]):hover {
+    border-color: rgba(13, 97, 78, 0.1);
+    background: rgba(255, 255, 255, 0.65);
+    color: var(--or-green-dark);
+  }
+
   .or-filters > .am-btn:hover,
   .or-filters > button:hover,
   .or-filters > .chip:hover {
@@ -871,8 +1003,11 @@
     color: var(--or-green-dark);
   }
 
-  .or-page > .am-tabs .am-tab:hover {
-    color: var(--or-green-dark);
+  .or-row--static:hover {
+    border-color: var(--or-line-brand);
+    background: #fcfefd;
+    box-shadow: var(--or-shadow-xs);
+    transform: none;
   }
 }
 
@@ -882,15 +1017,15 @@
 .or-filters > .am-btn:active,
 .or-filters > button:active,
 .or-filters > .chip:active,
-.or-row:active {
+.or-row:not(.or-row--static):active {
   transform: scale(0.985);
 }
 
-/* ── Tablet and mobile ──────────────────────────────────── */
+/* ── Tablet ────────────────────────────────────────────── */
 
 @media (max-width: 767px) {
   .or-page {
-    gap: 16px;
+    gap: 17px;
     padding: 18px var(--or-gutter) calc(28px + env(safe-area-inset-bottom, 0px));
   }
 
@@ -973,18 +1108,30 @@
     font-size: 11px;
   }
 
+  .or-page > .am-tabs {
+    width: fit-content;
+    max-width: 100%;
+  }
+
+  .or-page > .am-tabs .am-tab {
+    min-width: 120px;
+    min-height: 41px;
+    padding: 9px 14px;
+    font-size: 12.5px;
+  }
+
   .or-row {
-    grid-template-columns: 46px minmax(0, 1fr);
+    grid-template-columns: 50px minmax(0, 1fr);
     align-items: start;
-    gap: 10px;
-    padding: 12px;
+    gap: 11px;
+    padding: 13px;
     border-radius: 15px;
   }
 
   .or-row__thumb {
-    width: 46px;
-    height: 46px;
-    border-radius: 11px;
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
   }
 
   .or-row__title {
@@ -992,7 +1139,7 @@
   }
 
   .or-row__meta {
-    font-size: 11px;
+    font-size: 11.5px;
   }
 
   .or-row__aside {
@@ -1087,11 +1234,11 @@
   }
 }
 
-/* ── Small phones ───────────────────────────────────────── */
+/* ── Small phones ──────────────────────────────────────── */
 
 @media (max-width: 480px) {
   .or-page {
-    gap: 14px;
+    gap: 15px;
     padding-top: 14px;
     padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
   }
@@ -1100,18 +1247,34 @@
     align-items: flex-start;
   }
 
+  /* Full-width segmented tabs on small screens. */
   .or-page > .am-tabs {
+    display: flex;
     width: 100%;
-    border-bottom: 1px solid var(--or-line);
+    gap: 4px;
+    padding: 4px;
+    border-radius: 13px;
   }
 
   .or-page > .am-tabs .am-tab {
     flex: 1 1 0;
-    justify-content: center;
     min-width: 0;
-    padding-inline: 7px;
+    min-height: 41px;
+    padding: 8px 5px;
+    border-radius: 9px;
+    font-size: 12px;
     white-space: normal;
     text-align: center;
+  }
+
+  .or-page > .am-tabs .am-tab[aria-selected="true"]::after,
+  .or-page > .am-tabs .am-tab[aria-current="page"]::after,
+  .or-page > .am-tabs .am-tab.is-active::after,
+  .or-page > .am-tabs .am-tab.active::after,
+  .or-page > .am-tabs .am-tab[data-state="active"]::after {
+    right: 17px;
+    bottom: 3px;
+    left: 17px;
   }
 
   .or-confirm__main {
@@ -1193,15 +1356,16 @@
   }
 
   .or-row {
-    grid-template-columns: 42px minmax(0, 1fr);
-    gap: 9px;
-    padding: 11px;
-    border-radius: 13px;
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 10px;
+    padding: 12px;
+    border-radius: 14px;
   }
 
   .or-row__thumb {
-    width: 42px;
-    height: 42px;
+    width: 44px;
+    height: 44px;
+    border-radius: 11px;
   }
 
   .or-row__title {
@@ -1209,7 +1373,11 @@
   }
 
   .or-row__meta {
-    font-size: 10.5px;
+    font-size: 11px;
+  }
+
+  .or-row__aside {
+    gap: 7px;
   }
 
   .or-row__amount {
@@ -1260,7 +1428,7 @@
   }
 }
 
-/* ── Desktop layouts ────────────────────────────────────── */
+/* ── Desktop layouts ───────────────────────────────────── */
 
 @media (min-width: 768px) {
   .or-confirm__badge {
@@ -1322,9 +1490,13 @@
     position: sticky;
     top: calc(var(--am-header-h, 76px) + 20px);
   }
+
+  .or-row {
+    padding: 18px;
+  }
 }
 
-/* ── Reduced motion ─────────────────────────────────────── */
+/* ── Reduced motion ────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
   .or-card,
@@ -1354,7 +1526,7 @@
   }
 }
 
-/* ── Forced colors ──────────────────────────────────────── */
+/* ── Forced colors ─────────────────────────────────────── */
 
 @media (forced-colors: active) {
   .or-confirm__main,
@@ -1363,7 +1535,8 @@
   .or-status-block,
   .or-eta,
   .or-agent,
-  .or-skel > * {
+  .or-skel > *,
+  .or-page > .am-tabs {
     border: 1px solid CanvasText;
   }
 
@@ -1371,6 +1544,10 @@
   .or-item__thumb,
   .or-row__thumb {
     border: 1px solid CanvasText;
+  }
+
+  .or-page > .am-tabs .am-tab[aria-selected="true"] {
+    outline: 2px solid Highlight;
   }
 
   .or-row:focus-visible,
@@ -1386,7 +1563,7 @@
   }
 }
 
-/* ── Skeleton animation ─────────────────────────────────── */
+/* ── Skeleton animation ────────────────────────────────── */
 
 @keyframes or-skeleton-shimmer {
   0% {
@@ -1395,5 +1572,259 @@
 
   100% {
     background-position: -120% 0;
+  }
+}
+
+/* Button receives or-item__action directly */
+.or-item__action {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+}
+
+.or-item__action.am-btn {
+  min-height: 36px;
+  padding: 8px 13px;
+  border-radius: var(--or-radius-pill);
+  font-size: 12px;
+}
+
+/* =========================================================
+   ORDER DETAILS — ADDITIONAL UI REFINEMENTS
+   Compatible with the supplied OrderDetails JSX
+   ========================================================= */
+
+/* Main and sidebar layout */
+.or-detail__main {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+.or-detail > *,
+.or-detail__main > *,
+.or-aside > * {
+  min-width: 0;
+}
+
+/* Order status and action header */
+.or-hero-actions {
+  gap: 18px;
+  padding: clamp(18px, 2.5vw, 24px);
+  background:
+    radial-gradient(
+      420px 180px at 100% 0%,
+      rgba(13, 97, 78, 0.055),
+      transparent 72%
+    ),
+    #fff;
+}
+
+.or-hero-actions .or-status-block {
+  align-items: flex-start;
+  gap: 9px;
+}
+
+.or-hero-actions .or-status-block__label {
+  margin-bottom: 1px;
+}
+
+.or-hero-actions .or-row__meta {
+  font-size: 12px;
+}
+
+.or-action-row {
+  align-items: center;
+  flex-wrap: wrap;
+  padding-top: 15px;
+  border-top: 1px solid var(--or-line);
+}
+
+.or-action-row .am-btn {
+  min-height: 39px;
+  padding-inline: 13px;
+  font-size: 12px;
+  transition:
+    transform 220ms var(--or-ease-out),
+    background-color 180ms var(--or-ease),
+    border-color 180ms var(--or-ease),
+    box-shadow 220ms var(--or-ease);
+}
+
+/* Section headings */
+.or-section-head {
+  margin-bottom: 5px;
+}
+
+.or-section-head h2 {
+  letter-spacing: -0.02em;
+}
+
+/* Delivery card */
+.or-delivery {
+  gap: 12px;
+}
+
+.or-delivery h2 svg {
+  flex-shrink: 0;
+  color: var(--or-green);
+}
+
+.or-delivery p {
+  padding: 13px 14px;
+  border: 1px solid rgba(13, 97, 78, 0.09);
+  border-radius: 12px;
+  background: #f7faf8;
+  color: #52645b;
+  font-size: 13px;
+  line-height: 1.75;
+}
+
+/* Order information and refund cards */
+.or-aside .or-card h2 {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--or-line);
+}
+
+.or-aside .or-info-row {
+  padding: 11px 0;
+}
+
+.or-aside .or-info-row strong {
+  max-width: 62%;
+  overflow-wrap: anywhere;
+}
+
+/* Billing total */
+.or-aside .or-total {
+  margin-top: 5px;
+  padding: 16px 14px;
+  border: 1px solid rgba(13, 97, 78, 0.13);
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f0f8f4, #f9fcfa);
+}
+
+/* Tracking timeline */
+.or-track {
+  padding: 5px 0;
+}
+
+.or-track__step {
+  transition: color 180ms var(--or-ease);
+}
+
+.or-track__step.is-active strong {
+  color: var(--or-green-dark);
+}
+
+.or-track__step.is-active small {
+  color: #5b7669;
+}
+
+.or-track__step.is-done::before {
+  background: linear-gradient(180deg, var(--or-green), rgba(13, 97, 78, 0.25));
+}
+
+/* Live tracking information */
+.or-eta,
+.or-agent {
+  border-color: rgba(13, 97, 78, 0.12);
+  transition:
+    border-color 200ms var(--or-ease),
+    box-shadow 200ms var(--or-ease),
+    transform 200ms var(--or-ease-out);
+}
+
+.or-eta > svg,
+.or-agent > svg {
+  flex-shrink: 0;
+  color: var(--or-green);
+}
+
+.or-agent .am-btn {
+  flex-shrink: 0;
+}
+
+/* Product review action */
+.or-item__action.am-btn {
+  align-self: center;
+}
+
+/* Better mobile layout */
+@media (max-width: 767px) {
+  .or-detail__main,
+  .or-detail,
+  .or-aside {
+    gap: 14px;
+  }
+
+  .or-hero-actions {
+    gap: 14px;
+  }
+
+  .or-action-row {
+    gap: 8px;
+  }
+
+  .or-action-row .am-btn {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .or-aside .or-info-row strong {
+    max-width: 58%;
+  }
+}
+
+@media (max-width: 480px) {
+  .or-hero-actions {
+    padding: 14px;
+  }
+
+  .or-action-row .am-btn {
+    min-height: 40px;
+    padding-inline: 10px;
+    font-size: 11.5px;
+  }
+
+  .or-delivery p {
+    padding: 11px;
+    font-size: 12.5px;
+  }
+
+  .or-aside .or-info-row {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+
+  .or-aside .or-info-row strong {
+    max-width: 60%;
+    text-align: right;
+  }
+
+  .or-aside .or-total {
+    padding: 13px 11px;
+  }
+
+  .or-agent {
+    flex-wrap: wrap;
+  }
+}
+
+/* Desktop refinement */
+@media (min-width: 1024px) {
+  .or-detail__main {
+    gap: 20px;
+  }
+
+  .or-hero-actions {
+    gap: 20px;
+  }
+
+  .or-action-row {
+    padding-top: 17px;
   }
 }

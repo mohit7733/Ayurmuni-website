@@ -360,7 +360,6 @@ export default function App() {
                     element={<MedicalReceipt />}
                   />
                   <Route path="/profile/orders" element={<OrderHistory />} />
-                  /** ***** */
                   <Route
                     path="/profile/orders/:orderId"
                     element={<OrderDetails />}

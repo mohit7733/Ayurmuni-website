@@ -1,11 +1,15 @@
 .yoga-page.catalog-page {
   display: flex;
-  width: min(var(--am-container), calc(100% - var(--am-gutter) - var(--am-gutter)));
+  width: min(
+    var(--am-container),
+    calc(100% - var(--am-gutter) - var(--am-gutter))
+  );
   max-width: var(--am-container);
   flex-direction: column;
   gap: var(--am-space-6);
   margin-inline: auto;
-  padding: clamp(var(--am-space-5), 4vw, var(--am-space-8)) var(--am-gutter) var(--am-space-10);
+  padding: clamp(var(--am-space-5), 4vw, var(--am-space-8)) var(--am-gutter)
+    var(--am-space-10);
 }
 
 .yoga-page .catalog-head {
@@ -16,8 +20,16 @@
   border: 1px solid color-mix(in srgb, var(--am-primary-tint) 78%, white);
   border-radius: 28px;
   background:
-    radial-gradient(70% 90% at 100% 0%, rgba(255, 205, 136, 0.3), transparent 62%),
-    radial-gradient(55% 90% at 0% 100%, rgba(130, 204, 170, 0.22), transparent 65%),
+    radial-gradient(
+      70% 90% at 100% 0%,
+      rgba(255, 205, 136, 0.3),
+      transparent 62%
+    ),
+    radial-gradient(
+      55% 90% at 0% 100%,
+      rgba(130, 204, 170, 0.22),
+      transparent 65%
+    ),
     linear-gradient(145deg, #fff, #f2faf5 72%, #eef6ff);
   box-shadow: 0 10px 30px rgba(16, 61, 48, 0.075);
 }
@@ -27,12 +39,14 @@
   font-family: var(--am-font-display);
   font-size: clamp(var(--am-text-3xl), 4.5vw, 3.75rem);
   letter-spacing: -0.035em;
+  line-height: 1.3;
 }
 
 .yoga-page .catalog-head p {
   margin-top: var(--am-space-2);
   color: var(--am-text-soft);
   font-size: var(--am-text-base);
+  margin-left: var(--am-space-2);
 }
 
 .yoga-page .catalog-head .text-back {
@@ -91,21 +105,37 @@
   border-color: color-mix(in srgb, var(--am-primary-tint) 76%, white);
   border-radius: 20px;
   background:
-    radial-gradient(110% 90% at 100% 0%, rgba(255, 222, 184, 0.2), transparent 60%),
+    radial-gradient(
+      110% 90% at 100% 0%,
+      rgba(255, 222, 184, 0.2),
+      transparent 60%
+    ),
     linear-gradient(145deg, #fff, #f3faf6);
-  box-shadow: 0 5px 14px rgba(16, 61, 48, 0.06), 0 14px 28px rgba(16, 61, 48, 0.075);
-  transition: transform 240ms ease, border-color 240ms ease, box-shadow 240ms ease;
+  box-shadow:
+    0 5px 14px rgba(16, 61, 48, 0.06),
+    0 14px 28px rgba(16, 61, 48, 0.075);
+  transition:
+    transform 240ms ease,
+    border-color 240ms ease,
+    box-shadow 240ms ease;
 }
 
 .yoga-page .yoga-row:hover {
   transform: translateY(-4px);
   border-color: color-mix(in srgb, var(--am-primary) 34%, white);
-  box-shadow: 0 12px 22px rgba(16, 61, 48, 0.09), 0 22px 34px rgba(16, 61, 48, 0.1);
+  box-shadow:
+    0 12px 22px rgba(16, 61, 48, 0.09),
+    0 22px 34px rgba(16, 61, 48, 0.1);
 }
 
 .yoga-page .yoga-thumb {
   border-radius: 15px;
-  background: linear-gradient(135deg, var(--am-green-100), var(--am-sand-100), #e9f1ff);
+  background: linear-gradient(
+    135deg,
+    var(--am-green-100),
+    var(--am-sand-100),
+    #e9f1ff
+  );
 }
 
 .yoga-page .yoga-row-copy {

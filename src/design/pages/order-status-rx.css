@@ -1,249 +1,520 @@
+/* =========================================================
+   Prescription Status — enhanced UI
+   ========================================================= */
+
 .rx-status-page {
+  --status-primary: var(--am-primary, #0d614e);
+  --status-primary-strong: var(--am-primary-strong, #0a4f40);
+  --status-primary-soft: var(--am-primary-soft, #eaf4ef);
+  --status-primary-tint: var(--am-primary-tint, #d7e9e2);
+  --status-line: var(--am-line, #e5ebe7);
+  --status-muted: var(--am-text-muted, #718078);
+  --status-radius: var(--am-radius-xl, 22px);
+  --status-shadow: 0 12px 32px rgba(13, 97, 78, 0.08);
+
+  position: relative;
   display: flex;
-  width: min(100%, var(--am-container));
+  width: min(100%, var(--am-container, 1120px));
   min-width: 0;
   flex-direction: column;
-  gap: var(--am-space-4);
-  padding: var(--am-space-5) var(--am-gutter) var(--am-space-10);
+  gap: var(--am-space-4, 16px);
+  padding: var(--am-space-5, 24px) var(--am-gutter, 16px)
+    var(--am-space-10, 56px);
 }
 
+/* ---------- Page header ---------- */
+
 .rx-status-page .catalog-head {
+  position: relative;
   display: block;
+  overflow: hidden;
   margin: 0;
-  padding: var(--am-space-5);
-  border: 1px solid var(--am-line);
-  border-radius: var(--am-radius-xl);
+  padding: var(--am-space-5, 24px);
+  border: 1px solid color-mix(in srgb, var(--status-primary) 14%, transparent);
+  border-radius: var(--status-radius);
   background:
-    radial-gradient(90% 100% at 100% 0, var(--am-accent-soft), transparent 62%),
-    linear-gradient(135deg, var(--am-surface), var(--am-primary-soft));
-  box-shadow: var(--am-shadow-sm);
+    radial-gradient(
+      90% 120% at 100% 0%,
+      rgba(13, 97, 78, 0.12),
+      transparent 62%
+    ),
+    linear-gradient(
+      135deg,
+      var(--am-surface, #ffffff) 0%,
+      var(--status-primary-soft) 100%
+    );
+  box-shadow: var(--status-shadow);
+}
+
+.rx-status-page .catalog-head::after {
+  content: "";
+  position: absolute;
+  right: -60px;
+  top: -60px;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: rgba(13, 97, 78, 0.07);
+  pointer-events: none;
 }
 
 .rx-status-page .catalog-head .text-back {
-  margin: 0 0 var(--am-space-3);
-  color: var(--am-primary);
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  margin: 0 0 var(--am-space-3, 12px);
+  padding: 0 15px;
+  border: 1px solid var(--status-primary-tint);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--status-primary);
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(13, 97, 78, 0.06);
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.rx-status-page .catalog-head .text-back:hover {
+  background: #ffffff;
+  border-color: var(--status-primary);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(13, 97, 78, 0.14);
+}
+
+.rx-status-page .catalog-head .text-back:focus-visible {
+  outline: 3px solid rgba(13, 97, 78, 0.22);
+  outline-offset: 3px;
 }
 
 .rx-status-page .catalog-head h1 {
-  color: var(--am-primary-strong);
-  font-size: var(--am-text-2xl);
+  margin: 0;
+  color: var(--am-text, #172b25);
+  font-size: clamp(24px, 4vw, 32px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
 }
 
 .rx-status-page .catalog-head p {
-  margin-top: var(--am-space-1);
-  color: var(--am-text-muted);
-  font-size: var(--am-text-sm);
+  max-width: 58ch;
+  margin-top: var(--am-space-1, 6px);
+  color: var(--status-muted);
+  font-size: var(--am-text-sm, 13px);
+  font-weight: 500;
+  line-height: 1.6;
 }
 
+/* ---------- Status hero ---------- */
+
 .rx-status-page .rx-status-hero {
+  position: relative;
+  overflow: hidden;
   margin: 0;
-  padding: var(--am-space-6) var(--am-space-5);
-  border: 1px solid var(--am-primary-tint);
-  border-radius: var(--am-radius-xl);
+  padding: var(--am-space-6, 32px) var(--am-space-5, 24px);
+  border: 1px solid var(--status-primary-tint);
+  border-radius: var(--status-radius);
   background:
-    radial-gradient(70% 100% at 50% 0, var(--am-surface), transparent 72%),
-    linear-gradient(145deg, var(--am-primary-soft), var(--am-green-100));
-  box-shadow: var(--am-shadow-sm);
+    radial-gradient(
+      75% 100% at 50% 0%,
+      rgba(255, 255, 255, 0.9),
+      transparent 72%
+    ),
+    linear-gradient(
+      145deg,
+      var(--status-primary-soft) 0%,
+      var(--am-green-100, #dcfce7) 100%
+    );
+  box-shadow: var(--status-shadow);
+  text-align: center;
+}
+
+.rx-status-page .rx-status-hero::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -90px;
+  width: 240px;
+  height: 240px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: rgba(13, 97, 78, 0.08);
+  pointer-events: none;
 }
 
 .rx-status-page .rx-status-check {
-  width: 52px;
-  height: 52px;
-  margin-bottom: var(--am-space-3);
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  margin: 0 auto var(--am-space-3, 12px);
+  border: 1px solid var(--status-primary-tint);
   border-radius: 50%;
-  color: var(--am-primary-strong);
-  font-size: 23px;
-  box-shadow: var(--am-shadow-sm);
+  background: #ffffff;
+  color: var(--status-primary);
+  font-size: 25px;
+  font-weight: 800;
+  box-shadow:
+    0 10px 22px rgba(13, 97, 78, 0.14),
+    inset 0 0 0 4px rgba(13, 97, 78, 0.05);
+  animation: rx-status-pop 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes rx-status-pop {
+  from {
+    transform: scale(0.65);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .rx-status-page .rx-status-hero h2 {
-  color: var(--am-primary-strong);
-  font-size: var(--am-text-xl);
-  line-height: var(--am-leading-tight);
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  color: var(--am-text, #172b25);
+  font-size: clamp(20px, 3vw, 25px);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
 }
 
 .rx-status-page .rx-status-hero p {
-  max-width: 44ch;
-  margin: var(--am-space-2) auto 0;
-  color: var(--am-text-muted);
-  font-size: var(--am-text-sm);
-  line-height: var(--am-leading-relaxed);
+  position: relative;
+  z-index: 1;
+  max-width: 48ch;
+  margin: var(--am-space-2, 8px) auto 0;
+  color: var(--status-muted);
+  font-size: var(--am-text-sm, 13px);
+  line-height: 1.65;
 }
 
 .rx-status-page .rx-status-chip {
-  margin-top: var(--am-space-4);
-  padding: var(--am-space-2) var(--am-space-3);
-  background: var(--am-surface);
-  color: var(--am-primary-strong);
-  font-size: var(--am-text-xs);
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: var(--am-space-4, 16px);
+  padding: 8px 14px;
+  border: 1px solid var(--status-primary-tint);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--status-primary-strong);
+  font-size: var(--am-text-xs, 11px);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: 0 4px 12px rgba(13, 97, 78, 0.08);
 }
+
+.rx-status-page .rx-status-chip::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--status-primary);
+  box-shadow: 0 0 0 3px rgba(13, 97, 78, 0.12);
+}
+
+/* ---------- Order card ---------- */
 
 .rx-status-page .rx-order-card {
   min-width: 0;
   margin: 0;
-  padding: var(--am-space-5);
-  border: 1px solid var(--am-line);
-  border-radius: var(--am-radius-xl);
-  background: var(--am-surface);
-  box-shadow: var(--am-shadow-sm);
+  padding: var(--am-space-5, 24px);
+  border: 1px solid var(--status-line);
+  border-radius: var(--status-radius);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(13, 97, 78, 0.05), transparent 38%),
+    var(--am-surface, #ffffff);
+  box-shadow: var(--status-shadow);
+  transition:
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+.rx-status-page .rx-order-card:hover {
+  border-color: var(--status-primary-tint);
+  box-shadow: 0 16px 38px rgba(13, 97, 78, 0.12);
 }
 
 .rx-status-page .rx-order-card > p {
-  margin: var(--am-space-2) 0 0;
-  color: var(--am-text-muted);
-  font-size: var(--am-text-sm);
-  line-height: var(--am-leading-relaxed);
+  margin: var(--am-space-2, 8px) 0 0;
+  color: var(--status-muted);
+  font-size: var(--am-text-sm, 13px);
+  line-height: 1.65;
   overflow-wrap: anywhere;
 }
+
+/* ---------- Items heading ---------- */
+
+.rx-status-page .rx-order-items > h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 var(--am-space-3, 12px);
+  color: var(--am-text, #172b25);
+  font-size: var(--am-text-lg, 17px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.rx-status-page .rx-order-items > h3::before {
+  content: "";
+  width: 5px;
+  height: 18px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--status-primary), #1fa37d);
+}
+
+/* ---------- Item summary ---------- */
 
 .rx-status-page .rx-order-items > .receipt-price {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: var(--am-space-3);
-  margin-bottom: var(--am-space-4);
+  gap: var(--am-space-3, 12px);
+  margin-bottom: var(--am-space-4, 16px);
+  padding: 12px 14px;
+  border: 1px solid var(--status-primary-tint);
+  border-radius: 15px;
+  background: linear-gradient(180deg, #f7fbf9 0%, #ffffff 100%);
 }
 
 .rx-status-page .receipt-price > span {
   display: grid;
-  gap: var(--am-space-1);
+  gap: 3px;
   min-width: 0;
+  flex: 1 1 180px;
 }
 
 .rx-status-page .receipt-price small {
-  color: var(--am-text-muted);
-  font-size: var(--am-text-xs);
+  color: var(--status-muted);
+  font-size: var(--am-text-xs, 11px);
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .rx-status-page .receipt-price strong {
-  color: var(--am-primary-strong);
+  color: var(--am-text, #172b25);
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.3;
   overflow-wrap: anywhere;
 }
 
-.rx-status-page .rx-order-items > h3 {
-  margin: 0 0 var(--am-space-3);
-  color: var(--am-primary-strong);
-  font-size: var(--am-text-lg);
-}
+/* ---------- Medicine rows ---------- */
 
 .rx-status-page .checkout-item {
+  display: flex;
+  align-items: center;
   min-width: 0;
-  gap: var(--am-space-3);
-  padding: var(--am-space-3) 0;
-  border-top: 1px solid var(--am-line);
+  gap: var(--am-space-3, 12px);
+  padding: 14px 0;
+  border-top: 1px solid var(--status-line);
+}
+
+.rx-status-page .checkout-item:first-of-type {
+  border-top: 0;
+  padding-top: 4px;
 }
 
 .rx-status-page .checkout-item img,
 .rx-status-page .checkout-item > span {
-  flex: 0 0 48px;
-  width: 48px;
-  height: 48px;
-  border-radius: var(--am-radius-md);
+  flex: 0 0 52px;
+  width: 52px;
+  height: 52px;
+  border: 1px solid var(--status-primary-tint);
+  border-radius: 15px;
   object-fit: cover;
+  box-shadow: 0 3px 10px rgba(13, 97, 78, 0.07);
 }
 
 .rx-status-page .checkout-item > span {
   display: grid;
   place-items: center;
-  background: var(--am-primary-soft);
-  color: var(--am-primary-strong);
-  font-weight: var(--am-weight-bold);
+  background: var(--status-primary-soft);
+  color: var(--status-primary-strong);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
 }
 
 .rx-status-page .checkout-item p {
   flex: 1 1 auto;
   min-width: 0;
   margin: 0;
-  color: var(--am-text);
-  font-size: var(--am-text-sm);
+  color: var(--am-text, #172b25);
+  font-size: var(--am-text-sm, 13px);
+  font-weight: 700;
+  line-height: 1.45;
   overflow-wrap: anywhere;
 }
 
 .rx-status-page .checkout-item p small {
   display: block;
-  margin-top: var(--am-space-1);
-  color: var(--am-text-muted);
-  font-size: var(--am-text-xs);
+  margin-top: 3px;
+  color: var(--status-muted);
+  font-size: var(--am-text-xs, 11px);
+  font-weight: 500;
+  line-height: 1.5;
 }
 
 .rx-status-page .checkout-item > strong {
   flex: 0 0 auto;
-  color: var(--am-primary-strong);
-  font-size: var(--am-text-sm);
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: var(--status-primary-soft);
+  color: var(--status-primary-strong);
+  font-size: var(--am-text-sm, 13px);
+  font-weight: 800;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
+
+/* ---------- Total ---------- */
 
 .rx-status-page .receipt-total {
   display: flex;
+  align-items: baseline;
   justify-content: space-between;
-  gap: var(--am-space-3);
-  margin-top: var(--am-space-3);
-  padding-top: var(--am-space-3);
-  border-top: 1px solid var(--am-line);
-  color: var(--am-text-muted);
-  font-size: var(--am-text-sm);
+  gap: var(--am-space-3, 12px);
+  margin-top: var(--am-space-3, 12px);
+  padding-top: 16px;
+  border-top: 1px dashed var(--status-primary-tint);
+  color: var(--am-text, #172b25);
+  font-size: var(--am-text-sm, 13px);
+  font-weight: 750;
 }
 
 .rx-status-page .receipt-total strong {
-  color: var(--am-primary-strong);
+  color: var(--status-primary-strong);
+  font-size: 22px;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
 }
+
+/* ---------- CTA ---------- */
 
 .rx-status-page > .cta {
   width: 100%;
-  min-height: 48px;
-  border-radius: var(--am-radius-lg);
-  font-size: var(--am-text-sm);
+  min-height: 52px;
+  margin-top: var(--am-space-2, 8px);
+  border: 0;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--status-primary), #14937a);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow:
+    0 12px 26px rgba(13, 97, 78, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
 }
+
+.rx-status-page > .cta:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+  box-shadow: 0 18px 34px rgba(13, 97, 78, 0.26);
+}
+
+.rx-status-page > .cta:active {
+  transform: translateY(0) scale(0.99);
+  box-shadow: 0 6px 14px rgba(13, 97, 78, 0.2);
+}
+
+.rx-status-page > .cta:focus-visible {
+  outline: 3px solid rgba(13, 97, 78, 0.28);
+  outline-offset: 3px;
+}
+
+/* ---------- Responsive ---------- */
 
 @media (max-width: 600px) {
   .rx-status-page {
-    gap: var(--am-space-3);
-    padding: var(--am-space-3) var(--am-gutter) var(--am-space-8);
+    gap: var(--am-space-3, 12px);
+    padding: var(--am-space-3, 12px) var(--am-gutter, 16px)
+      var(--am-space-8, 40px);
   }
 
   .rx-status-page .catalog-head,
   .rx-status-page .rx-order-card {
-    padding: var(--am-space-4);
+    padding: var(--am-space-4, 16px);
+    border-radius: 18px;
   }
 
   .rx-status-page .catalog-head h1 {
-    font-size: var(--am-text-xl);
+    font-size: 24px;
   }
 
   .rx-status-page .catalog-head p {
-    font-size: var(--am-text-xs);
+    font-size: var(--am-text-xs, 11px);
   }
 
   .rx-status-page .rx-status-hero {
-    padding: var(--am-space-5) var(--am-space-4);
+    padding: var(--am-space-5, 24px) var(--am-space-4, 16px);
+    border-radius: 18px;
   }
 
   .rx-status-page .rx-status-hero h2 {
-    font-size: var(--am-text-lg);
+    font-size: 20px;
   }
 
   .rx-status-page .rx-status-hero p,
   .rx-status-page .rx-order-card > p {
-    font-size: var(--am-text-xs);
+    font-size: var(--am-text-xs, 11px);
   }
 
   .rx-status-page .rx-order-items > h3 {
-    font-size: var(--am-text-base);
+    font-size: var(--am-text-base, 15px);
   }
 
   .rx-status-page .checkout-item {
-    gap: var(--am-space-2);
+    align-items: flex-start;
+    gap: var(--am-space-2, 8px);
   }
 
   .rx-status-page .checkout-item img,
   .rx-status-page .checkout-item > span {
-    flex-basis: 40px;
-    width: 40px;
-    height: 40px;
+    flex-basis: 44px;
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
   }
 
-  .rx-status-page .checkout-item p,
-  .rx-status-page .checkout-item > strong,
-  .rx-status-page .receipt-total {
-    font-size: var(--am-text-xs);
+  .rx-status-page .checkout-item > strong {
+    align-self: center;
+    font-size: 12px;
+  }
+
+  .rx-status-page .receipt-total strong {
+    font-size: 20px;
+  }
+}
+
+/* ---------- Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .rx-status-page *,
+  .rx-status-page *::before,
+  .rx-status-page *::after {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
   }
 }
