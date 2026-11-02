@@ -281,6 +281,17 @@
   font-weight: 700;
 }
 
+.bk-confirm-page .bk-doctor {
+  grid-template-columns: 72px minmax(0, 1fr);
+  align-items: center;
+}
+
+.bk-confirm-page .bk-doctor__photo {
+  width: 72px;
+  height: 72px;
+  flex-basis: 72px;
+}
+
 .bk-doctor__photo img {
   display: block;
   width: 100%;
@@ -1246,6 +1257,10 @@
     gap: 12px;
   }
 
+  .bk-confirm-page .bk-confirm-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .bk-main,
   .bk-aside,
   .bk-confirm-aside,
@@ -1293,6 +1308,14 @@
     flex-basis: 64px;
     border-radius: 12px;
     font-size: 17px;
+  }
+  .bk-confirm-page .bk-doctor {
+    grid-template-columns: 56px minmax(0, 1fr);
+  }
+  .bk-confirm-page .bk-doctor__photo {
+    width: 56px;
+    height: 56px;
+    flex-basis: 56px;
   }
   .bk-doctor__copy {
     gap: 5px;

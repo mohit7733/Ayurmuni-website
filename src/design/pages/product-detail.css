@@ -2072,3 +2072,248 @@ html:has(.pd-page) {
     transition: none;
   }
 }
+
+/* Product reviews */
+.pd-reviews {
+  box-sizing: border-box;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.pd-review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+}
+
+.pd-reviews .pd-auto-rail {
+  min-width: 0;
+}
+
+.pd-review-list,
+.pd-review-list.is-static {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 12px;
+  min-width: 0;
+  margin: 0;
+  padding: 2px 2px 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-inline: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+}
+
+.pd-review-item {
+  flex: 0 0 min(100%, 320px);
+  min-width: 0;
+  scroll-snap-align: start;
+}
+
+.pd-review-item > .am-review,
+.pd-reviews .am-review {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  padding: 16px;
+  overflow: hidden;
+  border: 1px solid #dce8e0;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgb(18 55 39 / 5%);
+}
+
+.pd-reviews .am-review__head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  margin: 0;
+}
+
+.pd-reviews .am-review__who {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.pd-reviews .am-review__name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pd-reviews .am-review__head > :last-child {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.pd-reviews .am-review__text {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  line-height: 1.55;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+}
+
+.pd-reviews .am-review__media {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  margin: auto 0 0;
+  padding: 0 0 2px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: none;
+}
+
+.pd-reviews .am-review__media::-webkit-scrollbar {
+  display: none;
+}
+
+.pd-reviews .am-review__media > li {
+  flex: 0 0 68px;
+  width: 68px;
+  height: 68px;
+  overflow: hidden;
+  border: 1px solid #dce8e0;
+  border-radius: 10px;
+}
+
+.pd-reviews .am-review__media button {
+  position: relative;
+  display: grid;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: #edf4ef;
+  cursor: pointer;
+}
+
+.pd-reviews .am-review__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 180ms ease;
+}
+
+.pd-reviews .am-review__media button:hover img {
+  transform: scale(1.05);
+}
+
+.pd-reviews .am-review__video {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  background: linear-gradient(145deg, #1d4235, #0d614e);
+  color: #fff;
+}
+
+@media (min-width: 1280px) {
+  .pd-review-list,
+  .pd-review-list.is-static {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+  }
+
+  .pd-review-item {
+    flex: 0 0 min(100%, 320px);
+  }
+}
+
+@media (max-width: 640px) {
+  .pd-reviews {
+    gap: 12px;
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .pd-reviews > .am-section-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .pd-reviews .am-section-header__action {
+    width: 100%;
+  }
+
+  .pd-review-actions {
+    justify-content: flex-start;
+  }
+
+  .pd-review-actions .am-btn {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .pd-reviews .pd-auto-rail:not(.is-static) {
+    display: block;
+  }
+
+  .pd-reviews .pd-auto-rail__control {
+    display: none;
+  }
+
+  .pd-review-list,
+  .pd-review-list.is-static {
+    gap: 10px;
+    padding-bottom: 6px;
+    scroll-padding-inline: 2px;
+    scrollbar-width: none;
+  }
+
+  .pd-review-item {
+    flex-basis: min(88%, 340px);
+  }
+
+  .pd-review-item > .am-review,
+  .pd-reviews .am-review {
+    gap: 10px;
+    padding: 13px;
+  }
+
+  .pd-reviews .am-review__media > li {
+    flex-basis: 60px;
+    width: 60px;
+    height: 60px;
+  }
+}
+
+@media (max-width: 360px) {
+  .pd-reviews {
+    padding: 12px;
+  }
+
+  .pd-review-actions .am-btn {
+    padding-inline: 10px;
+    font-size: 0.78rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pd-reviews .am-review__media img {
+    transition: none;
+  }
+}

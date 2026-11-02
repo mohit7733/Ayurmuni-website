@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Flower2, Leaf, Salad } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import AutoScrollRail from '../components/AutoScrollRail';
 import DoctorCard from '../components/DoctorCard';
 import PageHeader from '../components/PageHeader';
 import ProductCard from '../components/ProductCard';
@@ -26,8 +27,6 @@ import {
   Disclaimer,
   EmptyState,
   MediaCard,
-  Rail,
-  RailItem,
   RailSkeleton,
   SearchField,
   SectionHeader,
@@ -368,18 +367,22 @@ export default function CategoryDoctor() {
             {dietLoading && dietPlans.length === 0 ? (
               <RailSkeleton size="wide" count={3} />
             ) : (
-              <Rail label={T.dietFor(scopeName)}>
+              <AutoScrollRail
+                label={T.dietFor(scopeName)}
+                className="cs-category-auto-rail"
+                trackClassName="cs-category-auto-rail__track"
+                itemClassName="cs-category-auto-rail__item"
+              >
                 {dietPlans.map((item) => (
-                  <RailItem key={item.id} size="wide">
-                    <MediaCard
-                      image={item.thumbnail_url || dietCoverImg}
-                      title={item.title}
-                      fallbackIcon={Salad}
-                      onClick={() => navigate(`/diet/${item.id}`, { state: { item } })}
-                    />
-                  </RailItem>
+                  <MediaCard
+                    key={item.id}
+                    image={item.thumbnail_url || dietCoverImg}
+                    title={item.title}
+                    fallbackIcon={Salad}
+                    onClick={() => navigate(`/diet/${item.id}`, { state: { item } })}
+                  />
                 ))}
-              </Rail>
+              </AutoScrollRail>
             )}
             {dietPlans.length > 0 ? (
               <div className="cs-category-page__diet-viewall">
@@ -399,18 +402,22 @@ export default function CategoryDoctor() {
             {yogaLoading && yogaSessions.length === 0 ? (
               <RailSkeleton size="wide" count={3} />
             ) : (
-              <Rail label={T.yogaFor(scopeName)}>
+              <AutoScrollRail
+                label={T.yogaFor(scopeName)}
+                className="cs-category-auto-rail"
+                trackClassName="cs-category-auto-rail__track"
+                itemClassName="cs-category-auto-rail__item"
+              >
                 {yogaSessions.map((item) => (
-                  <RailItem key={item.id} size="wide">
-                    <MediaCard
-                      image={resolveYogaThumbnailUri(item) || yogaPosterImg}
-                      title={item.title || item.name}
-                      fallbackIcon={Flower2}
-                      onClick={() => navigate(`/yoga/${item.id}`, { state: { item } })}
-                    />
-                  </RailItem>
+                  <MediaCard
+                    key={item.id}
+                    image={resolveYogaThumbnailUri(item) || yogaPosterImg}
+                    title={item.title || item.name}
+                    fallbackIcon={Flower2}
+                    onClick={() => navigate(`/yoga/${item.id}`, { state: { item } })}
+                  />
                 ))}
-              </Rail>
+              </AutoScrollRail>
             )}
           </section>
         ) : null}

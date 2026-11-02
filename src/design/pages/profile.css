@@ -859,13 +859,8 @@
 ========================================================= */
 
 .pf-hub {
-  gap: 0;
+  gap: 18px;
   padding-top: var(--am-space-4);
-}
-
-.pf-hub > * + *,
-.pf-hub > .pf-referral-section {
-  margin-top: 18px;
 }
 
 .pf-hub > .am-page-header {
@@ -1174,9 +1169,8 @@
     height: 72px;
   }
 
-  .pf-hub > * + *,
-  .pf-hub > .pf-referral-section {
-    margin-top: 20px;
+  .pf-hub {
+    gap: 20px;
   }
 }
 
@@ -1300,13 +1294,8 @@
   /* Compact Profile Hub spacing */
 
   .pf-hub {
-    gap: 0;
+    gap: 16px;
     padding-top: 10px;
-  }
-
-  .pf-hub > * + *,
-  .pf-hub > .pf-referral-section {
-    margin-top: 16px;
   }
 
   .pf-hub .pf-hero {
@@ -1343,6 +1332,17 @@
     padding: 12px 34px 12px 12px;
     gap: 4px;
     border-radius: 13px;
+  }
+
+  .pf-hub .referral-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .pf-hub .referral-actions > button {
+    flex: 1 1 0;
+    min-width: 0;
+    width: auto;
   }
 
   .pf-hub .pf-explore__card::after {

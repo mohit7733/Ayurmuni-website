@@ -540,7 +540,7 @@ export default function ProductDetails() {
                 id="pd-reviews-title"
                 title={T.reviews}
                 action={
-                  <div style={{ display: "flex", gap: "8px" }}>
+                  <div className="pd-review-actions">
                     <Button
                       variant="secondary"
                       size="sm"
