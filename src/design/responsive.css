@@ -121,3 +121,158 @@
   /* ---- Media never distorts ---- */
   img { max-width: 100%; }
 }
+
+/* =====================================================================
+   Footer responsiveness (all screens). Existing tokens only.
+   >=1024: trust 4-up, brand + 4 link columns in one row.
+   768-1023: trust 2x2, brand full width, 4 link columns.
+   400-767: trust 2x2, brand full width, links 2 per row, centred legal row.
+   <400: trust single column, links 2 per row.
+   ===================================================================== */
+.site-footer { overflow-x: clip; max-width: 100%; }
+.site-footer-trust li { align-items: flex-start; min-width: 0; }
+.site-footer-trust svg { margin-top: 1px; }
+.site-footer-trust strong,
+.site-footer-trust span { overflow-wrap: break-word; }
+.site-footer-col { min-width: 0; }
+.site-footer-col a { overflow-wrap: anywhere; }
+/* Watermark scales with the viewport and never pushes the page wider. */
+.site-footer .site-footer-mark { --mark-logo: clamp(64px, 9vw, 120px); max-width: 100%; }
+.site-footer .site-footer-mark span { font-size: clamp(3.5rem, 16.5vw, 11rem); }
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .site-footer-trust {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--am-space-4) var(--am-space-6);
+  }
+  .site-footer-inner {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--am-space-6) var(--am-space-5);
+  }
+  .site-footer-brand { grid-column: 1 / -1; max-width: 60ch; }
+}
+
+@media (max-width: 767px) {
+  .site-footer-trust { gap: var(--am-space-4) var(--am-space-4); }
+  .site-footer-inner { gap: var(--am-space-5) var(--am-space-4); padding-top: var(--am-space-5); }
+  .site-footer-brand { max-width: none; }
+  .site-footer-col h2 { margin-bottom: var(--am-space-1, 4px); }
+  .site-footer-col a { min-height: 40px; }
+
+  /* Legal row: stacked and centred. */
+  .site-footer .site-footer-bar { overflow-x: visible; text-align: center; }
+  .site-footer .site-footer-bar .site-footer-legal {
+    flex-direction: column;
+    justify-content: center;
+    gap: 0;
+    width: 100%;
+  }
+  .site-footer .site-footer-bar .site-footer-legal nav {
+    justify-content: center;
+    column-gap: var(--am-space-4);
+  }
+  .site-footer .site-footer-bar .site-footer-legal > span { padding-top: var(--am-space-2); }
+
+  /* Clear the floating View-cart pill / Ayurchat button so they never cover the last links. */
+  body:has(.cart-float, .ci-launch:not(.is-mobile-hidden)) .app-shell .site-footer {
+    padding-bottom: calc(var(--am-tabbar-h) + 72px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 399px) {
+  .site-footer-trust { grid-template-columns: minmax(0, 1fr); gap: var(--am-space-3); }
+  .site-footer-inner { column-gap: var(--am-space-3); }
+}
+
+/* Footer wordmark: left edge on the content gutter (same as logo / trust icons),
+   sized so the word spans exactly gutter-to-gutter. Satoshi Bold "AYURMUNI"
+   is ~5.23em wide at -0.02em tracking; 'A' side bearing is ~0.01em. */
+.site-footer .site-footer-mark { container-type: inline-size; }
+.site-footer .site-footer-mark span {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--am-container);
+  margin-inline: auto;
+  padding-inline: var(--am-gutter);
+  text-align: left;
+  text-indent: -0.011em;
+  /* Visible ink (A stroke to I stroke) = 5.154em; fills the container gutter-to-gutter. */
+  font-size: calc((100cqw - 2 * var(--am-gutter)) / 5.154);
+  overflow: hidden;
+}
+
+/* Footer wordmark: soft blur proportional to its size + gentle downward fade. */
+.site-footer .site-footer-mark span {
+  filter: blur(clamp(1px, 0.015em, 5px));
+  -webkit-mask-image: linear-gradient(180deg, #000 35%, rgba(0, 0, 0, 0.45) 100%);
+  mask-image: linear-gradient(180deg, #000 35%, rgba(0, 0, 0, 0.45) 100%);
+}
+
+/* Progressive bottom blur: crisp copy on top half, blurred copy fades in toward the base.
+   The real text stays in the DOM (transparent) to keep size and position. */
+.site-footer .site-footer-mark span {
+  color: transparent;
+  filter: none;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+.site-footer .site-footer-mark span::before,
+.site-footer .site-footer-mark span::after {
+  content: "AYURMUNI";
+  display: block;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  box-sizing: border-box;
+  padding-inline: var(--am-gutter);
+  background: none;
+  color: #fff;
+  pointer-events: none;
+}
+.site-footer .site-footer-mark span::before {
+  -webkit-mask-image: linear-gradient(180deg, #000 45%, transparent 80%);
+  mask-image: linear-gradient(180deg, #000 45%, transparent 80%);
+}
+.site-footer .site-footer-mark span::after {
+  filter: blur(clamp(1.5px, 0.02em, 6px));
+  -webkit-mask-image: linear-gradient(180deg, transparent 45%, #000 75%, rgba(0, 0, 0, 0.55) 100%);
+  mask-image: linear-gradient(180deg, transparent 45%, #000 75%, rgba(0, 0, 0, 0.55) 100%);
+}
+
+/* Premium finish: tonal fill (light-on-dark white melting into footer green),
+   hairline etched edge on the sharp layer; masks are exact complements so the
+   crisp/blurred overlap reads as one word. Letter-spacing unchanged (edge fit holds). */
+.site-footer .site-footer-mark span { opacity: 0.24; }
+.site-footer .site-footer-mark span::before,
+.site-footer .site-footer-mark span::after {
+  color: transparent;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.7) 50%,
+    color-mix(in srgb, #fff 30%, var(--footer-logo, #0d614e)) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+.site-footer .site-footer-mark span::before {
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.28);
+  -webkit-mask-image: linear-gradient(180deg, #000 45%, transparent 75%);
+  mask-image: linear-gradient(180deg, #000 45%, transparent 75%);
+}
+
+/* Active diet plan banner (Home + Diet): no "Next meal" line; progress row starts at the
+   plan name's left edge and ends at the View plan button's right edge. Appointment card untouched. */
+.hm-page .hm-pair .am-diet-active:not(.hm-appt) { grid-template-areas: 'media body cta' '. prog prog'; }
+@media (max-width: 360px) {
+  .hm-page .hm-pair .am-diet-active:not(.hm-appt) { grid-template-areas: 'media body body' 'prog prog prog' 'cta cta cta'; }
+}
+@media (min-width: 1024px) {
+  .dt-page .am-diet-active { grid-template-columns: auto minmax(0, 1.3fr) minmax(200px, 1fr) auto; }
+}
+@media (max-width: 1023px) {
+  .dt-page .am-diet-active .am-diet-active__progress { grid-column: 2 / -1; }
+}
+@media (max-width: 639px) {
+  .dt-page .am-diet-active .am-diet-active__progress { grid-column: 1 / -1; }
+}

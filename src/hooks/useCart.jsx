@@ -2,9 +2,11 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { addUpdateCart, cartMetrics, getAllCart } from '../services/cartService';
 import { isAuthenticated, requireAuth } from '../services/guestAuth';
 import { showSuccessToast } from '../config/key';
-import { subscribeApiSession } from '../services/apiClient';
+import { invalidateApiCache, subscribeApiSession } from '../services/apiClient';
+import { pickOrderedCartLines } from '../cart/clearOrdered';
 
 const CartContext = createContext(null);
+const apiFreshCart = () => getAllCart({ cache: false });
 
 export function CartProvider({ children }) {
   const [variantQuantities, setVariantQuantities] = useState({});
@@ -88,6 +90,35 @@ export function CartProvider({ children }) {
     [fetchCart],
   );
 
+  /**
+   * After a confirmed order: remove the ordered lines from the server cart (if the backend has not
+   * already), then reload. Uses the existing cart endpoint with quantity 0; other lines are kept.
+   */
+  const clearOrderedItems = useCallback(
+    async (orderedItems) => {
+      if (!(await isAuthenticated())) return null;
+      invalidateApiCache(['cart/']);
+      try {
+        const fresh = await apiFreshCart();
+        const leftovers = pickOrderedCartLines(fresh, orderedItems);
+        for (const line of leftovers) {
+          const variantId = String(line?.variant_id ?? line?.variant?.variant_id ?? line?.variant?.id ?? '').trim();
+          if (!variantId) continue;
+          try {
+            await addUpdateCart({ variant_id: variantId, quantity: 0, cart_item_id: line?.id ?? line?.cart_item_id });
+          } catch {
+            /* keep going: the reload below shows whatever is really left */
+          }
+        }
+      } catch {
+        /* fall through to a plain reload */
+      }
+      invalidateApiCache(['cart/']);
+      return fetchCart();
+    },
+    [fetchCart],
+  );
+
   const value = useMemo(
     () => ({
       variantQuantities,
@@ -97,8 +128,9 @@ export function CartProvider({ children }) {
       loading,
       fetchCart,
       syncCartQuantity,
+      clearOrderedItems,
     }),
-    [variantQuantities, itemCount, cartData, addingVariantId, loading, fetchCart, syncCartQuantity],
+    [variantQuantities, itemCount, cartData, addingVariantId, loading, fetchCart, syncCartQuantity, clearOrderedItems],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
@@ -115,6 +147,7 @@ export function useCart() {
       loading: false,
       fetchCart: async () => null,
       syncCartQuantity: async () => false,
+      clearOrderedItems: async () => null,
     };
   }
   return ctx;

@@ -1012,8 +1012,9 @@
   width: auto;
   margin-left: 0;
   margin-bottom: var(--am-space-2);
-  /* Artwork sits 56/256 down the file; shift it up to the column titles. */
-  transform: translateY(calc(var(--logo-h) * -56 / 256));
+  /* Artwork sits 56/256 down and 104/256 in from the left of the file (transparent margin);
+     shift it so the visible mark starts on the container edge, like the trust strip above. */
+  transform: translate(calc(var(--logo-h) * -104 / 256), calc(var(--logo-h) * -56 / 256));
   filter: brightness(0) invert(1);
 }
 

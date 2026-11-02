@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import AppShell from '../components/AppShell';
 import { Button, EmptyState } from '../components/ui';
@@ -16,12 +16,16 @@ import {
 import { getConsultationPayment, verifyConsultationPayment } from '../services/consultService';
 import { getOrderById, verifyOrderPayment } from '../services/orderService';
 import { showSuccessToast } from '../config/key';
+import { useCart } from '../hooks/useCart';
 
 export default function PaymentReturn() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const [phase, setPhase] = useState('working');
   const [message, setMessage] = useState('');
+  const { clearOrderedItems } = useCart();
+  const clearRef = useRef(clearOrderedItems);
+  clearRef.current = clearOrderedItems;
 
   useEffect(() => {
     let cancelled = false;
@@ -96,6 +100,8 @@ export default function PaymentReturn() {
             items: Array.isArray(pending.items) ? pending.items : [],
           }),
         );
+        // Redirect return: the cart provider still holds the pre-order cart; clear the ordered lines.
+        await clearRef.current(Array.isArray(pending.items) ? pending.items : []);
         navigate('/order-confirmation', { replace: true });
       } catch (error) {
         if (cancelled) return;

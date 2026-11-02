@@ -494,7 +494,7 @@ export default function Medicines() {
                     {ordersLoading && recent.length === 0 ? (
                       <RailSkeleton count={4} />
                     ) : (
-                      <Rail label="Recent orders">
+                      <Rail label="Recent orders" className="med-recent-rail">
                         {recent.map((item) => (
                           <RailItem key={`${item.id}-${item.variantId}`}>
                             <DietPlanCard
@@ -504,6 +504,7 @@ export default function Medicines() {
                                 season: item.lastOrdered ? `Ordered ${item.lastOrdered}` : 'Recent order',
                                 prakriti: formatRupee(item.price, { decimals: 0 }),
                               }}
+                              fallbackIcon={Pill}
                               onClick={() => item.variantId && navigate(`/medicines/${item.variantId}`)}
                             />
                           </RailItem>

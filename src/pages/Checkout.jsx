@@ -69,7 +69,7 @@ const money = (value) => formatRupee(value, { decimals: 2 });
 export default function Checkout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { fetchCart } = useCart();
+  const { clearOrderedItems } = useCart();
   const [items, setItems] = useState([]);
   const [addresses, setAddresses] = useState([]);
   const [addressId, setAddressId] = useState('');
@@ -269,7 +269,8 @@ export default function Checkout() {
         items: orderedItems,
       }),
     );
-    await fetchCart();
+    // Order is confirmed (COD placed / payment verified): empty the ordered lines everywhere.
+    await clearOrderedItems(orderedItems);
     navigate('/order-confirmation', { replace: true });
   };
 

@@ -2441,6 +2441,8 @@
   transition-delay: calc(120ms + var(--hc-i, 11) * 40ms);
 }
 .hm-page .hm-concerns-panel.is-shown .am-concerns__track > li { opacity: 1; transform: none; }
+/* Panels that are not a <Reveal> never get .is-shown: show their tiles right away. */
+.hm-page .hm-concerns-panel:not(.am-reveal) .am-concerns__track > li { opacity: 1; transform: none; transition: none; }
 .hm-page .hm-concerns-panel .am-concerns__track > li:nth-child(1) { --hc-i: 0; }
 .hm-page .hm-concerns-panel .am-concerns__track > li:nth-child(2) { --hc-i: 1; }
 .hm-page .hm-concerns-panel .am-concerns__track > li:nth-child(3) { --hc-i: 2; }
