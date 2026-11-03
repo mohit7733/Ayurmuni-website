@@ -5,6 +5,7 @@ import AppShell from "../components/AppShell";
 import { Button, EmptyState, ErrorState, SkeletonGrid } from "../components/ui";
 import { formatRupee } from "../home/catalog";
 import PlanTransferModal from "../components/PlanTransferModal";
+import PackagePaymentModal from "../components/PackagePaymentModal";
 import usePackagePurchase from "../hooks/usePackagePurchase";
 import { isAuthenticated, requireAuth } from "../services/guestAuth";
 import { loadPackageKinds, loadPackagesWithStatus } from "../services/packageService";
@@ -153,7 +154,7 @@ export default function Packages() {
     },
     [load],
   );
-  const { start: buyPlan, busyId: buyingId, prompt: transferPrompt, confirm: confirmTransfer, cancel: cancelTransfer } =
+  const { start: buyPlan, busyId: buyingId, prompt: transferPrompt, confirm: confirmTransfer, cancel: cancelTransfer, sheet: paymentSheet } =
     usePackagePurchase({ onPurchased });
 
   const onAction = (item) => {
@@ -239,6 +240,7 @@ export default function Packages() {
           : null}
 
         <PlanTransferModal prompt={transferPrompt} onYes={confirmTransfer} onNo={cancelTransfer} />
+        <PackagePaymentModal {...paymentSheet} />
 
         <button type="button" className="pp-help" onClick={talkToTeam}>
           <span className="pp-group__icon"><HeartPulse size={16} aria-hidden /></span>

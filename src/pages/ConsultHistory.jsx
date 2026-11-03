@@ -23,6 +23,7 @@ const TABS = [
 
 const PAGE_SIZE = 5;
 
+const HIDDEN_HISTORY_STATUSES = new Set(['testing', 'test', 'draft']);
 const PAST_STATUSES = ['completed', 'cancelled', 'missed', 'expired', 'no_show', 'noshow'];
 
 const STATUS_STYLE = {
@@ -50,7 +51,9 @@ const weekdayFrom = (dateStr) => {
 };
 
 const formatStatusLabel = (status) =>
-  String(status || '')
+  ['testing', 'test'].includes(String(status || '').toLowerCase())
+    ? 'Processing'
+    : String(status || '')
     .replace(/_/g, ' ')
     .trim();
 
@@ -90,8 +93,12 @@ export default function ConsultHistory() {
   }, [tab, reload]);
 
   const filtered = useMemo(() => {
-    if (!debounced) return history;
-    return history.filter((item) => {
+    // Hide internal / unfinished statuses from patient history (same as the app).
+    const base = history.filter(
+      (item) => !HIDDEN_HISTORY_STATUSES.has(String(item.status || '').toLowerCase().trim()),
+    );
+    if (!debounced) return base;
+    return base.filter((item) => {
       const doctorName = String(item.doctorName || '').toLowerCase();
       const concern = String(item.concern || '').toLowerCase();
       const status = String(item.status || '').toLowerCase();

@@ -71,7 +71,7 @@ export default function EditProfile() {
     const firstName = String(form.first_name || '').trim();
     const lastName = String(form.last_name || '').trim();
     if (!firstName) {
-      showSuccessToast('Please enter your first name', 'error');
+      showSuccessToast('First name is required', 'error');
       return;
     }
     if (!lastName) {

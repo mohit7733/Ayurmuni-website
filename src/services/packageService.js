@@ -17,12 +17,14 @@ export const getPackagePlans = (params = {}) =>
 
 export const getPackageKinds = () => apiClient('packages/kinds/', { method: 'GET' });
 
-export const purchasePackage = (packageId, patientId) =>
+/** POST packages/purchase/ { package_id, patient_id?, payment_gateway? (cashfree default | razorpay) }. */
+export const purchasePackage = (packageId, patientId, paymentGateway) =>
   apiClient('packages/purchase/', {
     method: 'POST',
     body: JSON.stringify({
       package_id: packageId,
       ...(patientId ? { patient_id: patientId } : {}),
+      ...(paymentGateway ? { payment_gateway: paymentGateway } : {}),
     }),
   });
 

@@ -15,6 +15,7 @@ import {
 } from '../payment/cashfree';
 import { getConsultationPayment, verifyConsultationPayment } from '../services/consultService';
 import { getOrderById, verifyOrderPayment } from '../services/orderService';
+import { verifyPendingPackage } from '../payment/packageCheckout';
 import { showSuccessToast } from '../config/key';
 import { useCart } from '../hooks/useCart';
 
@@ -36,6 +37,25 @@ export default function PaymentReturn() {
         if (!cancelled) {
           setPhase('failed');
           setMessage('We could not match this payment. Check My Orders, or start checkout again.');
+        }
+        return;
+      }
+      if (pending.kind === 'package') {
+        try {
+          const { ok, verify } = await verifyPendingPackage(pending, Object.fromEntries(params.entries()));
+          if (cancelled) return;
+          if (!ok) {
+            setPhase('failed');
+            setMessage(verify?.message || 'Payment was not completed. You can try again.');
+            return;
+          }
+          clearCashfreePending();
+          showSuccessToast(verify?.message || 'Package activated successfully.', 'success');
+          navigate('/profile/plans', { replace: true });
+        } catch (error) {
+          if (cancelled) return;
+          setPhase('failed');
+          setMessage(error?.message || 'Unable to verify payment');
         }
         return;
       }

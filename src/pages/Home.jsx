@@ -842,6 +842,7 @@ export default function Home() {
                 id="hm-brands-title"
                 title={T.brandsTitle}
                 description={T.brandsText}
+                action={<ViewAll label={T.brandsTitle} onClick={() => navigate('/products')} />}
               />
               <ConcernCarousel label={T.brandsTitle}>
                 {brands.map((item) => (

@@ -73,7 +73,7 @@ export default function ConsultPlanPicker({ open, plans, eligibility, selectedId
         </>
       }
     >
-      <div className="bk-record-list" role="radiogroup" aria-label="Which plan do you want to go with?">
+      <div className="cp-list" role="radiogroup" aria-label="Which plan do you want to go with?">
         {plans.map((plan) => {
           const status = rowStatus(plan);
           const on = status.usable && plan.id === pickedId;
@@ -81,7 +81,7 @@ export default function ConsultPlanPicker({ open, plans, eligibility, selectedId
           const payable = eligibility?.[plan.id]?.payable;
           const price = Number(plan.paid_price || plan.original_price || 0);
           return (
-            <label key={plan.id} className={`bk-record cp-row${on ? ' is-on' : ''}${status.usable ? '' : ' is-off'}`}>
+            <label key={plan.id} className={`cp-row${on ? ' is-on' : ''}${status.usable ? '' : ' is-off'}`}>
               <input
                 type="radio"
                 name="consult-plan"
@@ -89,11 +89,12 @@ export default function ConsultPlanPicker({ open, plans, eligibility, selectedId
                 disabled={!status.usable}
                 onChange={() => setPickedId(plan.id)}
               />
-              <span className="bk-record__copy">
-                <strong>
-                  <Star size={13} aria-hidden /> {plan.name}
+              <span className="cp-row__copy">
+                <strong className="cp-row__name">
+                  <Star size={13} aria-hidden />
+                  <span>{plan.name}</span>
                 </strong>
-                <small className={status.usable ? '' : 'cp-row__off'}>{status.label}</small>
+                {status.label ? <small className={status.usable ? '' : 'cp-row__off'}>{status.label}</small> : null}
                 {expires ? <small>Valid till {expires}</small> : null}
               </span>
               <span className="cp-row__price">

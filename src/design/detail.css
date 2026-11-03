@@ -1562,3 +1562,93 @@ button.dx-person__main:hover strong {
     grid-column: 2;
   }
 }
+
+/* Reschedule modal. The modal is portalled outside .dx-page, so the dx tokens are re-declared here
+   (without them the selected date chip had no background and rendered as an empty gap). */
+.dx-resched {
+  --dx-ink: var(--am-brand-green-deep);
+  --dx-green: var(--am-brand-green);
+}
+.dx-resched .am-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.dx-resched .dx-month button {
+  width: 32px;
+  height: 32px;
+  transition: border-color var(--am-dur-fast) var(--am-ease-standard), background-color var(--am-dur-fast) var(--am-ease-standard);
+}
+.dx-resched .dx-month button:hover:not(:disabled) {
+  border-color: var(--dx-green);
+  background: var(--am-green-50);
+}
+.dx-resched .dx-month button:disabled {
+  opacity: 1;
+  border-color: var(--am-line);
+  background: var(--am-surface-sunken);
+  color: var(--am-text-subtle);
+}
+.dx-resched .dx-dates {
+  margin: 0 calc(-1 * var(--am-space-5));
+  padding: 2px var(--am-space-5);
+  scroll-padding-inline: var(--am-space-5);
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+.dx-resched .dx-dates::-webkit-scrollbar {
+  display: none;
+}
+.dx-resched .dx-dates button {
+  width: 52px;
+  padding: 8px 0;
+  border-radius: 12px;
+  transition: border-color var(--am-dur-fast) var(--am-ease-standard), background-color var(--am-dur-fast) var(--am-ease-standard);
+}
+.dx-resched .dx-dates button:hover:not(.is-on) {
+  border-color: var(--am-green-300);
+}
+.dx-resched .dx-dates button:focus-visible {
+  outline: none;
+  box-shadow: var(--am-focus-ring);
+}
+.dx-resched .dx-dates button.is-on strong {
+  color: #fff;
+}
+.dx-resched__slots {
+  gap: 8px;
+}
+.dx-resched__slots > * {
+  min-width: 88px;
+  justify-content: center;
+}
+.dx-resched__empty {
+  justify-content: center;
+  padding: 14px 12px;
+  border: 1px dashed var(--am-line);
+  border-radius: var(--am-radius-md);
+  background: var(--am-surface-muted);
+  text-align: center;
+}
+.dx-resched .am-textarea {
+  min-height: 88px;
+}
+.dx-resched .am-modal__footer .am-btn:disabled {
+  opacity: 1;
+  filter: none;
+  border-color: var(--am-line);
+  background: var(--am-surface-sunken);
+  color: var(--am-text-subtle);
+  box-shadow: none;
+}
+@media (max-width: 380px) {
+  .dx-resched .am-modal__footer > .am-btn {
+    flex-basis: 100%;
+  }
+  .dx-resched__slots > * {
+    min-width: 0;
+    flex: 1 1 calc(33.333% - 8px);
+  }
+}
