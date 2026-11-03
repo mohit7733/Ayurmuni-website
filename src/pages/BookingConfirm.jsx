@@ -501,20 +501,23 @@ export default function BookingConfirm() {
           </div>
         </div>
         <p className="bk-share-options__label">Share using</p>
+
         <div className="bk-share-options">
           {SHARE_OPTIONS.map((item) => {
             const Icon = item.icon;
+
             return (
               <button
                 key={item.id}
                 type="button"
-                className="bk-share-option"
-                style={{ "--bk-share-color": item.color }}
+                className={`bk-share-option bk-share-option--${item.id}`}
+                style={{ backgroundColor: item.color }}
                 onClick={() => onShare(item.id)}
               >
                 <span className="bk-share-option__icon" aria-hidden>
                   <Icon size={18} />
                 </span>
+
                 <span className="bk-share-option__label">{item.title}</span>
               </button>
             );

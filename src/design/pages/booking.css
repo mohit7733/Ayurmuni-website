@@ -889,32 +889,58 @@
 
 /* 09. Share appointment */
 
+/* =========================================================
+   BOOKING — SHARE PREVIEW
+   Premium appointment preview card
+   ========================================================= */
+
 .bk-share-preview {
+  position: relative;
   display: grid;
   gap: 16px;
-  padding: 16px;
-  border: 1px solid var(--bk-border);
+  overflow: hidden;
+  padding: 18px;
+  border: 1px solid color-mix(in srgb, var(--bk-green) 15%, var(--bk-border));
   border-radius: 16px;
   background:
-    radial-gradient(ellipse at 100% 0%, var(--bk-soft), transparent 70%),
-    var(--am-surface-muted, #f6f8f7);
+    radial-gradient(
+      90% 100% at 100% 0%,
+      color-mix(in srgb, var(--bk-green) 11%, transparent),
+      transparent 70%
+    ),
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--bk-soft) 55%, var(--am-surface)),
+      var(--am-surface) 75%
+    );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    0 2px 5px rgba(10, 40, 32, 0.04),
+    0 10px 24px rgba(10, 40, 32, 0.06);
 }
 
+/* Doctor information */
 .bk-share-preview__doctor {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 13px;
   min-width: 0;
 }
+
 .bk-share-preview__doctor .bk-doctor__photo {
-  width: 52px;
-  height: 52px;
-  flex-basis: 52px;
+  flex: 0 0 54px;
+  width: 54px;
+  height: 54px;
+  border: 2px solid var(--am-surface, #fff);
   border-radius: 50%;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--bk-green) 20%, transparent),
+    0 4px 12px rgba(10, 40, 32, 0.12);
 }
 
 .bk-share-preview__copy {
   display: grid;
+  flex: 1;
   min-width: 0;
   gap: 4px;
 }
@@ -929,96 +955,302 @@
 }
 
 .bk-share-preview__copy strong {
+  color: var(--bk-text);
   font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.35;
 }
-.bk-share-preview__copy p,
+
+.bk-share-preview__copy p {
+  color: var(--bk-green);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
 .bk-share-preview__copy small {
   color: var(--bk-muted);
   font-size: 12px;
+  line-height: 1.4;
 }
 
+/* Appointment details */
 .bk-share-preview__schedule {
   display: grid;
-  gap: 8px;
-  padding-top: 12px;
-  border-top: 1px solid var(--bk-border);
+  gap: 10px;
+  padding: 13px 14px;
+  border: 1px solid color-mix(in srgb, var(--bk-green) 12%, var(--bk-border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--am-surface, #fff) 88%, transparent);
 }
 
 .bk-share-preview__schedule span {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  font-size: 14px;
+  gap: 10px;
+  min-width: 0;
+  color: var(--bk-text);
+  font-size: 13px;
+  font-weight: 500;
   line-height: 1.5;
 }
 
 .bk-share-preview__schedule svg {
-  flex: 0 0 auto;
+  flex: 0 0 17px;
+  width: 17px;
+  height: 17px;
+  margin-top: 1px;
   color: var(--bk-green);
 }
+
+/* Preview metadata */
 .bk-share-preview__meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-}
-.bk-share-preview__meta > span {
-  color: var(--bk-muted);
-  font-size: 12px;
+  gap: 7px;
 }
 
-.bk-share-options__label {
-  margin: 16px 0 8px;
-  font-size: 14px;
+.bk-share-preview__meta > span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 27px;
+  padding: 4px 10px;
+  border: 1px solid color-mix(in srgb, var(--bk-green) 15%, var(--bk-border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bk-soft) 75%, var(--am-surface));
+  color: var(--bk-green);
+  font-size: 11px;
   font-weight: 600;
+  line-height: 1.3;
+}
+
+/* =========================================================
+   SHARE OPTIONS
+   Interactive selection cards
+   ========================================================= */
+
+.bk-share-options__label {
+  display: block;
+  margin: 18px 0 10px;
+  color: var(--bk-text);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .bk-share-options {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  gap: 10px;
   margin-bottom: 16px;
 }
 
+/* Individual option */
 .bk-share-option {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 11px;
   min-width: 0;
-  min-height: 56px;
-  padding: 12px;
-  border: 1px solid var(--bk-border);
-  border-radius: 12px;
+  min-height: 64px;
+  padding: 11px 12px;
+  border: 1px solid transparent;
+  border-radius: 13px;
   background: var(--am-surface, #fff);
-  color: var(--bk-text);
+  color: #ffffff;
   text-align: left;
   cursor: pointer;
+  box-shadow:
+    0 1px 2px rgba(10, 40, 32, 0.04),
+    0 3px 8px rgba(10, 40, 32, 0.05);
   transition:
-    border-color 180ms ease,
-    background 180ms ease,
-    box-shadow 180ms ease;
+    transform 200ms ease,
+    box-shadow 200ms ease;
 }
 
+/* Individual button backgrounds */
+.bk-share-option--whatsapp {
+  background: #25d366;
+  color: #ffffff;
+}
+
+.bk-share-option--message {
+  background: #0d614e;
+  color: #ffffff;
+}
+
+.bk-share-option--email {
+  background: #3b82f6;
+  color: #ffffff;
+}
+
+/* Share option icon */
 .bk-share-option__icon,
 .bk-cal-option__icon {
   display: inline-flex;
-  width: 40px;
-  height: 40px;
-  flex: 0 0 40px;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
-  background: var(--bk-soft);
-  color: var(--bk-green);
-  transition: transform 180ms ease;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  transition: transform 200ms ease;
+}
+
+.bk-share-option__icon svg,
+.bk-cal-option__icon svg {
+  width: 19px;
+  height: 19px;
 }
 
 .bk-share-option__label {
+  flex: 1;
   min-width: 0;
   overflow: hidden;
-  font-size: 14px;
-  font-weight: 500;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Hover — movement and shadow only */
+@media (hover: hover) {
+  .bk-share-option:hover:not(:disabled):not([aria-disabled="true"]) {
+    transform: translateY(-4px);
+    box-shadow:
+      0 5px 10px rgba(10, 40, 32, 0.1),
+      0 10px 20px rgba(10, 40, 32, 0.12);
+  }
+
+  .bk-share-option:hover .bk-share-option__icon {
+    transform: scale(1.05);
+  }
+}
+
+/* Keyboard accessibility */
+.bk-share-option:focus-visible {
+  outline: 2px solid var(--bk-green);
+  outline-offset: 3px;
+}
+
+/* Press feedback */
+.bk-share-option:active:not(:disabled):not([aria-disabled="true"]) {
+  transform: translateY(-1px) scale(0.99);
+  box-shadow: 0 2px 6px rgba(10, 40, 32, 0.1);
+}
+
+/* Disabled option — no hover or click animation */
+.bk-share-option:disabled,
+.bk-share-option[aria-disabled="true"] {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.bk-share-option:disabled:hover,
+.bk-share-option[aria-disabled="true"]:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.bk-share-option:disabled:hover .bk-share-option__icon,
+.bk-share-option[aria-disabled="true"]:hover .bk-share-option__icon {
+  transform: none;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 480px) {
+  .bk-share-preview {
+    gap: 14px;
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .bk-share-preview__doctor {
+    gap: 11px;
+  }
+
+  .bk-share-preview__doctor .bk-doctor__photo {
+    flex-basis: 48px;
+    width: 48px;
+    height: 48px;
+  }
+
+  .bk-share-preview__copy strong {
+    font-size: 15px;
+  }
+
+  .bk-share-preview__schedule {
+    gap: 9px;
+    padding: 11px;
+  }
+
+  .bk-share-preview__schedule span {
+    font-size: 12px;
+  }
+
+  .bk-share-options {
+    gap: 8px;
+  }
+
+  .bk-share-option {
+    min-height: 58px;
+    gap: 8px;
+    padding: 9px;
+  }
+
+  .bk-share-option__icon,
+  .bk-cal-option__icon {
+    flex-basis: 34px;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+  }
+
+  .bk-share-option__icon svg,
+  .bk-cal-option__icon svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .bk-share-option__label {
+    font-size: 12px;
+  }
+}
+
+/* Very narrow phones */
+@media (max-width: 360px) {
+  .bk-share-options {
+    grid-template-columns: 1fr;
+  }
+
+  .bk-share-option {
+    min-height: 54px;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .bk-share-option,
+  .bk-share-option__icon,
+  .bk-cal-option__icon {
+    transition: none !important;
+  }
+
+  .bk-share-option:active,
+  .bk-share-option:hover {
+    transform: none;
+  }
 }
 
 /* 10. Calendar page */

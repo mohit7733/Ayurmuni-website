@@ -355,7 +355,125 @@
   font-weight: var(--am-weight-semibold);
 }
 
-/* About */
+/* =========================================================
+   About — refined editorial layout
+   Replaces the previous About styles in this location.
+   ========================================================= */
+
+.dp-about-card .dp-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.dp-about__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--am-primary);
+  font-size: 11px;
+  font-weight: var(--am-weight-semibold);
+  letter-spacing: 0.075em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.dp-about__label::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  flex: 0 0 6px;
+  border-radius: 50%;
+  background: var(--am-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--am-accent) 15%, transparent);
+}
+
+.dp-about__list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dp-about__list li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  align-items: start;
+  gap: 11px;
+  min-width: 0;
+  padding: 11px 13px;
+  border: 1px solid color-mix(in srgb, var(--am-primary) 10%, var(--am-line));
+  border-radius: 11px;
+  background: linear-gradient(
+    105deg,
+    color-mix(in srgb, var(--am-primary-soft) 65%, var(--am-surface)),
+    var(--am-surface) 78%
+  );
+  transition:
+    border-color 160ms var(--am-ease-standard),
+    background-color 160ms var(--am-ease-standard),
+    box-shadow 160ms var(--am-ease-standard),
+    transform 160ms var(--am-ease-standard);
+}
+
+.dp-about__marker {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  margin-top: 1px;
+  border: 1px solid color-mix(in srgb, var(--am-primary) 18%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--am-primary) 9%, var(--am-surface));
+  color: var(--am-primary);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.dp-about__marker::before {
+  content: "→";
+}
+
+.dp-about__marker span {
+  display: none;
+}
+
+.dp-about__list li p {
+  min-width: 0;
+  margin: 2px 0 0;
+  color: var(--am-text, #33443d);
+  font-size: 14px;
+  font-weight: 450;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+@media (hover: hover) {
+  .dp-about__list li:hover {
+    border-color: color-mix(in srgb, var(--am-primary) 25%, var(--am-line));
+    background: linear-gradient(
+      105deg,
+      color-mix(in srgb, var(--am-primary-soft) 85%, var(--am-surface)),
+      var(--am-surface) 82%
+    );
+    box-shadow: 0 4px 12px rgba(13, 97, 78, 0.06);
+    transform: translateX(2px);
+  }
+
+  .dp-about__list li:hover .dp-about__marker {
+    border-color: color-mix(in srgb, var(--am-primary) 30%, transparent);
+    background: var(--am-primary);
+    color: var(--am-on-primary);
+  }
+}
+
+/* Existing About paragraph and read-more support */
 .dp-about {
   margin: 0;
   color: var(--am-text-soft);
@@ -845,6 +963,33 @@
     font-size: var(--am-text-base);
   }
 
+  .dp-about-card .dp-card__head {
+    margin-bottom: 12px;
+  }
+
+  .dp-about__list {
+    gap: 8px;
+  }
+
+  .dp-about__list li {
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 9px;
+    padding: 10px 11px;
+    border-radius: 10px;
+  }
+
+  .dp-about__marker {
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
+  }
+
+  .dp-about__list li p {
+    margin-top: 1px;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
   .dp-about {
     font-size: var(--am-text-xs);
     line-height: 1.6;
@@ -957,15 +1102,16 @@
   .dp-stats li,
   .dp-card,
   .dp-chip,
-  .dp-avail {
+  .dp-avail,
+  .dp-about__list li {
     transition: none !important;
+    transform: none !important;
   }
 }
 
 /* =========================================================
    FINAL VISUAL POLISH LAYER
-   Paste at the very end of doctor-profile.css.
-   No layout, spacing, sizing, or alignment changes.
+   Existing visual enhancements retained.
    ========================================================= */
 
 /* Hero: richer, premium surface */
@@ -1172,11 +1318,6 @@
     0 2px 6px rgba(13, 97, 78, 0.12);
 }
 
-/* About */
-.dp-about {
-  position: relative;
-}
-
 /* Chips: more intentional tag design */
 .dp-chip {
   background: linear-gradient(
@@ -1341,10 +1482,16 @@
   .dp-stats li,
   .dp-card,
   .dp-chip,
-  .dp-avail {
+  .dp-avail,
+  .dp-about__list li {
     transition: none !important;
+    transform: none !important;
   }
 }
+
+/* =========================================================
+   Review cards
+   ========================================================= */
 
 .dp-reviews .am-review {
   background: #ffffff;

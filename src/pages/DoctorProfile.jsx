@@ -87,6 +87,32 @@ function doctorDisplaySafe(doctor) {
   );
 }
 
+function formatAboutPoints(value) {
+  if (!value) return [];
+
+  const text = String(value).replace(/\r\n/g, "\n").trim();
+
+  // Prefer existing line breaks or bullet separators.
+  const lines = text
+    .split(/\n+|[•●▪]\s*/)
+    .map((line) => line.replace(/^[\s\-–—]+/, "").trim())
+    .filter(Boolean);
+
+  if (lines.length > 1) return lines;
+
+  // For a single paragraph, split into readable sentences.
+  // Protect common abbreviations before splitting.
+  const protectedText = lines[0].replace(
+    /\b(Dr|Mr|Mrs|Ms|Prof|e\.g|i\.e|etc)\./gi,
+    "$1<dot>",
+  );
+
+  return protectedText
+    .split(/(?<=[.!?])\s+(?=[A-Z])/)
+    .map((point) => point.replace(/<dot>/g, ".").trim())
+    .filter(Boolean);
+}
+
 function ProfileSkeleton() {
   return (
     <div className="dp-skel" aria-busy="true">
@@ -165,9 +191,7 @@ export default function DoctorProfile() {
   )
     .replace(/\r\n/g, "\n")
     .trim();
-  const shouldTruncate = about.length > 160;
-  const aboutText =
-    shouldTruncate && !showFullAbout ? `${about.slice(0, 150)}` : about;
+  const aboutPoints = useMemo(() => formatAboutPoints(about), [about]);
   const languages = useMemo(() => resolveLanguages(doctor), [doctor]);
   const specializations = useMemo(
     () => resolveDoctorSpecializations(doctor),
@@ -418,12 +442,26 @@ export default function DoctorProfile() {
               </ul>
             </section>
 
-            {about ? (
-              <section className="dp-card" aria-labelledby="dp-about">
+            {aboutPoints.length > 0 ? (
+              <section
+                className="dp-card dp-about-card"
+                aria-labelledby="dp-about"
+              >
                 <div className="dp-card__head">
                   <h2 id="dp-about">{T.about}</h2>
+                  <span className="dp-about__label">Professional overview</span>
                 </div>
-                <p className="dp-about">{aboutText}</p>
+
+                <ul className="dp-about__list">
+                  {aboutPoints.map((point, index) => (
+                    <li key={`${index}-${point}`}>
+                      <span className="dp-about__marker" aria-hidden="true">
+                        <span />
+                      </span>
+                      <p>{point}</p>
+                    </li>
+                  ))}
+                </ul>
               </section>
             ) : null}
 
