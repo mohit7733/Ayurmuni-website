@@ -1,51 +1,66 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import AppShell from '../components/AppShell';
-import dietCoverImg from '/images/login/14.jpg';
-import { formatRupee } from '../home/catalog';
-import useDietPlans from '../diet/useDietPlans';
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import AppShell from "../components/AppShell";
+import dietCoverImg from "/images/login/14.jpg";
+import { formatRupee } from "../home/catalog";
+import useDietPlans from "../diet/useDietPlans";
 import {
   getDietListStatus,
   getDietPlanCoverUrl,
   getDietPlanRatingLabel,
-} from '../diet/utils';
-import '../design/pages/diet.css';
+} from "../diet/utils";
+import "../design/pages/diet.css";
 
-const PRAKRITI = ['all', 'Vata', 'Pitta', 'Kapha', 'Vata-Pitta', 'Pitta-Kapha', 'Vata-Kapha'];
+const PRAKRITI = [
+  "all",
+  "Vata",
+  "Pitta",
+  "Kapha",
+  "Vata-Pitta",
+  "Pitta-Kapha",
+  "Vata-Kapha",
+];
 const STATUS_TABS = [
-  { key: 'all', label: 'All' },
-  { key: 'active', label: 'Active' },
-  { key: 'inactive', label: 'Inactive' },
+  { key: "all", label: "All" },
+  { key: "active", label: "Active" },
+  { key: "inactive", label: "Inactive" },
 ];
 
 const statusLabel = (plan) => {
   const status = getDietListStatus(plan);
-  if (status === 'active') return 'Active';
-  if (status === 'paused') return 'Paused';
-  if (status === 'completed') return 'Completed';
-  if (status === 'stopped') return 'Stopped';
-  return '';
+  if (status === "active") return "Active";
+  if (status === "paused") return "Paused";
+  if (status === "completed") return "Completed";
+  if (status === "stopped") return "Stopped";
+  return "";
 };
 
 export default function Diet() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const healthCategoryId = params.get('category') || params.get('health_category_id') || '';
-  const healthDiseaseId = params.get('disease') || params.get('health_disease_id') || '';
-  const categoryName = (params.get('name') || '').trim();
+  const healthCategoryId =
+    params.get("category") || params.get("health_category_id") || "";
+  const healthDiseaseId =
+    params.get("disease") || params.get("health_disease_id") || "";
+  const categoryName = (params.get("name") || "").trim();
   const wantsAll =
-    params.get('view') === 'all' || Boolean(healthCategoryId) || Boolean(healthDiseaseId);
+    params.get("view") === "all" ||
+    Boolean(healthCategoryId) ||
+    Boolean(healthDiseaseId);
 
-  const [search, setSearch] = useState('');
-  const [debounced, setDebounced] = useState('');
-  const [prakriti, setPrakriti] = useState('all');
-  const [statusTab, setStatusTab] = useState('all');
+  const [search, setSearch] = useState("");
+  const [debounced, setDebounced] = useState("");
+  const [prakriti, setPrakriti] = useState("all");
+  const [statusTab, setStatusTab] = useState("all");
   const [carouselIndex, setCarouselIndex] = useState(0);
   const carouselRef = useRef(null);
   const carouselIndexRef = useRef(0);
   const carouselScrollTimerRef = useRef(null);
 
-  useEffect(() => () => window.clearTimeout(carouselScrollTimerRef.current), []);
+  useEffect(
+    () => () => window.clearTimeout(carouselScrollTimerRef.current),
+    [],
+  );
 
   useEffect(() => {
     const timer = setTimeout(() => setDebounced(search.trim()), 400);
@@ -55,33 +70,36 @@ export default function Diet() {
   const listFilters = useMemo(
     () => ({
       search: debounced || undefined,
-      prakriti: prakriti !== 'all' ? prakriti : undefined,
-      health_category_id: !healthDiseaseId && healthCategoryId ? healthCategoryId : undefined,
+      prakriti: prakriti !== "all" ? prakriti : undefined,
+      health_category_id:
+        !healthDiseaseId && healthCategoryId ? healthCategoryId : undefined,
       health_disease_id: healthDiseaseId || undefined,
     }),
     [debounced, prakriti, healthCategoryId, healthDiseaseId],
   );
 
   const { plans, loadingList, loadingMore, hasMore, loadMore } = useDietPlans({
-    listType: wantsAll ? 'all' : null,
+    listType: wantsAll ? "all" : null,
     listFilters,
   });
 
   const visible = useMemo(() => {
-    if (statusTab === 'all') return plans;
-    if (statusTab === 'active') return plans.filter((p) => getDietListStatus(p) === 'active');
-    return plans.filter((p) => getDietListStatus(p) !== 'active');
+    if (statusTab === "all") return plans;
+    if (statusTab === "active")
+      return plans.filter((p) => getDietListStatus(p) === "active");
+    return plans.filter((p) => getDietListStatus(p) !== "active");
   }, [plans, statusTab]);
 
   useEffect(() => {
     setCarouselIndex(0);
     carouselIndexRef.current = 0;
-    if (carouselRef.current) carouselRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+    if (carouselRef.current)
+      carouselRef.current.scrollTo({ left: 0, behavior: "smooth" });
   }, [visible]);
 
   useEffect(() => {
     if (visible.length < 2) return undefined;
-    const isMobileCarousel = window.matchMedia('(max-width: 640px)').matches;
+    const isMobileCarousel = window.matchMedia("(max-width: 640px)").matches;
     if (!isMobileCarousel) return undefined;
 
     const timer = window.setInterval(() => {
@@ -91,25 +109,28 @@ export default function Diet() {
       const carousel = carouselRef.current;
       const card = carousel?.children[next];
       if (carousel && card) {
-        carousel.scrollTo({ left: card.offsetLeft, behavior: 'smooth' });
+        carousel.scrollTo({ left: card.offsetLeft, behavior: "smooth" });
       }
     }, 5000);
     return () => window.clearInterval(timer);
   }, [visible.length]);
 
   const moveCarousel = (direction) => {
-    const next = Math.min(visible.length - 1, Math.max(0, carouselIndex + direction));
+    const next = Math.min(
+      visible.length - 1,
+      Math.max(0, carouselIndex + direction),
+    );
     carouselIndexRef.current = next;
     setCarouselIndex(next);
     const carousel = carouselRef.current;
     const card = carousel?.children[next];
     if (carousel && card) {
-      carousel.scrollTo({ left: card.offsetLeft, behavior: 'smooth' });
+      carousel.scrollTo({ left: card.offsetLeft, behavior: "smooth" });
     }
   };
 
   const handleCarouselScroll = (event) => {
-    if (!window.matchMedia('(max-width: 640px)').matches) return;
+    if (!window.matchMedia("(max-width: 640px)").matches) return;
     const carousel = event.currentTarget;
     window.clearTimeout(carouselScrollTimerRef.current);
     carouselScrollTimerRef.current = window.setTimeout(() => {
@@ -132,18 +153,34 @@ export default function Diet() {
       <section className="catalog-page diet-page">
         <header className="catalog-head">
           <div>
-            <button type="button" className="text-back" onClick={() => navigate(-1)}>
+            <button
+              type="button"
+              className="text-back"
+              onClick={() => navigate("/home")}
+            >
               ← Back
             </button>
-            <h1>{categoryName ? `${categoryName} Diet` : 'Diet Plans'}</h1>
+            <h1>{categoryName ? `${categoryName} Diet` : "Diet Plans"}</h1>
             <p>Personalized Ayurveda meal plans</p>
           </div>
-          <div className="diet-chips" role="group" aria-label="Diet plan shortcuts">
-            <button type="button" className="chip" onClick={() => navigate('/diet/weekly')}>
+          <div
+            className="diet-chips"
+            role="group"
+            aria-label="Diet plan shortcuts"
+          >
+            <button
+              type="button"
+              className="chip"
+              onClick={() => navigate("/diet/weekly")}
+            >
               Weekly planner
             </button>
             {!wantsAll ? (
-              <button type="button" className="chip" onClick={() => navigate('/diet?view=all')}>
+              <button
+                type="button"
+                className="chip"
+                onClick={() => navigate("/diet?view=all")}
+              >
                 View all
               </button>
             ) : null}
@@ -176,10 +213,10 @@ export default function Diet() {
             <button
               key={item}
               type="button"
-              className={`chip ${prakriti === item ? 'on' : ''}`}
+              className={`chip ${prakriti === item ? "on" : ""}`}
               onClick={() => setPrakriti(item)}
             >
-              {item === 'all' ? 'All prakriti' : item}
+              {item === "all" ? "All prakriti" : item}
             </button>
           ))}
         </div>
@@ -193,7 +230,7 @@ export default function Diet() {
             <button
               key={tab.key}
               type="button"
-              className={`chip ${statusTab === tab.key ? 'on' : ''}`}
+              className={`chip ${statusTab === tab.key ? "on" : ""}`}
               onClick={() => setStatusTab(tab.key)}
             >
               {tab.label}
@@ -208,75 +245,96 @@ export default function Diet() {
             <strong>No diet plans</strong>
             <p>
               {debounced
-                ? 'Try another search.'
-                : 'Plans for this concern will appear here when available.'}
+                ? "Try another search."
+                : "Plans for this concern will appear here when available."}
             </p>
           </div>
         ) : (
           <>
             <div className="diet-results-heading">
               <h2>
-                {statusTab === 'active'
-                  ? 'Active plans'
-                  : statusTab === 'inactive'
-                    ? 'Past plans'
-                    : 'Available plans'}
+                {statusTab === "active"
+                  ? "Active plans"
+                  : statusTab === "inactive"
+                    ? "Past plans"
+                    : "Available plans"}
               </h2>
               <span>
-                {visible.length} {visible.length === 1 ? 'plan' : 'plans'}
+                {visible.length} {visible.length === 1 ? "plan" : "plans"}
               </span>
             </div>
-            <div className="diet-grid" ref={carouselRef} onScroll={handleCarouselScroll}>
+            <div
+              className="diet-grid"
+              ref={carouselRef}
+              onScroll={handleCarouselScroll}
+            >
               {visible.map((item) => {
                 const cover = getDietPlanCoverUrl(item) || dietCoverImg;
                 const rating = getDietPlanRatingLabel(item);
                 const status = statusLabel(item);
                 const price =
                   item.is_paid === false || Number(item.price) === 0
-                    ? 'Free'
+                    ? "Free"
                     : formatRupee(item.price);
                 return (
                   <button
                     key={item.id}
                     type="button"
                     className="diet-card"
-                    onClick={() => navigate(`/diet/${item.id}`, { state: { item } })}
+                    onClick={() =>
+                      navigate(`/diet/${item.id}`, { state: { item } })
+                    }
                   >
                     <div className="diet-card-media">
                       <img src={cover} alt="" />
                       {status ? (
-                        <span className={`diet-status ${getDietListStatus(item)}`}>{status}</span>
+                        <span
+                          className={`diet-status ${getDietListStatus(item)}`}
+                        >
+                          {status}
+                        </span>
                       ) : null}
                     </div>
                     <strong>{item.title || item.name}</strong>
                     <small>
-                      {[item.prakriti, item.season, price].filter(Boolean).join(' • ')}
+                      {[item.prakriti, item.season, price]
+                        .filter(Boolean)
+                        .join(" • ")}
                     </small>
                     {rating ? <em>★ {rating}</em> : null}
-                    {item.short_description ? <p>{item.short_description}</p> : null}
+                    {item.short_description ? (
+                      <p>{item.short_description}</p>
+                    ) : null}
                   </button>
                 );
               })}
             </div>
-            {visible.length > 1 ? <div className="diet-carousel-controls" aria-label="Diet plan carousel controls">
-              <button
-                type="button"
-                aria-label="Previous diet plan"
-                disabled={carouselIndex === 0}
-                onClick={() => moveCarousel(-1)}
+            {visible.length > 1 ? (
+              <div
+                className="diet-carousel-controls"
+                aria-label="Diet plan carousel controls"
               >
-                <span aria-hidden="true">‹</span>
-              </button>
-              <span aria-live="polite">{carouselIndex + 1} / {visible.length}</span>
-              <button
-                type="button"
-                aria-label="Next diet plan"
-                disabled={carouselIndex >= visible.length - 1}
-                onClick={() => moveCarousel(1)}
-              >
-                <span aria-hidden="true">›</span>
-              </button>
-            </div> : null}
+                <button
+                  type="button"
+                  aria-label="Previous diet plan"
+                  disabled={carouselIndex === 0}
+                  onClick={() => moveCarousel(-1)}
+                >
+                  <span aria-hidden="true">‹</span>
+                </button>
+                <span aria-live="polite">
+                  {carouselIndex + 1} / {visible.length}
+                </span>
+                <button
+                  type="button"
+                  aria-label="Next diet plan"
+                  disabled={carouselIndex >= visible.length - 1}
+                  onClick={() => moveCarousel(1)}
+                >
+                  <span aria-hidden="true">›</span>
+                </button>
+              </div>
+            ) : null}
           </>
         )}
 
@@ -287,7 +345,7 @@ export default function Diet() {
             disabled={loadingMore}
             onClick={loadMore}
           >
-            {loadingMore ? 'Loading…' : 'Load more'}
+            {loadingMore ? "Loading…" : "Load more"}
           </button>
         ) : null}
       </section>

@@ -1260,10 +1260,6 @@ html:has(.pd-page) {
   -ms-overflow-style: none;
 }
 
-.pd-review-list::-webkit-scrollbar {
-  display: none;
-}
-
 .pd-review-list.is-static {
   flex-wrap: wrap;
 
@@ -2088,28 +2084,29 @@ html:has(.pd-page) {
   min-width: 0;
 }
 
-.pd-reviews .pd-auto-rail {
-  min-width: 0;
-}
-
 .pd-review-list,
 .pd-review-list.is-static {
   display: flex;
+  flex-direction: column;
   flex-wrap: nowrap;
-  align-items: stretch;
   gap: 12px;
+  width: 100%;
+  height: 260px;
+  flex: 0 0 260px;
   min-width: 0;
   margin: 0;
-  padding: 2px 2px 8px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  overscroll-behavior-inline: contain;
-  scroll-snap-type: x mandatory;
+  padding: 2px 6px 2px 2px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scroll-snap-type: y proximity;
   scrollbar-width: thin;
 }
 
 .pd-review-item {
-  flex: 0 0 min(100%, 320px);
+  display: flex;
+  flex: 0 0 auto;
+  width: 100%;
   min-width: 0;
   scroll-snap-align: start;
 }
@@ -2117,14 +2114,14 @@ html:has(.pd-page) {
 .pd-review-item > .am-review,
 .pd-reviews .am-review {
   box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: minmax(140px, 2.5fr) minmax(0, 0.5fr) minmax(72px, 1fr);
+  align-items: center;
+  column-gap: 12px;
   width: 100%;
-  height: 100%;
+  height: auto;
   min-width: 0;
-  padding: 16px;
+  padding: 12px;
   overflow: hidden;
   border: 1px solid #dce8e0;
   border-radius: 14px;
@@ -2133,9 +2130,10 @@ html:has(.pd-page) {
 }
 
 .pd-reviews .am-review__head {
+  grid-column: 1;
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 6px;
   min-width: 0;
   margin: 0;
 }
@@ -2146,35 +2144,40 @@ html:has(.pd-page) {
 }
 
 .pd-reviews .am-review__name {
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  max-width: none;
+  overflow-wrap: normal;
   white-space: nowrap;
 }
 
 .pd-reviews .am-review__head > :last-child {
   flex: 0 0 auto;
-  margin-left: auto;
+  margin-left: 0;
 }
 
 .pd-reviews .am-review__text {
+  grid-column: 2;
   display: -webkit-box;
   margin: 0;
   overflow: hidden;
   overflow-wrap: anywhere;
   line-height: 1.55;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 4;
-  line-clamp: 4;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+.pd-reviews .am-review__text:last-child {
+  grid-column: 2 / -1;
 }
 
 .pd-reviews .am-review__media {
+  grid-column: 3;
   display: flex;
   flex-wrap: nowrap;
-  gap: 8px;
+  gap: 5px;
   width: 100%;
   min-width: 0;
-  margin: auto 0 0;
+  margin: 0;
   padding: 0 0 2px;
   overflow-x: auto;
   overscroll-behavior-inline: contain;
@@ -2186,9 +2189,9 @@ html:has(.pd-page) {
 }
 
 .pd-reviews .am-review__media > li {
-  flex: 0 0 68px;
-  width: 68px;
-  height: 68px;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
   overflow: hidden;
   border: 1px solid #dce8e0;
   border-radius: 10px;
@@ -2227,21 +2230,6 @@ html:has(.pd-page) {
   color: #fff;
 }
 
-@media (min-width: 1280px) {
-  .pd-review-list,
-  .pd-review-list.is-static {
-    flex-direction: row;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scroll-snap-type: x mandatory;
-  }
-
-  .pd-review-item {
-    flex: 0 0 min(100%, 320px);
-  }
-}
-
 @media (max-width: 640px) {
   .pd-reviews {
     gap: 12px;
@@ -2268,36 +2256,20 @@ html:has(.pd-page) {
     min-width: 0;
   }
 
-  .pd-reviews .pd-auto-rail:not(.is-static) {
-    display: block;
-  }
-
-  .pd-reviews .pd-auto-rail__control {
-    display: none;
-  }
-
-  .pd-review-list,
-  .pd-review-list.is-static {
-    gap: 10px;
-    padding-bottom: 6px;
-    scroll-padding-inline: 2px;
-    scrollbar-width: none;
-  }
-
-  .pd-review-item {
-    flex-basis: min(88%, 340px);
-  }
-
   .pd-review-item > .am-review,
   .pd-reviews .am-review {
-    gap: 10px;
-    padding: 13px;
+    grid-template-columns: minmax(160px, 2fr) minmax(0, 1fr) minmax(
+        48px,
+        0.75fr
+      );
+    column-gap: 8px;
+    padding: 10px;
   }
 
   .pd-reviews .am-review__media > li {
-    flex-basis: 60px;
-    width: 60px;
-    height: 60px;
+    flex-basis: 34px;
+    width: 34px;
+    height: 34px;
   }
 }
 

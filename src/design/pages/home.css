@@ -24,11 +24,18 @@
   border: 1px solid color-mix(in srgb, var(--am-primary-tint) 45%, white);
   border-radius: 26px;
   background:
-    radial-gradient(110% 100% at 100% 0%, rgba(255, 214, 143, 0.17), transparent 54%),
+    radial-gradient(
+      110% 100% at 100% 0%,
+      rgba(255, 214, 143, 0.17),
+      transparent 54%
+    ),
     linear-gradient(145deg, #fff 0%, #fbfffc 68%, #f4fbf6 100%);
   box-shadow: 0 8px 28px rgba(19, 83, 66, 0.055);
   animation: hm-section-in 600ms var(--am-ease-out) both;
-  transition: border-color 240ms ease, box-shadow 240ms ease, transform 240ms ease;
+  transition:
+    border-color 240ms ease,
+    box-shadow 240ms ease,
+    transform 240ms ease;
 }
 
 .hm-body > .hm-section:hover {
@@ -37,8 +44,14 @@
 }
 
 @keyframes hm-section-in {
-  from { opacity: 0; transform: translateY(14px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ================= HERO ================= */
@@ -1237,13 +1250,21 @@
 
 .hm-body > .hm-section:nth-of-type(3n + 2) {
   background:
-    radial-gradient(100% 100% at 0% 0%, rgba(191, 222, 255, 0.2), transparent 55%),
+    radial-gradient(
+      100% 100% at 0% 0%,
+      rgba(191, 222, 255, 0.2),
+      transparent 55%
+    ),
     linear-gradient(145deg, #fff, #f7fbff 100%);
 }
 
 .hm-body > .hm-section:nth-of-type(3n) {
   background:
-    radial-gradient(100% 100% at 100% 0%, rgba(255, 206, 184, 0.2), transparent 55%),
+    radial-gradient(
+      100% 100% at 100% 0%,
+      rgba(255, 206, 184, 0.2),
+      transparent 55%
+    ),
     linear-gradient(145deg, #fff, #fff9f5 100%);
 }
 
@@ -1280,7 +1301,7 @@
     0 2px 5px rgba(10, 40, 32, 0.035),
     0 12px 28px rgba(10, 40, 32, 0.075);
   transition:
-    transform 320ms cubic-bezier(.2,.8,.2,1),
+    transform 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
     box-shadow 320ms var(--am-ease-standard),
     border-color 320ms var(--am-ease-standard);
 }
@@ -1291,7 +1312,8 @@
   scroll-padding-inline: 8px;
   scroll-behavior: smooth;
   scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--am-primary) 30%, transparent) transparent;
+  scrollbar-color: color-mix(in srgb, var(--am-primary) 30%, transparent)
+    transparent;
 }
 
 .hm-auto-rail {
@@ -1309,7 +1331,10 @@
   background: linear-gradient(145deg, #fff, #f2faf5);
   color: var(--am-primary);
   box-shadow: 0 6px 16px rgba(19, 83, 66, 0.11);
-  transition: transform 200ms ease, box-shadow 200ms ease, background 200ms ease;
+  transition:
+    transform 200ms ease,
+    box-shadow 200ms ease,
+    background 200ms ease;
 }
 
 .hm-auto-rail__control:hover {
@@ -1374,7 +1399,9 @@
 
 .hm-body .am-media-card__img img,
 .hm-body .am-tile img {
-  transition: transform 650ms cubic-bezier(.2,.8,.2,1), filter 400ms ease;
+  transition:
+    transform 650ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    filter 400ms ease;
 }
 
 .hm-body .am-media-card:hover .am-media-card__img img,

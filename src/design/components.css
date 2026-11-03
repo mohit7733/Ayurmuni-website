@@ -27,6 +27,7 @@
 /* ---------- Button ---------- */
 .am-btn {
   --btn-h: var(--am-control-h);
+  margin-bottom: var(--am-space-3);
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -1774,8 +1775,6 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
   overflow: hidden;
   border-radius: 50%;
   background: linear-gradient(
@@ -2778,8 +2777,6 @@
 }
 
 .am-tile {
-  min-height: 142px;
-  padding: var(--am-space-5) var(--am-space-3);
   border-color: color-mix(in srgb, var(--am-primary-tint) 70%, white);
   border-radius: 18px;
   background:
@@ -2795,8 +2792,8 @@
 }
 
 .am-tile__img {
-  width: 58px;
-  height: 58px;
+  width: 40px;
+  height: 40px;
   background: linear-gradient(145deg, #dff2e8, #fff 78%);
   box-shadow:
     0 0 0 4px #fff,

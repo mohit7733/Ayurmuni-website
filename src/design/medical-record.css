@@ -575,7 +575,7 @@ body:has(.records-page) .web-modal {
 ========================================= */
 
 .web-modal .web-modal-card {
-  width: min(100%, 510px);
+  width: min(100%, 700px);
   max-height: min(88vh, 760px);
   padding: 26px;
   overflow-y: auto;
@@ -713,17 +713,14 @@ body:has(.records-page) .web-modal {
 
 .web-modal .detail-cta button,
 .web-modal .web-modal-card > button.ghost {
-  min-height: 42px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0 18px;
   border: 1px solid #dce6df;
   border-radius: 8px;
   color: #5e7166;
   background: #fff;
-  font-size: 14px;
-  font-weight: 650;
+  font-size: 13px;
   cursor: pointer;
   transition:
     color 0.18s ease,

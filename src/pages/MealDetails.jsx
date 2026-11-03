@@ -24,7 +24,7 @@ export default function MealDetails() {
               <button
                 type="button"
                 className="text-back"
-                onClick={() => navigate(`/diet/${planId}`)}
+                onClick={() => navigate(`/diet`)}
               >
                 ← Back
               </button>

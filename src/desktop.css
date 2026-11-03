@@ -931,12 +931,6 @@
     margin: 0 auto;
   }
 
-  .modal-card,
-  .web-modal-card,
-  .note-card {
-    max-width: 480px;
-  }
-
   .phone-pill,
   .onboard input,
   .otp-box {

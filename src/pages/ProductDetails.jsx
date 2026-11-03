@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   FileText,
@@ -10,7 +10,6 @@ import {
   Star,
 } from "lucide-react";
 import AppShell from "../components/AppShell";
-import AutoScrollRail from "../components/AutoScrollRail";
 import PageHeader from "../components/PageHeader";
 import ProductDiscoveryRails from "../components/ProductDiscoveryRails";
 import ReviewSubmitModal from "../components/ReviewSubmitModal";
@@ -111,6 +110,8 @@ export default function ProductDetails() {
   const [imageIndex, setImageIndex] = useState(0);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [zoomOpen, setZoomOpen] = useState(false);
+  const [reviewsPaused, setReviewsPaused] = useState(false);
+  const reviewListRef = useRef(null);
 
   useEffect(() => {
     let alive = true;
@@ -144,6 +145,40 @@ export default function ProductDetails() {
       alive = false;
     };
   }, [variantId]);
+
+  useEffect(() => {
+    if (
+      reviewsPaused ||
+      reviews.length < 2 ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return undefined;
+    }
+
+    const timer = window.setInterval(() => {
+      const list = reviewListRef.current;
+      if (!list || list.scrollHeight <= list.clientHeight + 1) return;
+
+      const listTop = list.getBoundingClientRect().top;
+      const nextItem = Array.from(list.children).find(
+        (item) => item.getBoundingClientRect().top > listTop + 6,
+      );
+      const maxScroll = list.scrollHeight - list.clientHeight;
+      const targetScroll =
+        !nextItem || list.scrollTop >= maxScroll - 1
+          ? 0
+          : list.scrollTop +
+            nextItem.getBoundingClientRect().top -
+            listTop;
+
+      list.scrollTo({
+        top: targetScroll >= maxScroll - 1 ? 0 : targetScroll,
+        behavior: "smooth",
+      });
+    }, 4000);
+
+    return () => window.clearInterval(timer);
+  }, [reviews.length, reviewsPaused]);
 
   const variants = useMemo(
     () => (Array.isArray(product?.variants) ? product.variants : []),
@@ -576,11 +611,18 @@ export default function ProductDetails() {
                 }
               />
               {reviews.length > 0 ? (
-                <AutoScrollRail
-                  label="Product reviews"
-                  className="pd-auto-rail"
-                  trackClassName="pd-review-list"
-                  itemClassName="pd-review-item"
+                <ul
+                  ref={reviewListRef}
+                  className="pd-review-list"
+                  aria-label="Product reviews"
+                  tabIndex={0}
+                  onPointerEnter={() => setReviewsPaused(true)}
+                  onPointerLeave={() => setReviewsPaused(false)}
+                  onFocusCapture={() => setReviewsPaused(true)}
+                  onBlurCapture={(event) => {
+                    if (!event.currentTarget.contains(event.relatedTarget))
+                      setReviewsPaused(false);
+                  }}
                 >
                   {reviews.map((item, index) => {
                     const media = (item.image_urls || []).map((url) => ({
@@ -588,25 +630,28 @@ export default function ProductDetails() {
                       type: isReviewVideoUrl(url) ? "video" : "image",
                     }));
                     return (
-                      <ReviewCard
-                        key={item.id || index}
-                        name={item.patient_name || "Patient"}
-                        rating={item.rating}
-                        text={item.comment || item.review || item.message || ""}
-                        media={media}
-                        onMediaClick={(mediaIndex) =>
-                          navigate("/reviews/gallery", {
-                            state: {
-                              images: item.image_urls,
-                              selectedIndex: mediaIndex,
-                              backgroundLocation: location,
-                            },
-                          })
-                        }
-                      />
+                      <li className="pd-review-item" key={item.id || index}>
+                        <ReviewCard
+                          name={item.patient_name || "Patient"}
+                          rating={item.rating}
+                          text={
+                            item.comment || item.review || item.message || ""
+                          }
+                          media={media}
+                          onMediaClick={(mediaIndex) =>
+                            navigate("/reviews/gallery", {
+                              state: {
+                                images: item.image_urls,
+                                selectedIndex: mediaIndex,
+                                backgroundLocation: location,
+                              },
+                            })
+                          }
+                        />
+                      </li>
                     );
                   })}
-                </AutoScrollRail>
+                </ul>
               ) : (
                 <EmptyState
                   compact
