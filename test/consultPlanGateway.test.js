@@ -143,6 +143,15 @@ describe('consultPayment helpers', () => {
     const plan = (benefits, expires_at) => ({ benefits, expires_at });
     expect(cp.getPlanConsultState(plan([{ label: 'Doctor Consultation', quantity_remaining: 1 }]), now)).toBe('usable');
     expect(cp.getPlanConsultState(plan([{ label: 'Doctor Consultation', quantity_remaining: 0 }]), now)).toBe('exhausted');
+    expect(
+      cp.getPlanConsultState(
+        plan([
+          { label: 'Doctor Consultation', quantity_remaining: 0, status: 'exhausted' },
+          { label: 'Doctor follow-up', quantity_remaining: 1, status: 'available' },
+        ]),
+        now,
+      ),
+    ).toBe('usable');
     expect(cp.getPlanConsultState(plan([{ label: 'Doctor Consultation', status: 'used' }]), now)).toBe('exhausted');
     expect(cp.getPlanConsultState(plan([{ label: 'Diet chart' }]), now)).toBe('no_consult');
     expect(cp.getPlanConsultState(plan([{ label: 'Doctor Consultation' }], '2025-12-31T00:00:00Z'), now)).toBe('expired');

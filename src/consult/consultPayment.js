@@ -124,19 +124,45 @@ export const readPlanFunding = (res) => {
   return {
     loading: false,
     canFund,
-    reason: canFund ? '' : String(funding?.ineligible_reason || res?.message || PLAN_NOT_ELIGIBLE),
+    reason: canFund
+      ? ''
+      : String(
+          funding?.ineligible_message ||
+            funding?.ineligible_reason ||
+            (isApiSuccess(res) ? '' : res?.message) ||
+            PLAN_NOT_ELIGIBLE,
+        ),
     payable,
     quantityRemaining: remaining != null && Number.isFinite(Number(remaining)) ? Number(remaining) : null,
   };
 };
 
-/** Consultation benefit of a purchased plan (label based - API has no benefit code). */
+const benefitStillUsable = (benefit) => {
+  const status = String(benefit?.status || 'available').toLowerCase();
+  if (status !== 'available') return false;
+  if (benefit?.quantity_remaining != null && Number(benefit.quantity_remaining) <= 0) return false;
+  return true;
+};
+
+/** Consultation or follow-up benefit of a purchased plan (label based). */
 export const getConsultBenefit = (plan) => {
-  const consults = (plan?.benefits || []).filter((b) => /consult/i.test(String(b?.label || '')));
+  const rows = (plan?.benefits || []).filter((b) =>
+    /consult|follow-?up/i.test(String(b?.label || '')),
+  );
+  const doctorConsult = rows.find(
+    (b) => /doctor/i.test(String(b.label)) && /consult/i.test(String(b.label)) && !/follow/i.test(String(b.label)),
+  );
+  if (doctorConsult && benefitStillUsable(doctorConsult)) return doctorConsult;
+  const doctorFollow = rows.find(
+    (b) => /doctor/i.test(String(b.label)) && /follow/i.test(String(b.label)),
+  );
+  if (doctorFollow && benefitStillUsable(doctorFollow)) return doctorFollow;
   return (
-    consults.find((b) => /doctor/i.test(String(b.label))) ??
-    consults.find((b) => !/diet/i.test(String(b.label))) ??
-    consults[0] ??
+    rows.find(benefitStillUsable) ??
+    doctorConsult ??
+    rows.find((b) => /doctor/i.test(String(b.label))) ??
+    rows.find((b) => !/diet/i.test(String(b.label))) ??
+    rows[0] ??
     null
   );
 };
