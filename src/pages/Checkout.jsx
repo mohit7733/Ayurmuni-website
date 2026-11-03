@@ -7,19 +7,20 @@ import PageHeader from '../components/PageHeader';
 import { formatRupee } from '../home/catalog';
 import { useCart } from '../hooks/useCart';
 import { useCheckoutCoupons } from '../hooks/useCheckoutCoupons';
+import usePaymentGateways from '../hooks/usePaymentGateways';
+import PaymentGatewaySelector from '../components/PaymentGatewaySelector';
 import {
   CHECKOUT_KEY,
   ORDER_RESULT_KEY,
   formatAddress,
   isCodAvailableForItems,
   isOrderSuccessful,
-  isPrepaidVerifyAcceptable,
 } from '../cart/mapCart';
 import { calculateOrderFees, feeRateLabel, parseFeeQuoteConfig } from '../cart/feeQuote';
-import { toRazorpayPaise } from '../consult/doctors';
 import {
   buildCartItemIds,
   buildOrderPayload,
+  getOrderById,
   getOrderFeeQuote,
   placeOrder,
   verifyOrderPayment,
@@ -28,10 +29,24 @@ import { getAddresses, listAddresses, user_profile } from '../services/profileSe
 import { formatOrderStockError } from '../product/stock';
 import { showSuccessToast } from '../config/key';
 import { requireAuth } from '../services/guestAuth';
-import { Badge, Button, Disclaimer, EmptyState } from '../components/ui';
+import { Badge, Button, EmptyState } from '../components/ui';
 import { CHECKOUT_COPY as T } from '../content/checkout';
 import '../design/pages/checkout.css';
-import { extractRazorpayCheckout, loadRazorpay, preloadRazorpay } from '../payment/razorpay';
+import {
+  buildCashfreeVerifyPayload,
+  clearCashfreePending,
+  enrichCashfreeVerifyPayload,
+  extractCashfreeCheckout,
+  isCashfreePaymentVerified,
+  isRecordUuid,
+  openCashfreeCheckout,
+  preloadCashfree,
+  saveCashfreePending,
+  shouldVerifyCashfreePayment,
+} from '../payment/cashfree';
+import { pickPaymentData as pickRazorpayPayment, pickRazorpayKey, pickRazorpayOrderId } from '../payment/razorpay';
+import { openRazorpayCheckout, toRazorpayPaise } from '../payment/razorpayCheckout';
+import { buildRazorpayOrderVerifyPayload, isPrepaidVerifyAcceptable } from '../payment/orderVerify';
 
 const pickPaymentData = (orderResponse) => {
   const data = orderResponse?.data && typeof orderResponse.data === 'object' ? orderResponse.data : {};
@@ -54,7 +69,7 @@ const money = (value) => formatRupee(value, { decimals: 2 });
 export default function Checkout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { fetchCart } = useCart();
+  const { clearOrderedItems } = useCart();
   const [items, setItems] = useState([]);
   const [addresses, setAddresses] = useState([]);
   const [addressId, setAddressId] = useState('');
@@ -66,10 +81,10 @@ export default function Checkout() {
   const [placing, setPlacing] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [orderError, setOrderError] = useState('');
-  const [customer, setCustomer] = useState(null);
+  const { gateways, gateway, setGateway } = usePaymentGateways();
 
   useEffect(() => {
-    preloadRazorpay();
+    preloadCashfree();
   }, []);
 
   useEffect(() => {
@@ -105,7 +120,6 @@ export default function Checkout() {
       const profileRes = await user_profile();
       const profile =
         profileRes?.data && !Array.isArray(profileRes.data) ? profileRes.data : profileRes;
-      setCustomer(profile);
       const fromProfile = Array.isArray(profile?.addresses) ? profile.addresses : [];
       const addressRes = await getAddresses();
       const list = listAddresses(addressRes);
@@ -202,7 +216,7 @@ export default function Checkout() {
               { ignoreConsultationFee: true },
             )
           : null;
-        if (parsed) parsed.quotedCouponCode = String(appliedCoupon?.code || '').trim();
+        if (parsed && !parsed.quotedCouponCode) parsed.quotedCouponCode = String(appliedCoupon?.code || '').trim();
         setFeeConfig(parsed);
         setFeeError(parsed ? null : 'Unable to load order fees. Please try again.');
       } catch {
@@ -255,7 +269,8 @@ export default function Checkout() {
         items: orderedItems,
       }),
     );
-    await fetchCart();
+    // Order is confirmed (COD placed / payment verified): empty the ordered lines everywhere.
+    await clearOrderedItems(orderedItems);
     navigate('/order-confirmation', { replace: true });
   };
 
@@ -313,9 +328,75 @@ export default function Checkout() {
     }
   };
 
+  // Razorpay prepaid: order already created by POST order/ -> modal -> order/verify-payment/.
+  const payWithRazorpay = async (result) => {
+    const rzPayment = pickRazorpayPayment(result) || {};
+    const key = pickRazorpayKey(rzPayment);
+    const orderId = pickRazorpayOrderId(rzPayment);
+    if (total <= 0 && !orderId && isOrderSuccessful(result)) {
+      await finishOrder(result);
+      return;
+    }
+    if (!key || !orderId) {
+      const failMsg = !key ? 'Payment key missing from order response' : 'Razorpay order was not created';
+      setOrderError(failMsg);
+      showSuccessToast(failMsg, 'error');
+      return;
+    }
+    let profile = {};
+    try {
+      profile = (await user_profile())?.data || {};
+    } catch {
+      profile = {};
+    }
+    const outcome = await openRazorpayCheckout({
+      key,
+      orderId,
+      amountPaise: toRazorpayPaise(rzPayment.amount, total),
+      description: 'Order payment',
+      customerName: [profile.first_name, profile.last_name].filter(Boolean).join(' ').trim() || profile.full_name,
+      customerEmail: profile.email,
+      customerPhone: profile.phone_number || profile.mobile || profile.phone,
+    });
+    if (outcome.status === 'cancelled') {
+      showSuccessToast('Payment cancelled. You can try again anytime.', 'error');
+      return;
+    }
+    if (outcome.status === 'failed') {
+      setOrderError(outcome.message);
+      showSuccessToast(outcome.message, 'error');
+      return;
+    }
+    setVerifying(true);
+    try {
+      const rz = outcome.response || {};
+      const verify = await verifyOrderPayment(
+        buildRazorpayOrderVerifyPayload({ paymentId: rzPayment.payment_id, orderId, result: rz }),
+      );
+      if (isPrepaidVerifyAcceptable(verify, rz)) {
+        showSuccessToast('Payment Successful', 'success');
+        await finishOrder(verify?.data ? verify : result);
+      } else {
+        const failMsg = failMessage(verify, 'Payment verification failed. Some items may be out of stock.');
+        setOrderError(failMsg);
+        showSuccessToast(failMsg, 'error');
+      }
+    } finally {
+      setVerifying(false);
+    }
+  };
+
   const handleOnline = async () => {
     if (!addressId) {
       showSuccessToast('Please add a delivery address before checkout', 'error');
+      return;
+    }
+    if (!items.length) {
+      showSuccessToast('Cart is empty', 'error');
+      return;
+    }
+    if (items.some((item) => !(item.cart_item_id ?? item.id))) {
+      showSuccessToast('Cart item id missing. Please refresh cart.', 'error');
       return;
     }
     setPlacing(true);
@@ -324,6 +405,7 @@ export default function Checkout() {
       const result = await placeOrder(
         buildOrderPayload({
           mode: 'prepaid',
+          payment_gateway: gateway,
           delivery_address_id: addressId,
           cartItems: items,
           shipping_charges: shipping,
@@ -333,8 +415,8 @@ export default function Checkout() {
           coupon_code: appliedCoupon?.code,
         }),
       );
-      // Same as the app: prepaid place-order must return success: true.
-      if (!isOrderSuccessful(result) || result?.success === false || !(result?.success === true || result?.success === "true" || result?.success === 1)) {
+      // success: true with "Complete payment to confirm order" is a created Razorpay order.
+      if (!result?.success) {
         const failMsg = failMessage(result, 'Order failed');
         if (handleCouponFailure(failMsg)) return;
         setOrderError(failMsg);
@@ -342,90 +424,95 @@ export default function Checkout() {
         return;
       }
       const payment = pickPaymentData(result);
-      const { key, orderId } = extractRazorpayCheckout(result);
-      if (!key || !orderId) {
+      if (gateway === 'razorpay') {
+        await payWithRazorpay(result);
+        return;
+      }
+      const checkout = extractCashfreeCheckout(result);
+      if (!checkout.sessionId) {
+        if (total <= 0 && isOrderSuccessful(result)) {
+          await finishOrder(result);
+          return;
+        }
         if (import.meta.env.DEV) {
-          console.warn('[checkout] prepaid order response has no Razorpay key/order id', {
-            hasKey: Boolean(key),
-            hasOrderId: Boolean(orderId),
+          console.warn('[checkout] prepaid order response has no Cashfree payment session', {
+            hasSession: Boolean(checkout.sessionId),
+            hasOrderId: Boolean(checkout.orderId),
             keys: Object.keys(payment || {}),
           });
         }
-        const failMsg = !key
-          ? 'Online payment is not configured right now. Please choose Cash on Delivery or contact support.'
-          : 'We could not start the payment for this order. Please check My Orders before trying again.';
+        const failMsg =
+          'Online payment is not configured right now. Please choose Cash on Delivery or contact support.';
         setOrderError(failMsg);
         showSuccessToast(failMsg, 'error');
         return;
       }
-      const contactDigits = String(
-        customer?.phone_number ?? customer?.mobile ?? selectedAddress?.phone_number ?? selectedAddress?.phone ?? '',
-      ).replace(/\D/g, '');
-      const customerName = String(
-        customer?.first_name ?? customer?.full_name ?? selectedAddress?.full_name ?? selectedAddress?.name ?? 'AyurMuni Customer',
-      );
-      const customerEmail = String(customer?.email ?? selectedAddress?.email ?? 'customer@ayurmuni.com');
-      const amount = toRazorpayPaise(payment?.amount, total);
-      const Razorpay = await loadRazorpay();
-      await new Promise((resolve) => {
-        let settled = false;
-        const finish = () => {
-          if (settled) return;
-          settled = true;
-          resolve();
-        };
-        const rzp = new Razorpay({
-          key,
-          amount,
-          currency: payment?.currency || 'INR',
-          name: customerName,
-          description: 'Product Order Payment',
-          order_id: orderId,
-          prefill: {
-            name: customerName,
-            email: customerEmail,
-            contact: contactDigits ? `91${contactDigits.slice(-10)}` : '919999999999',
-          },
-          theme: { color: '#0D614E' },
-          handler: async (response) => {
-            setVerifying(true);
-            try {
-              const verify = await verifyOrderPayment({
-                payment_id: payment?.payment_id,
-                razorpay_order_id: response.razorpay_order_id || orderId,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-              });
-              if (isPrepaidVerifyAcceptable(verify, response)) {
-                showSuccessToast('Payment Successful', 'success');
-                await finishOrder(verify?.data ? verify : result);
-              } else {
-                const failMsg = failMessage(verify, 'Payment verification failed');
-                setOrderError(failMsg);
-                showSuccessToast(failMsg, 'error');
-              }
-            } finally {
-              setVerifying(false);
-              finish();
-            }
-          },
-          modal: {
-            ondismiss: () => {
-              if (settled) return;
-              showSuccessToast('Payment cancelled. You can try again anytime.', 'error');
-              finish();
-            },
-          },
-        });
-        rzp.on('payment.failed', () => {
-          if (settled) return;
-          showSuccessToast('Unable to complete payment. Please try again.', 'error');
-          finish();
-        });
-        rzp.open();
+      if (!checkout.paymentId && payment?.payment_id) checkout.paymentId = String(payment.payment_id);
+      saveCashfreePending({
+        kind: 'order',
+        paymentId: checkout.paymentId,
+        orderId: checkout.orderId,
+        recordId: String(result?.data?.id || result?.data?.order?.id || result?.data?.order_id || '').trim(),
+        gatewayPaymentId: checkout.gatewayPaymentId,
+        signature: checkout.signature,
+        sessionId: checkout.sessionId,
+        items,
+        placed: result,
       });
+      const cfResult = await openCashfreeCheckout({
+        sessionId: checkout.sessionId,
+        mode: checkout.mode,
+        paymentId: checkout.paymentId,
+      });
+      if (cfResult?.redirect) return;
+      if (!shouldVerifyCashfreePayment(cfResult)) {
+        clearCashfreePending();
+        showSuccessToast('Payment cancelled. You can try again anytime.', 'error');
+        return;
+      }
+      setVerifying(true);
+      try {
+        let payload = buildCashfreeVerifyPayload(checkout, cfResult);
+        if (!payload.gateway_payment_id) {
+          const recordIds = [...new Set(
+            [result?.data?.id, result?.data?.order?.id, result?.data?.order_id]
+              .map((value) => String(value || '').trim())
+              .filter((id) => isRecordUuid(id)),
+          )];
+          payload = await enrichCashfreeVerifyPayload(
+            payload,
+            recordIds.map((id) => () => getOrderById(id)),
+          );
+        }
+        if (!payload.gateway_payment_id) {
+          const failMsg =
+            'Cashfree has not returned the payment id yet. Wait a few seconds, then try the payment again.';
+          setOrderError(failMsg);
+          showSuccessToast(failMsg, 'error');
+          return;
+        }
+        const verify = await verifyOrderPayment(payload);
+        const completed = Boolean(cfResult?.paymentDetails);
+        if (isCashfreePaymentVerified(verify)) {
+          clearCashfreePending();
+          showSuccessToast('Payment Successful', 'success');
+          await finishOrder(verify?.data ? verify : result);
+        } else if (completed) {
+          const failMsg = failMessage(verify, 'Payment verification failed');
+          setOrderError(failMsg);
+          showSuccessToast(failMsg, 'error');
+        } else {
+          clearCashfreePending();
+          const failMsg = cfResult?.error?.message
+            ? String(cfResult.error.message)
+            : 'Payment cancelled. You can try again anytime.';
+          showSuccessToast(failMsg, 'error');
+        }
+      } finally {
+        setVerifying(false);
+      }
     } catch (error) {
-      const failMsg = formatOrderStockError(error?.message) || error?.message || 'Unable to start payment';
+      const failMsg = formatOrderStockError(error?.message) || error?.message || 'Something went wrong. Please try again.';
       if (handleCouponFailure(failMsg)) return;
       setOrderError(failMsg);
       showSuccessToast(failMsg, 'error');
@@ -435,6 +522,10 @@ export default function Checkout() {
   };
 
   const place = () => {
+    if (!feeConfig) {
+      showSuccessToast(feeError || 'Unable to load order fees. Please try again.', 'error');
+      return;
+    }
     if (!selectedAddress?.id) {
       showSuccessToast('Please add a delivery address before checkout', 'error');
       return;
@@ -572,6 +663,9 @@ export default function Checkout() {
                 </button>
               </div>
               {method === 'online' ? <p className="co-online-hint">{T.onlineHint}</p> : null}
+              {method === 'online' ? (
+                <PaymentGatewaySelector gateways={gateways} selected={gateway} onSelect={setGateway} disabled={busy} />
+              ) : null}
             </div>
 
             <div className="co-card">
@@ -683,7 +777,6 @@ export default function Checkout() {
           </aside>
         </div>
 
-        <Disclaimer />
       </section>
 
       {verifying ? (

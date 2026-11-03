@@ -13,12 +13,15 @@ import {
   doctorRating,
   doctorSpeciality,
   favoriteFromToggle,
+  getDoctorAvailabilityLabel,
   getDoctorId,
 } from '../consult/doctors';
+import '../design/components/doctor-availability.css';
 import { showSuccessToast } from '../config/key';
 import { requireAuth } from '../services/guestAuth';
 import { toggleFavDoctor } from '../services/consultService';
 import FavButton from './ui/FavButton';
+import DietitianBadge from './DietitianBadge';
 import { nameInitial } from '../utils/initials';
 
 /** T131 — compact premium card for the All doctors grid (same data + actions as SuggestedDoctorCard). */
@@ -34,6 +37,7 @@ export default function DoctorListCard({ item, fallbackSpeciality = 'Ayurveda' }
   const location = doctorLocation(item);
   const reviewCount = Number(item?.total_reviews || item?.review_count || 0);
   const verified = Boolean(item?.is_verified);
+  const availability = getDoctorAvailabilityLabel(item);
   const initial = nameInitial(name);
   const [fav, setFav] = useState(() => doctorFavorite(item));
 
@@ -103,6 +107,7 @@ export default function DoctorListCard({ item, fallbackSpeciality = 'Ayurveda' }
         </button>
         {verified ? <BadgeCheck size={15} aria-label="Verified" /> : null}
       </h3>
+      <DietitianBadge doctor={item} />
       {credential ? <p className="dl-card__cred">{credential}</p> : null}
 
       <ul className="dl-card__facts">
@@ -118,6 +123,9 @@ export default function DoctorListCard({ item, fallbackSpeciality = 'Ayurveda' }
             <span>{location}</span>
           </li>
         ) : null}
+        <li className={`dl-card__avail${availability === 'Available' ? ' is-on' : ''}`}>
+          <span>{availability}</span>
+        </li>
       </ul>
 
       <div className="dl-card__foot">

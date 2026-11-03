@@ -6,10 +6,18 @@ import {
 } from "../services/productService";
 import { mapCatalogProductItem, normalizeApiList } from "../home/catalog";
 
-const toQuery = (filter, page, pageSize) => {
+export const toQuery = (filter, page, pageSize) => {
   const query = { page_size: pageSize, page };
+  // User-chosen filters apply to both browse and search results (server-side).
+  if (filter.min_price != null) query.min_price = filter.min_price;
+  if (filter.max_price != null) query.max_price = filter.max_price;
+  if (filter.min_rating != null && filter.min_rating !== "") query.min_rating = filter.min_rating;
+  if (filter.dosha_type) query.dosha_type = filter.dosha_type;
+  if (filter.sort) query.sort = filter.sort;
   if (filter.search?.trim()) {
+    // Search spans the whole catalog (no category scoping); a chosen brand still applies, as in the app.
     query.search = filter.search.trim();
+    if (filter.brand_name_id) query.brand_name_id = filter.brand_name_id;
     return query;
   }
   [
@@ -53,6 +61,11 @@ export default function useCategoryProducts(
         brand_name_id: filter.brand_name_id ?? "",
         service_category_id: filter.service_category_id ?? "",
         search: filter.search ?? "",
+        min_price: filter.min_price ?? null,
+        max_price: filter.max_price ?? null,
+        min_rating: filter.min_rating ?? null,
+        dosha_type: filter.dosha_type ?? null,
+        sort: filter.sort ?? null,
         pageSize,
       }),
     [
@@ -63,6 +76,11 @@ export default function useCategoryProducts(
       filter.brand_name_id,
       filter.service_category_id,
       filter.search,
+      filter.min_price,
+      filter.max_price,
+      filter.min_rating,
+      filter.dosha_type,
+      filter.sort,
       pageSize,
     ],
   );

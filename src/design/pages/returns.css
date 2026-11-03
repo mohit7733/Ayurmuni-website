@@ -1,0 +1,414 @@
+/* Returns (rt-*) - request form and return details. Built on the shared detail.css (dx-*) system. */
+
+.rt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rt-choice {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--am-line);
+  border-radius: var(--am-radius-md);
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.rt-choice:hover:not([disabled]):not(.is-disabled) {
+  border-color: var(--dx-green);
+}
+.rt-choice:focus-visible {
+  outline: 2px solid var(--dx-green);
+  outline-offset: 2px;
+}
+.rt-choice.is-on {
+  border-color: var(--dx-green);
+  background: var(--am-green-50);
+}
+.rt-choice[disabled] {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+.rt-choice__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.rt-choice__copy strong {
+  color: var(--am-text);
+  font-size: 13.5px;
+  font-weight: var(--am-weight-semibold);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.rt-choice__copy small {
+  color: var(--am-text-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.rt-choice__copy .is-ok {
+  color: var(--am-success, #047857);
+}
+.rt-choice__copy .is-warn {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 4px;
+  color: var(--am-warning);
+}
+.rt-choice__copy .is-warn svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.rt-mark {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--am-line);
+  border-radius: 50%;
+  background: #fff;
+  color: #fff;
+}
+.rt-mark--box {
+  border-radius: 6px;
+}
+.rt-choice.is-on .rt-mark {
+  border-color: var(--dx-green);
+  background: var(--dx-green);
+}
+.rt-choice:not(.rt-choice--box).is-on .rt-mark::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.rt-item {
+  grid-template-columns: minmax(0, 1fr) auto;
+  cursor: default;
+}
+.rt-item.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+.rt-item__hit {
+  display: grid;
+  grid-template-columns: auto 48px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.rt-item__hit:disabled {
+  cursor: not-allowed;
+}
+.rt-item__hit:focus-visible {
+  outline: 2px solid var(--dx-green);
+  outline-offset: 4px;
+  border-radius: 6px;
+}
+.rt-item__media {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  overflow: hidden;
+  border: 1px solid var(--dx-tile-line);
+  border-radius: 10px;
+  background: #f6f4ee;
+  color: var(--dx-green);
+}
+.rt-item__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rt-qty {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--am-line);
+  border-radius: 999px;
+  background: #fff;
+}
+.rt-qty button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  background: transparent;
+  color: var(--dx-green);
+  cursor: pointer;
+}
+.rt-qty button:disabled {
+  color: var(--am-text-subtle);
+  cursor: not-allowed;
+}
+.rt-qty span {
+  min-width: 22px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: var(--am-weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.rt-head-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--dx-green);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: var(--am-weight-semibold);
+  cursor: pointer;
+}
+
+.rt-media {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 8px;
+}
+.rt-media__tile {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid var(--am-line);
+  border-radius: var(--am-radius-md);
+  background: #f6f4ee;
+}
+.rt-media__tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.rt-media__remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.72);
+  color: #fff;
+  cursor: pointer;
+}
+.rt-media__add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  aspect-ratio: 1;
+  border: 1px dashed var(--dx-green);
+  border-radius: var(--am-radius-md);
+  background: var(--am-green-50);
+  color: var(--dx-green);
+  font: inherit;
+  font-size: 12px;
+  font-weight: var(--am-weight-semibold);
+  cursor: pointer;
+}
+.rt-file {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.rt-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.rt-fields > .is-wide {
+  grid-column: 1 / -1;
+}
+
+.rt-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0;
+}
+.rt-total small {
+  color: var(--am-text-muted);
+  font-size: 12px;
+}
+.rt-total strong {
+  color: var(--dx-ink);
+  font-family: var(--am-font-display);
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+}
+
+.rt-refund {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.rt-refund__amount {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.rt-refund__amount strong {
+  color: var(--dx-ink);
+  font-family: var(--am-font-display);
+  font-size: 26px;
+  font-variant-numeric: tabular-nums;
+}
+.rt-refund__amount strong.is-struck {
+  color: var(--am-text-muted);
+  text-decoration: line-through;
+}
+.rt-refund__amount small {
+  display: block;
+  color: var(--am-text-muted);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.rt-stages {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rt-stages li {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 8px;
+  border-top: 3px solid var(--am-line);
+  color: var(--am-text-muted);
+  font-size: 11.5px;
+  line-height: 1.3;
+}
+.rt-stages li.is-on {
+  border-top-color: var(--dx-green);
+  color: var(--dx-ink);
+  font-weight: var(--am-weight-semibold);
+}
+
+.rt-note {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--am-radius-md);
+  background: var(--am-green-50);
+  color: var(--am-text);
+  font-size: 13px;
+}
+.rt-note small {
+  color: var(--am-text-muted);
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.rt-note strong {
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+.rt-photos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 8px;
+}
+.rt-photos a {
+  display: block;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid var(--am-line);
+  border-radius: var(--am-radius-md);
+}
+.rt-photos img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Return rows on Order details / Order history (reuse or-row look) */
+.rt-order-return {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--am-line);
+  border-radius: var(--am-radius-md);
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.rt-order-return:hover {
+  border-color: var(--dx-green);
+}
+.rt-order-return span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.rt-order-return small {
+  color: var(--am-text-muted);
+  font-size: 12px;
+}
+
+@media (max-width: 479px) {
+  .rt-item {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .rt-item__hit {
+    grid-template-columns: auto 44px minmax(0, 1fr);
+  }
+  .rt-item .rt-qty {
+    justify-self: start;
+    margin-left: 64px;
+  }
+  .rt-item__media {
+    width: 44px;
+    height: 44px;
+  }
+  .rt-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .rt-refund__amount strong {
+    font-size: 22px;
+  }
+}

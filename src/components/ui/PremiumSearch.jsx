@@ -129,6 +129,7 @@ export default function PremiumSearch({
           aria-label={clearLabel}
           onClick={() => {
             onChange?.('');
+            onSubmit?.('');
             inputRef.current?.focus();
           }}
         >

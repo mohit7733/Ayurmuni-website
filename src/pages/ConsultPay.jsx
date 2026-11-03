@@ -1,11 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { Loader2, Star } from "lucide-react";
 import AppShell from "../components/AppShell";
 import CouponApplyCard from "../components/CouponApplyCard";
 import PageHeader from "../components/PageHeader";
+import DietitianBadge from "../components/DietitianBadge";
 import { formatRupee } from "../home/catalog";
 import { useCheckoutCoupons } from "../hooks/useCheckoutCoupons";
+import useConsultPlans from "../hooks/useConsultPlans";
+import usePaymentGateways from "../hooks/usePaymentGateways";
+import ConsultPlanPicker from "../components/ConsultPlanPicker";
+import PaymentGatewaySelector from "../components/PaymentGatewaySelector";
 import {
   calculateFeeBreakdown,
   feeRateLabel,
@@ -22,12 +27,26 @@ import {
   doctorQualification,
   formatSlotTime,
   resolveDoctorSpecializations,
-  toRazorpayPaise,
 } from "../consult/doctors";
 import { formatDoctorDisplayName } from "../consult/appointmentUtils";
 import {
+  getConsultBenefit,
+  isApiSuccess,
+  isBookingAlreadyPaid,
+  isDuplicateGatewayOrder,
+  pickConsultPaymentData,
+  pickConsultRazorpayKey,
+  pickConsultRazorpayOrderId,
+  planRemainingLabel,
+  readAppointmentId,
+  readPlanFunding,
+} from "../consult/consultPayment";
+import { hasGatewayOrder, toApiPaymentGateway } from "../payment/gateways";
+import { openRazorpayCheckout, toRazorpayPaise } from "../payment/razorpayCheckout";
+import {
   createConsultationPayment,
   getConsultationFeeQuote,
+  getConsultationPayment,
   retryConsultationPayment,
   verifyConsultationPayment,
 } from "../services/consultService";
@@ -39,33 +58,28 @@ import {
 import { requireAuth } from "../services/guestAuth";
 import { showSuccessToast } from "../config/key";
 import {
+  buildCashfreeVerifyPayload,
+  clearCashfreePending,
+  enrichCashfreeVerifyPayload,
+  extractCashfreeCheckout,
+  isCashfreePaymentVerified,
+  isRecordUuid,
+  openCashfreeCheckout,
+  preloadCashfree,
+  saveCashfreePending,
+  shouldVerifyCashfreePayment,
+} from "../payment/cashfree";
+import {
   Button,
-  Disclaimer,
   EmptyState,
   StepIndicator,
 } from "../components/ui";
 import { BOOKING_COPY as T } from "../content/booking";
-import { extractRazorpayCheckout } from "../payment/razorpay";
 import { nameInitial } from '../utils/initials';
 import "../design/pages/booking.css";
+import "../design/components/consult-plan.css";
 
-const loadRazorpay = () =>
-  new Promise((resolve, reject) => {
-    if (window.Razorpay) {
-      resolve(window.Razorpay);
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.onload = () => resolve(window.Razorpay);
-    script.onerror = () => reject(new Error("Unable to load Razorpay"));
-    document.body.appendChild(script);
-  });
 
-const isApiSuccess = (response) =>
-  response?.success === true ||
-  response?.success === "true" ||
-  response?.success === 1;
 
 const isPendingPayment = (data) => {
   const status = String(
@@ -92,7 +106,7 @@ const readPending = (slotId) => {
   }
 };
 
-const savePending = (slotId, appointmentId, paymentId) => {
+const savePending = (slotId, appointmentId, paymentId, gateway) => {
   if (!slotId || !appointmentId) return;
   sessionStorage.setItem(
     CONSULT_PENDING_PAYMENT_KEY,
@@ -100,6 +114,7 @@ const savePending = (slotId, appointmentId, paymentId) => {
       slot_id: String(slotId),
       appointment_id: String(appointmentId),
       ...(paymentId ? { payment_id: String(paymentId) } : {}),
+      ...(gateway ? { gateway } : {}),
     }),
   );
 };
@@ -146,6 +161,12 @@ export default function ConsultPay() {
   const [paying, setPaying] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const startedRef = useRef(false);
+  const { gateways, gateway, setGateway } = usePaymentGateways();
+  const [planSheetOpen, setPlanSheetOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [planPayable, setPlanPayable] = useState(null);
+  const [planQuoteLoading, setPlanQuoteLoading] = useState(false);
+  const planPromptShownRef = useRef(false);
 
   const slotAmount = Number(slot.amount || doctor.consultation_fee || 0);
 
@@ -235,7 +256,70 @@ export default function ConsultPay() {
     quotedCouponCode,
   ]);
 
-  const finish = (result) => {
+  const { plans: activePlans, eligibility: planEligibility, usablePlans } = useConsultPlans({
+    doctorId: doctorId || doctor?.doctor_id || doctor?.id,
+    slotId: slot?.id,
+  });
+
+  // Offer the customer's active plans once, like the app's Confirm Booking screen.
+  useEffect(() => {
+    if (activePlans.length > 0 && !planPromptShownRef.current) {
+      planPromptShownRef.current = true;
+      setPlanSheetOpen(true);
+    }
+  }, [activePlans]);
+
+  const handleSelectPlan = async (plan) => {
+    setPlanSheetOpen(false);
+    if (!slot?.id) return;
+    setSelectedPlan(plan);
+    const cached = planEligibility[plan.id];
+    if (cached && !cached.loading && cached.canFund) {
+      setPlanPayable(cached.payable ?? 0);
+      return;
+    }
+    setPlanQuoteLoading(true);
+    try {
+      const response = await getConsultationFeeQuote(slot.id, undefined, plan.id);
+      const funding = readPlanFunding(response);
+      if (!funding.canFund) {
+        showSuccessToast(funding.reason, "error");
+        setSelectedPlan(null);
+        setPlanPayable(null);
+        return;
+      }
+      setPlanPayable(funding.payable ?? 0);
+    } catch (error) {
+      showSuccessToast(error?.message || "Unable to apply plan", "error");
+      setSelectedPlan(null);
+      setPlanPayable(null);
+    } finally {
+      setPlanQuoteLoading(false);
+    }
+  };
+
+  const clearSelectedPlan = () => {
+    setSelectedPlan(null);
+    setPlanPayable(null);
+  };
+
+  const usingPlan = Boolean(selectedPlan) && planPayable != null;
+  const totalAmount = usingPlan ? planPayable : feeBreakdown.total;
+  const planCoveredAmount = usingPlan
+    ? Math.max(0, roundMoney(feeBreakdown.total - planPayable))
+    : 0;
+  const planIsFree = usingPlan && planPayable === 0;
+  const selectedBenefit = selectedPlan ? getConsultBenefit(selectedPlan) : null;
+  const selectedPlanRemaining = !selectedBenefit
+    ? ""
+    : planRemainingLabel(selectedPlan);
+
+  useEffect(() => {
+    preloadCashfree();
+  }, []);
+
+  const finish = (result, message = "Payment Successful") => {
+    clearCashfreePending();
     clearPending(slot.id);
     sessionStorage.removeItem(CONSULT_PAY_KEY);
     const paid = result?.data || result || {};
@@ -260,7 +344,7 @@ export default function ConsultPay() {
           paid.amount ||
           paid.consultation_fee ||
           paid.total_amount ||
-          feeBreakdown.total,
+          totalAmount,
         consultation_mode:
           paid.consultation_mode || paid.mode || "Video consultation",
         hospital_name:
@@ -271,7 +355,7 @@ export default function ConsultPay() {
           paid.appointment_status || paid.status || "CONFIRMED",
       }),
     );
-    showSuccessToast("Payment Successful", "success");
+    showSuccessToast(message || "Payment Successful", "success");
     navigate("/consult/booking-confirm", { replace: true });
   };
 
@@ -280,24 +364,98 @@ export default function ConsultPay() {
     startedRef.current = true;
     setPaying(true);
     try {
-      const pending = readPending(slot.id);
+      const planPurchaseId = usingPlan ? selectedPlan?.id : undefined;
+      const apiGateway = toApiPaymentGateway(gateway);
+      const pending = planPurchaseId ? null : readPending(slot.id);
       let paymentResponse;
-      if (pending?.appointment_id) {
-        paymentResponse = await retryConsultationPayment(
-          pending.appointment_id,
-        );
-      } else {
+      if (planPurchaseId) {
+        // Plan-funded booking: package_purchase_id; payment_gateway only when a balance is still due.
         paymentResponse = await createConsultationPayment({
           slot_id: slot.id,
+          package_purchase_id: planPurchaseId,
           concern: booking.concern,
           medical_record_ids: booking.medical_record_ids,
-          coupon_code: appliedCoupon?.code,
+          ...(planPayable > 0 ? { payment_gateway: apiGateway } : {}),
         });
+        if (!isApiSuccess(paymentResponse)) {
+          showSuccessToast(
+            paymentResponse?.message || "Unable to book with this plan",
+            "error",
+          );
+          return;
+        }
+        // Plan covers the consultation - appointment is confirmed, no gateway.
+        if (!hasGatewayOrder(paymentResponse?.data)) {
+          finish(
+            {
+              ...paymentResponse,
+              data: {
+                ...(paymentResponse?.data || {}),
+                funded_by_package: paymentResponse?.data?.funded_by_package !== false,
+              },
+            },
+            paymentResponse?.message || "Appointment confirmed with your plan",
+          );
+          return;
+        }
+      } else {
+        // Retry only a pending order created for the SAME gateway, otherwise book fresh.
+        const canRetry =
+          Boolean(pending?.appointment_id) &&
+          (!pending.gateway || pending.gateway === apiGateway);
+        if (canRetry) {
+          try {
+            paymentResponse = await retryConsultationPayment(
+              pending.appointment_id,
+              apiGateway,
+            );
+          } catch {
+            paymentResponse = null;
+          }
+          const retryData = pickConsultPaymentData(paymentResponse);
+          const retryGateway = String(
+            retryData?.payment_gateway ?? retryData?.gateway ?? "",
+          ).toLowerCase();
+          if (
+            !isApiSuccess(paymentResponse) ||
+            (retryGateway && retryGateway !== apiGateway)
+          ) {
+            clearPending(slot.id);
+            paymentResponse = null;
+          }
+        } else if (pending?.appointment_id) {
+          clearPending(slot.id);
+        }
+        if (!paymentResponse) {
+          paymentResponse = await createConsultationPayment({
+            slot_id: slot.id,
+            concern: booking.concern,
+            medical_record_ids: booking.medical_record_ids,
+            coupon_code: appliedCoupon?.code,
+            payment_gateway: apiGateway,
+          });
+          const duplicateAppointmentId = isDuplicateGatewayOrder(paymentResponse)
+            ? readAppointmentId(pickConsultPaymentData(paymentResponse)) ||
+              readAppointmentId(paymentResponse?.data?.errors)
+            : "";
+          if (duplicateAppointmentId) {
+            try {
+              const retryResponse = await retryConsultationPayment(
+                duplicateAppointmentId,
+                apiGateway,
+              );
+              if (isApiSuccess(retryResponse)) paymentResponse = retryResponse;
+            } catch {
+              // keep the original (duplicate) response
+            }
+          }
+        }
       }
       if (!isApiSuccess(paymentResponse)) {
-        if (pending?.appointment_id) clearPending(slot.id);
         showSuccessToast(
-          paymentResponse?.message || "Unable to start payment",
+          isDuplicateGatewayOrder(paymentResponse)
+            ? "A payment for this slot is already in progress. Please try again in a minute or choose another payment method."
+            : paymentResponse?.message || "Unable to start payment",
           "error",
         );
         return;
@@ -310,95 +468,195 @@ export default function ConsultPay() {
           pending?.appointment_id ||
           "",
       ).trim();
-      if (appointmentId)
-        savePending(slot.id, appointmentId, payment.payment_id);
+      const razorpayReady =
+        apiGateway === "razorpay" &&
+        pickConsultRazorpayKey(pickConsultPaymentData(paymentResponse)) &&
+        pickConsultRazorpayOrderId(pickConsultPaymentData(paymentResponse));
       if (
         appointmentId &&
         !pending?.appointment_id &&
-        isPendingPayment(payment)
+        isPendingPayment(payment) &&
+        !razorpayReady
       ) {
         try {
-          const retry = await retryConsultationPayment(appointmentId);
+          const retry = await retryConsultationPayment(appointmentId, apiGateway);
           if (isApiSuccess(retry) && retry?.data) {
-            payment = { ...payment, ...retry.data };
+            payment = {
+              ...payment,
+              ...retry.data,
+              summary: retry.data?.summary ?? payment?.summary,
+              configurations: retry.data?.configurations ?? payment?.configurations,
+            };
           }
         } catch {
           // keep original payload
         }
       }
-      const payable = consultPayableRupees(payment, feeBreakdown.total);
-      // Look for key / order id anywhere in the response (nested shapes too);
-      // falls back to VITE_RAZORPAY_KEY_ID for the key.
-      // Use the merged payload (retry may issue a fresh order), like the app.
-      const { key, orderId } = extractRazorpayCheckout(payment);
-      const amount = toRazorpayPaise(
-        payment.amount ?? payment?.summary?.total_payable_amount,
-        payable,
-      );
-      if (!key || !orderId) {
-        // Like the app: never confirm without Razorpay + verify-payment.
+      const paymentData = pickConsultPaymentData({
+        ...paymentResponse,
+        data: { ...(paymentResponse?.data || {}), ...payment },
+      });
+      const payable = consultPayableRupees(payment, totalAmount);
+      const checkout = extractCashfreeCheckout({
+        ...paymentResponse,
+        data: { ...(paymentResponse?.data || {}), ...payment },
+      });
+      if (!checkout.paymentId && payment.payment_id) {
+        checkout.paymentId = String(payment.payment_id);
+      }
+      // Backend already confirmed the booking (auto-applied package / zero payable) - no gateway.
+      if (
+        !checkout.sessionId &&
+        (payable <= 0 ||
+          (!hasGatewayOrder(paymentData) && isBookingAlreadyPaid(paymentData)))
+      ) {
+        finish(paymentResponse, paymentResponse?.message);
+        return;
+      }
+      if (appointmentId) {
+        savePending(slot.id, appointmentId, payment.payment_id, apiGateway);
+      }
+
+      if (apiGateway === "razorpay") {
+        const razorpayKey = pickConsultRazorpayKey(paymentData);
+        const razorpayOrderId = pickConsultRazorpayOrderId(paymentData);
+        if (!razorpayKey || !razorpayOrderId) {
+          showSuccessToast(
+            !razorpayKey
+              ? "Payment key missing from order response"
+              : "Razorpay order was not created",
+            "error",
+          );
+          return;
+        }
+        const outcome = await openRazorpayCheckout({
+          key: razorpayKey,
+          orderId: razorpayOrderId,
+          amountPaise: toRazorpayPaise(
+            paymentData?.amount ?? paymentData?.summary?.total_payable_amount,
+            payable,
+          ),
+          description: "Consultation payment",
+          customerName: patientName(activePatient),
+          customerEmail: activePatient?.email,
+          customerPhone: activePatient?.phone_number || activePatient?.phone,
+        });
+        if (outcome.status === "cancelled") {
+          showSuccessToast(
+            "Payment cancelled. You can try again anytime.",
+            "error",
+          );
+          return;
+        }
+        if (outcome.status === "failed") {
+          showSuccessToast(outcome.message, "error");
+          return;
+        }
+        setVerifying(true);
+        try {
+          const rz = outcome.response || {};
+          const verify = await verifyConsultationPayment({
+            payment_id: String(paymentData?.payment_id ?? ""),
+            gateway_order_id: String(rz.razorpay_order_id || razorpayOrderId),
+            gateway_payment_id: String(rz.razorpay_payment_id ?? ""),
+            gateway_signature: String(rz.razorpay_signature ?? ""),
+            payment_gateway: "razorpay",
+          });
+          if (isApiSuccess(verify)) {
+            finish(verify?.data ? verify : paymentResponse);
+          } else {
+            showSuccessToast(
+              verify?.message || "Payment verification failed",
+              "error",
+            );
+          }
+        } finally {
+          setVerifying(false);
+        }
+        return;
+      }
+
+      if (!checkout.sessionId) {
+        showSuccessToast("Payment details missing. Please try again.", "error");
+        return;
+      }
+      saveCashfreePending({
+        kind: "consultation",
+        paymentId: checkout.paymentId,
+        orderId: checkout.orderId,
+        gatewayPaymentId: checkout.gatewayPaymentId,
+        signature: checkout.signature,
+        sessionId: checkout.sessionId,
+        confirmBase: {
+          doctor_name: doctorDisplayName(doctor),
+          doctor_image: doctorImage(doctor),
+          date: booking.date,
+          start_time: slot.start_time,
+          end_time: slot.end_time,
+          concern: booking.concern,
+          doctor,
+          slot,
+          patient: {
+            patient_name: patientName(activePatient),
+            phone_number: activePatient?.phone_number || activePatient?.phone,
+          },
+          patient_name: patientName(activePatient),
+          amount: payable,
+          consultation_mode: "Video consultation",
+          hospital_name: doctor?.hospital_name || doctor?.clinic_name,
+          doctor_specialization: resolveDoctorSpecializations(doctor),
+          appointment_status: "CONFIRMED",
+        },
+      });
+      const cfResult = await openCashfreeCheckout({
+        sessionId: checkout.sessionId,
+        mode: checkout.mode,
+        paymentId: checkout.paymentId,
+      });
+      if (cfResult?.redirect) return;
+      if (!shouldVerifyCashfreePayment(cfResult)) {
+        clearCashfreePending();
         showSuccessToast(
-          "Payment gateway could not be started (missing Razorpay order). Please try again.",
+          "Payment cancelled. You can try again anytime.",
           "error",
         );
         return;
       }
-      const Razorpay = await loadRazorpay();
-      await new Promise((resolve) => {
-        const rzp = new Razorpay({
-          key,
-          amount,
-          currency: payment.currency || "INR",
-          name: "Ayurmuni",
-          description: `Consult ${doctorDisplayName(doctor)}`,
-          order_id: orderId,
-          prefill: {
-            name: patientName(activePatient),
-            contact: String(
-              activePatient?.phone_number || activePatient?.phone || "",
-            ).replace(/\D/g, ""),
-          },
-          theme: { color: "#0D614E" },
-          handler: async (response) => {
-            setVerifying(true);
-            try {
-              const verify = await verifyConsultationPayment({
-                payment_id: payment.payment_id,
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-              });
-              if (!isApiSuccess(verify)) {
-                showSuccessToast(
-                  verify?.message || "Payment verification failed",
-                  "error",
-                );
-              } else {
-                finish(verify?.data ? verify : paymentResponse);
-              }
-            } finally {
-              setVerifying(false);
-              resolve();
-            }
-          },
-          modal: {
-            ondismiss: () => {
-              showSuccessToast(
-                "Payment cancelled. You can try again anytime.",
-                "error",
-              );
-              resolve();
-            },
-          },
-        });
-        rzp.on?.("payment.failed", (resp) => {
+      setVerifying(true);
+      try {
+        let payload = buildCashfreeVerifyPayload(checkout, cfResult);
+        if (!payload.gateway_payment_id && isRecordUuid(checkout.paymentId)) {
+          payload = await enrichCashfreeVerifyPayload(payload, [
+            () => getConsultationPayment(checkout.paymentId),
+          ]);
+        }
+        if (!payload.gateway_payment_id) {
           showSuccessToast(
-            resp?.error?.description || "Payment failed. Please try again.",
+            "Cashfree has not returned the payment id yet. Wait a few seconds, then confirm the booking again.",
             "error",
           );
-        });
-        rzp.open();
-      });
+          return;
+        }
+        const verify = await verifyConsultationPayment(payload);
+        if (isCashfreePaymentVerified(verify)) {
+          finish(verify?.data ? verify : paymentResponse);
+        } else if (cfResult?.paymentDetails) {
+          showSuccessToast(
+            verify?.message || "Payment verification failed",
+            "error",
+          );
+        } else {
+          clearCashfreePending();
+          showSuccessToast(
+            cfResult?.error?.message ||
+              verify?.message ||
+              "Payment cancelled. You can try again anytime.",
+            "error",
+          );
+        }
+      } finally {
+        setVerifying(false);
+      }
     } catch (error) {
       showSuccessToast(error?.message || "Unable to start payment", "error");
     } finally {
@@ -406,7 +664,6 @@ export default function ConsultPay() {
       startedRef.current = false;
     }
   };
-
   const changePatient = async (patient) => {
     if (!patient?.id || String(patient.id) === String(activePatient?.id))
       return;
@@ -446,7 +703,9 @@ export default function ConsultPay() {
   const image = doctorImage(doctor);
   const name = formatDoctorDisplayName(doctorDisplayName(doctor));
   const records = booking.medical_records || [];
-  const payDisabled = paying || feeQuoteLoading || !feeQuote;
+  const payDisabled =
+    paying || planQuoteLoading || (usingPlan ? false : feeQuoteLoading || !feeQuote);
+  const priceLoading = usingPlan ? planQuoteLoading : feeQuoteLoading || planQuoteLoading;
   const whenLabel = [
     formatDisplayDate(booking.date),
     formatSlotTime(slot.start_time) || slot.displayTime,
@@ -477,6 +736,7 @@ export default function ConsultPay() {
               </span>
               <div className="bk-doctor__copy">
                 <strong>{name}</strong>
+                <DietitianBadge doctor={doctor} />
                 {doctorQualification(doctor) ? (
                   <p>{doctorQualification(doctor)}</p>
                 ) : null}
@@ -566,34 +826,107 @@ export default function ConsultPay() {
             <div className="bk-card bk-payment-hero">
               <div className="bk-payment-hero__head">
                 <span className="bk-payment-tag">Total payable</span>
-                <strong>{money(feeBreakdown.total)}</strong>
+                <strong>{money(totalAmount)}</strong>
               </div>
-              <p>Secure payment at checkout</p>
+              <p>{planIsFree ? `Paid via ${selectedPlan?.name || "plan"}` : "Secure payment at checkout"}</p>
             </div>
 
-            <div className="bk-card">
-              <CouponApplyCard
-                coupons={coupons}
-                eligibleCoupons={eligibleCoupons}
-                cartAmount={consultationFee}
-                loading={couponsLoading}
-                applied={appliedCoupon}
-                discount={feeBreakdown.discount || couponDiscount}
-                payable={feeBreakdown.total}
-                error={couponError}
-                checkoutScope="consultation"
-                onApply={applyCode}
-                onRemove={removeCoupon}
-              />
-            </div>
+            {activePlans.length > 0 ? (
+              selectedPlan ? (
+                <div className="cp-banner cp-banner--on">
+                  <Star size={16} aria-hidden="true" />
+                  <span className="cp-banner__copy">
+                    <small>Booking with your plan</small>
+                    <strong>{selectedPlan.name}</strong>
+                    <small>
+                      {planQuoteLoading
+                        ? "Checking plan benefit..."
+                        : [planIsFree ? "No payment needed" : null, selectedPlanRemaining]
+                            .filter(Boolean)
+                            .join(" · ")}
+                    </small>
+                  </span>
+                  <span className="cp-banner__actions">
+                    <Button size="sm" variant="secondary" disabled={paying} onClick={() => setPlanSheetOpen(true)}>
+                      Change
+                    </Button>
+                    <Button size="sm" variant="ghost" disabled={paying} onClick={clearSelectedPlan}>
+                      Remove
+                    </Button>
+                  </span>
+                </div>
+              ) : (
+                <button type="button" className="cp-banner" onClick={() => setPlanSheetOpen(true)}>
+                  <Star size={16} aria-hidden="true" />
+                  <span className="cp-banner__copy">
+                    <strong>
+                      You have {activePlans.length} active plan{activePlans.length > 1 ? "s" : ""}
+                    </strong>
+                    <small>
+                      {usablePlans.length > 0
+                        ? "Book this consultation without paying"
+                        : "Consultations in your plans are used up"}
+                    </small>
+                  </span>
+                  <strong>{usablePlans.length > 0 ? "Use plan" : "View"}</strong>
+                </button>
+              )
+            ) : null}
+
+            {usingPlan ? null : (
+              <div className="bk-card">
+                <CouponApplyCard
+                  coupons={coupons}
+                  eligibleCoupons={eligibleCoupons}
+                  cartAmount={consultationFee}
+                  loading={couponsLoading}
+                  applied={appliedCoupon}
+                  discount={feeBreakdown.discount || couponDiscount}
+                  payable={totalAmount}
+                  error={couponError}
+                  checkoutScope="consultation"
+                  onApply={applyCode}
+                  onRemove={removeCoupon}
+                />
+              </div>
+            )}
+
+            {!planIsFree && gateways.length > 1 ? (
+              <div className="bk-card">
+                <PaymentGatewaySelector
+                  gateways={gateways}
+                  selected={gateway}
+                  onSelect={setGateway}
+                  disabled={paying}
+                />
+              </div>
+            ) : null}
 
             <section className="bk-card" aria-labelledby="bk-bill-title">
               <div className="bk-card__head">
                 <h2 id="bk-bill-title">{T.billTitle}</h2>
               </div>
-              {feeQuoteLoading ? (
+              {priceLoading ? (
                 <p className="bk-card__hint">{T.calculating}</p>
               ) : null}
+              {usingPlan ? (
+                <dl className="bk-bill">
+                  <div className="bk-bill__row">
+                    <dt>Consultation total</dt>
+                    <dd>{money(feeBreakdown.total)}</dd>
+                  </div>
+                  {planCoveredAmount > 0 ? (
+                    <div className="bk-bill__row is-discount">
+                      <dt>Covered by plan</dt>
+                      <dd>- {money(planCoveredAmount)}</dd>
+                    </div>
+                  ) : null}
+                  <div className="bk-bill__row is-total">
+                    <dt>{T.toPay}</dt>
+                    <dd>{money(totalAmount)}</dd>
+                  </div>
+                </dl>
+              ) : (
               <dl className="bk-bill">
                 <div className="bk-bill__row">
                   <dt>{T.consultation}</dt>
@@ -628,6 +961,7 @@ export default function ConsultPay() {
                   <dd>{money(feeBreakdown.total)}</dd>
                 </div>
               </dl>
+              )}
             </section>
 
             <div className="bk-aside__cta">
@@ -642,7 +976,6 @@ export default function ConsultPay() {
                 {paying ? T.starting : T.payNow}
               </Button>
             </div>
-            <Disclaimer />
           </aside>
         </div>
       </div>
@@ -653,7 +986,7 @@ export default function ConsultPay() {
         aria-label={T.payNow}
       >
         <div className="bk-sticky__meta">
-          <strong>{money(feeBreakdown.total)}</strong>
+          <strong>{money(totalAmount)}</strong>
           <small>{T.toPay}</small>
         </div>
         <Button
@@ -665,6 +998,19 @@ export default function ConsultPay() {
           {paying ? T.starting : T.payNow}
         </Button>
       </div>
+
+      <ConsultPlanPicker
+        open={planSheetOpen}
+        plans={activePlans}
+        eligibility={planEligibility}
+        selectedId={selectedPlan?.id}
+        onSelect={handleSelectPlan}
+        onPayNormally={() => {
+          setPlanSheetOpen(false);
+          clearSelectedPlan();
+        }}
+        onClose={() => setPlanSheetOpen(false)}
+      />
 
       {verifying ? (
         <div

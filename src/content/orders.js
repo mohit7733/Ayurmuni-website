@@ -79,6 +79,10 @@ export const ORDERS_COPY = {
   returnTitle: 'Return order',
   returnText:
     'Return and exchange requests are handled by our support team. Contact us and we will help you with the next steps.',
+  returnsTab: 'Returns',
+  returnsSearchPlaceholder: 'Search returns',
+  returnsEmptyTitle: 'No returns yet',
+  returnsEmptyText: 'Return requests you raise for delivered orders will appear here.',
   requestedTab: 'Requested',
   ordersTab: 'My orders',
   requestedEmptyTitle: 'No prescription requests',

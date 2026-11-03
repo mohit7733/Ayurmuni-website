@@ -51,15 +51,6 @@ export function ActiveDietCard({ plan }) {
         {plan.subtitle ? <p className="am-diet-active__sub">{plan.subtitle}</p> : null}
       </div>
       <DayProgress plan={plan} />
-      {plan.nextMeal?.title ? (
-        <div className="am-diet-active__next">
-          <span className="am-diet-active__next-label">
-            Next{plan.nextMeal.type ? ` · ${plan.nextMeal.type.toLowerCase()}` : ''}
-            {plan.nextMeal.time ? ` · ${plan.nextMeal.time}` : ''}
-          </span>
-          <span className="am-diet-active__next-meal">{plan.nextMeal.title}</span>
-        </div>
-      ) : null}
       <Link to={href} className="am-diet-active__cta">
         View plan <ArrowRight size={16} aria-hidden />
       </Link>

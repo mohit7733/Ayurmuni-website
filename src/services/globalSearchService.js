@@ -1,5 +1,5 @@
 /** Port of the app's services/GlobalSearchService.ts (same endpoints, params and parsing). */
-import { apiClient } from "./apiClient";
+import { apiClient, invalidateApiCache } from "./apiClient";
 
 import { formatRupee } from "../home/catalog";
 
@@ -249,7 +249,8 @@ const anySearchSectionHasMore = (response) => {
   const root = response?.data ?? response ?? {};
   return sectionHasMore(root, "products") || sectionHasMore(root, "medicines") || sectionHasMore(root, "doctors") || sectionHasMore(root, "brands") || sectionHasMore(root, "yoga_sessions") || sectionHasMore(root, "diet_plans") || sectionHasMore(root, "categories") || sectionHasMore(root, "banners");
 };
-const globalSearch = async (params) => {
+/** requestOptions: { signal, cache } are passed to apiClient (abort obsolete / bypass cache). */
+const globalSearch = async (params, requestOptions = {}) => {
   const opts = typeof params === "string" ? { search: params } : params;
   const search = String(opts.search || "").trim();
   if (!search) {
@@ -272,9 +273,15 @@ const globalSearch = async (params) => {
   );
   qs.set("page", String(opts.page || 1));
   qs.set("page_size", String(opts.page_size || 10));
+  // save_recent=true is a write disguised as a GET: never serve it from the shared cache.
+  const saving = qs.get("save_recent") === "true";
   const response = await apiClient(`customers/search/?${qs.toString()}`, {
+    ...requestOptions,
+    ...(saving ? { cache: false } : {}),
     method: "GET"
   });
+  // The server just added this query to the recent list: drop the cached recent list.
+  if (saving) invalidateApiCache("customers/search/recent/");
   const grouped = parseGlobalSearchResponse(response);
   const hasMore = anySearchSectionHasMore(response);
   return { grouped, raw: response, hasMore };

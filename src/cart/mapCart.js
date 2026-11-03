@@ -179,7 +179,7 @@ export const formatAddress = (address) => {
     .join(', ');
 };
 
-const getResponseMessage = (response) =>
+export const getResponseMessage = (response) =>
   String(
     response?.message ||
       response?.data?.message ||
@@ -188,19 +188,26 @@ const getResponseMessage = (response) =>
       '',
   ).toLowerCase();
 
-const hasOrderEntity = (response) => {
-  const data = response?.data ?? {};
-  const order = data.order ?? data;
+export const hasOrderEntity = (response) => {
+  const data = response?.data;
+  const order = data?.order ?? data;
   return Boolean(
     order?.id ||
       order?.order_id ||
       order?.order_number ||
       order?.order_code ||
-      response?.order?.id,
+      data?.order_id ||
+      data?.order_number ||
+      data?.order_code ||
+      response?.order_id ||
+      response?.order_code,
   );
 };
 
 const isFulfillmentNoise = (msg) =>
+  msg.includes('out of stock') ||
+  msg.includes('sku') ||
+  msg.includes('insufficient') ||
   msg.includes('unicommerce') ||
   msg.includes('uni-commerce') ||
   msg.includes('fulfillment') ||
@@ -211,7 +218,7 @@ const isFulfillmentNoise = (msg) =>
   msg.includes('facility') ||
   msg.includes('allocation');
 
-const isHardPaymentFailure = (msg) =>
+export const isHardPaymentFailure = (msg) =>
   msg.includes('signature') ||
   msg.includes('invalid payment') ||
   msg.includes('payment failed') ||
@@ -227,12 +234,17 @@ export const isOrderSuccessful = (response) => {
 
   const data = response.data ?? {};
   const msg = getResponseMessage(response);
+  const orderStatus = String(data?.order_status || response?.order_status || '').toUpperCase();
   const paidLike =
     data?.payment_id ||
     data?.razorpay_payment_id ||
+    data?.cf_payment_id ||
+    data?.cashfree_payment_id ||
+    data?.gateway_payment_id ||
     data?.status === 'paid' ||
     data?.payment_status === 'paid' ||
     data?.payment_status === 'success' ||
+    orderStatus === 'PAID' ||
     data?.order_status ||
     data?.verified === true ||
     response?.payment_id ||
@@ -250,9 +262,12 @@ export const isOrderSuccessful = (response) => {
   return false;
 };
 
-export const isPrepaidVerifyAcceptable = (response, razorpayResult) => {
+export const isPrepaidVerifyAcceptable = (response, gatewayResult) => {
   if (isOrderSuccessful(response)) return true;
-  if (!razorpayResult?.razorpay_payment_id) return false;
+  const gatewayPaid = Boolean(
+    gatewayResult?.razorpay_payment_id || gatewayResult?.gateway_payment_id,
+  );
+  if (!gatewayPaid) return false;
   const msg = getResponseMessage(response);
   if (isHardPaymentFailure(msg)) return false;
   if (

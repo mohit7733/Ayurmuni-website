@@ -202,3 +202,15 @@
 .rw-referral-section {
   margin: var(--am-space-6) 0;
 }
+
+/* Add coupon sheet (app RewardsScreen parity) */
+.rw-add {
+  display: flex;
+  align-items: stretch;
+  gap: var(--am-space-3);
+}
+
+.rw-add > :first-child {
+  flex: 1;
+  min-width: 0;
+}

@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { Check, ChevronDown, List, Package, IndianRupee, X } from 'lucide-react';
+import { Check, ChevronDown, Leaf, List, Package, IndianRupee, Star, X } from 'lucide-react';
 import { Button, Modal } from './ui';
 import { cx } from './ui/cx';
 import {
   PRODUCT_SORT_OPTIONS,
   PRICE_RANGE_OPTIONS,
+  PRODUCT_RATING_OPTIONS,
+  DOSHA_OPTIONS,
   getSortLabel,
 } from '../utils/productSearchUtils';
 
@@ -53,6 +55,11 @@ export default function ProductSearchFilterBar({
   brands,
   activeFilterCount,
   onClearFilters,
+  // Rating / dosha chips render only when both props of a pair are passed (same as the app).
+  rating,
+  onRatingChange,
+  dosha,
+  onDoshaChange,
 }) {
   const [sheet, setSheet] = useState(null);
   const [draftBrandIds, setDraftBrandIds] = useState([]);
@@ -87,7 +94,21 @@ export default function ProductSearchFilterBar({
   const priceActive = priceRange !== 'all';
   const filtersActive = activeFilterCount > 0;
 
-  const sheetTitle = sheet === 'sort' ? 'Sort by' : sheet === 'brand' ? 'Brand' : 'Price range';
+  const showRating = rating !== undefined && !!onRatingChange;
+  const showDosha = dosha !== undefined && !!onDoshaChange;
+  const ratingActive = showRating && rating !== 'all';
+  const doshaActive = showDosha && dosha !== 'all';
+
+  const sheetTitle =
+    sheet === 'sort'
+      ? 'Sort by'
+      : sheet === 'brand'
+        ? 'Brand'
+        : sheet === 'rating'
+          ? 'Customer rating'
+          : sheet === 'dosha'
+            ? 'Dosha type'
+            : 'Price range';
 
   return (
     <>
@@ -113,6 +134,26 @@ export default function ProductSearchFilterBar({
           active={priceActive}
           onClick={() => setSheet('price')}
         />
+        {showRating ? (
+          <FilterChip
+            label="Rating"
+            selectedText={
+              ratingActive ? PRODUCT_RATING_OPTIONS.find((o) => o.key === rating)?.label : undefined
+            }
+            icon={Star}
+            active={ratingActive}
+            onClick={() => setSheet('rating')}
+          />
+        ) : null}
+        {showDosha ? (
+          <FilterChip
+            label="Dosha"
+            selectedText={doshaActive ? dosha : undefined}
+            icon={Leaf}
+            active={doshaActive}
+            onClick={() => setSheet('dosha')}
+          />
+        ) : null}
         {filtersActive ? (
           <button type="button" className="st-filter-chip st-filter-chip--clear" onClick={onClearFilters}>
             <X size={13} aria-hidden />
@@ -185,6 +226,34 @@ export default function ProductSearchFilterBar({
             )}
           </div>
         ) : null}
+
+        {sheet === 'rating'
+          ? PRODUCT_RATING_OPTIONS.map((option) => (
+              <OptionRow
+                key={option.key}
+                label={option.label}
+                selected={rating === option.key}
+                onClick={() => {
+                  onRatingChange?.(option.key);
+                  closeSheet();
+                }}
+              />
+            ))
+          : null}
+
+        {sheet === 'dosha'
+          ? DOSHA_OPTIONS.map((option) => (
+              <OptionRow
+                key={option.key}
+                label={option.label}
+                selected={dosha === option.key}
+                onClick={() => {
+                  onDoshaChange?.(option.key);
+                  closeSheet();
+                }}
+              />
+            ))
+          : null}
 
         {sheet === 'price'
           ? PRICE_RANGE_OPTIONS.map((option) => (

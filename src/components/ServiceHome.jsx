@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { ArrowRight, Flower2, Play, Salad } from 'lucide-react';
 import { Button } from './ui';
 import { HOME_COPY as T } from '../content/home';
@@ -68,17 +69,25 @@ export function YogaSessionCard({ item, onClick }) {
   );
 }
 
-export function DietPlanCard({ item, onClick }) {
+export function DietPlanCard({ item, onClick, fallbackIcon: FallbackIcon = Salad }) {
+  const [failedSrc, setFailedSrc] = useState('');
+  const showImage = Boolean(item.thumbnail_url) && failedSrc !== item.thumbnail_url;
   const season = shortLabel(item.season) || shortLabel(item.short_description);
   const prakriti = shortLabel(item.prakriti);
 
   return (
     <article className="hm-meal">
       <div className="hm-meal__media">
-        {item.thumbnail_url ? (
-          <img src={item.thumbnail_url} alt="" loading="lazy" decoding="async" />
+        {showImage ? (
+          <img
+            src={item.thumbnail_url}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            onError={() => setFailedSrc(item.thumbnail_url)}
+          />
         ) : (
-          <Salad size={28} aria-hidden />
+          <FallbackIcon size={28} aria-hidden />
         )}
       </div>
       <div className="hm-meal__copy">

@@ -18,6 +18,10 @@ export const BOOKING_COPY = {
   concernPlaceholder: 'Briefly describe your symptoms or questions…',
   recordsTitle: 'Medical records',
   recordsHint: 'Attach reports the doctor should review before the call.',
+  recordsHintFor: (concern) => {
+    const text = String(concern || '').trim();
+    return text ? `Add reports related to \u201c${text.slice(0, 48)}${text.length > 48 ? '\u2026' : ''}\u201d (optional)` : '';
+  },
   noRecords: 'No saved records yet.',
   uploadRecord: 'Upload record',
   uploading: 'Uploading…',

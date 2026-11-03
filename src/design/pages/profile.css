@@ -689,3 +689,106 @@
 .pf-switch:checked::after { transform: translateX(18px); }
 .pf-switch:disabled { opacity: 0.6; cursor: progress; }
 .pf-switch:focus-visible { outline: 2px solid #e4c47a; outline-offset: 2px; }
+
+/* Profile hero: photo actions + dashboard stat chips (app ProfileHeader parity) */
+.pf-hero__avatar--btn {
+  position: relative;
+  padding: 0;
+  cursor: pointer;
+  overflow: visible;
+}
+
+.pf-hero__avatar--btn img {
+  border-radius: 50%;
+}
+
+.pf-hero__avatar--btn:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.pf-hero__camera {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--am-surface);
+  border-radius: 50%;
+  background: var(--am-primary);
+  color: #fff;
+}
+
+.pf-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--am-space-3);
+}
+
+.pf-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: var(--am-tap-min);
+  padding: var(--am-space-3);
+  border: 1px solid var(--am-line);
+  border-radius: var(--am-radius-lg);
+  background: var(--am-surface);
+  color: var(--am-text);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.pf-stat:hover {
+  border-color: color-mix(in srgb, var(--am-primary) 35%, var(--am-line));
+  background: color-mix(in srgb, var(--am-primary) 5%, var(--am-surface));
+}
+
+.pf-stat strong {
+  color: var(--am-primary);
+  font-family: var(--am-font-display);
+  font-size: var(--am-text-xl);
+  line-height: 1.1;
+}
+
+.pf-stat small {
+  color: var(--am-text-muted);
+  font-size: var(--am-text-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.pf-photo-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--am-space-2);
+}
+
+.pf-photo-actions__row {
+  display: flex;
+  align-items: center;
+  gap: var(--am-space-3);
+  min-height: var(--am-tap-min);
+  padding: var(--am-space-3) var(--am-space-4);
+  border: 1px solid var(--am-line);
+  border-radius: var(--am-radius-lg);
+  background: var(--am-surface);
+  color: var(--am-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.pf-photo-actions__row.is-danger {
+  color: var(--am-danger, #b3261e);
+}
+
+.pf-photo-view {
+  display: block;
+  width: 100%;
+  max-height: 70vh;
+  border-radius: var(--am-radius-lg);
+  object-fit: contain;
+}

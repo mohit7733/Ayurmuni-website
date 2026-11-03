@@ -39,7 +39,16 @@ export default function SiteFooter() {
     const place = () => {
       footer.classList.remove('is-mark-pinned');
       inner.style.paddingBottom = '';
-      if (!window.matchMedia('(min-width: 768px)').matches) return;
+      if (!window.matchMedia('(min-width: 768px)').matches) {
+        // Phones: same background layer, its base resting on the bottom of the link columns.
+        footer.classList.add('is-mark-pinned');
+        const fTop = footer.getBoundingClientRect().top;
+        const contentBottom = Math.max(
+          ...[...inner.children].map((n) => n.getBoundingClientRect().bottom - fTop),
+        );
+        footer.style.setProperty('--mark-top', `${Math.max(0, Math.round(contentBottom - mark.offsetHeight))}px`);
+        return;
+      }
       const care = [...footer.querySelectorAll('.site-footer-col')].find(
         (n) => n.getAttribute('aria-label') === 'Care',
       );

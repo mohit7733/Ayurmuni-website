@@ -491,6 +491,16 @@
 .am-head-tools > .am-btn { flex: none; min-height: 36px; }
 .am-head-tools--top { margin-bottom: 12px; }
 .hm-doctor-head__row:has(> .am-head-tools) .hm-doctor-head__title { flex: none; }
+/* Below laptop the tools take their own row under the title (search grows, buttons keep labels). */
+@media (max-width: 1023px) {
+  .hm-doctor-head__row:has(> .am-head-tools) { flex-wrap: wrap; row-gap: 10px; }
+  .hm-doctor-head__row > .am-head-tools { flex: 1 1 100%; }
+  .am-head-tools > .am-page-bar--slot { flex: 1 1 220px; min-width: 0; max-width: none; margin: 0; }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* .hm-page one-line headers are a grid from 768px: tools get their own full row. */
+  .hm-page .hm-doctor-head__row > .am-head-tools { grid-column: 1 / -1; order: 4; justify-self: stretch; margin-top: 4px; }
+}
 
 @media (max-width: 767px) {
   .am-page-bar.am-page-bar--slot { flex: 1 1 100%; max-width: none; width: 100%; order: -1; }

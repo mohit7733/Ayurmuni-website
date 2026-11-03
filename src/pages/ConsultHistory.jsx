@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
+import AdvanceLoad from '../components/ui/AdvanceLoad';
+import DietitianBadge from '../components/DietitianBadge';
 import {
-  canModifyAppointment,
+  canOfferReschedule,
   formatAppointmentDateFull,
   formatDoctorDisplayName,
   resolveAppointmentLookupId,
@@ -11,6 +13,7 @@ import { formatSlotTime } from '../consult/doctors';
 import { mapAppointment } from '../profile/map';
 import { requireAuth } from '../services/guestAuth';
 import { getConsultHistory } from '../services/consultService';
+import { invalidateApiCache } from '../services/apiClient';
 
 const TABS = [
   { key: 'all', label: 'All' },
@@ -144,7 +147,10 @@ export default function ConsultHistory() {
             <p>Track your medical journey</p>
           </div>
           <div className="catalog-head-actions">
-            <button type="button" disabled={loading} onClick={() => setReload((n) => n + 1)}>
+            <button type="button" disabled={loading} onClick={() => {
+                invalidateApiCache('customers/doctors/consultation-history/');
+                setReload((n) => n + 1);
+              }}>
               Refresh
             </button>
           </div>
@@ -181,7 +187,7 @@ export default function ConsultHistory() {
         </div>
 
         {loading && history.length === 0 ? (
-          <p className="muted">Loading consultations…</p>
+          <AdvanceLoad variant="list" label="Loading consultations" />
         ) : filtered.length === 0 ? (
           <div className="empty-copy">
             <strong>{history.length === 0 ? 'No Appointments Yet' : 'Appointment Not Found'}</strong>
@@ -214,7 +220,7 @@ export default function ConsultHistory() {
             {paged.map((item) => {
               const status = String(item.status || '').toLowerCase();
               const statusStyle = STATUS_STYLE[status] || { background: '#f3f4f6', color: '#000' };
-              const showReschedule = canModifyAppointment(status, item.date, item.time);
+              const showReschedule = canOfferReschedule(status, item.date, item.time, item);
               const showReceipt = Boolean(item.consultationId);
               const showBookAgain = !showReschedule && PAST_STATUSES.includes(status);
               const weekday = weekdayFrom(item.date);
@@ -233,6 +239,7 @@ export default function ConsultHistory() {
                           </em>
                         ) : null}
                       </div>
+                      <DietitianBadge doctor={item} />
                       <small className="history-specialty">{item.specialty || 'General Physician'}</small>
                       <div className="history-meta">
                         {weekday ? <span>{weekday}</span> : null}

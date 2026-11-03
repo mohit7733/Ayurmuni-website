@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import AppShell from "../components/AppShell";
 import PageHeader from "../components/PageHeader";
-import { Button, Disclaimer } from "../components/ui";
+import { Button } from "../components/ui";
 import { STATIC_COPY as T } from "../content/static";
 import "../design/pages/static.css";
 
@@ -127,7 +127,6 @@ export default function About() {
             </div>
           </section>
 
-          <Disclaimer className="sx-about__disclaimer" />
         </div>
       </section>
     </AppShell>

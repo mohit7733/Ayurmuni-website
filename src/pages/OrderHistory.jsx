@@ -1,12 +1,20 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FileText, Leaf, Package } from 'lucide-react';
+import { ChevronRight, FileText, Leaf, Package, RefreshCw } from 'lucide-react';
+import { buildRequestViewRoute } from '../cart/rxGroups';
 import AppShell from '../components/AppShell';
 import PageHeader from '../components/PageHeader';
-import { formatRupee } from '../home/catalog';
+import { formatRupee, resolveImageUrl } from '../home/catalog';
 import { mapOrderToListItem } from '../profile/map';
 import { requireAuth } from '../services/guestAuth';
 import { getOrders, normalizeOrdersList } from '../services/orderService';
+import {
+  countReturns,
+  filterReturns,
+  getReturnStatusMeta,
+  loadAllReturns,
+  RETURN_FILTERS,
+} from '../services/returnService';
 import {
   formatPrescriptionDate,
   getPrescriptionRequests,
@@ -20,11 +28,8 @@ import {
   Badge,
   Button,
   Chip,
-  Disclaimer,
   EmptyState,
   SearchField,
-  Skeleton,
-  SkeletonText,
   Tabs,
 } from '../components/ui';
 import {
@@ -32,6 +37,9 @@ import {
   orderStatusLabel,
   orderStatusTone,
 } from '../content/orders';
+import { formatOrderId } from '../utils/formatDisplayId';
+import { formatOrderDateTime } from '../utils/orderDetailUtils';
+import Skeleton from '../components/skeletons/Block';
 import '../design/pages/orders.css';
 
 const requestTone = (item) => {
@@ -40,10 +48,63 @@ const requestTone = (item) => {
   return 'warning';
 };
 
+const lineTitle = (line) => line?.variant?.variant_title || line?.product_name || line?.name || '';
+const lineQty = (line) => Number(line?.quantity ?? line?.qty ?? 1) || 1;
+const paymentLabel = (raw) => {
+  const value = String(raw?.payment_method || raw?.payment_mode || '').trim();
+  if (!value) return '';
+  return /^cod$|cash/i.test(value) ? 'Cash on delivery' : value.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
+};
+
+/** Thumbnail stack: main image, up to two mini thumbs, and a +N count for the rest. */
+function OrderThumbs({ items = [], image, Icon = Leaf }) {
+  const extras = items.slice(1);
+  const minis = extras.slice(0, 2).map((line) => resolveImageUrl(line?.variant || line));
+  const rest = extras.length - minis.length;
+  return (
+    <span className="or-row__thumbs" aria-hidden>
+      <span className="or-row__thumb">
+        {image ? <img src={image} alt="" loading="lazy" decoding="async" /> : <Icon size={22} />}
+      </span>
+      {minis.length ? (
+        <span className="or-row__minis">
+          {minis.map((src, i) => (
+            <span key={i} className="or-row__mini">
+              {src ? <img src={src} alt="" loading="lazy" decoding="async" /> : <Leaf size={12} />}
+            </span>
+          ))}
+          {rest > 0 ? <span className="or-row__mini or-row__mini--more">+{rest}</span> : null}
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
+function OrderListSkeleton({ label, count = 4 }) {
+  return (
+    <div className="or-list" role="status" aria-busy="true" aria-label={label}>
+      <span className="am-sr-only">{label}</span>
+      {Array.from({ length: count }, (_, i) => (
+        <div key={i} className="or-row or-row--static or-row--skel" aria-hidden>
+          <span className="or-row__thumbs"><span className="or-row__thumb"><Skeleton variant="rect" className="am-skel-fill" /></span></span>
+          <div className="or-row__body">
+            <Skeleton width="55%" height={14} />
+            <Skeleton width="38%" height={12} />
+          </div>
+          <div className="or-row__aside">
+            <Skeleton width={72} height={20} />
+            <Skeleton width={56} height={14} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function OrderHistory() {
   const navigate = useNavigate();
   const location = useLocation();
-  const openedTab = location.state?.tab === 'requested' ? 'requested' : 'orders';
+  const openedTab = ['requested', 'returns'].includes(location.state?.tab) ? location.state.tab : 'orders';
   const [tab, setTab] = useState(openedTab);
   const [orders, setOrders] = useState([]);
   const [requests, setRequests] = useState([]);
@@ -51,6 +112,11 @@ export default function OrderHistory() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [requestsLoading, setRequestsLoading] = useState(true);
+  const [returns, setReturns] = useState([]);
+  const [returnsLoading, setReturnsLoading] = useState(false);
+  const [returnsLoaded, setReturnsLoaded] = useState(false);
+  const [returnFilter, setReturnFilter] = useState('all');
+  const [returnSearch, setReturnSearch] = useState('');
 
   useEffect(() => {
     (async () => {
@@ -71,6 +137,32 @@ export default function OrderHistory() {
       setRequestsLoading(false);
     })();
   }, []);
+
+  // The Returns tab loads on first open and refreshes every time it is opened again.
+  useEffect(() => {
+    if (tab !== 'returns' || loading) return undefined;
+    let active = true;
+    (async () => {
+      if (!(await requireAuth('Please login to view returns'))) return;
+      setReturnsLoading(true);
+      const next = await loadAllReturns(orders);
+      if (!active) return;
+      setReturns(next);
+      setReturnsLoaded(true);
+      setReturnsLoading(false);
+    })();
+    return () => {
+      active = false;
+    };
+    // `orders` only feeds the fallback path; reload on tab open / initial orders load.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, loading]);
+
+  const returnList = useMemo(
+    () => filterReturns(returns, returnFilter, returnSearch),
+    [returns, returnFilter, returnSearch],
+  );
+  const returnCounts = useMemo(() => countReturns(returns), [returns]);
 
   const list = useMemo(() => {
     const chip = T.filters.find((item) => item.key === filter);
@@ -99,7 +191,7 @@ export default function OrderHistory() {
 
   return (
     <AppShell tab="profile">
-      <section className="or-page">
+      <section className="or-page or-page--history">
         <PageHeader title={T.historyTitle} subtitle={T.historySubtitle} backTo="/profile" />
 
         <Tabs
@@ -108,6 +200,7 @@ export default function OrderHistory() {
           onChange={setTab}
           items={[
             { id: 'orders', label: T.ordersTab },
+            { id: 'returns', label: returns.length ? `${T.returnsTab} (${returns.length})` : T.returnsTab },
             {
               id: 'requested',
               label: requests.length ? `${T.requestedTab} (${requests.length})` : T.requestedTab,
@@ -139,11 +232,7 @@ export default function OrderHistory() {
             </div>
 
             {loading ? (
-              <div className="or-skel" aria-busy="true" aria-label={T.loading}>
-                <Skeleton style={{ height: 88, borderRadius: 'var(--am-radius-lg)' }} />
-                <Skeleton style={{ height: 88, borderRadius: 'var(--am-radius-lg)' }} />
-                <SkeletonText lines={2} />
-              </div>
+              <OrderListSkeleton label={T.loading} />
             ) : list.length === 0 ? (
               <EmptyState
                 icon={<Package size={28} />}
@@ -164,17 +253,27 @@ export default function OrderHistory() {
                     className="or-row"
                     onClick={() => navigate(`/profile/orders/${item.id}`)}
                   >
-                    <span className="or-row__thumb">
-                      {item.image ? (
-                        <img src={item.image} alt="" loading="lazy" decoding="async" />
-                      ) : (
-                        <Leaf size={22} aria-hidden />
-                      )}
-                    </span>
+                    <OrderThumbs items={item.items} image={item.image} />
                     <div className="or-row__body">
-                      <p className="or-row__title">{item.title}</p>
-                      <p className="or-row__meta">#{item.orderCode}</p>
-                      <p className="or-row__meta">{item.date}</p>
+                      <p className="or-row__title">
+                        {lineTitle(item.items?.[0]) || item.title}
+                        {item.items?.length > 1 ? (
+                          <span className="or-row__more"> +{item.items.length - 1} more</span>
+                        ) : null}
+                      </p>
+                      <p className="or-row__meta or-row__meta--line">
+                        <span>#{item.orderCode}</span>
+                        {item.date ? <span>{item.date}</span> : null}
+                        {item.items?.length ? (
+                          <span>
+                            {(() => {
+                              const n = item.items.reduce((sum, line) => sum + lineQty(line), 0);
+                              return `${n} item${n === 1 ? '' : 's'}`;
+                            })()}
+                          </span>
+                        ) : null}
+                        {paymentLabel(item.raw) ? <span>{paymentLabel(item.raw)}</span> : null}
+                      </p>
                     </div>
                     <div className="or-row__aside">
                       <Badge tone={orderStatusTone(item.status)}>
@@ -182,16 +281,76 @@ export default function OrderHistory() {
                       </Badge>
                       <strong className="or-row__amount">{item.amount}</strong>
                     </div>
+                    <ChevronRight className="or-row__chev" size={18} aria-hidden />
                   </button>
                 ))}
               </div>
             )}
           </>
+        ) : tab === 'returns' ? (
+          <>
+            <div className="or-toolbar">
+              <SearchField
+                value={returnSearch}
+                onChange={setReturnSearch}
+                placeholder={T.returnsSearchPlaceholder}
+                label={T.returnsSearchPlaceholder}
+              />
+              <div className="or-filters" role="group" aria-label={T.statusFilter}>
+                {RETURN_FILTERS.map((item) => (
+                  <Chip
+                    key={item.key}
+                    selected={returnFilter === item.key}
+                    count={returnCounts[item.key] > 0 ? returnCounts[item.key] : undefined}
+                    onClick={() => setReturnFilter(item.key)}
+                  >
+                    {item.label}
+                  </Chip>
+                ))}
+              </div>
+            </div>
+            {returnsLoading && !returnsLoaded ? (
+              <OrderListSkeleton label="Loading returns" count={3} />
+            ) : returnList.length === 0 ? (
+              <EmptyState
+                icon={<RefreshCw size={28} />}
+                title={T.returnsEmptyTitle}
+                description={T.returnsEmptyText}
+              />
+            ) : (
+              <div className="or-list">
+                {returnList.map((ret) => {
+                  const meta = getReturnStatusMeta(ret.status);
+                  const qty = ret.items.reduce((sum, line) => sum + line.quantity, 0);
+                  return (
+                    <button
+                      key={ret.id}
+                      type="button"
+                      className="or-row"
+                      onClick={() => navigate(`/profile/returns/${ret.id}`, { state: { returnRequest: ret.raw } })}
+                    >
+                      <OrderThumbs Icon={RefreshCw} />
+                      <div className="or-row__body">
+                        <p className="or-row__title">
+                          Order #{formatOrderId(ret.orderCode || ret.orderId)}
+                        </p>
+                        <p className="or-row__meta">
+                          {qty} item{qty === 1 ? '' : 's'} · {ret.reason || 'Return request'}
+                        </p>
+                        <p className="or-row__meta">{formatOrderDateTime(ret.createdAt)}</p>
+                      </div>
+                      <div className="or-row__aside">
+                        <Badge tone={meta.tone}>{meta.label}</Badge>
+                      </div>
+                      <ChevronRight className="or-row__chev" size={18} aria-hidden />
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </>
         ) : requestsLoading ? (
-          <div className="or-skel" aria-busy="true">
-            <Skeleton style={{ height: 88, borderRadius: 'var(--am-radius-lg)' }} />
-            <SkeletonText lines={2} />
-          </div>
+          <OrderListSkeleton label="Loading requests" count={3} />
         ) : requests.length === 0 ? (
           <EmptyState
             icon={<FileText size={28} />}
@@ -210,9 +369,7 @@ export default function OrderHistory() {
               const itemCount = variants.reduce((sum, row) => sum + row.quantity, 0);
               return (
                 <div key={item.id} className="or-row or-row--static">
-                  <span className="or-row__thumb">
-                    <FileText size={22} aria-hidden />
-                  </span>
+                  <OrderThumbs Icon={FileText} />
                   <div className="or-row__body">
                     <p className="or-row__title">{item.patient_name || 'Prescription request'}</p>
                     <p className="or-row__meta">
@@ -228,6 +385,17 @@ export default function OrderHistory() {
                   </div>
                   <div className="or-row__aside">
                     <Badge tone={requestTone(item)}>{getStatusLabel(item)}</Badge>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      trailingIcon={<ChevronRight size={14} aria-hidden />}
+                      onClick={() => {
+                        const route = buildRequestViewRoute(item);
+                        navigate(route.path, { state: route.state });
+                      }}
+                    >
+                      View request
+                    </Button>
                   </div>
                 </div>
               );
@@ -235,7 +403,6 @@ export default function OrderHistory() {
           </div>
         )}
 
-        <Disclaimer />
       </section>
     </AppShell>
   );

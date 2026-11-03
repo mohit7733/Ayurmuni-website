@@ -8,9 +8,11 @@ import {
   doctorRating,
   doctorSpeciality,
   getDoctorId,
+  isDietitian,
   resolveLanguages,
 } from '../consult/doctors';
 import Rating from './ui/Rating';
+import DietitianBadge from './DietitianBadge';
 import { nameInitial } from '../utils/initials';
 
 export default function DoctorCard({ item }) {
@@ -20,7 +22,8 @@ export default function DoctorCard({ item }) {
   const image = doctorImage(item);
   const fee = doctorFeeLabel(item);
   const rating = doctorRating(item);
-  const speciality = doctorSpeciality(item) || 'Ayurveda';
+  const dietitian = isDietitian(item);
+  const speciality = doctorSpeciality(item) || (dietitian ? 'Diet & Nutrition' : 'Ayurveda');
   const experience = doctorExperience(item);
   const languages = resolveLanguages(item).slice(0, 2);
   const reviewCount = Number(item?.total_reviews || item?.review_count || 0);
@@ -52,6 +55,7 @@ export default function DoctorCard({ item }) {
               {name}
             </button>
           </h3>
+          <DietitianBadge doctor={item} />
           <p className="am-doctor-card__spec">{speciality}</p>
           <Rating value={rating} count={reviewCount} />
         </div>

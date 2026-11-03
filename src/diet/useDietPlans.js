@@ -15,6 +15,8 @@ import {
   buildDietDayChips,
   buildWaterProgressPatch,
   calculateDietNutrition,
+  dietStatusFallbackMessage,
+  extractCompletionJson,
   extractDietApiError,
   extractDietPlanDetail,
   extractProgressPayload,
@@ -23,8 +25,10 @@ import {
   getWaterGoalMl,
   getWaterIntakeForDay,
   isAlreadyActiveDietPlanError,
+  isDietPlanFullyComplete,
   isDietPlanStarted,
   isNoActiveDietPlanError,
+  loadCompletionJson,
   mapDietPlanSummary,
   mapPlanJsonMeals,
   mergePlanAssignmentFields,
@@ -33,10 +37,20 @@ import {
   normalizeProgressList,
   nowIso,
   resolveCurrentDayKey,
+  saveCompletionJson,
   WATER_LITER_ML,
 } from './utils';
 
-const normalizeListFilters = (filters) => {
+// Sent to the API as-is when set (same keys the app passes through).
+const PASSTHROUGH_FILTER_KEYS = [
+  'duration_min',
+  'duration_max',
+  'calories_min',
+  'calories_max',
+  'patient_assignment_status',
+];
+
+export const normalizeListFilters = (filters) => {
   if (!filters) return {};
   const search = String(filters.search || '').trim();
   const prakriti = String(filters.prakriti || '').trim();
@@ -68,7 +82,13 @@ const normalizeListFilters = (filters) => {
     filters.is_paid === 'false'
       ? filters.is_paid
       : undefined;
+  const passthrough = {};
+  PASSTHROUGH_FILTER_KEYS.forEach((key) => {
+    const value = filters[key];
+    if (value != null && String(value).trim() !== '') passthrough[key] = value;
+  });
   return {
+    ...passthrough,
     ...(search ? { search } : {}),
     ...(prakriti && prakriti.toLowerCase() !== 'all' ? { prakriti } : {}),
     ...(health_category_id != null ? { health_category_id } : {}),
@@ -108,6 +128,8 @@ export default function useDietPlans(options = {}) {
   const [loggingMealId, setLoggingMealId] = useState(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  // complete_json from the last "complete" call (the app keeps it per selected plan only).
+  const [completionJson, setCompletionJson] = useState(null);
   const currentDayKeyRef = useRef(currentDayKey);
   const plansRef = useRef([]);
   const planDetailRef = useRef(null);
@@ -131,6 +153,12 @@ export default function useDietPlans(options = {}) {
     if (!planDetail || !currentDayKey) return;
     setWaterMl(getWaterIntakeForDay(planDetail, currentDayKey));
   }, [planDetail, currentDayKey]);
+  // Restore the tracking summary of a run completed earlier in this session.
+  useEffect(() => {
+    if (completionJson || getDietListStatus(planDetail) !== 'completed') return;
+    const saved = loadCompletionJson(planDetail?.patient_diet_plan_id);
+    if (saved) setCompletionJson(saved);
+  }, [planDetail, completionJson]);
 
   const nutrition = useMemo(
     () => calculateDietNutrition(meals, planDetail, currentDayKey, { waterMl }),
@@ -224,10 +252,9 @@ export default function useDietPlans(options = {}) {
       }
       const requestId = listRequestIdRef.current;
       try {
-        const { min_rating: _minRating, ...apiFilters } = normalizedFilters;
         const res = await getDietPlans({
           ...(effectiveListType ? { type: effectiveListType } : {}),
-          ...apiFilters,
+          ...normalizedFilters,
           page: pageToLoad,
           page_size: DIET_PLAN_PAGE_SIZE,
         });
@@ -467,6 +494,7 @@ export default function useDietPlans(options = {}) {
 
   const selectPlan = useCallback((planId) => {
     hasInitializedDayRef.current = false;
+    setCompletionJson(null);
     setPlanDetail(null);
     setMeals([]);
     setMealsByDay([]);
@@ -476,6 +504,7 @@ export default function useDietPlans(options = {}) {
   }, []);
 
   const clearSelection = useCallback(() => {
+    setCompletionJson(null);
     setSelectedPlanId(null);
     setPlanDetail(null);
     setMeals([]);
@@ -757,7 +786,38 @@ export default function useDietPlans(options = {}) {
           showSuccessToast(errMsg, 'error');
           return false;
         }
-        showSuccessToast(res?.message || `Plan ${action}d.`, 'success');
+        const backendMsg = typeof res?.message === 'string' ? res.message.trim() : '';
+        if (action === 'complete') {
+          const completion = extractCompletionJson(res);
+          setCompletionJson(completion);
+          saveCompletionJson(id, completion);
+          lastCompletedAssignmentIdRef.current = id;
+          setPlanDetail((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  patient_assignment_status: 'completed',
+                  patient_diet_plan_id: prev.patient_diet_plan_id || id,
+                  ended_at: prev.ended_at || nowIso(),
+                }
+              : prev,
+          );
+          setPlans((prev) =>
+            prev.map((p) =>
+              String(p.patient_diet_plan_id) === id || String(p.id) === String(selectedPlanId)
+                ? { ...p, patient_assignment_status: 'completed', patient_diet_plan_id: p.patient_diet_plan_id || id }
+                : p,
+            ),
+          );
+        }
+        if (action === 'repeat' || action === 'reset') {
+          // New run starts on Day 1 with no tracked meals.
+          if (action === 'repeat') lastCompletedAssignmentIdRef.current = null;
+          hasInitializedDayRef.current = false;
+          setProgress([]);
+          setShowAllDays(false);
+        }
+        showSuccessToast(backendMsg || dietStatusFallbackMessage(action), 'success');
         await loadList();
         if (selectedPlanId) await loadDetail(selectedPlanId);
         return true;
@@ -769,6 +829,90 @@ export default function useDietPlans(options = {}) {
       }
     },
     [patientDietPlanId, planDetail, loadList, loadDetail, selectedPlanId, resolveActiveAssignment],
+  );
+
+  /** Currently active assignment (only one is allowed at a time). */
+  const activePlan = useMemo(
+    () => plans.find((p) => getDietListStatus(p) === 'active') || null,
+    [plans],
+  );
+
+  const isPlanFullyComplete = useMemo(
+    () => isDietPlanFullyComplete(planDetail, progress, isStarted),
+    [planDetail, progress, isStarted],
+  );
+
+  const resolveCompletedAssignmentId = useCallback(() => {
+    if (lastCompletedAssignmentIdRef.current) return String(lastCompletedAssignmentIdRef.current);
+    const plan = planDetail || selectedSummary;
+    if (getDietListStatus(plan) !== 'completed') return null;
+    const id = plan?.patient_diet_plan_id ?? selectedSummary?.patient_diet_plan_id ?? null;
+    return id ? String(id) : null;
+  }, [planDetail, selectedSummary]);
+
+  /**
+   * Guards before Repeat (app prepareRepeat): plan must be completed, and another active
+   * plan needs a pause-first confirmation.
+   */
+  const prepareRepeat = useCallback(() => {
+    const status = getDietListStatus(planDetail || selectedSummary);
+    if (status === 'active') {
+      showSuccessToast(
+        'This plan is already active. Continue tracking meals, or pause it first.',
+        'error',
+      );
+      return { canRepeat: false, needsConfirm: false };
+    }
+    if (status !== 'completed') {
+      showSuccessToast('Complete this plan first, then you can repeat it.', 'error');
+      return { canRepeat: false, needsConfirm: false };
+    }
+    const completedId = resolveCompletedAssignmentId();
+    if (!completedId) {
+      showSuccessToast(
+        'We couldn’t find your completed run. Pull to refresh, then try Repeat again.',
+        'error',
+      );
+      return { canRepeat: false, needsConfirm: false };
+    }
+    const otherActive =
+      activePlan &&
+      String(activePlan.patient_diet_plan_id || '') !== String(completedId) &&
+      String(activePlan.patient_diet_plan_id || '').trim()
+        ? activePlan
+        : null;
+    if (otherActive) {
+      return { canRepeat: true, needsConfirm: true, activePlan: otherActive, completedAssignmentId: completedId };
+    }
+    return { canRepeat: true, needsConfirm: false, completedAssignmentId: completedId };
+  }, [planDetail, selectedSummary, activePlan, resolveCompletedAssignmentId]);
+
+  /** Pause the active assignment, then repeat the completed one. */
+  const pauseActiveAndRepeat = useCallback(
+    async (activeAssignmentId, completedAssignmentId) => {
+      if (!(await requireAuth('Please login to update diet plan'))) return false;
+      setUpdatingStatus(true);
+      try {
+        const pauseRes = await updateDietPlanStatus(activeAssignmentId, { action: 'pause' });
+        if (pauseRes?.success === false) {
+          showSuccessToast(extractDietApiError(pauseRes, 'Unable to pause the active plan'), 'error');
+          return false;
+        }
+        setUpdatingStatus(false);
+        const ok = await updateStatus('repeat', undefined, String(completedAssignmentId));
+        if (!ok) {
+          await loadList();
+          return false;
+        }
+        return true;
+      } catch (e) {
+        showSuccessToast(extractDietApiError(e, e?.message || 'Unable to switch diet plan'), 'error');
+        return false;
+      } finally {
+        setUpdatingStatus(false);
+      }
+    },
+    [updateStatus, loadList],
   );
 
   const pauseActiveAndStart = useCallback(
@@ -790,6 +934,18 @@ export default function useDietPlans(options = {}) {
     [startPlan],
   );
 
+  const completePlan = useCallback(() => updateStatus('complete'), [updateStatus]);
+  const resetPlan = useCallback((reason) => updateStatus('reset', reason), [updateStatus]);
+  /** Pause/stop the current assignment so another plan can be picked. */
+  const switchPlan = useCallback(
+    async (action = 'pause', stop_reason) => {
+      const ok = await updateStatus(action, stop_reason);
+      if (ok === true) clearSelection();
+      return ok;
+    },
+    [updateStatus, clearSelection],
+  );
+
   return {
     plans,
     selectedPlanId,
@@ -808,7 +964,11 @@ export default function useDietPlans(options = {}) {
     showAllDays,
     selectDay,
     selectAllDays: () => setShowAllDays(true),
+    progress,
     isStarted,
+    isPlanFullyComplete,
+    completionJson,
+    activePlan,
     loadingList,
     loadingDetail,
     starting,
@@ -820,6 +980,11 @@ export default function useDietPlans(options = {}) {
     pausePlan: () => updateStatus('pause'),
     stopPlan: () => updateStatus('stop', 'Stopped by user'),
     repeatPlan: () => updateStatus('repeat'),
+    completePlan,
+    resetPlan,
+    switchPlan,
+    prepareRepeat,
+    pauseActiveAndRepeat,
     pauseActiveAndStart,
     updatingStatus,
     patientDietPlanId,

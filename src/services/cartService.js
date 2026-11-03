@@ -15,7 +15,7 @@ export const addUpdateCart = async ({ variant_id, quantity, cart_item_id }) => {
   return apiClient(`cart/?${query.toString()}`, { method: 'POST' });
 };
 
-export const getAllCart = async () => apiClient('cart/', { method: 'GET' });
+export const getAllCart = async (options = {}) => apiClient('cart/', { method: 'GET', ...options });
 
 export const getVariantIdFromItem = (item) =>
   String(

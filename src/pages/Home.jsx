@@ -13,7 +13,6 @@ import {
   Search,
   ShoppingBag,
   Sparkles,
-  Star,
   Stethoscope,
   Users,
   Heart,
@@ -31,24 +30,22 @@ import {
   resolveServiceCategoryKey,
 } from '../home/serviceCategories';
 import useHomeData from '../hooks/useHomeData';
+import { useLazySection, useSectionQueue } from '../hooks/useLazySection';
 import { getDoctors } from '../services/consultService';
 import { isAuthenticated, requireAuth } from '../services/guestAuth';
 import {
-  doctorDisplayName,
-  doctorExperience,
-  doctorFeeLabel,
-  doctorImage,
-  doctorQualification,
-  doctorRating,
   getDoctorId,
   normalizeDoctorList,
-  resolveDoctorSpecializations,
 } from '../consult/doctors';
 import DoctorTable from '../components/DoctorTable';
 import VisitedDoctorList from '../components/VisitedDoctorList';
 import '../components/visited-doctors.css';
 import DummyOfferCard from '../components/DummyOfferCard';
 import ProductCard from '../components/ProductCard';
+import OurDoctorCard from '../components/OurDoctorCard';
+import { DoctorRailHeader, ViewAll } from '../components/HomeSections';
+import { HomeDoctorsSkeleton, HomeProductsSkeleton } from '../components/skeletons';
+import Skeleton from '../components/skeletons/Block';
 import HomeJoinAppointments from '../components/HomeJoinAppointments';
 import '../design/pages/home-pair.css';
 
@@ -63,17 +60,19 @@ import {
   Modal,
   Rail,
   RailItem,
-  RailSkeleton,
   Reveal,
   SectionHeader,
+  SectionHold,
   Tile,
   ConcernCarousel,
 } from '../components/ui';
 import { HOME_COPY as T } from '../content/home';
 // TEMP hidden per Rohit — DUMMY_LAB_TESTS, DUMMY_PANCHAKARMA unused while Lab/Panchakarma are hidden
-import { DUMMY_CONSULT_PACKAGES } from '../data/homeDummySections';
+import { loadConsultPackages } from '../services/packageService';
 import '../design/pages/home.css';
 import '../design/pages/dummy-offers.css';
+import '../design/pages/plan-cards.css';
+import { isCarePlan } from '../packages/planTheme';
 import '../design/pages/orange-lab.css';
 
 let prakritiModalShownThisSession = false;
@@ -110,6 +109,7 @@ const HERO_VIDEO = '/videos/hero-herbal-wellness.mp4';
 function HeroBackgroundVideo() {
   const videoRef = useRef(null);
   const [src, setSrc] = useState('');
+  const [ready, setReady] = useState(false);
   const [reduced] = useState(
     () => typeof window !== 'undefined' && Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches),
   );
@@ -124,6 +124,7 @@ function HeroBackgroundVideo() {
   }, []);
 
   useEffect(() => {
+    setReady(false);
     const video = videoRef.current;
     if (!video || !src) return;
     video.muted = true;
@@ -136,7 +137,7 @@ function HeroBackgroundVideo() {
       {src ? (
         <video
           ref={videoRef}
-          className="hm-hero__bg-video"
+          className={`hm-hero__bg-video${ready ? ' is-ready' : ''}`}
           src={reduced ? `${src}#t=0.1` : src}
           autoPlay={!reduced}
           muted
@@ -145,6 +146,7 @@ function HeroBackgroundVideo() {
           preload={reduced ? 'metadata' : 'auto'}
           disablePictureInPicture
           tabIndex={-1}
+          onCanPlay={() => setReady(true)}
         />
       ) : null}
     </div>
@@ -205,34 +207,11 @@ function CategoryRow({ items, renderItem }) {
         .join(' ')}
       aria-roledescription={carousel ? 'carousel' : undefined}
     >
-      {items.length
-        ? items.map((item) => renderItem(item))
-        : Array.from({ length: 7 }).map((_, index) => (
-            <li key={`service-skel-${index}`}>
-              <div className="hm-service is-skeleton" aria-hidden>
-                <span className="hm-service__tile" />
-                <span className="hm-service__label" />
-              </div>
-            </li>
-          ))}
+      {items.map((item) => renderItem(item))}
     </ul>
   );
 }
 
-function ViewAll({ onClick, label, plain = false, className }) {
-  return (
-    <Button
-      variant="ghost"
-      size="sm"
-      className={[plain ? 'hm-doctor-head__link' : '', className].filter(Boolean).join(' ') || undefined}
-      onClick={onClick}
-      trailingIcon={<ArrowRight size={16} aria-hidden />}
-    >
-      {T.viewAll}
-      <span className="am-sr-only"> {label}</span>
-    </Button>
-  );
-}
 
 function shortLabel(value) {
   const text = String(value || '').replace(/\s+/g, ' ').trim();
@@ -245,99 +224,39 @@ const OUR_DOCTORS_LIMIT = 10;
 /** "Our doctors" rail — customers/doctors/ (needs a token; shown for guests and full users, hidden when logged out, empty or failed (401/403)). */
 function useOurDoctors(enabled) {
   const [items, setItems] = useState([]);
+  const [done, setDone] = useState(false);
   useEffect(() => {
     if (!enabled) return undefined;
     let alive = true;
     (async () => {
-      // Guests are OTP-verified and hold a token; only logged-out visitors skip the call.
-      if (!(await isAuthenticated())) return;
-      const res = await getDoctors({ page: 1, page_size: OUR_DOCTORS_LIMIT });
-      if (!alive || !res || res.success === false) return;
-      const list = normalizeDoctorList(res, { approvedOnly: true }).filter((d) => getDoctorId(d));
-      setItems(list.slice(0, OUR_DOCTORS_LIMIT));
+      try {
+        // Guests are OTP-verified and hold a token; only logged-out visitors skip the call.
+        if (!(await isAuthenticated())) return;
+        const res = await getDoctors({ page: 1, page_size: OUR_DOCTORS_LIMIT });
+        if (!alive || !res || res.success === false) return;
+        const list = normalizeDoctorList(res, { approvedOnly: true }).filter((d) => getDoctorId(d));
+        setItems(list.slice(0, OUR_DOCTORS_LIMIT));
+      } catch {
+        // section stays hidden
+      } finally {
+        if (alive) setDone(true);
+      }
     })();
     return () => {
       alive = false;
     };
   }, [enabled]);
-  return items;
+  return [items, done];
 }
 
-/** Explicit approval flag from the API (not the permissive list filter default). */
-const hasApprovalFlag = (d) => {
-  const status = String(d?.approval_status ?? d?.verification_status ?? '').trim().toLowerCase();
-  if (['approved', 'verified'].includes(status)) return true;
-  const flag = d?.is_approved ?? d?.is_verified;
-  return flag === true || flag === 'true' || flag === 1 || flag === '1';
-};
-
-function OurDoctorCard({ item, index, onOpen }) {
-  const name = doctorDisplayName(item);
-  const image = doctorImage(item);
-  const qualification = doctorQualification(item);
-  const specs = resolveDoctorSpecializations(item).slice(0, 2).join(', ');
-  const experience = doctorExperience(item);
-  const rating = doctorRating(item);
-  const fee = doctorFeeLabel(item);
-  const verified = hasApprovalFlag(item);
-  const line = [qualification, specs && specs !== qualification ? specs : ''].filter(Boolean);
-
-  return (
-    <article className="hm-odoc" style={{ '--hm-odoc-i': Math.min(index, 6) }}>
-      <span className="hm-odoc__photo">
-        {image ? (
-          <img src={image} alt="" loading="lazy" decoding="async" width="52" height="52" />
-        ) : (
-          <span aria-hidden>{name.charAt(0)}</span>
-        )}
-      </span>
-      <div className="hm-odoc__id">
-        <h3 className="hm-odoc__name">
-          <span>{name}</span>
-          {verified ? <BadgeCheck className="hm-odoc__tick" size={15} aria-label="Verified" /> : null}
-        </h3>
-        {line.length ? (
-          <p className="hm-odoc__line">
-            {line.map((part, i) => (
-              <span key={part} className={i ? 'hm-odoc__spec' : 'hm-odoc__qual'}>
-                {part}
-              </span>
-            ))}
-          </p>
-        ) : null}
-      </div>
-      <div className="hm-odoc__foot">
-        {experience || rating || fee ? (
-          <ul className="hm-odoc__meta">
-            {experience ? <li>{experience}</li> : null}
-            {rating ? (
-              <li>
-                <Star size={11} aria-hidden /> {rating}
-              </li>
-            ) : null}
-            {fee ? (
-              <li className="hm-odoc__fee">
-                <strong>{fee}</strong>
-              </li>
-            ) : null}
-          </ul>
-        ) : null}
-        <button type="button" className="hm-odoc__cta am-stretched" onClick={onOpen}>
-          Consult
-          <ArrowRight size={13} aria-hidden />
-        </button>
-      </div>
-    </article>
-  );
-}
 
 function YogaSessionCard({ item, onClick }) {
   const level = shortLabel(item.difficulty);
   const duration = shortLabel(item.duration);
 
   return (
-    <article className="hm-pose">
-      <div className="hm-pose__media">
+    <button type="button" className="hm-pose" onClick={onClick}>
+      <span className="hm-pose__media">
         {item.thumbnail_url ? (
           <img src={item.thumbnail_url} alt="" loading="lazy" decoding="async" />
         ) : (
@@ -347,16 +266,35 @@ function YogaSessionCard({ item, onClick }) {
           <Play size={16} fill="currentColor" />
         </span>
         {level ? <span className="hm-pose__level">{level}</span> : null}
-      </div>
-      <div className="hm-pose__copy">
-        <h3>
-          <button type="button" className="am-stretched" onClick={onClick}>
-            {item.title}
-          </button>
-        </h3>
-        {duration ? <p>{duration}</p> : null}
-      </div>
-    </article>
+      </span>
+      <span className="hm-pose__copy">
+        <span className="hm-pose__title">{item.title}</span>
+        {duration ? <span className="hm-pose__time">{duration}</span> : null}
+      </span>
+    </button>
+  );
+}
+
+function YogaPoseRailSkeleton({ label, count = 4 }) {
+  return (
+    <div role="status" aria-busy="true" aria-label={label}>
+      <span className="am-sr-only">{label}</span>
+      <ul className="am-rail am-skel-rail hm-yoga-rail">
+        {Array.from({ length: count }, (_, i) => (
+          <li key={i} className="am-rail__item" aria-hidden>
+            <span className="hm-pose">
+              <span className="hm-pose__media">
+                <Skeleton variant="rect" className="am-skel-fill" />
+              </span>
+              <span className="hm-pose__copy">
+                <Skeleton width="75%" height={14} />
+                <Skeleton width={48} height={12} />
+              </span>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -386,23 +324,36 @@ function DietPlanCard({ item, onClick }) {
   );
 }
 
-function DoctorRailHeader({ id, eyebrow, title, description, onViewAll, reserveEyebrow = false }) {
+
+/** Below-the-fold wrapper: a fixed-height placeholder until its data has loaded, then it
+ *  disappears from layout (display: contents) so the section renders exactly as before. */
+/** Home sections in visual order; each starts after the previous one finishes (or times out). */
+const HOME_SECTION_ORDER = [
+  'critical', // profile + service categories (hero, services row)
+  'pair', // upcoming appointment + active diet
+  'banners',
+  'concerns',
+  'ourDoctors',
+  'brands',
+  'doctors', // visited + suggested
+  'products',
+  'yoga',
+  'diet',
+];
+const SECTION_STEP_TIMEOUT_MS = 3000;
+// Scrolling bumps a section only after the user actually scrolls; initial load stays strictly ordered.
+const BUMP_AFTER_SCROLL = { requireScroll: true };
+const DATA_SECTIONS = ['banners', 'concerns', 'doctors', 'products', 'yoga', 'diet'];
+
+function LazyBlock({ blockRef, done, minHeight, skeleton = null, children }) {
   return (
-    <div className="hm-doctor-head">
-      {eyebrow ? (
-        <p className="am-eyebrow">{eyebrow}</p>
-      ) : reserveEyebrow ? (
-        <p className="am-eyebrow" aria-hidden="true">
-          &nbsp;
-        </p>
-      ) : null}
-      <div className="hm-doctor-head__row">
-        <h2 id={id} className="hm-doctor-head__title">
-          {title}
-        </h2>
-        <ViewAll plain label={title} onClick={onViewAll} />
-      </div>
-      {description ? <p className="hm-doctor-head__desc">{description}</p> : null}
+    <div
+      ref={blockRef}
+      className="hm-lazy"
+      style={done ? { display: 'contents' } : { minHeight }}
+      aria-busy={done ? undefined : true}
+    >
+      {done ? children : skeleton}
     </div>
   );
 }
@@ -422,7 +373,10 @@ export default function Home() {
     sections,
     sectionLabels,
     loading,
-    loadingMore,
+    bannersLoading,
+    allSectionsDone,
+    isSectionDone,
+    loadSection,
     refreshing,
     loadingCustomer,
     medicineCategoryId,
@@ -430,13 +384,65 @@ export default function Home() {
     fetchCustomerData,
   } = useHomeData();
   const secondaryReady = !loading;
+  const [consultPackages, setConsultPackages] = useState([]);
+  useEffect(() => {
+    let cancelled = false;
+    loadConsultPackages()
+      .then((rows) => {
+        if (!cancelled && rows.length) setConsultPackages(rows);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  // All Home APIs load on mount, one section after another in visual order (top to bottom).
+  // Scrolling to a section that has not started yet bumps it to load immediately.
+  const queue = useSectionQueue(HOME_SECTION_ORDER, { timeout: SECTION_STEP_TIMEOUT_MS });
+  const { isStarted, markDone, bump } = queue;
+  const [concernsRef] = useLazySection(() => bump('concerns'), BUMP_AFTER_SCROLL);
+  const [ourDocsRef] = useLazySection(() => bump('ourDoctors'), BUMP_AFTER_SCROLL);
+  const [brandsRef] = useLazySection(() => bump('brands'), BUMP_AFTER_SCROLL);
+  const [doctorRowRef] = useLazySection(() => bump('doctors'), BUMP_AFTER_SCROLL);
+  const [productsRef] = useLazySection(() => bump('products'), BUMP_AFTER_SCROLL);
+  const [wellnessRef] = useLazySection(() => {
+    bump('yoga');
+    bump('diet');
+  }, BUMP_AFTER_SCROLL);
+  const pairStarted = isStarted('pair');
+  const ourDocsSeen = isStarted('ourDoctors');
+  const brandsSeen = isStarted('brands');
+  const doctorRowSeen = isStarted('doctors');
   const { doctors: visitedDoctors, loading: loadingVisitedDoctors } =
-    useRecentVisitedDoctors(secondaryReady);
-  const ourDoctors = useOurDoctors(secondaryReady);
+    useRecentVisitedDoctors(secondaryReady && doctorRowSeen);
+  const [ourDoctors, ourDoctorsDone] = useOurDoctors(secondaryReady && ourDocsSeen);
   const { appointments: upcomingAppointments, loading: loadingAppointments } =
-    useUpcomingAppointments(50, secondaryReady);
-  const { preview: activeDiet } = useActiveDietHome(secondaryReady);
-  const { brands } = useBrands();
+    useUpcomingAppointments(50, pairStarted);
+  const { preview: activeDiet } = useActiveDietHome(pairStarted);
+  const { brands, loading: brandsLoading } = useBrands(brandsSeen);
+
+  // Drive the section queue: start useHomeData sections when their turn comes, report completion.
+  useEffect(() => {
+    DATA_SECTIONS.forEach((key) => {
+      if (isStarted(key)) loadSection(key);
+      if (isSectionDone(key)) markDone(key);
+    });
+  }, [isStarted, isSectionDone, loadSection, markDone]);
+  useEffect(() => {
+    if (!loading) markDone('critical');
+  }, [loading, markDone]);
+  const pairWasLoading = useRef(false);
+  useEffect(() => {
+    if (!pairStarted) return;
+    if (loadingAppointments) pairWasLoading.current = true;
+    else if (pairWasLoading.current) markDone('pair');
+  }, [pairStarted, loadingAppointments, markDone]);
+  useEffect(() => {
+    if (ourDoctorsDone) markDone('ourDoctors');
+  }, [ourDoctorsDone, markDone]);
+  useEffect(() => {
+    if (brandsSeen && !brandsLoading) markDone('brands');
+  }, [brandsSeen, brandsLoading, markDone]);
 
   const [name, setName] = useState('');
   const [activeHomeModal, setActiveHomeModal] = useState('none');
@@ -753,7 +759,7 @@ export default function Home() {
           </div>
           <ActiveDietToast plan={activeDiet} />
 
-          {loading || bannerItems.length ? (
+          {bannersLoading || bannerItems.length ? (
           <div className="hm-dash">
             <div className="hm-dash__main">
               <BannerCarousel
@@ -761,13 +767,14 @@ export default function Home() {
                 initialIndex={0}
                 interval={6000}
                 onSelect={handleBannerPress}
-                loading={loading}
+                loading={bannersLoading}
                 copy={bannerCopy}
               />
             </div>
           </div>
           ) : null}
 
+          <LazyBlock blockRef={concernsRef} done={isSectionDone('concerns')} minHeight={120} skeleton={<SectionHold label={T.concernsTitle} minHeight={120} variant="chips" />}>
           {healthConcerns.length > 0 ? (
             <Reveal as="section" className="hm-section hm-panel hm-concerns-panel" aria-labelledby="hm-concerns-title">
               <SectionHeader
@@ -777,7 +784,7 @@ export default function Home() {
                 description={T.concernsText}
                 action={healthConcerns.length > 1 ? <ViewAll label={T.concernsTitle} onClick={() => navigate('/consult')} /> : null}
               />
-              <ConcernCarousel label={T.concernsTitle}>
+              <ConcernCarousel label={T.concernsTitle} marquee>
                 {healthConcerns.map((item) => (
                   <Tile
                     cutout
@@ -797,7 +804,9 @@ export default function Home() {
               </ConcernCarousel>
             </Reveal>
           ) : null}
+          </LazyBlock>
 
+          <LazyBlock blockRef={ourDocsRef} done={ourDoctorsDone} minHeight={120} skeleton={<HomeDoctorsSkeleton label="Loading our doctors" />}>
           {ourDoctors.length > 0 ? (
             <Reveal as="section" className="hm-section hm-panel hm-odocs" aria-labelledby="hm-odocs-title">
               <SectionHeader
@@ -823,7 +832,9 @@ export default function Home() {
               </Rail>
             </Reveal>
           ) : null}
+          </LazyBlock>
 
+          <LazyBlock blockRef={brandsRef} done={brandsSeen && !brandsLoading} minHeight={120} skeleton={<SectionHold label={T.brandsTitle} minHeight={120} variant="chips" />}>
           {brands.length > 0 ? (
             <Reveal as="section" className="hm-section hm-panel hm-brands-panel" aria-labelledby="hm-brands-title">
               <SectionHeader
@@ -852,8 +863,9 @@ export default function Home() {
               </ConcernCarousel>
             </Reveal>
           ) : null}
+          </LazyBlock>
 
-
+          <LazyBlock blockRef={doctorRowRef} done={doctorRowSeen} minHeight={360}>
           {showVisitedDoctors || showSuggestedDoctors ? (
             <div className={splitDoctorRow ? 'hm-doctor-row hm-doctor-row--split' : 'hm-doctor-row'}>
               {loadingVisitedDoctors && visitedDoctors.length === 0 ? (
@@ -863,7 +875,7 @@ export default function Home() {
                     description={T.visitedText}
                     onViewAll={() => navigate('/consult')}
                   />
-                  <RailSkeleton variant="doctor" />
+                  <SectionHold label={T.visitedTitle} minHeight={120} variant="list" count={2} />
                 </section>
               ) : null}
 
@@ -884,7 +896,7 @@ export default function Home() {
                 </Reveal>
               ) : null}
 
-              {loading && !doctors.length ? (
+              {!isSectionDone('doctors') && !doctors.length ? (
                 <section className="hm-section" aria-busy="true">
                   <DoctorRailHeader
                     eyebrow={T.doctorsEyebrow}
@@ -892,7 +904,7 @@ export default function Home() {
                     description={T.doctorsText}
                     onViewAll={() => navigate('/consult/doctors')}
                   />
-                  <RailSkeleton variant="doctor" />
+                  <SectionHold label={T.doctorsTitle} minHeight={120} variant="list" count={3} />
                 </section>
               ) : null}
 
@@ -910,21 +922,11 @@ export default function Home() {
               ) : null}
             </div>
           ) : null}
+          </LazyBlock>
 
-          {productPanels.length || (loading && !medicineProducts.length && !storeProducts.length) ? (
+          <LazyBlock blockRef={productsRef} done={isSectionDone('products')} minHeight={140} skeleton={<HomeProductsSkeleton label={T.productsTitle} />}>
+          {productPanels.length ? (
             <div className="hm-product-row hm-product-grid">
-              {loading && !medicineProducts.length && !storeProducts.length ? (
-                <>
-                  <section className="hm-section hm-products" aria-busy="true">
-                    <DoctorRailHeader title={T.medicinesTitle} onViewAll={() => navigate('/medicines')} />
-                    <RailSkeleton />
-                  </section>
-                  <section className="hm-section hm-products" aria-busy="true">
-                    <DoctorRailHeader title={T.productsTitle} onViewAll={() => navigate('/products')} />
-                    <RailSkeleton />
-                  </section>
-                </>
-              ) : null}
               {productPanels.map((panel) => (
                 <Reveal
                   as="section"
@@ -943,11 +945,9 @@ export default function Home() {
               ))}
             </div>
           ) : null}
-          {loadingMore && !yogaSessions.length && !dietProducts.length ? (
-            <section className="hm-section hm-panel" aria-busy="true">
-              <RailSkeleton />
-            </section>
-          ) : null}
+          </LazyBlock>
+
+          <LazyBlock blockRef={wellnessRef} done={isSectionDone('yoga') && isSectionDone('diet')} minHeight={140} skeleton={<YogaPoseRailSkeleton label={T.yogaTitle} count={4} />}>
 
           {yogaSessions.length > 0 || dietProducts.length > 0 ? (
             <div
@@ -966,7 +966,7 @@ export default function Home() {
                       <ViewAll label={T.yogaTitle} onClick={() => navigate('/yoga')} />
                     ) : null}
                   </div>
-                  <Rail label={T.yogaTitle} auto interval={3000} motionOverride className="hm-yoga-rail">
+                  <Rail label={T.yogaTitle} auto interval={3000} motionOverride controls className="hm-yoga-rail">
                     {yogaSessions.map((item) => (
                       <RailItem key={item.id}>
                         <YogaSessionCard
@@ -990,7 +990,7 @@ export default function Home() {
                     </div>
                     <ViewAll label={T.dietTitle} onClick={() => navigate('/diet?view=all')} />
                   </div>
-                  <Rail label={T.dietTitle} auto>
+                  <Rail label={T.dietTitle} auto controls className="hm-diet-rail">
                     {dietProducts.filter((d, i, all) => all.findIndex((x) => x.id === d.id) === i).map((item) => (
                       <RailItem key={item.id}>
                         <DietPlanCard
@@ -1004,21 +1004,37 @@ export default function Home() {
               ) : null}
             </div>
           ) : null}
+          </LazyBlock>
 
+          {consultPackages.length ? (
           <Reveal as="section" className="hm-section hm-panel" aria-labelledby="hm-packages-title">
             <SectionHeader
               id="hm-packages-title"
               title={T.packagesTitle}
               action={<ViewAll label={T.packagesTitle} onClick={() => navigate('/packages')} />}
             />
-            <Rail label={T.packagesTitle}>
-              {DUMMY_CONSULT_PACKAGES.slice(0, 6).map((item) => (
-                <RailItem key={item.id} size="product">
-                  <DummyOfferCard item={item} kind="package" onClick={() => navigate('/packages')} />
-                </RailItem>
-              ))}
-            </Rail>
+            <div className="hm-plan-band">
+              <p className="hm-plan-band__tag">
+                <span className="hm-plan-band__dot" aria-hidden />
+                Save more with guided Ayurvedic care plans
+              </p>
+              <Rail label={T.packagesTitle} className="hm-package-rail" auto interval={3200} controls>
+                {[...consultPackages]
+                  .sort((a, b) => Number(isCarePlan(b)) - Number(isCarePlan(a)))
+                  .slice(0, 8)
+                  .map((item) => (
+                    <RailItem key={item.id}>
+                      <DummyOfferCard
+                        item={item}
+                        kind="package"
+                        onClick={() => navigate(`/packages/${encodeURIComponent(item.id)}`)}
+                      />
+                    </RailItem>
+                  ))}
+              </Rail>
+            </div>
           </Reveal>
+          ) : null}
 
           {/* TEMP hidden per Rohit — Health Lab (Home collection) + Panchakarma (Classical therapies) sections
           <Reveal as="section" className="hm-section hm-panel hm-lab" aria-labelledby="hm-lab-title">
@@ -1060,7 +1076,7 @@ export default function Home() {
             </Rail>
           </Reveal> */}
 
-          {!loading && !hasAnyContent ? (
+          {!loading && allSectionsDone && !hasAnyContent ? (
             <EmptyState
               icon={<Leaf size={28} />}
               title={T.emptyTitle}

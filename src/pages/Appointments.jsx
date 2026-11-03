@@ -1,11 +1,22 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import {
+  CalendarDays,
+  Clock,
+  RefreshCw,
+  Plus,
+} from "lucide-react";
 import AppShell from "../components/AppShell";
+import { Chip, Tabs } from "../components/ui";
+import AdvanceLoad from "../components/ui/AdvanceLoad";
+import DietitianBadge from "../components/DietitianBadge";
 import PageHeader from "../components/PageHeader";
 import {
   buildVideoCallNavParams,
-  canModifyAppointment,
+  canOfferCancel,
+  canOfferReschedule,
   hasAlreadyRescheduled,
+  isAppointmentJoinable,
   formatAppointmentDateFull,
   formatAppointmentTimeLabel,
   formatDoctorDisplayName,
@@ -13,9 +24,13 @@ import {
   resolveAppointmentLookupId,
 } from "../consult/appointmentUtils";
 import { showSuccessToast } from "../config/key";
+import { useJoinWindowTick } from "../hooks/useJoinWindow";
 import { mapAppointment } from "../profile/map";
+import { formatRupee } from "../home/catalog";
+import { formatPaymentTimestamp, getCompletedRefund } from "../utils/paymentHistoryUtils";
 import { requireAuth } from "../services/guestAuth";
 import { getConsultHistory } from "../services/consultService";
+import { invalidateApiCache } from "../services/apiClient";
 import { consultationHasPrescription } from "../utils/prescriptionDetailUtils";
 import "../design/pages/appointments.css";
 
@@ -60,18 +75,18 @@ const PAST_STATUS_FILTERS = [
 ];
 
 const STATUS_STYLE = {
-  confirmed: { background: "#eef4ff", color: "#1048b9" },
-  upcoming: { background: "#eef4ff", color: "#1048b9" },
-  booked: { background: "#eef4ff", color: "#1048b9" },
-  pending: { background: "#fff7ed", color: "#ea580c" },
-  cancelled: { background: "#fee2e2", color: "#ef4444" },
-  completed: { background: "#dcfce7", color: "#16a34a" },
+  confirmed: { background: "#e3f3ec", color: "#0b6b4f" },
+  upcoming: { background: "#e3f3ec", color: "#0b6b4f" },
+  booked: { background: "#e3f3ec", color: "#0b6b4f" },
+  pending: { background: "#fff4dc", color: "#a8650c" },
+  cancelled: { background: "#fbe9e7", color: "#a8453a" },
+  completed: { background: "#e3f3ec", color: "#0b6b4f" },
   missed: { background: "#f3f4f6", color: "#6b7280" },
   expired: { background: "#f3f4f6", color: "#6b7280" },
   no_show: { background: "#f3f4f6", color: "#6b7280" },
   noshow: { background: "#f3f4f6", color: "#6b7280" },
-  reschedule: { background: "#fef3c7", color: "#b45309" },
-  rescheduled: { background: "#fef3c7", color: "#b45309" },
+  reschedule: { background: "#f8ecc9", color: "#8a6b2e" },
+  rescheduled: { background: "#f8ecc9", color: "#8a6b2e" },
 };
 
 const formatStatusLabel = (status) => {
@@ -114,20 +129,6 @@ const itemHasPrescription = (item) => {
   );
 };
 
-const ChipRow = ({ items, activeKey, onChange }) => (
-  <div className="home-rail subcat-rail">
-    {items.map((item) => (
-      <button
-        key={item.key}
-        type="button"
-        className={`chip ${activeKey === item.key ? "on" : ""}`}
-        onClick={() => onChange(item.key)}
-      >
-        {item.label}
-      </button>
-    ))}
-  </div>
-);
 
 export default function Appointments() {
   const navigate = useNavigate();
@@ -153,9 +154,13 @@ export default function Appointments() {
     return filters;
   }, [listScope, statusFilter, followUpFilter]);
 
+  // Tab / filter switches and refresh race: only the newest list request may write state.
+  const listRequestRef = useRef(0);
   const loadPage = useCallback(
     async (pageNo, mode = "replace") => {
       if (!(await requireAuth("Please login to view appointments"))) return;
+      const requestId = ++listRequestRef.current;
+      if (mode === "refresh") invalidateApiCache("customers/doctors/consultation-history/");
       if (mode === "append") setLoadingMore(true);
       else if (mode === "refresh") setRefreshing(true);
       else setLoading(true);
@@ -165,15 +170,18 @@ export default function Appointments() {
           page_size: PAGE_SIZE,
           ...apiFilters,
         });
+        if (requestId !== listRequestRef.current) return;
         const list = res?.data?.results || res?.results || [];
         const mapped = Array.isArray(list) ? list.map(mapAppointment) : [];
         setItems((prev) => (mode === "append" ? [...prev, ...mapped] : mapped));
         setPage(pageNo);
         setHasMore(Boolean(res?.data?.next) || mapped.length >= PAGE_SIZE);
       } finally {
-        setLoading(false);
-        setLoadingMore(false);
-        setRefreshing(false);
+        if (requestId === listRequestRef.current) {
+          setLoading(false);
+          setLoadingMore(false);
+          setRefreshing(false);
+        }
       }
     },
     [apiFilters],
@@ -182,6 +190,9 @@ export default function Appointments() {
   useEffect(() => {
     loadPage(1, "replace");
   }, [loadPage]);
+
+  // Re-render when a join window opens / closes so "Join call" appears exactly 5 min before start.
+  useJoinWindowTick(items);
 
   const handleTabChange = (nextTab) => {
     setTab(nextTab);
@@ -242,7 +253,7 @@ export default function Appointments() {
   };
 
   const joinCall = (item) => {
-    if (item.call_status !== "in_progress") {
+    if (!isAppointmentJoinable(item)) {
       showSuccessToast(
         "Video call is not active yet. Please wait for the doctor to start the consultation.",
         "error",
@@ -279,7 +290,7 @@ export default function Appointments() {
 
   return (
     <AppShell tab="profile">
-      <section className="catalog-page appointments-page">
+      <section className="catalog-page appointments-page ap-premium">
         <PageHeader
           title={upcomingOnly ? "Upcoming" : "My Appointments"}
           subtitle={
@@ -290,17 +301,19 @@ export default function Appointments() {
             <>
               <button
                 type="button"
-                className="cta"
+                className="ap-btn ap-btn--ghost"
                 onClick={() => loadPage(1, "refresh")}
                 disabled={refreshing || loading}
               >
+                <RefreshCw size={15} className={refreshing ? "ap-spin" : ""} aria-hidden />
                 {refreshing ? "Refreshing…" : "Refresh"}
               </button>
               <button
                 type="button"
-                className="cta"
+                className="ap-btn ap-btn--primary"
                 onClick={() => navigate("/consult/doctors")}
               >
+                <Plus size={15} aria-hidden />
                 Book
               </button>
             </>
@@ -308,66 +321,62 @@ export default function Appointments() {
         />
 
         {!upcomingOnly ? (
-          <div className="appoint-filters">
-            <div className="filter-group">
-              <span>When</span>
-              <div className="filter-chips">
-                {[
-                  { key: "upcoming", label: "Upcoming" },
-                  { key: "past", label: "Past" },
-                ].map((item) => (
-                  <button
-                    key={item.key}
-                    type="button"
-                    className={`chip ${tab === item.key ? "on" : ""}`}
-                    onClick={() => handleTabChange(item.key)}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
+          <Tabs
+            label="When"
+            className="ap-when-tabs"
+            value={tab}
+            onChange={handleTabChange}
+            items={[
+              { id: "upcoming", label: "Upcoming" },
+              { id: "past", label: "Past" },
+            ]}
+          />
+        ) : null}
+        <div className="ap-toolbar" role="toolbar" aria-label="Filter appointments">
+          <div className="ap-toolbar__chips">
+            <div className="ap-toolbar__group" role="group" aria-label="Visit type">
+              {FOLLOW_UP_FILTERS.map((item) => (
+                <Chip
+                  key={item.key}
+                  selected={followUpFilter === item.key}
+                  onClick={() => setFollowUpFilter(item.key)}
+                >
+                  {item.label}
+                </Chip>
+              ))}
             </div>
-            <div className="filter-group">
-              <span>Follow-up</span>
-              <ChipRow
-                items={FOLLOW_UP_FILTERS}
-                activeKey={followUpFilter}
-                onChange={setFollowUpFilter}
-              />
-            </div>
-            <div className="filter-group">
-              <span>Status</span>
-              <ChipRow
-                items={statusChips}
-                activeKey={statusFilter}
-                onChange={setStatusFilter}
-              />
-            </div>
-          </div>
-        ) : (
-          <div className="appoint-filters">
-            <div className="filter-group">
-              <span>Follow-up</span>
-              <ChipRow
-                items={FOLLOW_UP_FILTERS}
-                activeKey={followUpFilter}
-                onChange={setFollowUpFilter}
-              />
-            </div>
-            <div className="filter-group">
-              <span>Status</span>
-              <ChipRow
-                items={statusChips}
-                activeKey={statusFilter}
-                onChange={setStatusFilter}
-              />
+            <span className="ap-toolbar__sep" aria-hidden />
+            <div className="ap-toolbar__group" role="group" aria-label="Status">
+              {statusChips.map((item) => (
+                <Chip
+                  key={item.key}
+                  selected={statusFilter === item.key}
+                  onClick={() => setStatusFilter(item.key)}
+                >
+                  {item.label}
+                </Chip>
+              ))}
             </div>
           </div>
-        )}
-        <p className="muted appoint-count">{resultLabel}</p>
+          <div className="ap-toolbar__meta">
+            <span className="ap-toolbar__count" aria-live="polite">{resultLabel}</span>
+            {followUpFilter !== "all" || statusFilter !== "all" ? (
+              <button
+                type="button"
+                className="ap-toolbar__clear"
+                onClick={() => {
+                  setFollowUpFilter("all");
+                  setStatusFilter("all");
+                }}
+              >
+                Clear filters
+              </button>
+            ) : null}
+          </div>
+        </div>
 
         {loading ? (
-          <p className="muted">Loading appointments…</p>
+          <AdvanceLoad variant="list" label="Loading appointments" onRetry={() => loadPage(1, "replace")} />
         ) : visible.length === 0 ? (
           <div className="empty-copy">
             <strong>
@@ -415,21 +424,26 @@ export default function Appointments() {
               const timeRange = item.endTime
                 ? `${timeLabel} – ${formatAppointmentTimeLabel(item.endTime)}`
                 : timeLabel;
-              const withinModify = canModifyAppointment(
+              const showReschedule = canOfferReschedule(
                 status,
                 item.date,
                 item.time,
+                item,
               );
+              const showCancel = canOfferCancel(status, item.date, item.time);
+              const withinModify = showReschedule || showCancel;
               const hasRx = itemHasPrescription(item);
               const showViewDetails = hasRx && PAST_STATUS.includes(status);
-              const showJoinCall = item.call_status === "in_progress";
+              const showJoinCall = isAppointmentJoinable(item);
+              const refund = getCompletedRefund(status, item.raw, item);
               const therapy =
                 item.therapies || item.specialty || "Ayurvedic consultation";
               const followUp = item.followUpDate;
               return (
                 <article
                   key={item.consultationId || item.appointmentId || item.id}
-                  className="checkout-card appoint-card"
+                  className="checkout-card appoint-card ap-card"
+                  data-status={paymentPending ? "pending" : status}
                 >
                   <button
                     type="button"
@@ -459,22 +473,41 @@ export default function Appointments() {
                           </em>
                         ) : null}
                       </div>
-                      <small className="history-specialty">{therapy}</small>
+                      <DietitianBadge doctor={item} />
+                      <div className="ap-specialties">
+                        {String(therapy)
+                          .split(/[,;|]/)
+                          .map((s) => s.trim())
+                          .filter(Boolean)
+                          .map((s) => (
+                            <span key={s}>{s}</span>
+                          ))}
+                      </div>
                       {item.patientName ? (
-                        <small>Patient · {item.patientName}</small>
+                        <small className="ap-patient">Patient · {item.patientName}</small>
                       ) : null}
                     </div>
                   </button>
                   <div className="confirm-meta-grid appoint-meta">
                     <div className="confirm-meta-chip">
-                      <small>Date</small>
+                      <small>
+                        <CalendarDays size={13} aria-hidden /> Date
+                      </small>
                       <strong>{dateLabel || "—"}</strong>
                     </div>
                     <div className="confirm-meta-chip">
-                      <small>Time</small>
+                      <small>
+                        <Clock size={13} aria-hidden /> Time
+                      </small>
                       <strong>{timeRange || "—"}</strong>
                     </div>
                   </div>
+                  {refund ? (
+                    <p className="appoint-followup">
+                      Refunded {refund.amount != null ? formatRupee(refund.amount) : ""}
+                      {refund.at ? ` · ${formatPaymentTimestamp(refund.at)}` : ""}
+                    </p>
+                  ) : null}
                   {followUp ? (
                     <p className="appoint-followup">
                       Follow-up scheduled · {followUp}
@@ -482,7 +515,7 @@ export default function Appointments() {
                   ) : null}
                   {withinModify || showViewDetails || showJoinCall ? (
                     <div className="history-actions">
-                      {withinModify && !showJoinCall ? (
+                      {showReschedule && !showJoinCall ? (
                         <button
                           type="button"
                           className="ghost"
@@ -510,7 +543,7 @@ export default function Appointments() {
                         >
                           Join call
                         </button>
-                      ) : withinModify ? (
+                      ) : showCancel ? (
                         <button
                           type="button"
                           className="cta danger"

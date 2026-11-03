@@ -1,0 +1,14 @@
+/* Pay-using gateway chips (pgw-*). Reuses ui Chip; only layout lives here. */
+.pgw {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 0;
+}
+.pgw__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--am-ink-2, #475569);
+  margin-right: 2px;
+}

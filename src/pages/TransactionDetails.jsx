@@ -334,16 +334,20 @@ export default function TransactionDetails() {
                         label: 'Gateway order',
                         value:
                           consultationPayment?.gateway_order_id ||
+                          consultationPayment?.cashfree_order_id ||
                           consultationPayment?.razorpay_order_id ||
                           orderPayment?.gateway_order_id ||
+                          orderPayment?.cashfree_order_id ||
                           orderPayment?.razorpay_order_id,
                       },
                       {
                         label: 'Gateway payment',
                         value:
                           consultationPayment?.gateway_payment_id ||
+                          consultationPayment?.cf_payment_id ||
                           consultationPayment?.razorpay_payment_id ||
                           orderPayment?.gateway_payment_id ||
+                          orderPayment?.cf_payment_id ||
                           orderPayment?.razorpay_payment_id,
                       },
                       { label: 'Status', value: words(consultationPayment?.status || orderPayment?.status) },

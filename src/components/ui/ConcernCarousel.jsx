@@ -3,7 +3,7 @@ import { cx } from './cx';
 
 const INTERVAL = 4200;
 
-export default function ConcernCarousel({ label = 'Health concerns', className, children }) {
+export default function ConcernCarousel({ label = 'Health concerns', className, children, marquee = false, speed = 40 }) {
   const items = Children.toArray(children).filter(Boolean);
   const count = items.length;
   const viewportRef = useRef(null);
@@ -13,6 +13,7 @@ export default function ConcernCarousel({ label = 'Health concerns', className, 
   const [perView, setPerView] = useState(1);
   const [reduced, setReduced] = useState(false);
   const [jumping, setJumping] = useState(false);
+  const [viewportWidth, setViewportWidth] = useState(0);
 
   useEffect(() => {
     const media = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -34,6 +35,7 @@ export default function ConcernCarousel({ label = 'Health concerns', className, 
     if (!nextStep) return;
     const visible = Math.max(1, Math.ceil((viewport.clientWidth + gap) / nextStep));
     setStep(nextStep);
+    setViewportWidth(viewport.clientWidth);
     setPerView(Math.min(count, visible));
   }, [count]);
 
@@ -46,7 +48,12 @@ export default function ConcernCarousel({ label = 'Health concerns', className, 
     return () => observer.disconnect();
   }, [measure]);
 
-  const canSlide = count > perView && step > 0;
+  // Marquee: continuous loop at every width, even when every item already fits.
+  const loopWidth = count * step;
+  const marqueeOn = marquee && !reduced && count > 0 && step > 0;
+  const copies = marqueeOn ? Math.max(2, Math.ceil(viewportWidth / loopWidth) + 1) : 1;
+
+  const canSlide = !marquee && count > perView && step > 0;
   const held = reduced || !canSlide;
 
   useEffect(() => {
@@ -73,16 +80,23 @@ export default function ConcernCarousel({ label = 'Health concerns', className, 
   };
 
   const slides = useMemo(() => {
+    if (marqueeOn) {
+      const out = [...items];
+      for (let c = 1; c < copies; c += 1) {
+        items.forEach((child) => out.push(cloneElement(child, { loopCopy: true, key: `${child.key}-m${c}` })));
+      }
+      return out;
+    }
     if (!canSlide) return items;
     const clones = items.slice(0, perView).map((child) =>
       cloneElement(child, { loopCopy: true, key: `${child.key}-loop` }),
     );
     return [...items, ...clones];
-  }, [items, canSlide, perView]);
+  }, [items, canSlide, perView, marqueeOn, copies]);
 
   return (
     <div
-      className={cx('am-concerns', className)}
+      className={cx('am-concerns', marqueeOn && 'am-concerns--marquee', className)}
       role="region"
       aria-roledescription="carousel"
       aria-label={label}
@@ -91,7 +105,13 @@ export default function ConcernCarousel({ label = 'Health concerns', className, 
         <ul
           ref={trackRef}
           className={cx('am-concerns__track', jumping && 'is-instant')}
-          style={canSlide ? { transform: `translate3d(${-index * step}px, 0, 0)` } : undefined}
+          style={
+            marqueeOn
+              ? { '--am-loop': `-${loopWidth}px`, '--am-loop-dur': `${Math.max(12, loopWidth / speed)}s` }
+              : canSlide
+                ? { transform: `translate3d(${-index * step}px, 0, 0)` }
+                : undefined
+          }
           onTransitionEnd={settle}
         >
           {slides}

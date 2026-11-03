@@ -16,6 +16,7 @@ import {
   Video,
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import DietitianBadge from '../components/DietitianBadge';
 import {
   ActionStack,
   DetailCard,
@@ -34,6 +35,7 @@ import { formatRupee } from '../home/catalog';
 import { getDoctorById, toggleFavDoctor } from '../services/consultService';
 import { getReviews } from '../services/productService';
 import { requireAuth } from '../services/guestAuth';
+import { invalidateApiCache } from '../services/apiClient';
 import { showSuccessToast } from '../config/key';
 import { formatDoctorDisplayName } from '../consult/appointmentUtils';
 import {
@@ -62,7 +64,6 @@ import {
 } from '../utils/reviewUtils';
 import {
   Button,
-  Disclaimer,
   EmptyState,
   ErrorState,
   FavButton,
@@ -117,8 +118,10 @@ export default function DoctorProfile() {
   const load = useCallback(
     async (isRefresh = false) => {
       if (!doctorId) return;
-      if (isRefresh) setRefreshing(true);
-      else if (!seeded) setLoading(true);
+      if (isRefresh) {
+        setRefreshing(true);
+        invalidateApiCache(['customers/doctors/', 'review/']);
+      } else if (!seeded) setLoading(true);
       try {
         const [docRes, reviewRes] = await Promise.all([
           getDoctorById(doctorId),
@@ -295,6 +298,7 @@ export default function DoctorProfile() {
           lede={showQualification ? `${speciality} · ${qualification}` : speciality}
           chips={
             <>
+              <DietitianBadge doctor={doctor} size="md" />
               {ratingValue ? (
                 <MetaChip icon={Star} tone="gold">
                   {ratingValue} · {reviewCount} {T.reviews.toLowerCase()}
@@ -499,7 +503,6 @@ export default function DoctorProfile() {
             )}
           </DetailCard>
 
-          <Disclaimer variant="banner" />
         </DetailLayout>
       </DetailPage>
 

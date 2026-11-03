@@ -217,25 +217,215 @@
   }
 }
 
-/* ---------- Route loader (lazy page fallback) ---------- */
+/* ---------- Route / data loading ---------- */
 .am-route-loader {
+  min-height: 60vh;
+  padding: var(--am-space-6) var(--am-space-4);
+}
+.am-load--hold {
+  min-height: 40vh;
+}
+.am-load__page,
+.am-load__detail,
+.am-load__rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--am-space-3);
+}
+.am-load__row {
+  display: flex;
+  align-items: center;
+  gap: var(--am-space-3);
+  padding: var(--am-space-3);
+  border: 1px solid var(--am-line);
+  border-radius: var(--am-radius-lg);
+  background: var(--am-surface);
+}
+.am-load__row-copy {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.am-load__note {
+  margin-top: var(--am-space-4);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--am-space-3);
+}
+.am-load__note p {
+  margin: 0;
+  color: var(--am-ink-soft, var(--am-muted, #5c6b66));
+  font-size: 0.92rem;
+}
+.am-load {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  min-height: 240px;
+  padding: 36px 16px;
+  position: relative;
+  overflow: hidden;
+  container-type: inline-size;
+}
+.am-load--cards,
+.am-load--detail {
+  min-height: 380px;
+}
+.am-load--page {
+  min-height: 68vh;
+}
+.am-hold {
+  position: relative;
   display: grid;
   place-items: center;
-  min-height: 60vh;
-  opacity: 0;
-  animation: am-route-loader-in 200ms ease-out 250ms forwards;
+  width: 100%;
+  overflow: hidden;
+  contain: layout paint;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
 }
-.am-route-loader__ring {
-  width: 36px;
-  height: 36px;
+.am-hold > .am-logo-spin {
+  position: relative;
+  left: auto;
+  top: auto;
+  transform: none;
+}
+/* AyurMuni logo loader: the real mark, a thin brand-green ring with a gold accent tip, nothing outside its own box. */
+.am-logo-spin {
+  --seal: 48px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--seal);
+  height: var(--seal);
+  flex: none;
+  isolation: isolate;
+}
+.am-logo-spin--micro { --seal: 28px; }
+.am-logo-spin--compact { --seal: 40px; }
+.am-logo-spin--section { --seal: 48px; }
+.am-logo-spin--feature,
+.am-logo-spin--page { --seal: 56px; }
+.am-logo-spin__orbit {
+  position: absolute;
+  inset: 0;
   border-radius: 50%;
-  border: 3px solid color-mix(in srgb, var(--am-primary) 18%, transparent);
-  border-top-color: var(--am-primary);
-  animation: am-spin 800ms linear infinite;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0 50%,
+    color-mix(in srgb, var(--am-primary) 40%, transparent) 64%,
+    var(--am-primary) 90%,
+    var(--am-gold-500, var(--am-accent)) 100%
+  );
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
+  animation: am-spin 1.4s linear infinite;
 }
-@keyframes am-route-loader-in {
-  to {
-    opacity: 1;
+.am-logo-spin__mark {
+  width: 78%;
+  height: 78%;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #fff;
+  animation: am-logo-breathe 2s ease-in-out infinite;
+}
+.am-logo-spin__mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.am-logo-spin--micro .am-logo-spin__orbit {
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 1.5px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 1.5px));
+}
+@keyframes am-logo-breathe {
+  0%, 100% { opacity: 0.82; transform: scale(0.94); }
+  50% { opacity: 1; transform: scale(1); }
+}
+.am-skeleton-grid--loading,
+.am-rail-wrap,
+.dx-skeleton,
+.or-skel,
+.cp-skel,
+.rw-skel,
+.hm-appt.is-loading,
+.pf-page[aria-busy='true'],
+.am-load {
+  position: relative;
+}
+.am-skeleton-grid--loading,
+.dx-skeleton,
+.or-skel,
+.cp-skel,
+.rw-skel,
+.pf-page[aria-busy='true'] {
+  container-type: inline-size;
+}
+.am-skeleton-grid--loading > .am-logo-spin,
+.am-rail-wrap > .am-logo-spin,
+.dx-skeleton > .am-logo-spin,
+.or-skel > .am-logo-spin,
+.cp-skel > .am-logo-spin,
+.rw-skel > .am-logo-spin,
+.hm-appt.is-loading > .am-logo-spin,
+.pf-page[aria-busy='true'] > .am-logo-spin {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  top: 46%;
+  transform: translate(-50%, -50%);
+}
+.am-loadbar {
+  position: fixed;
+  top: 76px;
+  left: 0;
+  right: 0;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+.am-loadbar__note {
+  pointer-events: auto;
+  width: min(440px, calc(100% - 24px));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: var(--am-surface);
+  border: 1px solid var(--am-line);
+  box-shadow: var(--am-shadow-sm, 0 8px 24px rgba(11, 65, 54, 0.12));
+}
+.am-loadbar__note p {
+  margin: 0;
+  font-size: 0.88rem;
+}
+.am-loadbar__note button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  color: var(--am-primary);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+@media (prefers-reduced-motion: reduce) {
+  .am-skeleton,
+  .am-logo-spin__orbit,
+  .am-logo-spin__mark {
+    animation: none;
   }
 }
 
@@ -1695,6 +1885,12 @@
   opacity: 0;
   pointer-events: none;
   z-index: 0;
+  /* Hidden slides park behind the side cards (offset clamped to +/-1). Using the raw +/-2 offset pushed
+     them ~1.5 section-widths out, and with overflow-x: visible (>=1200px) that stretched the whole page. */
+  transform:
+    translateX(calc(clamp(-1, var(--am-banner-offset, 0), 1) * var(--am-banner-shift)))
+    rotateY(calc(clamp(-1, var(--am-banner-offset, 0), 1) * var(--am-banner-tilt) * -1))
+    scale(var(--am-banner-scale));
 }
 .am-banner__slide.is-prev:hover,
 .am-banner__slide.is-next:hover {
@@ -1860,7 +2056,18 @@
   outline-offset: -4px;
 }
 
-/* ----- Skeleton ----- */
+/* ----- Waiting for banner data: seal only, no coverflow cards ----- */
+.am-banner--hold {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 180px;
+  overflow: hidden;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
 .am-banner--loading { padding-bottom: 12px; }
 .am-banner__skeleton {
   background: var(--am-surface-muted);
@@ -1916,16 +2123,11 @@
   scroll-snap-type: x mandatory;
   scroll-padding-inline: var(--am-gutter);
   scroll-behavior: smooth;
-  scrollbar-width: thin;
-  scrollbar-color: var(--am-line-strong) transparent;
+  scrollbar-width: none;
   overscroll-behavior-x: contain;
 }
 .am-rail::-webkit-scrollbar {
-  height: 6px;
-}
-.am-rail::-webkit-scrollbar-thumb {
-  border-radius: 6px;
-  background: var(--am-line-strong);
+  display: none;
 }
 .am-rail__item {
   flex: 0 0 min(72%, 220px);
@@ -1945,6 +2147,36 @@
 
 .am-rail__item > * {
   height: 100%;
+}
+.am-rail-scroller {
+  position: relative;
+}
+.am-rail-scroller__btn {
+  position: absolute;
+  top: 42%;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid rgba(16, 83, 67, 0.18);
+  border-radius: 50%;
+  background: #fffdf8;
+  color: #105343;
+  box-shadow: 0 6px 16px rgba(8, 36, 29, 0.18);
+  cursor: pointer;
+}
+.am-rail-scroller__btn--prev { left: 0; }
+.am-rail-scroller__btn--next { right: 0; }
+.am-rail-scroller__btn:hover:not(:disabled) { background: #fff; }
+.am-rail-scroller__btn:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+.am-rail-scroller__btn:focus-visible {
+  outline: 2px solid #105343;
+  outline-offset: 2px;
 }
 @media (min-width: 1024px) {
   .am-rail {

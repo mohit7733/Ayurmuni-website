@@ -7,10 +7,13 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { setNavigate } from "./navigation/nav";
+import { PRIMARY_NAV } from "./site/nav";
 import ToastHost from "./components/ToastHost";
+import GlobalLoadBar from "./components/GlobalLoadBar";
 import { Utils } from "./common/utils";
 import { getAccessLevel } from "./services/guestAuth";
 import { syncPushForSession } from "./services/pushNotificationService";
+import { runWhenIdle } from "./hooks/useLazySection";
 import Splash from "./pages/Splash";
 import Welcome from "./pages/Welcome";
 import Login from "./pages/Login";
@@ -19,7 +22,7 @@ import Home from "./pages/Home";
 import NetworkError from "./pages/NetworkError";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
-import { STATIC_COPY } from "./content/static";
+import { PageSkeleton } from "./components/skeletons";
 
 const loadPage = (loader) => lazy(loader);
 const loadVideoCall = () => import("./pages/VideoCall");
@@ -42,11 +45,13 @@ const Products = loadPage(() => import("./pages/Products"));
 const CategoryProducts = loadPage(() => import("./pages/CategoryProducts"));
 const TopCategories = loadPage(() => import("./pages/TopCategories"));
 const ProductDetails = loadPage(() => import("./pages/ProductDetails"));
+const MedicineDetails = loadPage(() => import("./pages/MedicineDetails"));
 const ProductSearch = loadPage(() => import("./pages/ProductSearch"));
 const ReviewPage = loadPage(() => import("./pages/ReviewPage"));
 const ReviewGallery = loadPage(() => import("./pages/ReviewGallery"));
 const Cart = loadPage(() => import("./pages/Cart"));
 const Checkout = loadPage(() => import("./pages/Checkout"));
+const PaymentReturn = loadPage(() => import("./pages/PaymentReturn"));
 const OrderConfirmation = loadPage(() => import("./pages/OrderConfirmation"));
 const Consult = loadPage(() => import("./pages/Consult"));
 const ConsultHistory = loadPage(() => import("./pages/ConsultHistory"));
@@ -65,6 +70,7 @@ const Settings = loadPage(() => import("./pages/Settings"));
 const NotificationSettings = loadPage(() => import("./pages/NotificationSettings"));
 // const OrangeLab = loadPage(() => import("./pages/OrangeLab")); // Health Lab disabled per Rohit
 const Packages = loadPage(() => import("./pages/Packages"));
+const PackageDetails = loadPage(() => import("./pages/PackageDetails"));
 const Panchakarma = loadPage(() => import("./pages/Panchakarma"));
 const Addresses = loadPage(() => import("./pages/Addresses"));
 const AddressForm = loadPage(() => import("./pages/AddressForm"));
@@ -80,7 +86,10 @@ const FeedbackInformation = loadPage(() => import("./pages/FeedbackInformation")
 const LegalPoliciesHub = loadPage(() => import("./pages/LegalPoliciesHub"));
 const OrderHistory = loadPage(() => import("./pages/OrderHistory"));
 const OrderDetails = loadPage(() => import("./pages/OrderDetails"));
+const ReturnRequest = loadPage(() => import("./pages/ReturnRequest"));
+const ReturnDetails = loadPage(() => import("./pages/ReturnDetails"));
 const Wishlist = loadPage(() => import("./pages/Wishlist"));
+const MyPlans = loadPage(() => import("./pages/MyPlans"));
 const FavDoctors = loadPage(() => import("./pages/FavDoctors"));
 const HelpCenter = loadPage(() => import("./pages/HelpCenter"));
 const FaqDetail = loadPage(() => import("./pages/FaqDetail"));
@@ -119,6 +128,7 @@ import FloatingVideoOverlay from "./components/FloatingVideoOverlay";
 import ChatLauncher from "./components/chat/ChatLauncher";
 import CartFloat from "./components/CartFloat";
 import AuthShell from "./components/AuthShell";
+import AppShell from "./components/AppShell";
 import NetworkGuard from "./components/NetworkGuard";
 import RequireAuth from "./components/RequireAuth";
 import "./design/tokens.css";
@@ -170,10 +180,14 @@ const PatientFaqPage = withAuthChrome(PatientFAQ, {
   welcomeMode: false,
   className: 'auth-shell--assessment',
 });
-const PrakritiProfilePage = withAuthChrome(PrakritiProfile, {
-  hideFooter: true,
-  welcomeMode: false,
-});
+// Result page: full site navbar (data, cart, profile). Quiz steps keep the minimal AuthShell header.
+function PrakritiProfilePage() {
+  return (
+    <AppShell tab="profile" hideFooter>
+      <PrakritiProfile />
+    </AppShell>
+  );
+}
 const CompleteDetailsPage = withAuthChrome(CompleteDetails);
 
 // Push for already-logged-in users (they never went through OTP after push shipped).
@@ -186,7 +200,10 @@ function PushSessionSync() {
       const userId = await Utils.getData('_USER_ID');
       const info = await Utils.getData('_USER_INFO');
       if (!userId || info?.is_notification_enabled === false) return;
-      syncPushForSession(userId);
+      // OneSignal is non-critical: init after first paint / idle.
+      runWhenIdle(() => {
+        if (alive) syncPushForSession(userId);
+      }, 4000);
     })();
     return () => {
       alive = false;
@@ -210,11 +227,22 @@ function RouteErrorBoundary({ children }) {
   return <ErrorBoundary resetKey={pathname}>{children}</ErrorBoundary>;
 }
 
-function RouteLoader() {
+const HEADER_HOLD_PATHS = [...PRIMARY_NAV.map((item) => item.to), "/profile", "/cart", "/notifications", "/search"];
+
+/**
+ * Suspense fallback while a lazy page chunk loads. The header lives inside each page, so without
+ * this the top of the screen shows the bare page background. Renders a static bar in the header's
+ * own colours (no animation) so the header area looks the same before and after the page loads,
+ * followed by a page skeleton.
+ */
+function RouteFallback() {
+  const { pathname } = useLocation();
+  const holdsHeader = HEADER_HOLD_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
   return (
-    <div className="am-route-loader" role="status" aria-label={STATIC_COPY.pageLoading}>
-      <span className="am-route-loader__ring" aria-hidden />
-    </div>
+    <>
+      {holdsHeader ? <div className="site-header-hold" aria-hidden="true" /> : null}
+      <PageSkeleton />
+    </>
   );
 }
 
@@ -237,11 +265,12 @@ export default function App() {
             <NavBinder />
             <ScrollToTop />
             <ToastHost />
+            <GlobalLoadBar />
             <PushSessionSync />
             <FloatingVideoOverlay />
             <NetworkGuard>
               <RouteErrorBoundary>
-              <Suspense fallback={<RouteLoader />}>
+              <Suspense fallback={<RouteFallback />}>
               <Routes>
                 <Route path="/" element={<Splash />} />
                 <Route path="/welcome" element={<WelcomePage />} />
@@ -299,6 +328,7 @@ export default function App() {
                   <Route path="/reviews/gallery" element={<ReviewGallery />} />
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/payment/return" element={<PaymentReturn />} />
                   <Route
                     path="/order-confirmation"
                     element={<OrderConfirmation />}
@@ -391,7 +421,16 @@ export default function App() {
                     path="/profile/orders/:orderId"
                     element={<OrderDetails />}
                   />
+                  <Route
+                    path="/profile/orders/:orderId/return"
+                    element={<ReturnRequest />}
+                  />
+                  <Route
+                    path="/profile/returns/:returnId"
+                    element={<ReturnDetails />}
+                  />
                   <Route path="/profile/wishlist" element={<Wishlist />} />
+                  <Route path="/profile/plans" element={<MyPlans />} />
                   <Route
                     path="/profile/favourite-doctors"
                     element={<FavDoctors />}
@@ -435,6 +474,7 @@ export default function App() {
                   {/* Health Lab disabled per Rohit
                   <Route path="/labs" element={<OrangeLab />} /> */}
                   <Route path="/packages" element={<Packages />} />
+                  <Route path="/packages/:packageId" element={<PackageDetails />} />
                   <Route path="/panchakarma" element={<Panchakarma />} />
                   <Route
                     path="/medicines/prescription"
@@ -451,6 +491,10 @@ export default function App() {
                   <Route
                     path="/medicines/order-status"
                     element={<OrderStatus />}
+                  />
+                  <Route
+                    path="/medicines/:variantId"
+                    element={<MedicineDetails />}
                   />
                   <Route path="/yoga" element={<Yoga />} />
                   <Route path="/yoga/:sessionId" element={<YogaSession />} />

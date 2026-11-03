@@ -38,6 +38,32 @@ const formatOrderDate = (value) => {
   });
 };
 
+/** Order line image: variant, line item, then nested product (incl. images[]), first usable URL. */
+const firstImage = (list) => {
+  if (!Array.isArray(list)) return '';
+  for (const entry of list) {
+    const url = typeof entry === 'string' ? entry : resolveImageUrl(entry) || entry?.url || entry?.src || '';
+    if (typeof url === 'string' && url.trim()) return url.trim();
+  }
+  return '';
+};
+const recentItemImage = (item) => {
+  const variant = item?.variant || null;
+  const product = item?.product || variant?.product || null;
+  for (const source of [variant, item, product]) {
+    if (!source) continue;
+    const url =
+      resolveImageUrl(source) ||
+      (typeof source.product_image === 'string' ? source.product_image.trim() : '') ||
+      (typeof source.variant_image === 'string' ? source.variant_image.trim() : '') ||
+      firstImage(source.images) ||
+      firstImage(source.media) ||
+      firstImage(source.variant_images);
+    if (url) return url;
+  }
+  return '';
+};
+
 export const mapOrdersToRecentProducts = (orders = [], limit = 8) => {
   const sorted = [...orders].sort(
     (a, b) => new Date(b?.created_at ?? 0).getTime() - new Date(a?.created_at ?? 0).getTime(),
@@ -60,7 +86,7 @@ export const mapOrdersToRecentProducts = (orders = [], limit = 8) => {
         ),
         name: item?.variant?.variant_title || item?.product_name || item?.name || 'Product',
         price: Number(item?.selling_price ?? item?.variant?.selling_price ?? 0),
-        image: resolveImageUrl(item?.variant || item),
+        image: recentItemImage(item),
         lastOrdered: orderDate,
       });
     }

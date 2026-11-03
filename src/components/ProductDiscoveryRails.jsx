@@ -7,7 +7,7 @@ import { mapCatalogProductItem, normalizeApiList } from '../home/catalog';
 
 const SECTIONS = ['trending', 'best_sellers', 'related', 'similar', 'recently_viewed'];
 
-export default function ProductDiscoveryRails({ productId, excludeVariantId }) {
+export default function ProductDiscoveryRails({ productId, excludeVariantId, detailBase = '/products' }) {
   const [rails, setRails] = useState({});
 
   useEffect(() => {
@@ -48,7 +48,7 @@ export default function ProductDiscoveryRails({ productId, excludeVariantId }) {
             itemClassName="pd-discovery__item"
           >
             {rails[section].map((item) => (
-              <ProductCard key={item.variant_id || item.id} item={item} cartButton />
+              <ProductCard key={item.variant_id || item.id} item={item} cartButton detailBase={detailBase} />
             ))}
           </AutoScrollRail>
         </section>

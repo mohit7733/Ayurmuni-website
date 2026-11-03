@@ -48,8 +48,19 @@ export async function apiPostCallEvent(appointmentId, event, sessionId) {
   }
 }
 
+/**
+ * Web equivalent of the app's Agora onLeaveChannel: the client reached DISCONNECTED for any reason
+ * other than our own client.leave() (reason 'LEAVE'), so the server should still get a 'left' event.
+ */
+export function shouldPostLeftOnDisconnect({ current, reason, endedByUser, appointmentId }) {
+  if (current !== 'DISCONNECTED') return false;
+  if (reason === 'LEAVE') return false;
+  if (endedByUser) return false;
+  return Boolean(appointmentId);
+}
+
 export async function apiEndCall(appointmentId) {
-  await apiClient(`doctors/appointments/${appointmentId}/call/end/`, {
+  await apiClient(`doctors/appointments/${appointmentId}/call/left/`, {
     method: 'POST',
     body: '{}',
   });

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { buildMapHtml } from '../utils/mapHtml';
 
-export default function InteractiveMapPicker({ center, onCenterChange, loading }) {
+export default function InteractiveMapPicker({ center, onCenterChange, loading, children }) {
   const frameRef = useRef(null);
   const lastCoords = useRef(center);
   const html = useMemo(() => buildMapHtml(center), []);
@@ -40,7 +40,8 @@ export default function InteractiveMapPicker({ center, onCenterChange, loading }
         srcDoc={html}
         sandbox="allow-scripts allow-same-origin"
       />
-      {loading ? <div className="map-picker-overlay">Finding location…</div> : null}
+      {loading ? <div className="map-picker-overlay">Finding location�</div> : null}
+      {children}
     </div>
   );
 }

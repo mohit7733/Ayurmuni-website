@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
+import AdvanceLoad from '../components/ui/AdvanceLoad';
 import DoctorCard from '../components/DoctorCard';
 import { doctorFavorite, getDoctorId, listDoctors } from '../consult/doctors';
 import { requireAuth } from '../services/guestAuth';
@@ -53,7 +54,7 @@ export default function FavDoctors() {
           />
         </form>
         {loading ? (
-          <p className="muted">Loading doctors…</p>
+          <AdvanceLoad variant="cards" count={4} label="Loading doctors" />
         ) : filtered.length === 0 ? (
           <p className="empty-copy">No favourite doctors</p>
         ) : (

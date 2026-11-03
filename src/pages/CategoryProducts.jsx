@@ -17,8 +17,14 @@ import {
   SkeletonGrid,
 } from '../components/ui';
 import useBrands from '../hooks/useBrands';
-import { applyProductFilters, brandOptionsFromProducts } from '../utils/productSearchUtils';
+import {
+  applyProductFilters,
+  brandOptionsFromProducts,
+  DOSHA_OPTIONS,
+  toProductApiSort,
+} from '../utils/productSearchUtils';
 import { STORE_COPY as T } from '../content/store';
+import { filterItemsByQuery } from '../home/concernCatalog';
 import '../design/pages/store.css';
 import '../design/brand.css';
 import '../design/product-card-home.css';
@@ -61,11 +67,18 @@ export default function CategoryProducts() {
   const activeCategoryId = selectedCategoryId === 'all' ? null : selectedCategoryId;
   const [healthCategories, setHealthCategories] = useState([]);
   const [search, setSearch] = useState('');
+  const [query, setQuery] = useState('');
+  // Page search filters this page in place (debounced while typing; Search/Enter applies now).
+  useEffect(() => {
+    const timer = setTimeout(() => setQuery(search.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
   
   // Filter & Sort States
   const [sortBy, setSortBy] = useState('relevance');
   const [priceRange, setPriceRange] = useState([0, 10000]);
   const [minRating, setMinRating] = useState(0);
+  const [dosha, setDosha] = useState('all');
   const [inStockOnly, setInStockOnly] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [brandIds, setBrandIds] = useState(brandId ? [brandId] : []);
@@ -128,8 +141,22 @@ export default function CategoryProducts() {
     };
   }, [brandId, mode, activeCategoryId, selectedSubcategoryId, serviceCategoryId]);
 
+  // Price / rating / dosha / sort are also sent to the API (same params as the app); the
+  // client-side pass below keeps results exact for rows the API leaves unrated.
+  const requestFilter = useMemo(
+    () => ({
+      ...productFilter,
+      min_price: priceRange[0] > 0 ? priceRange[0] : null,
+      max_price: priceRange[1] < 10000 ? priceRange[1] : null,
+      min_rating: minRating > 0 ? minRating : null,
+      dosha_type: dosha === 'all' ? null : dosha,
+      sort: toProductApiSort(sortBy),
+    }),
+    [productFilter, priceRange, minRating, dosha, sortBy],
+  );
+
   const { products, loading, loadingMore, hasMore, loadMore, refresh, refreshing } =
-    useCategoryProducts(productFilter, []);
+    useCategoryProducts(requestFilter, []);
 
   const brandOptions = useMemo(() => {
     if (brandRecords.length > 0) return brandRecords;
@@ -163,7 +190,7 @@ export default function CategoryProducts() {
         })
       : products;
     let filtered = applyProductFilters({
-      products: scoped,
+      products: filterItemsByQuery(scoped, query),
       sortBy: catalogSort,
       brandIds: !brandId && brandIds.length > 0 ? brandIds : null,
       brandNames: brandNames.length > 0 ? brandNames : null,
@@ -202,7 +229,7 @@ export default function CategoryProducts() {
     }
 
     return filtered;
-  }, [products, priceRange, minRating, inStockOnly, sortBy, brandIds, brandNames, brandId, brandTitleKey]);
+  }, [products, query, priceRange, minRating, inStockOnly, sortBy, brandIds, brandNames, brandId, brandTitleKey]);
 
   const categoryList = brandId
     ? []
@@ -219,24 +246,25 @@ export default function CategoryProducts() {
     priceRange[0] !== 0 ||
     priceRange[1] !== 10000 ||
     minRating > 0 ||
+    dosha !== 'all' ||
     inStockOnly ||
     sortBy !== 'relevance' ||
-    hasBrandFilter;
+    hasBrandFilter ||
+    Boolean(query);
 
   const clearFilters = () => {
     setPriceRange([0, 10000]);
     setMinRating(0);
+    setDosha('all');
     setInStockOnly(false);
     setSortBy('relevance');
     setBrandIds(brandId ? [brandId] : []);
     setBrandNames([]);
+    setSearch('');
+    setQuery('');
   };
 
-  const goSearch = (value) => {
-    const query = String(value || search || '').trim();
-    const searchMode = mode === 'health' ? 'health' : 'product';
-    navigate(`/search?mode=${searchMode}${query ? `&q=${encodeURIComponent(query)}` : ''}`);
-  };
+  const goSearch = (value) => setQuery(String(value ?? search).trim());
 
   const selectCategory = (id) => {
     setSelectedCategoryId(id);
@@ -267,8 +295,7 @@ export default function CategoryProducts() {
               onChange={setSearch}
               onSubmit={goSearch}
               placeholder={T.searchCollection}
-              label={T.searchCollection}
-              includeRecent
+              label={T.searchCollection}
             suggestions={searchSuggestions(subcategories, topCategories)}
             />
             <kbd className="cp-kbd" aria-hidden>/</kbd>
@@ -313,6 +340,7 @@ export default function CategoryProducts() {
               <option value="relevance">Relevance</option>
               <option value="price_low">Price: Low to High</option>
               <option value="price_high">Price: High to Low</option>
+              <option value="popularity">Popularity</option>
               <option value="discount">Max Discount</option>
               <option value="rating">Highest Rated</option>
               <option value="name">Name: A-Z</option>
@@ -453,6 +481,26 @@ export default function CategoryProducts() {
             </div>
           </section>
 
+          <section className="st-filter-section" aria-labelledby="st-filter-dosha-title">
+            <div className="st-filter-section__heading">
+              <h3 id="st-filter-dosha-title">Dosha type</h3>
+              <span>Ayurvedic constitution</span>
+            </div>
+            <div className="st-filter-ratings" role="group" aria-label="Dosha type">
+              {DOSHA_OPTIONS.map((option) => (
+                <button
+                  key={option.key}
+                  type="button"
+                  onClick={() => setDosha(option.key)}
+                  className={`st-filter-rating${dosha === option.key ? ' is-selected' : ''}`}
+                  aria-pressed={dosha === option.key}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </section>
+
           {!brandId ? (
             <section
               className="st-filter-section st-filter-section--brands"
@@ -523,6 +571,7 @@ export default function CategoryProducts() {
                   <span>Price: ₹{priceRange[0]} – ₹{priceRange[1]}</span>
                 ) : null}
                 {minRating > 0 && <span>Rating: {minRating}★ and up</span>}
+                {dosha !== 'all' && <span>Dosha: {dosha}</span>}
                 {inStockOnly && <span>In stock only</span>}
                 {(brandIds.length > 0 || brandNames.length > 0) && (
                   <span>

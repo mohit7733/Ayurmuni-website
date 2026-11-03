@@ -5,7 +5,8 @@ import AppShell from "../components/AppShell";
 import ProductCard from "../components/ProductCard";
 import CartAddButton from "../components/CartAddButton";
 import { getProductByVariant } from "../services/productService";
-import { hasStockInfo } from "../product/stock";
+import { getProductStockQty, hasStockInfo } from "../product/stock";
+import { getCatalogPrice, getCatalogRating } from "../utils/productSearchUtils";
 import {
   formatRupee,
   resolveImageUrl,
@@ -18,7 +19,6 @@ import { getOrders, normalizeOrdersList } from "../services/orderService";
 import { mapOrdersToRecentProducts } from "../profile/map";
 import {
   Button,
-  Disclaimer,
   EmptyState,
   MediaCard,
   Modal,
@@ -30,8 +30,9 @@ import {
   SearchField,
   searchSuggestions,
   SectionHeader,
-  SkeletonGrid,
 } from "../components/ui";
+import { CatalogPageSkeleton } from "../components/skeletons";
+import { filterItemsByQuery } from "../home/concernCatalog";
 import { STORE_COPY as T } from "../content/store";
 import "../design/pages/store.css";
 import "../design/brand.css";
@@ -77,6 +78,12 @@ export default function Products() {
   const [recentProducts, setRecentProducts] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [query, setQuery] = useState("");
+  // Page search filters this page in place (debounced while typing; Search/Enter applies now).
+  useEffect(() => {
+    const timer = setTimeout(() => setQuery(search.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   // Filter & Sort States
   const [sortBy, setSortBy] = useState("relevance");
@@ -153,26 +160,26 @@ export default function Products() {
 
   // Apply client-side filters and sorting
   const filteredAndSortedProducts = useMemo(() => {
-    let filtered = [...listProducts];
+    let filtered = [...filterItemsByQuery(listProducts, query)];
 
     // Filter by price range (items without a numeric price are kept)
     filtered = filtered.filter((product) => {
-      const price = Number(product.selling_price ?? product.price);
+      const price = getCatalogPrice(product);
       if (!Number.isFinite(price)) return true;
       return price >= priceRange[0] && price <= priceRange[1];
     });
 
     // Filter by rating
     if (minRating > 0) {
-      filtered = filtered.filter((product) => {
-        const rating = Number(product.rating || product.average_rating || 0);
-        return rating >= minRating;
-      });
+      filtered = filtered.filter((product) => getCatalogRating(product) >= minRating);
     }
 
     // Filter by stock
     if (inStockOnly) {
       filtered = filtered.filter((product) => {
+        if (product.out_of_stock === true) return false;
+        const qty = getProductStockQty(product);
+        if (qty !== null) return qty > 0;
         const stock = Number(product.stock || product.in_stock || 0);
         return stock > 0;
       });
@@ -180,10 +187,10 @@ export default function Products() {
 
     // Sort products
     filtered.sort((a, b) => {
-      const priceA = Number(a.price || a.selling_price || 0);
-      const priceB = Number(b.price || b.selling_price || 0);
-      const ratingA = Number(a.rating || a.average_rating || 0);
-      const ratingB = Number(b.rating || b.average_rating || 0);
+      const priceA = getCatalogPrice(a);
+      const priceB = getCatalogPrice(b);
+      const ratingA = getCatalogRating(a);
+      const ratingB = getCatalogRating(b);
 
       switch (sortBy) {
         case "price_low":
@@ -201,7 +208,7 @@ export default function Products() {
     });
 
     return filtered;
-  }, [listProducts, priceRange, minRating, inStockOnly, sortBy]);
+  }, [listProducts, query, priceRange, minRating, inStockOnly, sortBy]);
 
   const hasActiveFilters =
     priceRange[0] !== 0 ||
@@ -209,7 +216,8 @@ export default function Products() {
     minRating > 0 ||
     inStockOnly ||
     sortBy !== "relevance" ||
-    Boolean(selectedCategoryId);
+    Boolean(selectedCategoryId) ||
+    Boolean(query);
 
   const clearFilters = () => {
     setPriceRange([0, 10000]);
@@ -217,6 +225,8 @@ export default function Products() {
     setInStockOnly(false);
     setSortBy("relevance");
     setSelectedCategoryId("");
+    setSearch("");
+    setQuery("");
   };
 
   const showSkeleton = listLoading && listProducts.length === 0;
@@ -238,12 +248,7 @@ export default function Products() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const goSearch = (value) => {
-    const query = String(value || search || "").trim();
-    navigate(
-      `/search?mode=product${query ? `&q=${encodeURIComponent(query)}` : ""}`,
-    );
-  };
+  const goSearch = (value) => setQuery(String(value ?? search).trim());
 
   const placeBar = showSkeleton ? 'top' : 'all';
   const searchBar = (
@@ -254,7 +259,6 @@ export default function Products() {
           onSubmit={goSearch}
           placeholder={T.productsSearch}
           label={T.productsSearch}
-          includeRecent
           suggestions={searchSuggestions(productCategories, listProducts)}
         />
       </PageBar>
@@ -264,14 +268,8 @@ export default function Products() {
     <AppShell tab="products">
       <div className="st-page st-page--products">
 
-        {placeBar === 'top' ? searchBar : null}
-
         {showSkeleton ? (
-          <SkeletonGrid
-            count={6}
-            className="am-product-grid"
-            label="Loading products"
-          />
+          <CatalogPageSkeleton count={6} label="Loading products" />
         ) : (
           <>
             <section className="st-section st-panel" aria-labelledby="st-all-title">
@@ -499,9 +497,6 @@ export default function Products() {
               </Reveal>
             ) : null}
 
-            <footer className="st-foot">
-              <Disclaimer variant="banner" />
-            </footer>
           </>
         )}
       </div>

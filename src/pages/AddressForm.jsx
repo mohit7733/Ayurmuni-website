@@ -13,7 +13,7 @@ import {
   listAddresses,
   updateAddress,
 } from '../services/profileService';
-import { Button, Chip, Disclaimer, Input } from '../components/ui';
+import { Button, Chip, Input } from '../components/ui';
 import { PROFILE_COPY as T } from '../content/profile';
 import '../design/pages/profile.css';
 
@@ -260,7 +260,6 @@ export default function AddressForm() {
           </Button>
         </div>
 
-        <Disclaimer />
       </section>
     </AppShell>
   );

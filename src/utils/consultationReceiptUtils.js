@@ -61,9 +61,16 @@ export const parseConsultationReceiptBreakdown = (receipt) => {
     paymentMethod: methodLabel,
     paymentStatus: String(receipt?.payment_status || entity?.status || '').trim(),
     paymentId: String(
-      entity?.id || info?.razorpay_payment_id || receipt?.payment_id || '',
+      entity?.id ||
+        info?.cf_payment_id ||
+        info?.gateway_payment_id ||
+        info?.razorpay_payment_id ||
+        receipt?.payment_id ||
+        '',
     ).trim(),
-    orderId: String(entity?.order_id || info?.razorpay_order_id || '').trim(),
+    orderId: String(
+      entity?.order_id || info?.cashfree_order_id || info?.gateway_order_id || info?.razorpay_order_id || '',
+    ).trim(),
     bank: String(entity?.bank || '').trim(),
     bankTransactionId: String(entity?.acquirer_data?.bank_transaction_id || '').trim(),
   };

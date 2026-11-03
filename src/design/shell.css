@@ -6,6 +6,8 @@
   min-height: 100vh;
   min-height: 100dvh;
   background: var(--am-bg);
+  /* Guard: nothing inside the shell may widen the document. clip (not hidden) keeps the sticky header working. */
+  overflow-x: clip;
 }
 
 .app-shell-body {
@@ -212,6 +214,24 @@
   box-shadow: 0 10px 28px rgba(19, 35, 30, 0.06);
 }
 
+.site-recent {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  z-index: 40;
+  width: min(640px, calc(100vw - 32px));
+  transform: translateX(-50%);
+  padding: 12px 14px 6px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+}
+.site-recent .gs-recent { margin: 0; }
+.site-recent .site-live { display: grid; gap: 10px; max-height: min(420px, 60vh); overflow: auto; }
+.site-recent .site-live__hits { grid-template-columns: 1fr; }
+.site-recent .site-live__all { justify-self: start; }
+
 .site-search-submit {
   flex-shrink: 0;
   height: 38px;
@@ -315,7 +335,7 @@
   width: 34px;
   height: 34px;
   overflow: hidden;
-  border: 2px solid var(--am-gold-500);
+  border: 0;
   border-radius: 50%;
   background: var(--am-green-800);
   color: #f6f1e6;
@@ -666,6 +686,7 @@
   }
 
   .site-header.is-search-open .site-header-center {
+    position: relative;
     display: block;
     flex: 1 0 100%;
     order: 5;
@@ -776,6 +797,10 @@
 
   .site-header.is-search-open .site-search-btn {
     display: none;
+  }
+
+  .site-header.is-search-open .site-header-center {
+    position: relative;
   }
 
   .site-location-wrap {
@@ -987,8 +1012,9 @@
   width: auto;
   margin-left: 0;
   margin-bottom: var(--am-space-2);
-  /* Artwork sits 56/256 down the file; shift it up to the column titles. */
-  transform: translateY(calc(var(--logo-h) * -56 / 256));
+  /* Artwork sits 56/256 down and 104/256 in from the left of the file (transparent margin);
+     shift it so the visible mark starts on the container edge, like the trust strip above. */
+  transform: translate(calc(var(--logo-h) * -104 / 256), calc(var(--logo-h) * -56 / 256));
   filter: brightness(0) invert(1);
 }
 
@@ -1162,9 +1188,6 @@
 .site-header.is-elevated .site-location:hover,
 .site-header.is-elevated .site-location-wrap.is-open .site-location {
   background: rgba(255, 255, 255, 0.1);
-}
-.site-header.is-elevated .site-account .site-avatar-fallback {
-  box-shadow: 0 0 0 2px rgba(228, 196, 122, 0.7);
 }
 
 @media (min-width: 1024px) {
@@ -1438,4 +1461,26 @@
   .app-shell:not(.auth-shell):not(.is-logged-out) .site-footer {
     padding-bottom: calc(var(--am-tabbar-h) + 8px + env(safe-area-inset-bottom));
   }
+}
+
+/* Static stand-in for the header while a lazy page chunk loads (same colours as .site-header). */
+.site-header-hold {
+  position: sticky;
+  top: 0;
+  z-index: var(--am-z-header);
+  height: calc(var(--am-header-h) + env(safe-area-inset-top));
+  border-bottom: 1px solid rgba(203, 186, 150, 0.45);
+  background: linear-gradient(180deg, #fdfaf3 0%, #f8f3e8 100%);
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.7);
+}
+/* Prakriti result now renders in the full AppShell: keep its dark stage filling the body.
+   (.pk-backdrop scopes it away from the Packages page, which also uses .pk-page.) */
+.app-shell-body:has(> .pk-page > .pk-backdrop) {
+  display: flex;
+  flex-direction: column;
+}
+.app-shell-body > .pk-page:has(> .pk-backdrop) {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
 }

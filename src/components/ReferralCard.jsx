@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Copy, Share2, Users, Gift, TrendingUp } from 'lucide-react';
 import { showSuccessToast } from '../config/key';
 import { getReferralInfo, getReferralHistory } from '../services/referralService';
-import { Button, Skeleton } from './ui';
+import { Button, SectionHold } from './ui';
 import '../design/components/referral-card.css';
 
 export default function ReferralCard() {
@@ -118,9 +118,7 @@ export default function ReferralCard() {
 
   if (loading) {
     return (
-      <div className="referral-card" aria-busy="true">
-        <Skeleton style={{ height: 180, borderRadius: 'var(--am-radius-lg)' }} />
-      </div>
+      <SectionHold label="Loading referral" minHeight={180} scale="section" />
     );
   }
 

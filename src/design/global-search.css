@@ -2,15 +2,20 @@
 .gs-page .gs-field { margin: 4px 0 14px; }
 .gs-recent { margin: 0 0 16px; }
 .gs-recent__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
-.gs-recent__head h2, .gs-section__title { font-family: 'Satoshi', 'Gilroy', system-ui, sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #105343; margin: 0; }
+.gs-recent__head h2 { font-family: 'Satoshi', 'Gilroy', system-ui, sans-serif; font-size: 16px; font-weight: 600; letter-spacing: 0; text-transform: none; color: #0f172a; margin: 0; }
+.gs-recent__empty, .gs-recent__loading, .gs-recent__hint { margin: 0 0 12px; font-size: 12px; line-height: 17px; color: #94a3b8; }
+.gs-recent__hint { color: #64748b; font-weight: 600; }
+.gs-section__title { font-family: 'Satoshi', 'Gilroy', system-ui, sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #105343; margin: 0; }
 .gs-section__title span { color: #8a7a4e; font-weight: 600; margin-left: 4px; }
 .gs-link { min-height: 44px; padding: 0 6px; border: 0; background: none; color: #105343; font-weight: 600; font-size: 13px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 .gs-link:disabled { opacity: .55; cursor: default; }
-.gs-chips { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; margin: 0; padding: 0; }
-.gs-chip { display: inline-flex; align-items: center; border: 1px solid rgba(16,83,67,.16); border-radius: 999px; background: #fffdf7; }
-.gs-chip.is-active { border-color: #e4c47a; box-shadow: 0 0 0 2px rgba(228,196,122,.35); }
-.gs-chip__main, .gs-chip__x { min-height: 44px; border: 0; background: none; color: #1f2a26; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
-.gs-chip__main { padding: 0 4px 0 14px; max-width: 220px; }
+.gs-chips { display: flex; flex-wrap: nowrap; gap: 8px; list-style: none; margin: 0; padding: 2px 0; overflow-x: auto; scrollbar-width: none; }
+.gs-chips::-webkit-scrollbar { display: none; }
+.gs-chip { display: inline-flex; align-items: center; flex: none; max-width: 220px; min-height: 34px; border: 1px solid #e2e8f0; border-radius: 20px; background: #fff; }
+.gs-chip.is-active { border-color: #0d614e; }
+.gs-chip__main, .gs-chip__x { min-height: 34px; border: 0; background: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #0d614e; }
+.gs-chip__main { padding: 0 4px 0 12px; max-width: 180px; }
+.gs-chip__main svg { flex: none; }
 .gs-chip__main span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .gs-chip__x { min-width: 40px; justify-content: center; color: #6b746f; border-radius: 999px; }
 .gs-chip__x:hover { color: #105343; }

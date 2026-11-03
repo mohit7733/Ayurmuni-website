@@ -14,6 +14,8 @@ import { useGlobalSearch } from "../hooks/useGlobalSearch";
 import {
   applyProductFilters,
   brandOptionsFromProducts,
+  getPriceRangeBounds,
+  toProductApiSort,
 } from "../utils/productSearchUtils";
 
 function CatalogSearch() {
@@ -26,6 +28,8 @@ function CatalogSearch() {
   const [brandIds, setBrandIds] = useState([]);
   const [brandNames, setBrandNames] = useState([]);
   const [priceRange, setPriceRange] = useState("all");
+  const [rating, setRating] = useState("all");
+  const [dosha, setDosha] = useState("all");
   const { addToHistory } = useGlobalSearch();
   const { categories, loading: homeLoading } = useDashboardCategories();
   const { brands: brandRecords } = useBrands();
@@ -38,11 +42,19 @@ function CatalogSearch() {
   const filter = useMemo(() => {
     const search = submitted.trim();
 
+    const { min_price, max_price } = getPriceRangeBounds(priceRange);
+
+    // Price / rating / dosha / sort are applied by the API (same params as the app).
     return {
       search,
       service_category_id: search ? undefined : serviceCategoryId,
+      min_price,
+      max_price,
+      min_rating: rating === "all" ? null : rating,
+      dosha_type: dosha === "all" ? null : dosha,
+      sort: toProductApiSort(sortBy),
     };
-  }, [submitted, serviceCategoryId]);
+  }, [submitted, serviceCategoryId, priceRange, rating, dosha, sortBy]);
 
   const { products, loading, loadingMore, hasMore, loadMore } =
     useCategoryProducts(filter, [], { enabled: !homeLoading });
@@ -60,8 +72,9 @@ function CatalogSearch() {
         brandIds: brandIds.length > 0 ? brandIds : null,
         brandNames: brandNames.length > 0 ? brandNames : null,
         priceRange,
+        minRating: rating,
       }),
-    [products, sortBy, brandIds, brandNames, priceRange],
+    [products, sortBy, brandIds, brandNames, priceRange, rating],
   );
 
   const activeFilterCount = useMemo(() => {
@@ -69,14 +82,18 @@ function CatalogSearch() {
     if (sortBy !== "relevance") count += 1;
     if (brandIds.length > 0 || brandNames.length > 0) count += 1;
     if (priceRange !== "all") count += 1;
+    if (rating !== "all") count += 1;
+    if (dosha !== "all") count += 1;
     return count;
-  }, [sortBy, brandIds, brandNames, priceRange]);
+  }, [sortBy, brandIds, brandNames, priceRange, rating, dosha]);
 
   const clearFilters = () => {
     setSortBy("relevance");
     setBrandIds([]);
     setBrandNames([]);
     setPriceRange("all");
+    setRating("all");
+    setDosha("all");
   };
 
   const onSubmit = (query) => {
@@ -187,6 +204,10 @@ function CatalogSearch() {
             }}
             priceRange={priceRange}
             onPriceRangeChange={setPriceRange}
+            rating={rating}
+            onRatingChange={setRating}
+            dosha={dosha}
+            onDoshaChange={setDosha}
             brands={brandOptions}
             activeFilterCount={activeFilterCount}
             onClearFilters={clearFilters}

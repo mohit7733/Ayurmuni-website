@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import AppShell from '../components/AppShell';
+import AdvanceLoad from '../components/ui/AdvanceLoad';
 import {
   ConsultationTimeline,
   StitchedRegimenList,
@@ -70,7 +71,7 @@ export default function DoctorConsultationHistory() {
         </header>
 
         {loading ? (
-          <p className="muted">Loading consultation history…</p>
+          <AdvanceLoad variant="list" label="Loading consultation history" />
         ) : (
           <>
             <h3 className="yoga-section">All consultations</h3>

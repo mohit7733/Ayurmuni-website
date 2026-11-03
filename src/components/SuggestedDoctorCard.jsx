@@ -19,6 +19,7 @@ import { showSuccessToast } from '../config/key';
 import { requireAuth } from '../services/guestAuth';
 import { toggleFavDoctor } from '../services/consultService';
 import FavButton from './ui/FavButton';
+import DietitianBadge from './DietitianBadge';
 import { nameInitial } from '../utils/initials';
 
 export default function SuggestedDoctorCard({ item, fallbackSpeciality = 'Ayurveda' }) {
@@ -104,6 +105,7 @@ export default function SuggestedDoctorCard({ item, fallbackSpeciality = 'Ayurve
             {name}
           </button>
         </h3>
+        <DietitianBadge doctor={item} />
         {credential ? <p className="am-flip-doc__spec">{credential}</p> : null}
         {experience || location ? (
           <ul className="am-flip-doc__facts">

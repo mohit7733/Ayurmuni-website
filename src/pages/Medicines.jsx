@@ -30,10 +30,12 @@ import {
   Reveal,
   SearchField,
   searchSuggestions,
-  SkeletonGrid,
   Tile,
 } from '../components/ui';
+import { CatalogPageSkeleton } from '../components/skeletons';
+import { filterItemsByQuery } from '../home/concernCatalog';
 import { getProductStockQty } from '../product/stock';
+import { getCatalogPrice, getCatalogRating, toProductApiSort } from '../utils/productSearchUtils';
 import { HOME_COPY as H } from '../content/home';
 import { STORE_COPY as T } from '../content/store';
 import '../design/pages/store.css';
@@ -62,12 +64,21 @@ export default function Medicines() {
     null,
     medicineCategoryId,
   );
+  const [sortBy, setSortBy] = useState('relevance');
+  const [priceRange, setPriceRange] = useState([0, 10000]);
+  const [minRating, setMinRating] = useState(0);
+  const [brandIds, setBrandIds] = useState([]);
   const productFilter = useMemo(() => {
     const next = {};
     if (medicineCategoryId) next.service_category_id = medicineCategoryId;
     if (categoryId) next.id = categoryId;
+    if (priceRange[0] > 0) next.min_price = priceRange[0];
+    if (priceRange[1] < 10000) next.max_price = priceRange[1];
+    if (minRating > 0) next.min_rating = minRating;
+    const sort = toProductApiSort(sortBy);
+    if (sort) next.sort = sort;
     return next;
-  }, [medicineCategoryId, categoryId]);
+  }, [medicineCategoryId, categoryId, priceRange, minRating, sortBy]);
   const { products, loading, loadingMore, hasMore, loadMore } = useCategoryProducts(
     productFilter,
     [],
@@ -79,26 +90,26 @@ export default function Medicines() {
   const [recent, setRecent] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [sortBy, setSortBy] = useState('relevance');
-  const [priceRange, setPriceRange] = useState([0, 10000]);
-  const [minRating, setMinRating] = useState(0);
+  const [query, setQuery] = useState('');
+  // Page search filters this page in place (debounced while typing; Search/Enter applies now).
+  useEffect(() => {
+    const timer = setTimeout(() => setQuery(search.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
   const [inStockOnly, setInStockOnly] = useState(false);
-  const [brandIds, setBrandIds] = useState([]);
   const [brandNames, setBrandNames] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
   const moreRef = useRef(null);
 
   const filteredProducts = useMemo(() => {
-    let filtered = products.filter((product) => {
-      const price = Number(product.selling_price ?? product.price);
+    let filtered = filterItemsByQuery(products, query).filter((product) => {
+      const price = getCatalogPrice(product);
       if (Number.isFinite(price) && (price < priceRange[0] || price > priceRange[1])) return false;
 
-      if (minRating > 0) {
-        const rating = Number(product.rating || product.average_rating || 0);
-        if (rating < minRating) return false;
-      }
+      if (minRating > 0 && getCatalogRating(product) < minRating) return false;
 
       if (inStockOnly) {
+        if (product.out_of_stock === true) return false;
         const qty = getProductStockQty(product);
         const stock = qty ?? Number(product.stock || product.in_stock || 0);
         if (!(stock > 0)) return false;
@@ -116,10 +127,10 @@ export default function Medicines() {
     });
 
     filtered.sort((a, b) => {
-      const priceA = Number(a.price || a.selling_price || 0);
-      const priceB = Number(b.price || b.selling_price || 0);
-      const ratingA = Number(a.rating || a.average_rating || 0);
-      const ratingB = Number(b.rating || b.average_rating || 0);
+      const priceA = getCatalogPrice(a);
+      const priceB = getCatalogPrice(b);
+      const ratingA = getCatalogRating(a);
+      const ratingB = getCatalogRating(b);
       switch (sortBy) {
         case 'price_low':
           return priceA - priceB;
@@ -135,7 +146,7 @@ export default function Medicines() {
     });
 
     return filtered;
-  }, [products, priceRange, minRating, inStockOnly, sortBy, brandIds, brandNames]);
+  }, [products, query, priceRange, minRating, inStockOnly, sortBy, brandIds, brandNames]);
 
   const hasActiveFilters =
     priceRange[0] !== 0 ||
@@ -144,7 +155,8 @@ export default function Medicines() {
     inStockOnly ||
     sortBy !== 'relevance' ||
     brandIds.length > 0 ||
-    brandNames.length > 0;
+    brandNames.length > 0 ||
+    Boolean(query);
 
   const clearFilters = () => {
     setPriceRange([0, 10000]);
@@ -153,12 +165,11 @@ export default function Medicines() {
     setSortBy('relevance');
     setBrandIds([]);
     setBrandNames([]);
+    setSearch('');
+    setQuery('');
   };
 
-  const goSearch = (value) => {
-    const query = String(value || search || '').trim();
-    navigate(`/search?mode=product${query ? `&q=${encodeURIComponent(query)}` : ''}`);
-  };
+  const goSearch = (value) => setQuery(String(value ?? search).trim());
 
   useEffect(() => {
     let alive = true;
@@ -299,9 +310,8 @@ export default function Medicines() {
           value={search}
           onChange={setSearch}
           onSubmit={goSearch}
-          placeholder={H.searchPlaceholder}
+          placeholder="Search medicines"
           label="Search medicines"
-          includeRecent
         suggestions={searchSuggestions(concerns, brands)}
         />
       </PageBar>
@@ -312,10 +322,8 @@ export default function Medicines() {
       <div className="hm-page svc-page">
         <div className="hm-body">
 
-          {placeBar === 'top' ? searchBar : null}
-
           {showSkeleton ? (
-            <SkeletonGrid count={8} className="svc-catalog" label="Loading medicines" />
+            <CatalogPageSkeleton count={8} label="Loading medicines" />
           ) : (
             <>
               <div className="hm-doctor-row">
@@ -425,7 +433,7 @@ export default function Medicines() {
                     <div className="st-controls st-controls--search-only">{searchBar}</div>
                   ) : null}
                   {catalogLoading ? (
-                    <SkeletonGrid count={8} className="svc-catalog" label="Loading medicines" />
+                    <CatalogPageSkeleton count={8} label="Loading medicines" />
                   ) : filteredProducts.length === 0 ? (
                     <EmptyState
                       icon={<Leaf size={28} />}
@@ -459,7 +467,7 @@ export default function Medicines() {
                     <ul className="svc-catalog">
                       {filteredProducts.map((item) => (
                         <li key={item.variant_id || item.id}>
-                          <ProductCard item={item} />
+                          <ProductCard item={item} detailBase="/medicines" />
                         </li>
                       ))}
                     </ul>
@@ -486,7 +494,7 @@ export default function Medicines() {
                     {ordersLoading && recent.length === 0 ? (
                       <RailSkeleton count={4} />
                     ) : (
-                      <Rail label="Recent orders">
+                      <Rail label="Recent orders" className="med-recent-rail">
                         {recent.map((item) => (
                           <RailItem key={`${item.id}-${item.variantId}`}>
                             <DietPlanCard
@@ -496,7 +504,8 @@ export default function Medicines() {
                                 season: item.lastOrdered ? `Ordered ${item.lastOrdered}` : 'Recent order',
                                 prakriti: formatRupee(item.price, { decimals: 0 }),
                               }}
-                              onClick={() => item.variantId && navigate(`/products/${item.variantId}`)}
+                              fallbackIcon={Pill}
+                              onClick={() => item.variantId && navigate(`/medicines/${item.variantId}`)}
                             />
                           </RailItem>
                         ))}

@@ -17,6 +17,7 @@ import { showSuccessToast } from '../config/key';
 import { requireAuth } from '../services/guestAuth';
 import { toggleFavDoctor } from '../services/consultService';
 import FavButton from './ui/FavButton';
+import DietitianBadge from './DietitianBadge';
 import { nameInitial } from '../utils/initials';
 
 /**
@@ -83,6 +84,7 @@ function VisitedDoctorCard({ item, fallbackSpeciality }) {
             <strong>{name}</strong>
             {verified ? <BadgeCheck size={15} aria-label="Verified" /> : null}
           </span>
+          <DietitianBadge doctor={item} />
           {credential ? <span className="vd-card__cred">{credential}</span> : null}
           <span className="vd-card__chips">
             {rating ? (

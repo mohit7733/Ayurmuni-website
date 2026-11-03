@@ -26,7 +26,6 @@ import {
 import {
   Badge,
   Button,
-  Disclaimer,
   EmptyState,
 } from '../components/ui';
 import {
@@ -290,7 +289,6 @@ export default function AddCalendar() {
                 {T.calLater}
               </Button>
             </div>
-            <Disclaimer />
           </aside>
         </div>
       </div>

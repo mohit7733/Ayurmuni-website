@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight, CircleHelp, Mail, PhoneCall } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import PageHeader from '../components/PageHeader';
-import { Button, Disclaimer } from '../components/ui';
+import { Button } from '../components/ui';
 import { STATIC_COPY as T } from '../content/static';
 import '../design/pages/static.css';
 
@@ -76,9 +76,6 @@ export default function Contact() {
           </div>
         </div>
 
-        <div className="sx-contact-page__footer">
-          <Disclaimer />
-        </div>
       </section>
     </AppShell>
   );

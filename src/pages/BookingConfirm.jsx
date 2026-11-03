@@ -20,7 +20,6 @@ import { Utils } from '../common/utils';
 import {
   Badge,
   Button,
-  Disclaimer,
   EmptyState,
   Modal,
   StepIndicator,
@@ -95,6 +94,20 @@ const shareByType = async (type, message) => {
   }
 };
 
+/** book-slot / verify may nest the appointment under `booking` (top-level status = payment status). */
+const flattenNestedBooking = (raw) => {
+  const nested = raw?.booking;
+  if (!nested || typeof nested !== 'object') return raw;
+  return {
+    ...raw,
+    ...nested,
+    appointment_id: nested.appointment_id ?? raw?.appointment_id,
+    status: nested.status ?? raw?.status,
+    mode: nested.mode_label ?? nested.mode ?? raw?.mode,
+    amount: nested.paid_amount ?? raw?.amount,
+  };
+};
+
 export default function BookingConfirm() {
   const navigate = useNavigate();
   const [shareOpen, setShareOpen] = useState(false);
@@ -102,7 +115,7 @@ export default function BookingConfirm() {
 
   const detail = useMemo(() => {
     try {
-      return JSON.parse(sessionStorage.getItem(CONSULT_BOOKING_KEY) || 'null');
+      return flattenNestedBooking(JSON.parse(sessionStorage.getItem(CONSULT_BOOKING_KEY) || 'null'));
     } catch {
       return null;
     }
@@ -208,7 +221,12 @@ export default function BookingConfirm() {
   const statusTone = BOOKING_STATUS_TONE[statusKey] || 'success';
   const statusLabel = bookingStatusLabel(booking.status);
   const dateDisplay = [booking.weekday, booking.dateLabel].filter(Boolean).join(', ');
-  const paidLabel = booking.amount ? formatRupee(booking.amount) : '';
+  const fundedByPackage = detail.funded_by_package === true;
+  const paidLabel = fundedByPackage
+    ? 'Covered by plan'
+    : booking.amount && Number(booking.amount) !== 0
+      ? formatRupee(booking.amount)
+      : '';
   const shareMessage = getAppointmentShareMessage({
     doctorName: booking.doctorName,
     patientPhone: booking.patientPhone || registeredPhone,
@@ -345,7 +363,6 @@ export default function BookingConfirm() {
                 {T.home}
               </Button>
             </div>
-            <Disclaimer />
           </aside>
         </div>
       </div>

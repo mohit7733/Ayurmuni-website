@@ -18,7 +18,7 @@ import {
   SummaryRows,
 } from '../components/detail/Detail';
 import { formatDoctorDisplayName } from '../consult/appointmentUtils';
-import { doctorDisplayName, doctorImage } from '../consult/doctors';
+import { doctorDisplayName, doctorImage, formatDoctorSpecialization } from '../consult/doctors';
 import { formatRupee } from '../home/catalog';
 import { showSuccessToast } from '../config/key';
 import { requireAuth } from '../services/guestAuth';
@@ -27,6 +27,8 @@ import { formatDisplayIdHash, formatReceiptId } from '../utils/formatDisplayId';
 import { parseConsultationReceiptBreakdown } from '../utils/consultationReceiptUtils';
 import { saveBrowserFile } from '../utils/prescriptionDetailUtils';
 import { getEmailShareUrl } from '../utils/shareUtils';
+import { buildReceiptDocument } from '../documents/documentData';
+import { printDocumentHtml, renderDocumentHtml } from '../documents/documentHtml';
 
 const COMPANY = 'TruIndyaWellness Private Limited';
 
@@ -38,9 +40,10 @@ const formatReceiptDate = (value) => {
 };
 
 const specializationOf = (receipt) =>
-  Array.isArray(receipt?.info?.doctor_specialization)
+  formatDoctorSpecialization(receipt?.info) ||
+  (Array.isArray(receipt?.info?.doctor_specialization)
     ? receipt.info.doctor_specialization.join(', ')
-    : receipt?.info?.doctor_specialization || '';
+    : receipt?.info?.doctor_specialization || '');
 
 const receiptNumber = (receipt, breakdown) =>
   formatDisplayIdHash('RCP', breakdown.paymentId || receipt?.payment_id || receipt?.consultation_id);
@@ -138,12 +141,18 @@ export default function MedicalReceipt() {
   const legacyDigital = Number(receipt?.digital_report_access ?? 0);
   const receiptText = receipt && breakdown ? buildReceiptText(receipt, breakdown) : '';
 
-  const downloadReceipt = () => {
+  const downloadReceipt = async () => {
     if (!receipt) {
       showSuccessToast('Receipt data not loaded yet', 'error');
       return;
     }
     try {
+      // Designed receipt (same layout as the app PDF): opens the print dialog -> "Save as PDF".
+      const html = renderDocumentHtml(
+        buildReceiptDocument(receipt),
+        `Medical Receipt ${formatReceiptId(receipt?.consultation_id ?? receipt?.payment_id)}`,
+      );
+      if (await printDocumentHtml(html)) return;
       const fileName = `Medical_Receipt_${formatReceiptId(
         receipt?.consultation_id ?? receipt?.payment_id,
       ).replace(/[^a-zA-Z0-9._-]/g, '_')}.txt`;
@@ -187,7 +196,7 @@ export default function MedicalReceipt() {
                 <DetailCard id="receipt-actions" title="Save or share" icon={Download}>
                   <ActionStack>
                     <Button leadingIcon={<Download size={16} aria-hidden />} onClick={downloadReceipt}>
-                      Download receipt
+                      Download PDF
                     </Button>
                     <Button
                       variant="secondary"

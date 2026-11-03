@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -16,7 +16,9 @@ import {
   Video,
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import DietitianBadge from '../components/DietitianBadge';
 import { getDoctorById } from '../services/consultService';
+import { invalidateApiCache } from '../services/apiClient';
 import {
   CONSULT_PAY_KEY,
   doctorConsultFee,
@@ -47,10 +49,9 @@ import { UploadProfilePhoto } from '../services/profileService';
 import { extractUploadUrl } from '../services/prescriptionService';
 import {
   Button,
-  Disclaimer,
   EmptyState,
   IconButton,
-  Skeleton,
+  SectionHold,
   StepIndicator,
   Textarea,
 } from '../components/ui';
@@ -113,14 +114,20 @@ export default function DoctorSlot() {
     setRecords(listMedicalRecords(res));
   }, []);
 
+  const slotsRequestRef = useRef(0);
   const loadSlots = useCallback(
     async (date, isRefresh = false) => {
       if (!doctorId || !date) return;
-      if (isRefresh) setRefreshing(true);
-      else setLoading(true);
+      const requestId = ++slotsRequestRef.current;
+      if (isRefresh) {
+        setRefreshing(true);
+        invalidateApiCache('customers/doctors/');
+      } else setLoading(true);
       setSelectedSlot(null);
       try {
         const res = await getDoctorById(doctorId, { date });
+        // Switching dates quickly: an older date's slots must not replace the selected date's.
+        if (requestId !== slotsRequestRef.current) return;
         const data = res?.data ?? res;
         const list = (Array.isArray(data?.slots) ? data.slots : []).map((slot) => withSlotDate(slot, date));
         setSlots(list);
@@ -130,8 +137,10 @@ export default function DoctorSlot() {
           setDoctor((prev) => ({ ...(prev || {}), ...rest }));
         }
       } finally {
-        setLoading(false);
-        setRefreshing(false);
+        if (requestId === slotsRequestRef.current) {
+          setLoading(false);
+          setRefreshing(false);
+        }
       }
     },
     [doctorId],
@@ -295,6 +304,7 @@ export default function DoctorSlot() {
               <h1 id="bkp-hero-title">{T.slotTitle}</h1>
               <p className="bkp-hero__name">
                 {name}
+                <DietitianBadge doctor={doctor} className="bkp-dietitian" />
                 {rating ? <span className="bkp-rating">★ {rating}</span> : null}
               </p>
               {heroMeta.length ? <p className="bkp-hero__meta">{heroMeta.join(' · ')}</p> : null}
@@ -375,12 +385,7 @@ export default function DoctorSlot() {
               </div>
 
               {loading ? (
-                <div className="bk-slot-grid" aria-busy="true">
-                  {Array.from({ length: 8 }, (_, i) => (
-                    <Skeleton key={i} variant="rect" height={44} />
-                  ))}
-                  <span className="am-sr-only">{T.loadingSlots}</span>
-                </div>
+                <SectionHold label={T.loadingSlots} minHeight={180} scale="section" />
               ) : grouped.length === 0 ? (
                 <EmptyState
                   compact
@@ -493,7 +498,7 @@ export default function DoctorSlot() {
               <div className="bk-card__head">
                 <h2 id="bk-records-title">{T.recordsTitle}</h2>
               </div>
-              <p className="bk-card__hint">{T.recordsHint}</p>
+              <p className="bk-card__hint">{T.recordsHintFor(concern) || T.recordsHint}</p>
               {records.length ? (
                 <div className="bk-record-list">
                   {records.map((item) => {
@@ -546,7 +551,6 @@ export default function DoctorSlot() {
               </div>
             </section>
 
-            <Disclaimer />
           </aside>
         </div>
       </div>

@@ -102,6 +102,45 @@ export const WATER_GOAL_OPTIONS = [
 export const getWaterGlassCount = (goalMl) =>
   Math.max(1, Math.ceil((Number(goalMl) || 0) / WATER_GLASS_ML));
 
+/** End volume of each glass. The last glass stops at the goal, not the next full glass. */
+export const getWaterGlassEnds = (goalMl) => {
+  const goal = Math.max(0, Number(goalMl) || 0);
+  if (goal <= 0) return [];
+  const count = getWaterGlassCount(goal);
+  return Array.from({ length: count }, (_, index) =>
+    Math.min(goal, (index + 1) * WATER_GLASS_ML),
+  );
+};
+
+export const countFilledWaterGlasses = (intakeMl, goalMl) => {
+  const intake = Math.max(0, Number(intakeMl) || 0);
+  return getWaterGlassEnds(goalMl).filter((endMl) => intake + 0.001 >= endMl).length;
+};
+
+/**
+ * Rows of glasses for the log modal. Each row is one liter (4 × 250 ml), and the
+ * last row is only the remainder of daily_water_intake_goal. Labels are the
+ * cumulative amount at the end of the row, so a 1.5 L goal is "1 L" then "1.5 L".
+ */
+export const buildWaterLiterGroups = (goalMl) => {
+  const ends = getWaterGlassEnds(goalMl);
+  const perGroup = Math.max(1, Math.round(WATER_LITER_ML / WATER_GLASS_ML));
+  const groups = [];
+  for (let start = 0; start < ends.length; start += perGroup) {
+    const slice = ends.slice(start, start + perGroup);
+    const endMl = slice[slice.length - 1];
+    groups.push({
+      id: `${start}-${endMl}`,
+      label: formatWaterLiters(endMl),
+      glasses: slice.map((glassEndMl, offset) => ({
+        index: start + offset,
+        endMl: glassEndMl,
+      })),
+    });
+  }
+  return groups;
+};
+
 export const parseWaterProgressJson = (plan) => {
   const raw =
     plan?.daily_water_intake_progress_json ??
@@ -146,8 +185,13 @@ export const buildWaterProgressPatch = (
   [String(dayKey || 'day_1').toLowerCase()]: Math.max(0, intakeMl),
 });
 
-export const formatWaterLiters = (ml) =>
-  `${((Number(ml) || 0) / 1000).toFixed(1)} L`;
+/** Liters label from ml. Keeps quarter-glasses exact (0.25, 0.75, 1.25) and drops trailing zeros. */
+export const formatWaterLiters = (ml) => {
+  const liters = (Number(ml) || 0) / WATER_LITER_ML;
+  const rounded = Math.round(liters * 100) / 100;
+  if (!Number.isFinite(rounded)) return '0 L';
+  return `${rounded.toFixed(2).replace(/\.?0+$/, '')} L`;
+};
 
 
 const FALLBACK_MEAL_IMAGE = "";
@@ -1206,3 +1250,117 @@ export const calculateDietNutrition = (
 /** ISO timestamp without ms — e.g. 2026-07-15T07:15:00Z */
 export const nowIso = () =>
   new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
+
+/** True when every meal of every plan day is logged complete (app isPlanFullyComplete). */
+export const isDietPlanFullyComplete = (planDetail, progress, isStarted = true) => {
+  if (!planDetail || !isStarted) return false;
+  const days = getPlanJsonDays(planDetail);
+  if (!days.length) return false;
+  return days.every((dayKey) => {
+    const dayMeals = mapPlanJsonMeals(planDetail, dayKey, progress);
+    return dayMeals.length > 0 && dayMeals.every((m) => m.status === 'done');
+  });
+};
+
+/** complete_json from the status API (several envelope shapes, same keys as the app). */
+export const extractCompletionJson = (res) =>
+  res?.complete_json ??
+  res?.data?.complete_json ??
+  res?.completeJson ??
+  res?.data?.completeJson ??
+  res?.complete ??
+  null;
+
+/** "total_meals_done" -> "Total Meals Done". */
+export const formatCompletionLabel = (key) =>
+  String(key)
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+
+/**
+ * Rows for the completion tracking summary, as the app renders them
+ * (first `limit` entries, arrays as "N items", objects as short JSON, empty values skipped).
+ */
+export const buildCompletionEntries = (json, limit = 12) => {
+  if (!json || typeof json !== 'object') return [];
+  return Object.entries(json)
+    .slice(0, limit)
+    .map(([key, value]) => {
+      let text = '';
+      if (typeof value === 'string') text = value;
+      else if (typeof value === 'number' || typeof value === 'boolean') text = String(value);
+      else if (Array.isArray(value)) text = `${value.length} items`;
+      else if (value && typeof value === 'object') text = JSON.stringify(value).slice(0, 180);
+      return { key, label: formatCompletionLabel(key), value: text };
+    })
+    .filter((row) => row.value !== '');
+};
+
+/** Fallback toast copy per status action (the backend message wins when present). */
+export const dietStatusFallbackMessage = (action) => {
+  switch (action) {
+    case 'pause':
+      return 'Plan paused. You can resume anytime or start another plan.';
+    case 'resume':
+      return 'Plan resumed — tracking is active again.';
+    case 'stop':
+      return 'Plan stopped';
+    case 'reset':
+      return 'Plan reset to Day 1';
+    case 'repeat':
+      return 'Plan repeated — new run started from Day 1.';
+    default:
+      return 'Plan completed. You can repeat it anytime.';
+  }
+};
+
+/** "Health focus" text: disease names, else the short description. */
+export const getDietHealthFocus = (...plans) => {
+  for (const plan of plans) {
+    const diseases = plan?.health_diseases;
+    if (Array.isArray(diseases) && diseases.length) {
+      const names = diseases.map((d) => d?.name).filter(Boolean).join(', ');
+      if (names) return names;
+    }
+  }
+  for (const plan of plans) {
+    const desc = String(plan?.short_description || '').trim();
+    if (desc) return desc;
+  }
+  return '';
+};
+
+/** Router state for the diet-plan rating hand-off (ShareExperience). */
+export const buildDietReviewState = ({ plan, assignmentId, catalogPlanId }) => ({
+  entityType: 'diet_plan',
+  entityName: plan?.name || plan?.title || 'Diet Plan',
+  entitySubtitle: 'How was this diet plan?',
+  patientDietPlanId: String(assignmentId),
+  dietPlanId: catalogPlanId ? String(catalogPlanId) : undefined,
+});
+
+const COMPLETION_STORAGE_PREFIX = 'am_diet_completion_';
+
+/**
+ * Keep complete_json for the session so the completed screen can still show the tracking
+ * summary after the rating hand-off (the page unmounts on web, unlike the app's stack).
+ */
+export const saveCompletionJson = (assignmentId, json, storage = globalThis.sessionStorage) => {
+  if (assignmentId == null || !json || !storage) return false;
+  try {
+    storage.setItem(`${COMPLETION_STORAGE_PREFIX}${assignmentId}`, JSON.stringify(json));
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+export const loadCompletionJson = (assignmentId, storage = globalThis.sessionStorage) => {
+  if (assignmentId == null || !storage) return null;
+  try {
+    const raw = storage.getItem(`${COMPLETION_STORAGE_PREFIX}${assignmentId}`);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};

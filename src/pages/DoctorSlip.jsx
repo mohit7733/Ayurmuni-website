@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AppShell from '../components/AppShell';
+import AdvanceLoad from '../components/ui/AdvanceLoad';
 import ShareButton from '../components/ShareButton';
 import MultipleDoctorSlip from '../components/consult/MultipleDoctorSlip';
 import {
@@ -164,7 +165,7 @@ export default function DoctorSlip() {
         </header>
 
         {loading ? (
-          <p className="muted">Loading doctor slip…</p>
+          <AdvanceLoad variant="detail" label="Loading doctor slip" />
         ) : consultations.length === 0 ? (
           <div className="empty-copy">
             <strong>No consultations found</strong>

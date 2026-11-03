@@ -1,3 +1,5 @@
+import { fetchWithTimeout } from './apiClient';
+
 export const getDefaultRegion = () => ({
   latitude: 28.4595,
   longitude: 77.0266,
@@ -34,19 +36,116 @@ const parseNominatim = (item, coords) => {
   };
 };
 
-const nominatim = async (path) => {
-  const response = await fetch(`https://nominatim.openstreetmap.org${path}`, {
-    headers: { Accept: 'application/json' },
-  });
+export const GEOCODE_UNAVAILABLE_MESSAGE =
+  "Couldn't fetch the address right now. Please try again, search, or enter a pincode.";
+
+export const isAbortError = (error) =>
+  error?.name === 'AbortError' || error?.code === 20;
+
+const geocodeError = (cause) => {
+  const err = new Error(GEOCODE_UNAVAILABLE_MESSAGE);
+  err.code = 'geocode_unavailable';
+  err.retryable = true;
+  err.cause = cause;
+  return err;
+};
+
+const abortError = () => {
+  const err = new Error('Aborted');
+  err.name = 'AbortError';
+  return err;
+};
+
+// Nominatim usage policy: max 1 request/second. Requests over the limit get a
+// 429 with no CORS headers, which the browser surfaces as "Failed to fetch".
+const NOMINATIM_MIN_GAP_MS = 1100;
+let nominatimQueue = Promise.resolve();
+let nominatimLastAt = 0;
+
+const waitForNominatimSlot = (signal) => {
+  const slot = nominatimQueue.then(
+    () =>
+      new Promise((resolve, reject) => {
+        if (signal?.aborted) {
+          reject(abortError());
+          return;
+        }
+        const wait = Math.max(0, nominatimLastAt + NOMINATIM_MIN_GAP_MS - Date.now());
+        const timer = setTimeout(() => {
+          signal?.removeEventListener?.('abort', onAbort);
+          nominatimLastAt = Date.now();
+          resolve();
+        }, wait);
+        function onAbort() {
+          clearTimeout(timer);
+          reject(abortError());
+        }
+        signal?.addEventListener?.('abort', onAbort, { once: true });
+      }),
+  );
+  nominatimQueue = slot.catch(() => {});
+  return slot;
+};
+
+const nominatim = async (path, signal) => {
+  await waitForNominatimSlot(signal);
+  const sep = path.includes('?') ? '&' : '?';
+  let response;
+  try {
+    response = await fetchWithTimeout(
+      `https://nominatim.openstreetmap.org${path}${sep}accept-language=en`,
+      { headers: { Accept: 'application/json' }, signal },
+    );
+  } catch (error) {
+    if (isAbortError(error) || signal?.aborted) throw abortError();
+    throw geocodeError(error);
+  }
   if (!response.ok) {
-    throw new Error('Location lookup failed');
+    throw geocodeError(new Error(`Nominatim HTTP ${response.status}`));
   }
   return response.json();
 };
 
+// Fallback OSM-based reverse geocoder (CORS-enabled, no key) used when
+// Nominatim is rate-limited or unreachable.
+const photonReverse = async (coords, signal) => {
+  let response;
+  try {
+    response = await fetchWithTimeout(
+      `https://photon.komoot.io/reverse?lat=${coords.latitude}&lon=${coords.longitude}&lang=en`,
+      { headers: { Accept: 'application/json' }, signal },
+    );
+  } catch (error) {
+    if (isAbortError(error) || signal?.aborted) throw abortError();
+    throw geocodeError(error);
+  }
+  if (!response.ok) throw geocodeError(new Error(`Photon HTTP ${response.status}`));
+  const data = await response.json();
+  const p = data?.features?.[0]?.properties;
+  if (!p) throw geocodeError(new Error('Photon: no result'));
+  const address = {
+    house_number: p.housenumber,
+    road: p.street || (p.type === 'street' ? p.name : undefined),
+    neighbourhood: p.locality,
+    suburb: p.district,
+    city: p.city,
+    county: p.county,
+    state: p.state,
+    postcode: p.postcode,
+    country: p.country,
+  };
+  const display_name = [p.name, p.street, p.locality, p.district, p.city, p.state, p.postcode, p.country]
+    .filter(Boolean)
+    .filter((v, i, arr) => arr.indexOf(v) === i)
+    .join(', ');
+  return { address, display_name };
+};
+
+const reverseCache = new Map();
+
 const geocodePincodeIndiaPost = async (pincode) => {
   try {
-    const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+    const response = await fetchWithTimeout(`https://api.postalpincode.in/pincode/${pincode}`);
     const data = await response.json();
     const office = Array.isArray(data) ? data[0]?.PostOffice?.[0] : null;
     if (!office) return null;
@@ -68,14 +167,25 @@ const geocodePincodeIndiaPost = async (pincode) => {
   }
 };
 
-export const reverseGeocode = async (coords) => {
-  const data = await nominatim(
-    `/reverse?format=json&lat=${coords.latitude}&lon=${coords.longitude}&addressdetails=1&zoom=18`,
-  );
-  if (!data?.address) {
-    throw new Error('Could not resolve address for this pin.');
+export const reverseGeocode = async (coords, { signal } = {}) => {
+  const key = `${Number(coords.latitude).toFixed(5)},${Number(coords.longitude).toFixed(5)}`;
+  if (reverseCache.has(key)) return { ...reverseCache.get(key), ...coords };
+
+  let data;
+  try {
+    data = await nominatim(
+      `/reverse?format=jsonv2&lat=${coords.latitude}&lon=${coords.longitude}&addressdetails=1&zoom=18`,
+      signal,
+    );
+    if (!data?.address) throw geocodeError(new Error('Nominatim: no address'));
+  } catch (error) {
+    if (isAbortError(error)) throw error;
+    data = await photonReverse(coords, signal);
   }
-  return parseNominatim(data, coords);
+  const parsed = parseNominatim(data, coords);
+  if (reverseCache.size > 200) reverseCache.clear();
+  reverseCache.set(key, parsed);
+  return parsed;
 };
 
 export const geocodePincode = async (pincode) => {
@@ -84,7 +194,7 @@ export const geocodePincode = async (pincode) => {
 
   try {
     const data = await nominatim(
-      `/search?postalcode=${encodeURIComponent(cleaned)}&country=India&format=json&addressdetails=1&limit=1`,
+      `/search?postalcode=${encodeURIComponent(cleaned)}&country=India&format=jsonv2&addressdetails=1&limit=1`,
     );
     if (Array.isArray(data) && data[0]) {
       const item = data[0];
@@ -120,11 +230,12 @@ export const enrichAddressWithPincode = async (address) => {
   };
 };
 
-export const searchPlaces = async (query) => {
+export const searchPlaces = async (query, { signal } = {}) => {
   const q = String(query || '').trim();
   if (!q) return [];
   const data = await nominatim(
-    `/search?q=${encodeURIComponent(q)}&countrycodes=in&format=json&addressdetails=1&limit=6`,
+    `/search?q=${encodeURIComponent(q)}&countrycodes=in&format=jsonv2&addressdetails=1&limit=6`,
+    signal,
   );
   if (!Array.isArray(data)) return [];
   return data.map((item) => ({
@@ -162,7 +273,16 @@ export const getCurrentPosition = () =>
           longitude: position.coords.longitude,
         });
       },
-      (error) => reject(error),
+      (error) => {
+        const messages = {
+          1: 'Location permission denied. Allow location access in your browser, or search / enter a pincode.',
+          2: 'Your location is unavailable right now. Search, enter a pincode, or move the map.',
+          3: 'Getting your location timed out. Please try again, or search / enter a pincode.',
+        };
+        const err = new Error(messages[error?.code] || messages[2]);
+        err.code = error?.code;
+        reject(err);
+      },
       { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 },
     );
   });

@@ -1,7 +1,15 @@
+import { subscribeApiSession } from '../services/apiClient';
+
 const STORAGE_KEY = 'ayurmuni_reviewed_diet_assignments';
 
 let reviewedIds = new Set();
 let hydrated = false;
+
+// Logout clears the localStorage copy; drop the in-memory copy too so the next account rehydrates.
+subscribeApiSession(() => {
+  reviewedIds = new Set();
+  hydrated = false;
+});
 
 export const hydrateReviewedDietPlans = async () => {
   if (hydrated) return;

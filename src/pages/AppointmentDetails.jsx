@@ -20,10 +20,14 @@ import {
   Stethoscope,
   UserRound,
   Video,
+  Wallet,
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import ShareButton from '../components/ShareButton';
-import { Button, Chip, Modal, SkeletonText, Textarea } from '../components/ui';
+import DietitianBadge from '../components/DietitianBadge';
+import PaymentHistoryTimeline from '../components/PaymentHistoryTimeline';
+import { getPaymentHistory } from '../utils/paymentHistoryUtils';
+import { Button, Chip, Modal, SectionHold, Textarea } from '../components/ui';
 import {
   DetailCard,
   DetailEmpty,
@@ -40,7 +44,8 @@ import {
 } from '../components/detail/Detail';
 import {
   buildVideoCallNavParams,
-  canModifyAppointment,
+  canOfferCancel,
+  canOfferReschedule,
   formatAppointmentDateFull,
   formatAppointmentTimeLabel,
   formatDoctorDisplayName,
@@ -62,6 +67,7 @@ import { formatRupee } from '../home/catalog';
 import { showSuccessToast } from '../config/key';
 import { Utils } from '../common/utils';
 import { requireAuth } from '../services/guestAuth';
+import { invalidateApiCache } from '../services/apiClient';
 import {
   appointmentActionAPI,
   getAppointmentDetail,
@@ -179,6 +185,7 @@ export default function AppointmentDetails() {
   const onRefresh = async () => {
     setRefreshing(true);
     try {
+      invalidateApiCache('customers/patient/consultation/');
       await fetchDetail({ silent: true });
     } finally {
       setRefreshing(false);
@@ -222,7 +229,14 @@ export default function AppointmentDetails() {
     appointment,
     rawData: detail,
   });
-  const showButtons = canModifyAppointment(status, schedule.date, schedule.time);
+  const showReschedule = canOfferReschedule(status, schedule.date, schedule.time, {
+    status,
+    appointment,
+    rawData: detail,
+  });
+  const showCancel = canOfferCancel(status, schedule.date, schedule.time);
+  const showButtons = showReschedule || showCancel;
+  const paymentHistory = useMemo(() => getPaymentHistory(detail, appointment), [detail, appointment]);
   const isRescheduleRequest = status === 'reschedule';
   const showAddToCalendar = detail?.appointment
     ? !isAppointmentInPast({
@@ -365,8 +379,8 @@ export default function AppointmentDetails() {
     const action = location.state?.action;
     if (!action) return;
     navigate(location.pathname, { replace: true, state: {} });
-    if (action === 'reschedule' && showButtons) openReschedule();
-    if (action === 'cancel' && showButtons) openCancelFlow();
+    if (action === 'reschedule' && showReschedule) openReschedule();
+    if (action === 'cancel' && showCancel) openCancelFlow();
   }, [detail, loading]);
 
   const addToCalendar = () => {
@@ -561,6 +575,7 @@ export default function AppointmentDetails() {
               lede={specialization}
               chips={
                 <>
+                  <DietitianBadge doctor={doctor || appointment} size="md" />
                   {isLive ? (
                     <MetaChip icon={Radio} tone="gold">
                       Live now
@@ -602,7 +617,7 @@ export default function AppointmentDetails() {
                       Chat with doctor
                     </Button>
                   ) : null}
-                  {showButtons ? (
+                  {showReschedule ? (
                     <Button
                       variant="secondary"
                       size="sm"
@@ -612,7 +627,7 @@ export default function AppointmentDetails() {
                       {isRescheduleRequest ? 'Request change' : 'Reschedule'}
                     </Button>
                   ) : null}
-                  {showButtons ? (
+                  {showCancel ? (
                     <Button variant="secondary" size="sm" onClick={openCancelFlow}>
                       Cancel
                     </Button>
@@ -693,6 +708,12 @@ export default function AppointmentDetails() {
                   ]}
                 />
               </DetailCard>
+
+              {paymentHistory.length > 0 ? (
+                <DetailCard id="appointment-payment-history" title="Payment history" icon={Wallet}>
+                  <PaymentHistoryTimeline history={paymentHistory} />
+                </DetailCard>
+              ) : null}
 
               {patient ? (
                 <DetailCard id="appointment-patient" title="Patient" icon={UserRound}>
@@ -861,7 +882,7 @@ export default function AppointmentDetails() {
             ))}
           </div>
           {slotsLoading ? (
-            <SkeletonText lines={2} />
+            <SectionHold label="Loading slots" minHeight={140} scale="section" />
           ) : (
             (() => {
               const open = slots.filter((slot) => isSlotBookable(slot, slotDate));

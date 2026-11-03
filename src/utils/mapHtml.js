@@ -21,16 +21,28 @@ export const buildMapHtml = (center) => `<!DOCTYPE html>
       position: absolute; top: 50%; left: 50%;
       transform: translate(-50%, -100%);
       pointer-events: none; z-index: 1000;
+      display: flex; flex-direction: column; align-items: center;
+      filter: drop-shadow(0 6px 8px rgba(11,65,54,0.35));
     }
     .pin-dot {
-      width: 16px; height: 16px; background: #0D614E;
-      border: 3px solid #fff; border-radius: 50%;
-      margin: 0 auto; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      width: 30px; height: 30px; border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      background: linear-gradient(135deg, #17634f 0%, #0b4136 100%);
+      border: 3px solid #e4c47a; box-shadow: 0 0 0 3px rgba(255,255,255,0.9);
+      display: flex; align-items: center; justify-content: center;
     }
-    .pin-stem {
-      width: 2px; height: 20px; background: #0D614E;
-      margin: 0 auto;
+    .pin-dot::after {
+      content: ''; width: 9px; height: 9px; border-radius: 50%;
+      background: #fbf6ea; transform: rotate(45deg);
     }
+    .pin-stem { width: 0; height: 6px; }
+    .pin-shadow {
+      position: absolute; top: 50%; left: 50%; width: 14px; height: 5px;
+      transform: translate(-50%, -50%); border-radius: 50%;
+      background: rgba(11,65,54,0.35); pointer-events: none; z-index: 999;
+    }
+    .leaflet-control-zoom a { color: #0b4136 !important; }
+    .leaflet-bar { border: 1px solid rgba(201,165,90,0.6) !important; border-radius: 10px !important; overflow: hidden; }
     .map-error {
       display:none;position:absolute;inset:0;align-items:center;justify-content:center;
       background:#F8FAFC;color:#64748B;font:14px sans-serif;text-align:center;padding:20px;z-index:2000;
@@ -42,7 +54,7 @@ export const buildMapHtml = (center) => `<!DOCTYPE html>
   <div id="mapError" class="map-error">
     Map tiles could not load.<br/>Use pincode or search instead.
   </div>
-  <div class="pin-wrap"><div class="pin-dot"></div><div class="pin-stem"></div></div>
+  <div class="pin-shadow"></div><div class="pin-wrap"><div class="pin-dot"></div><div class="pin-stem"></div></div>
   <script>
     let map, idleTimer, skipNextIdle = false;
     const startLat = ${center.latitude};
@@ -84,7 +96,11 @@ export const buildMapHtml = (center) => `<!DOCTYPE html>
           attribution: '&copy; OpenStreetMap',
         }).addTo(map);
         map.on('moveend', onMapIdle);
-        map.on('zoomend', onMapIdle);
+        // moveend already fires after zoom; zoomend removed to avoid duplicate geocodes.
+        // Make sure tiles fill the frame once layout settles (iframe may mount at 0 size).
+        setTimeout(function() { if (map) map.invalidateSize(); }, 0);
+        setTimeout(function() { if (map) map.invalidateSize(); }, 300);
+        window.addEventListener('resize', function() { if (map) map.invalidateSize(); });
       } catch (e) {
         showMapError();
       }
