@@ -5,7 +5,7 @@ import { SectionHeader } from './ui';
 import { getProductDiscovery, PRODUCT_SECTION_LABELS } from '../services/productService';
 import { mapCatalogProductItem, normalizeApiList } from '../home/catalog';
 
-const SECTIONS = ['trending', 'best_sellers', 'related', 'similar', 'recently_viewed'];
+const SECTIONS = ['recently_viewed', 'trending', 'best_sellers', 'related', 'similar'];
 
 export default function ProductDiscoveryRails({ productId, excludeVariantId, detailBase = '/products' }) {
   const [rails, setRails] = useState({});

@@ -32,6 +32,7 @@ import {
   isPrescriptionRequired,
 } from "../product/stock";
 import { showPrescriptionRequired } from "../services/prescriptionGate";
+import { calculateOrderFees, parseFeeQuoteConfig } from "../cart/feeQuote";
 import { getOrderFeeQuote } from "../services/orderService";
 import { invalidateApiCache } from "../services/apiClient";
 import {
@@ -152,15 +153,7 @@ export default function Cart() {
         const res = await getOrderFeeQuote({ cart_item_ids: cartItemIds });
         if (!alive) return;
         const data = res?.data ?? res;
-        const summary = data?.summary ?? {};
-        setFees({
-          shipping:
-            Number(summary.shipping_charges ?? summary.delivery_charge ?? 0) ||
-            0,
-          gst: Number(summary.gst ?? summary.product_gst ?? 0) || 0,
-          platform: Number(summary.platform_fee ?? 0) || 0,
-          total: Number(summary.total ?? summary.payable ?? 0) || 0,
-        });
+        setFees(parseFeeQuoteConfig(data, subtotal, { ignoreConsultationFee: true }));
       } catch {
         if (alive) setFees(null);
       } finally {
@@ -170,14 +163,18 @@ export default function Cart() {
     return () => {
       alive = false;
     };
-  }, [cartItemIds.join(",")]);
+  }, [cartItemIds.join(","), subtotal]);
 
-  const shipping = Number(fees?.shipping) || 0;
-  const gst = Number(fees?.gst) || 0;
-  const platform = Number(fees?.platform) || 0;
-  const payable = fees
-    ? Math.round(subtotal + shipping + gst + platform)
-    : Math.round(subtotal);
+  const feeBreakdown = calculateOrderFees({
+    quote: fees,
+    fallbackSubtotal: subtotal,
+    includeCod: false,
+  });
+  const shipping = feeBreakdown.shipping;
+  const gst = feeBreakdown.gst;
+  const platform = feeBreakdown.platformFee;
+  const payable = feeBreakdown.total;
+  const itemTotal = fees ? feeBreakdown.baseAmount : subtotal;
 
   // Doctor vs uploaded-prescription groups (uploads grouped by prescription_request_id).
   const rxGroups = useMemo(
@@ -624,16 +621,18 @@ export default function Cart() {
                 <dl className="cp-bill">
                   <div>
                     <dt>{T.itemTotal}</dt>
-                    <dd>{formatRupee(subtotal)}</dd>
+                    <dd>{formatRupee(itemTotal)}</dd>
                   </div>
                   <div>
                     <dt>{T.delivery}</dt>
                     <dd>{feeLoading ? "…" : fees && !shipping ? <span className="cp-free">Free</span> : formatRupee(shipping)}</dd>
                   </div>
-                  <div>
-                    <dt>{T.gst}</dt>
-                    <dd>{feeLoading ? "…" : formatRupee(gst)}</dd>
-                  </div>
+                  {feeLoading || gst > 0 ? (
+                    <div>
+                      <dt>{T.gst}</dt>
+                      <dd>{feeLoading ? "…" : formatRupee(gst)}</dd>
+                    </div>
+                  ) : null}
                   <div>
                     <dt>{T.platformFee}</dt>
                     <dd>{feeLoading ? "…" : formatRupee(platform)}</dd>

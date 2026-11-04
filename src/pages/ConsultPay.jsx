@@ -230,6 +230,10 @@ export default function ConsultPay() {
       requested === quotedCouponCode && feeQuote?.couponDiscount != null
         ? feeQuote.couponDiscount
         : couponDiscount;
+    const serverPayable =
+      requested === quotedCouponCode && feeQuote?.summaryTotalPayable != null
+        ? feeQuote.summaryTotalPayable
+        : null;
     const quote = calculateFeeBreakdown({
       baseAmount: consultationFee,
       discount: quoteDiscount,
@@ -237,6 +241,7 @@ export default function ConsultPay() {
       platformFee: feeQuote?.platformFee ?? { flat: 0, percent: 0 },
       includeShipping: false,
       includeCod: false,
+      payable: serverPayable,
     });
     return {
       consultationFee: quote.baseAmount,
