@@ -83,12 +83,15 @@ import { consultationHasPrescription } from '../utils/prescriptionDetailUtils';
 import { formatAppointmentId } from '../utils/formatDisplayId';
 import { getAppointmentShareMessage } from '../helper/shareMessage';
 
+/** API cancellation_reason values. Free-text labels are rejected as an invalid request. */
 const CANCEL_REASONS = [
-  'Scheduling conflict',
-  'Feeling better / no longer needed',
-  'Booked by mistake',
-  'Found another doctor',
-  'Personal emergency',
+  { value: 'professional_or_medical_exigency', label: 'Professional or medical exigency' },
+  { value: 'personal_or_unforeseen_circumstance', label: 'Personal or unforeseen circumstance' },
+  { value: 'unavailability', label: 'Unavailability' },
+  { value: 'technical_difficulty', label: 'Technical difficulty' },
+  { value: 'unable_to_conduct_consultation', label: 'Unable to conduct consultation' },
+  { value: 'requires_user_in_person_care', label: 'Requires in-person care' },
+  { value: 'other_reasonable_circumstance', label: 'Other reasonable circumstance' },
 ];
 
 const CANCEL_NOTES = [
@@ -113,6 +116,9 @@ const formatLabel = (value) => {
     .replace(/_/g, ' ')
     .replace(/\b\w/g, (char) => char.toUpperCase());
 };
+
+const cancellationReasonLabel = (value) =>
+  CANCEL_REASONS.find((item) => item.value === value)?.label || formatLabel(value);
 
 const followUpLabel = (detail, appointment) => {
   const fu = appointment?.follow_up || detail?.prescription?.follow_up || detail?.follow_up || null;
@@ -706,7 +712,7 @@ export default function AppointmentDetails() {
                     { label: 'Consultation fee', value: paymentAmount != null ? formatRupee(paymentAmount) : '' },
                     { label: 'Payment', value: formatLabel(paymentStatusValue) },
                     { label: 'Follow-up', value: followUpLabel(detail, appointment) },
-                    { label: 'Cancellation reason', value: appointment?.cancellation_reason, wide: true },
+                    { label: 'Cancellation reason', value: cancellationReasonLabel(appointment?.cancellation_reason), wide: true },
                     { label: 'Reschedule reason', value: appointment?.reschedule_reason, wide: true },
                   ]}
                 />
@@ -769,13 +775,17 @@ export default function AppointmentDetails() {
               <Button
                 variant="danger"
                 loading={saving}
-                disabled={!cancelReason}
+                disabled={
+                  !cancelReason ||
+                  (cancelReason === 'other_reasonable_circumstance' && !cancelNote.trim())
+                }
                 onClick={() =>
                   runAction({
                     action: 'cancel',
-                    cancellation_reason: cancelNote.trim()
-                      ? `${cancelReason} — ${cancelNote.trim()}`
-                      : cancelReason,
+                    cancellation_reason: cancelReason,
+                    ...(cancelReason === 'other_reasonable_circumstance'
+                      ? { cancellation_reason_detail: cancelNote.trim() }
+                      : {}),
                   })
                 }
               >
@@ -792,17 +802,23 @@ export default function AppointmentDetails() {
           <p className="dx-field-label">Reason for cancellation</p>
           <div className="dx-chip-group">
             {CANCEL_REASONS.map((item) => (
-              <Chip key={item} selected={cancelReason === item} onClick={() => setCancelReason(item)}>
-                {item}
+              <Chip
+                key={item.value}
+                selected={cancelReason === item.value}
+                onClick={() => setCancelReason(item.value)}
+              >
+                {item.label}
               </Chip>
             ))}
           </div>
-          <Textarea
-            rows={3}
-            placeholder="Add a note (optional)"
-            value={cancelNote}
-            onChange={(e) => setCancelNote(e.target.value)}
-          />
+          {cancelReason === 'other_reasonable_circumstance' ? (
+            <Textarea
+              rows={3}
+              placeholder="Please describe the circumstance..."
+              value={cancelNote}
+              onChange={(e) => setCancelNote(e.target.value)}
+            />
+          ) : null}
         </Modal>
 
         <Modal
