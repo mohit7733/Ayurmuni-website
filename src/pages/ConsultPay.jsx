@@ -179,10 +179,17 @@ export default function ConsultPay() {
       setFeeQuoteLoading(true);
       try {
         const response = await getConsultationFeeQuote(slot.id, couponCode);
-        const parsed = parseFeeQuoteConfig(
-          response?.data ?? response,
-          slotAmount,
-        );
+        const raw = response?.data ?? response;
+        const parsed = parseFeeQuoteConfig(raw, slotAmount);
+        // Fee-quote sets total_payable_amount to 0 whenever a plan can fund the slot.
+        // That zero is only for "use plan". Pay normally must keep the cash total.
+        if (
+          parsed &&
+          raw?.package_funding?.can_fund === true &&
+          Number(parsed.summaryTotalPayable) === 0
+        ) {
+          parsed.summaryTotalPayable = null;
+        }
         setQuotedCouponCode(String(couponCode || "").trim());
         setFeeQuote(isApiSuccess(response) && parsed ? parsed : null);
       } catch {
@@ -438,6 +445,7 @@ export default function ConsultPay() {
             medical_record_ids: booking.medical_record_ids,
             coupon_code: appliedCoupon?.code,
             payment_gateway: apiGateway,
+            skip_package_funding: true,
           });
           const duplicateAppointmentId = isDuplicateGatewayOrder(paymentResponse)
             ? readAppointmentId(pickConsultPaymentData(paymentResponse)) ||
@@ -455,6 +463,17 @@ export default function ConsultPay() {
             }
           }
         }
+      }
+      if (
+        !planPurchaseId &&
+        paymentResponse?.data?.funded_by_package === true &&
+        !hasGatewayOrder(paymentResponse?.data)
+      ) {
+        showSuccessToast(
+          "A plan covered this visit instead of opening payment. Choose Pay normally again.",
+          "error",
+        );
+        return;
       }
       if (!isApiSuccess(paymentResponse)) {
         showSuccessToast(
