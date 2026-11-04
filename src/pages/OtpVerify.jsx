@@ -1,43 +1,47 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
-import consultImg from '/images/login/10.png';
-import medicineImg from '/images/login/9.png';
-import deliveryImg from '/images/login/delivery.png';
-import dietImg from '/images/login/14.jpg';
-import yogaImg from '/images/login/8.png';
-import login11Img from '/images/login/11.png';
-import login12Img from '/images/login/12.png';
-import login13Img from '/images/login/13.png';
-import logoImg from '/greenlogo.png';
-import { Utils } from '../common/utils';
-import { showSuccessToast } from '../config/key';
-import MarqueeCollage from '../components/MarqueeCollage';
-import * as AuthService from '../services/authService';
-import * as ProfileServices from '../services/profileService';
-import { acceptPolicies } from '../services/policyService';
-import { isProfileComplete, markAsGuest, syncAccessFromProfile } from '../services/guestAuth';
-import { parsePolicyAcceptedCustomer } from '../utils/policyUtils';
-import { Button, Modal } from '../components/ui';
-import { AUTH_COPY as T } from '../content/auth';
-import '../design/pages/auth.css';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
+import consultImg from "/images/login/10.png";
+import medicineImg from "/images/login/9.png";
+import deliveryImg from "/images/login/delivery.png";
+import dietImg from "/images/login/14.jpg";
+import yogaImg from "/images/login/8.png";
+import login11Img from "/images/login/11.png";
+import login12Img from "/images/login/12.png";
+import login13Img from "/images/login/13.png";
+import logoImg from "/greenlogo.png";
+import { Utils } from "../common/utils";
+import { showSuccessToast } from "../config/key";
+import MarqueeCollage from "../components/MarqueeCollage";
+import * as AuthService from "../services/authService";
+import * as ProfileServices from "../services/profileService";
+import { acceptPolicies } from "../services/policyService";
+import {
+  isProfileComplete,
+  markAsGuest,
+  syncAccessFromProfile,
+} from "../services/guestAuth";
+import { parsePolicyAcceptedCustomer } from "../utils/policyUtils";
+import { Button, Modal } from "../components/ui";
+import { AUTH_COPY as T } from "../content/auth";
+import "../design/pages/auth.css";
 
 const OTP_LEN = 4;
 
 const COLUMNS = [
   {
-    id: 'left',
-    direction: 'up',
+    id: "left",
+    direction: "up",
     images: [consultImg, medicineImg, deliveryImg, consultImg, medicineImg],
   },
   {
-    id: 'center',
-    direction: 'down',
+    id: "center",
+    direction: "down",
     images: [dietImg, yogaImg, login11Img, dietImg, yogaImg],
   },
   {
-    id: 'right',
-    direction: 'up',
+    id: "right",
+    direction: "up",
     images: [login12Img, login13Img, deliveryImg, consultImg, yogaImg],
   },
 ];
@@ -51,24 +55,29 @@ export default function OtpVerify() {
   const accountDeleted = params.accountDeleted === true;
   const retentionDays = params.retentionDays;
 
-  const [otp, setOtp] = useState(['', '', '', '']);
+  const [otp, setOtp] = useState(["", "", "", ""]);
   const [isLoading, setIsLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(60);
   const [notifPromptVisible, setNotifPromptVisible] = useState(false);
-  const pendingRegisterOtpRef = useRef('');
+  const [isDeletedAccount, setIsDeletedAccount] = useState(accountDeleted);
+  const [deletedRetentionDays, setDeletedRetentionDays] =
+    useState(retentionDays);
+  const pendingRegisterOtpRef = useRef("");
   const otpInputRefs = useRef([]);
 
   useEffect(() => {
     if (!phoneNumber) {
-      navigate('/login', { replace: true });
+      navigate("/login", { replace: true });
     }
   }, [phoneNumber, navigate]);
 
   const applyOtpDigits = useCallback((digits) => {
-    const cleaned = String(digits).replace(/[^0-9]/g, '').slice(0, OTP_LEN);
+    const cleaned = String(digits)
+      .replace(/[^0-9]/g, "")
+      .slice(0, OTP_LEN);
     if (!cleaned) return;
-    const next = ['', '', '', ''];
-    cleaned.split('').forEach((d, i) => {
+    const next = ["", "", "", ""];
+    cleaned.split("").forEach((d, i) => {
       next[i] = d;
     });
     setOtp(next);
@@ -78,7 +87,7 @@ export default function OtpVerify() {
 
   useEffect(() => {
     (async () => {
-      const storedOtp = await Utils.getData('_OTP');
+      const storedOtp = await Utils.getData("_OTP");
       if (storedOtp) applyOtpDigits(String(storedOtp));
     })();
   }, [applyOtpDigits]);
@@ -90,7 +99,7 @@ export default function OtpVerify() {
   }, [resendTimer]);
 
   const handleOTPChange = (text, index) => {
-    const cleaned = text.replace(/[^0-9]/g, '');
+    const cleaned = text.replace(/[^0-9]/g, "");
     if (cleaned.length > 1) {
       applyOtpDigits(cleaned);
       return;
@@ -104,36 +113,36 @@ export default function OtpVerify() {
   };
 
   const handleKeyDown = (event, index) => {
-    if (event.key !== 'Backspace') return;
+    if (event.key !== "Backspace") return;
     if (otp[index]) {
       const next = [...otp];
-      next[index] = '';
+      next[index] = "";
       setOtp(next);
       return;
     }
     if (index > 0) {
       const next = [...otp];
-      next[index - 1] = '';
+      next[index - 1] = "";
       setOtp(next);
       otpInputRefs.current[index - 1]?.focus();
     }
   };
 
   const requestWebNotification = async () => {
-    if (!('Notification' in window)) return false;
-    if (Notification.permission === 'granted') return true;
-    if (Notification.permission === 'denied') return false;
+    if (!("Notification" in window)) return false;
+    if (Notification.permission === "granted") return true;
+    if (Notification.permission === "denied") return false;
     const result = await Notification.requestPermission();
-    return result === 'granted';
+    return result === "granted";
   };
 
   const recordPolicyAcceptance = async () => {
     try {
-      await acceptPolicies({ type: 'all' });
-      await Utils.storeData('_POLICY_ACCEPTED_CUSTOMER', true);
+      await acceptPolicies({ type: "all" });
+      await Utils.storeData("_POLICY_ACCEPTED_CUSTOMER", true);
     } catch {
       try {
-        await Utils.storeData('_POLICY_ACCEPTED_CUSTOMER', true);
+        await Utils.storeData("_POLICY_ACCEPTED_CUSTOMER", true);
       } catch {
         // Acceptance is still recorded locally when the request fails.
       }
@@ -142,18 +151,20 @@ export default function OtpVerify() {
 
   const goAfterProfile = async (profile) => {
     const level = await syncAccessFromProfile(profile);
-    if (level === 'full' || isProfileComplete(profile)) {
-      navigate('/home', { replace: true });
+    if (level === "full" || isProfileComplete(profile)) {
+      navigate("/home", { replace: true });
       return;
     }
     await markAsGuest();
-    navigate('/access-mode', { replace: true });
+    navigate("/access-mode", { replace: true });
   };
 
-  const submitRegisterWithNotificationPreference = async (isNotificationEnabled) => {
-    const otpCode = pendingRegisterOtpRef.current || otp.join('');
+  const submitRegisterWithNotificationPreference = async (
+    isNotificationEnabled,
+  ) => {
+    const otpCode = pendingRegisterOtpRef.current || otp.join("");
     if (otpCode.length !== 4) {
-      showSuccessToast('Please enter valid OTP', 'error');
+      showSuccessToast("Please enter valid OTP", "error");
       return;
     }
 
@@ -173,52 +184,64 @@ export default function OtpVerify() {
         const refreshToken = response?.data?.refresh;
 
         if (!userId) {
-          showSuccessToast('User information not received. Please try again.', 'error');
+          showSuccessToast(
+            "User information not received. Please try again.",
+            "error",
+          );
           return;
         }
         if (!accessToken) {
-          showSuccessToast('Authentication token not received.', 'error');
+          showSuccessToast("Authentication token not received.", "error");
           return;
         }
 
-        await Utils.storeData('_USER_ID', String(userId));
-        await Utils.storeData('_TOKEN', accessToken);
+        await Utils.storeData("_USER_ID", String(userId));
+        await Utils.storeData("_TOKEN", accessToken);
         if (refreshToken) {
-          await Utils.storeData('_REFRESH_TOKEN', refreshToken);
+          await Utils.storeData("_REFRESH_TOKEN", refreshToken);
         }
 
         await markAsGuest();
-        showSuccessToast(response?.message || 'OTP verified successfully', 'success');
+        showSuccessToast(
+          response?.message || "OTP verified successfully",
+          "success",
+        );
         try {
           const profileRes = await ProfileServices.user_profile();
           if (profileRes?.data) {
-            await Utils.storeData('_USER_INFO', profileRes.data);
+            await Utils.storeData("_USER_INFO", profileRes.data);
           }
           await recordPolicyAcceptance();
           await goAfterProfile(profileRes?.data);
         } catch {
           await recordPolicyAcceptance();
           await markAsGuest();
-          navigate('/access-mode', { replace: true });
+          navigate("/access-mode", { replace: true });
         }
       } else {
-        showSuccessToast(response?.message || 'Failed to verify OTP', 'error');
+        showSuccessToast(response?.message || "Failed to verify OTP", "error");
       }
     } catch (error) {
-      showSuccessToast(error?.message || 'Something went wrong. Please try again.', 'error');
+      showSuccessToast(
+        error?.message || "Something went wrong. Please try again.",
+        "error",
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
   const finishLoginSession = async (response) => {
-    showSuccessToast(response.message || 'OTP verified successfully', 'success');
+    showSuccessToast(
+      response.message || "OTP verified successfully",
+      "success",
+    );
 
     const userId = response?.data?.user_id;
-    await Utils.storeData('_USER_ID', userId);
-    await Utils.storeData('_TOKEN', response?.data?.access);
+    await Utils.storeData("_USER_ID", userId);
+    await Utils.storeData("_TOKEN", response?.data?.access);
     if (response?.data?.refresh) {
-      await Utils.storeData('_REFRESH_TOKEN', response.data.refresh);
+      await Utils.storeData("_REFRESH_TOKEN", response.data.refresh);
     }
 
     if (userId) {
@@ -231,14 +254,14 @@ export default function OtpVerify() {
 
     const customerOnboard = response?.data?.customer;
     const loginFlags = {
-      ...(typeof response?.data === 'object' ? response.data : {}),
-      ...(typeof customerOnboard === 'object' ? customerOnboard : {}),
+      ...(typeof response?.data === "object" ? response.data : {}),
+      ...(typeof customerOnboard === "object" ? customerOnboard : {}),
     };
 
     try {
       const profileRes = await ProfileServices.user_profile();
       if (profileRes?.data) {
-        await Utils.storeData('_USER_INFO', profileRes.data);
+        await Utils.storeData("_USER_INFO", profileRes.data);
       }
       await recordPolicyAcceptance();
       const mergedProfile = {
@@ -250,18 +273,18 @@ export default function OtpVerify() {
       await recordPolicyAcceptance();
       if (isProfileComplete(loginFlags)) {
         await syncAccessFromProfile(loginFlags);
-        navigate('/home', { replace: true });
+        navigate("/home", { replace: true });
       } else {
         await markAsGuest();
-        navigate('/access-mode', { replace: true });
+        navigate("/access-mode", { replace: true });
       }
     }
   };
 
   const LoginVerfiyOTP = async () => {
-    const otpCode = otp.join('');
+    const otpCode = otp.join("");
     if (otpCode.length !== 4) {
-      showSuccessToast('Please enter valid OTP', 'error');
+      showSuccessToast("Please enter valid OTP", "error");
       return;
     }
 
@@ -274,20 +297,33 @@ export default function OtpVerify() {
 
       if (response?.success) {
         await finishLoginSession(response);
-      } else {
-        showSuccessToast(response?.message || 'Failed to verify OTP', 'error');
+        return;
       }
+
+      const deletedInfo = ProfileServices.parseDeletedAccountInfo(response);
+      if (response?.status === 403 && deletedInfo) {
+        await Utils.storeData("_DELETED_ACCOUNT_HOLD", {
+          phone: `+91${phoneNumber}`,
+          retention_days: deletedInfo.retentionDays,
+          held_at: Date.now(),
+        });
+        setDeletedRetentionDays(deletedInfo.retentionDays);
+        setIsDeletedAccount(true);
+        return;
+      }
+
+      showSuccessToast(response?.message || "Failed to verify OTP", "error");
     } catch {
-      showSuccessToast('Something went wrong. Please try again.', 'error');
+      showSuccessToast("Something went wrong. Please try again.", "error");
     } finally {
       setIsLoading(false);
     }
   };
 
   const recoverDeletedAccount = async () => {
-    const otpCode = otp.join('');
+    const otpCode = otp.join("");
     if (otpCode.length !== 4) {
-      showSuccessToast('Please enter valid OTP', 'error');
+      showSuccessToast("Please enter valid OTP", "error");
       return;
     }
 
@@ -299,62 +335,71 @@ export default function OtpVerify() {
       });
 
       if (!response?.success) {
-        showSuccessToast(response?.message || 'Unable to recover this account.', 'error');
+        showSuccessToast(
+          response?.message || "Unable to recover this account.",
+          "error",
+        );
         return;
       }
 
-      await Utils.removeData('_DELETED_ACCOUNT_HOLD');
+      await Utils.removeData("_DELETED_ACCOUNT_HOLD");
 
       if (!response?.data?.access) {
-        showSuccessToast(response?.message || 'Account recovered. Sign in to continue.', 'success');
-        navigate('/login', { replace: true });
+        showSuccessToast(
+          response?.message || "Account recovered. Sign in to continue.",
+          "success",
+        );
+        navigate("/login", { replace: true });
         return;
       }
 
       await finishLoginSession(response);
     } catch {
-      showSuccessToast('Something went wrong. Please try again.', 'error');
+      showSuccessToast("Something went wrong. Please try again.", "error");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleVerifyOTP = async () => {
-    const otpCode = otp.join('');
+    const otpCode = otp.join("");
     if (otpCode.length !== 4) {
-      showSuccessToast('Please enter valid OTP', 'error');
+      showSuccessToast("Please enter valid OTP", "error");
       return;
     }
     pendingRegisterOtpRef.current = otpCode;
     setNotifPromptVisible(true);
   };
 
-  const onVerify = accountDeleted
+  const onVerify = isDeletedAccount
     ? recoverDeletedAccount
     : NEW_CUSTOMER
       ? LoginVerfiyOTP
       : handleVerifyOTP;
-  const otpComplete = otp.join('').length === OTP_LEN;
+  const otpComplete = otp.join("").length === OTP_LEN;
 
   const onResendPress = async () => {
     if (resendTimer > 0) return;
     setResendTimer(60);
-    setOtp(['', '', '', '']);
+    setOtp(["", "", "", ""]);
     otpInputRefs.current[0]?.focus();
 
     try {
       const response = await AuthService.send_otp({
         phone_number: `+91${phoneNumber}`,
       });
-      Utils.storeData('_OTP', response?.data?.otp);
+      Utils.storeData("_OTP", response?.data?.otp);
       const policyOk = parsePolicyAcceptedCustomer(response);
-      await Utils.storeData('_POLICY_ACCEPTED_CUSTOMER', policyOk);
+      await Utils.storeData("_POLICY_ACCEPTED_CUSTOMER", policyOk);
       if (response?.data?.otp) applyOtpDigits(String(response.data.otp));
 
       if (response?.success) {
-        showSuccessToast('New OTP has been send to your mobile number', 'success');
+        showSuccessToast(
+          "New OTP has been send to your mobile number",
+          "success",
+        );
       } else {
-        showSuccessToast('Please Resend OTP', 'error');
+        showSuccessToast("Please Resend OTP", "error");
       }
     } catch (error) {
       console.log(error);
@@ -368,17 +413,16 @@ export default function OtpVerify() {
         <div className="au-sheet__handle" aria-hidden />
         <p className="au-kicker">{T.otpKicker}</p>
         <h2 className="au-title">{T.otpTitle}</h2>
-        {accountDeleted ? (
-          <p className="au-alert" role="status">
+        {isDeletedAccount ? (
+          <div className="au-alert" role="alert">
             <strong>{T.deletedAccountTitle}</strong>
-            {T.deletedAccountText(retentionDays)}
-          </p>
+          </div>
         ) : null}
         <div className="au-phone-row">
           <span>
             {T.sentTo} <strong>+91 {phoneNumber}</strong>
           </span>
-          <Button variant="ghost" size="sm" onClick={() => navigate('/login')}>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/login")}>
             {T.edit}
           </Button>
         </div>
@@ -391,13 +435,13 @@ export default function OtpVerify() {
               ref={(el) => {
                 otpInputRefs.current[index] = el;
               }}
-              className={digit ? 'is-filled' : ''}
+              className={digit ? "is-filled" : ""}
               value={digit}
               onChange={(e) => handleOTPChange(e.target.value, index)}
               onKeyDown={(e) => handleKeyDown(e, index)}
               inputMode="numeric"
               maxLength={index === 0 ? OTP_LEN : 1}
-              autoComplete={index === 0 ? 'one-time-code' : 'off'}
+              autoComplete={index === 0 ? "one-time-code" : "off"}
               autoFocus={index === 0}
               aria-label={`Digit ${index + 1}`}
             />
@@ -405,7 +449,12 @@ export default function OtpVerify() {
         </div>
 
         <div className="au-otp-meta">
-          <Button variant="ghost" size="sm" onClick={onResendPress} disabled={resendTimer > 0}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onResendPress}
+            disabled={resendTimer > 0}
+          >
             {resendTimer > 0 ? T.resendIn(resendTimer) : T.resendOtp}
           </Button>
         </div>
@@ -434,12 +483,17 @@ export default function OtpVerify() {
               variant="primary"
               onClick={async () => {
                 const granted = await requestWebNotification();
-                await submitRegisterWithNotificationPreference(Boolean(granted));
+                await submitRegisterWithNotificationPreference(
+                  Boolean(granted),
+                );
               }}
             >
               {T.enableAlerts}
             </Button>
-            <Button variant="secondary" onClick={() => submitRegisterWithNotificationPreference(false)}>
+            <Button
+              variant="secondary"
+              onClick={() => submitRegisterWithNotificationPreference(false)}
+            >
               {T.notNow}
             </Button>
           </>

@@ -7,12 +7,10 @@ import {
   Minus,
   Plus,
   ShoppingBag,
-  Star,
 } from "lucide-react";
 import AppShell from "../components/AppShell";
 import PageHeader from "../components/PageHeader";
 import ProductDiscoveryRails from "../components/ProductDiscoveryRails";
-import ReviewSubmitModal from "../components/ReviewSubmitModal";
 import ShareButton from "../components/ShareButton";
 import { formatRupee, resolveImageUrl } from "../home/catalog";
 import { useCart } from "../hooks/useCart";
@@ -108,7 +106,6 @@ export default function ProductDetails() {
   const [qty, setQty] = useState(1);
   const [wish, setWish] = useState(false);
   const [imageIndex, setImageIndex] = useState(0);
-  const [showReviewModal, setShowReviewModal] = useState(false);
   const [zoomOpen, setZoomOpen] = useState(false);
   const [reviewsPaused, setReviewsPaused] = useState(false);
   const reviewListRef = useRef(null);
@@ -576,20 +573,6 @@ export default function ProductDetails() {
                 title={T.reviews}
                 action={
                   <div className="pd-review-actions">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={async () => {
-                        if (
-                          !(await requireAuth("Please login to write a review"))
-                        )
-                          return;
-                        setShowReviewModal(true);
-                      }}
-                      leadingIcon={<Star size={16} />}
-                    >
-                      Write Review
-                    </Button>
                     {reviews.length > 0 && (
                       <Button
                         variant="ghost"
@@ -740,35 +723,6 @@ export default function ProductDetails() {
         ) : null}
       </Modal>
 
-      {/* Review Submit Modal */}
-      <ReviewSubmitModal
-        open={showReviewModal}
-        onClose={() => setShowReviewModal(false)}
-        product={{
-          product_id: product?.product_id || product?.id,
-          variant_id: variantId,
-          name: product?.name,
-          image:
-            selected?.cover_image ||
-            selected?.image_url ||
-            product?.cover_image,
-          size: selected?.size,
-        }}
-        onSuccess={async () => {
-          // Refresh reviews after successful submission
-          try {
-            const reviewRes = await getReviews({
-              entity_type: "product",
-              variant_id: variantId,
-            });
-            setReviews(
-              normalizeReviewsForDisplay(extractReviewsList(reviewRes)),
-            );
-          } catch (error) {
-            console.error("Failed to refresh reviews:", error);
-          }
-        }}
-      />
     </AppShell>
   );
 }

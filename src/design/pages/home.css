@@ -966,6 +966,10 @@
   min-width: 0;
 }
 
+.hm-auto-rail.is-static {
+  display: block;
+}
+
 .hm-auto-rail > .hm-auto-rail__track {
   box-sizing: border-box;
   width: 100%;
@@ -1027,10 +1031,6 @@
   .hm-auto-rail {
     grid-template-columns: 34px minmax(0, 1fr) 34px;
     align-items: center;
-  }
-
-  .hm-auto-rail.is-static {
-    display: block;
   }
 
   .hm-auto-rail > .hm-auto-rail__track {

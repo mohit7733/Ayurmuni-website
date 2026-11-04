@@ -1,6 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, FileUp, Search, ShoppingBag } from 'lucide-react';
+import {
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  FileUp,
+  Search,
+  ShoppingBag,
+} from 'lucide-react';
 import AppShell from '../components/AppShell';
 import BannerCarousel from '../components/BannerCarousel';
 import AutoScrollRail from '../components/AutoScrollRail';
@@ -66,6 +73,9 @@ export default function Medicines() {
   const [recent, setRecent] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const concernsTrackRef = useRef(null);
+  const [canScrollConcernsLeft, setCanScrollConcernsLeft] = useState(false);
+  const [canScrollConcernsRight, setCanScrollConcernsRight] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -116,6 +126,48 @@ export default function Medicines() {
 
   const showSkeleton = loading && products.length === 0;
   const concernQuery = medicineCategoryId ? `&service=${medicineCategoryId}` : '';
+
+  const updateConcernsScroll = useCallback(() => {
+    const element = concernsTrackRef.current;
+    if (!element) return;
+
+    setCanScrollConcernsLeft(element.scrollLeft > 2);
+    setCanScrollConcernsRight(
+      element.scrollLeft + element.clientWidth < element.scrollWidth - 2,
+    );
+  }, []);
+
+  const scrollConcerns = useCallback((direction) => {
+    const element = concernsTrackRef.current;
+    if (!element) return;
+
+    element.scrollBy({
+      left:
+        direction === 'left'
+          ? -element.clientWidth * 0.75
+          : element.clientWidth * 0.75,
+      behavior: 'smooth',
+    });
+  }, []);
+
+  useEffect(() => {
+    const element = concernsTrackRef.current;
+    if (!element) return;
+
+    updateConcernsScroll();
+    element.addEventListener('scroll', updateConcernsScroll, { passive: true });
+
+    const resizeObserver = new ResizeObserver(updateConcernsScroll);
+    resizeObserver.observe(element);
+    Array.from(element.children).forEach((child) =>
+      resizeObserver.observe(child),
+    );
+
+    return () => {
+      element.removeEventListener('scroll', updateConcernsScroll);
+      resizeObserver.disconnect();
+    };
+  }, [concerns.length, showSkeleton, updateConcernsScroll]);
 
   const goSearch = (value) => {
     const query = String(value || search || '').trim();
@@ -270,22 +322,49 @@ export default function Medicines() {
                     ) : null
                   }
                 />
-                <TileGrid label={T.shopByConcern}>
-                  {concerns.map((item) => (
-                    <Tile
-                      key={item.id}
-                      image={item.image_url}
-                      label={item.name}
-                      onClick={() =>
-                        navigate(
-                          `/products/category?mode=health&category=${item.id}&name=${encodeURIComponent(
-                            item.name,
-                          )}${concernQuery}`,
-                        )
-                      }
-                    />
-                  ))}
-                </TileGrid>
+                <div className="st-concerns-rail is-scrollable">
+                  <button
+                    type="button"
+                    className="st-concerns-rail__arrow"
+                    onClick={() => scrollConcerns('left')}
+                    disabled={!canScrollConcernsLeft}
+                    aria-controls="st-concerns-track"
+                    aria-label="Scroll to previous concerns"
+                  >
+                    <ChevronLeft size={19} aria-hidden />
+                  </button>
+                  <ul
+                    id="st-concerns-track"
+                    className="st-concerns-rail__track"
+                    aria-label={T.shopByConcern}
+                    ref={concernsTrackRef}
+                  >
+                    {concerns.map((item) => (
+                      <Tile
+                        key={item.id}
+                        image={item.image_url}
+                        label={item.name}
+                        onClick={() =>
+                          navigate(
+                            `/products/category?mode=health&category=${item.id}&name=${encodeURIComponent(
+                              item.name,
+                            )}${concernQuery}`,
+                          )
+                        }
+                      />
+                    ))}
+                  </ul>
+                  <button
+                    type="button"
+                    className="st-concerns-rail__arrow"
+                    onClick={() => scrollConcerns('right')}
+                    disabled={!canScrollConcernsRight}
+                    aria-controls="st-concerns-track"
+                    aria-label="Scroll to next concerns"
+                  >
+                    <ChevronRight size={19} aria-hidden />
+                  </button>
+                </div>
               </Reveal>
             ) : null}
 

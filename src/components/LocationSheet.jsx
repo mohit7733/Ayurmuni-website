@@ -1,6 +1,6 @@
-import { ChevronRight, Crosshair, MapPinned, Plus } from 'lucide-react';
-import Button from './ui/Button';
-import Modal from './ui/Modal';
+import { ChevronRight, Crosshair, MapPinned, Plus } from "lucide-react";
+import Button from "./ui/Button";
+import Modal from "./ui/Modal";
 
 export default function LocationSheet({
   visible,
@@ -16,10 +16,14 @@ export default function LocationSheet({
 }) {
   const gpsPreview =
     currentAddress?.formatted_address ||
-    (loadingLocation ? 'Detecting your location...' : 'Pick on map to set delivery location');
+    (loadingLocation
+      ? "Detecting your location..."
+      : "Pick on map to set delivery location");
   const gpsSubtext = currentAddress
-    ? [currentAddress.city, currentAddress.state, currentAddress.zipcode].filter(Boolean).join(', ')
-    : 'Tap to use GPS for delivery';
+    ? [currentAddress.city, currentAddress.state, currentAddress.zipcode]
+        .filter(Boolean)
+        .join(", ")
+    : "Tap to use GPS for delivery";
 
   return (
     <Modal
@@ -27,7 +31,12 @@ export default function LocationSheet({
       onClose={onClose}
       title="Select delivery location"
       footer={
-        <Button variant="secondary" block leadingIcon={<MapPinned size={18} aria-hidden />} onClick={onOpenMap}>
+        <Button
+          variant="secondary"
+          block
+          leadingIcon={<MapPinned size={18} aria-hidden />}
+          onClick={onOpenMap}
+        >
           Pick on map
         </Button>
       }
@@ -59,7 +68,8 @@ export default function LocationSheet({
 
       <div className="am-list-head">
         <h3>
-          Saved addresses {savedAddresses.length > 0 ? `(${savedAddresses.length})` : ''}
+          Saved addresses{" "}
+          {savedAddresses.length > 0 ? `(${savedAddresses.length})` : ""}
         </h3>
         {savedAddresses.length > 2 && onViewAll ? (
           <Button
@@ -74,28 +84,32 @@ export default function LocationSheet({
       </div>
 
       {savedAddresses.length === 0 ? (
-        <p className="am-list-empty">No saved addresses yet. Add one using GPS or a map pin.</p>
+        <p className="am-list-empty">
+          No saved addresses yet. Add one using GPS or a map pin.
+        </p>
       ) : (
         <div className="am-list" role="radiogroup" aria-label="Saved addresses">
-          {savedAddresses.slice(0, 4).map((item) => {
+          {savedAddresses.map((item) => {
             const fullAddress = [
               item?.address_line_1,
               item?.city,
-              [item?.state, item?.zipcode].filter(Boolean).join(' '),
+              [item?.state, item?.zipcode].filter(Boolean).join(" "),
             ]
               .filter(Boolean)
-              .join(', ');
+              .join(", ");
             return (
               <button
                 key={item.id}
                 type="button"
                 role="radio"
                 aria-checked={Boolean(item.is_default)}
-                className={`am-list-row ${item.is_default ? 'is-selected' : ''}`}
+                className={`am-list-row ${item.is_default ? "is-selected" : ""}`}
                 onClick={() => onSelectAddress(item)}
               >
                 <span className="am-list-row__copy">
-                  <strong>{item.address_type_name || item.address_type || 'Address'}</strong>
+                  <strong>
+                    {item.address_type_name || item.address_type || "Address"}
+                  </strong>
                   <small>{fullAddress}</small>
                 </span>
                 <span className="am-radio" aria-hidden />

@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Children,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowRight,
@@ -74,6 +81,7 @@ let diseaseModalShownThisSession = false;
 function AutoScrollRail({ label, children }) {
   const railRef = useRef(null);
   const [paused, setPaused] = useState(false);
+  const shouldAutoScroll = Children.count(children) > 5;
 
   const moveRail = useCallback((direction, wrap = false) => {
     const rail = railRef.current;
@@ -97,6 +105,7 @@ function AutoScrollRail({ label, children }) {
 
   useEffect(() => {
     if (
+      !shouldAutoScroll ||
       paused ||
       window.matchMedia("(prefers-reduced-motion: reduce)").matches
     ) {
@@ -105,11 +114,11 @@ function AutoScrollRail({ label, children }) {
 
     const timer = window.setInterval(() => moveRail(1, true), 3800);
     return () => window.clearInterval(timer);
-  }, [moveRail, paused]);
+  }, [moveRail, paused, shouldAutoScroll]);
 
   return (
     <div
-      className="hm-auto-rail"
+      className={`hm-auto-rail${shouldAutoScroll ? "" : " is-static"}`}
       onPointerEnter={() => setPaused(true)}
       onPointerLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}
@@ -118,14 +127,16 @@ function AutoScrollRail({ label, children }) {
           setPaused(false);
       }}
     >
-      <button
-        type="button"
-        className="hm-auto-rail__control"
-        aria-label={`Scroll ${label} left`}
-        onClick={() => moveRail(-1)}
-      >
-        <ChevronLeft size={20} aria-hidden />
-      </button>
+      {shouldAutoScroll ? (
+        <button
+          type="button"
+          className="hm-auto-rail__control"
+          aria-label={`Scroll ${label} left`}
+          onClick={() => moveRail(-1)}
+        >
+          <ChevronLeft size={20} aria-hidden />
+        </button>
+      ) : null}
       <ul
         ref={railRef}
         className="am-rail hm-auto-rail__track"
@@ -133,14 +144,16 @@ function AutoScrollRail({ label, children }) {
       >
         {children}
       </ul>
-      <button
-        type="button"
-        className="hm-auto-rail__control"
-        aria-label={`Scroll ${label} right`}
-        onClick={() => moveRail(1)}
-      >
-        <ChevronRight size={20} aria-hidden />
-      </button>
+      {shouldAutoScroll ? (
+        <button
+          type="button"
+          className="hm-auto-rail__control"
+          aria-label={`Scroll ${label} right`}
+          onClick={() => moveRail(1)}
+        >
+          <ChevronRight size={20} aria-hidden />
+        </button>
+      ) : null}
     </div>
   );
 }
@@ -237,14 +250,6 @@ export default function Home() {
   }, [customerData]);
 
   useEffect(() => {
-    if (Array.isArray(customerData?.addresses)) {
-      setSavedAddresses(customerData.addresses);
-      return;
-    }
-    setSavedAddresses([]);
-  }, [customerData]);
-
-  useEffect(() => {
     if (loadingCustomer || !customerData) return;
     if (activeHomeModal !== "none") return;
 
@@ -297,7 +302,18 @@ export default function Home() {
     const nameKey = item?.name?.trim().toLowerCase() ?? "";
     const serviceKey = resolveServiceCategoryKey(item) ?? nameKey;
     const path = mapAppScreenToPath(serviceKey);
-    navigate(path && path !== "/home" ? path : "/products");
+    if (!path || path === "/home") {
+      window.dispatchEvent(
+        new CustomEvent("ayurmuni-toast", {
+          detail: {
+            message: `${item?.name || "This service"} is coming soon!`,
+            type: "info",
+          },
+        }),
+      );
+      return;
+    }
+    navigate(path);
   };
 
   const handleBannerPress = (item) => {
@@ -382,11 +398,9 @@ export default function Home() {
 
   const openLocationSheet = async () => {
     setShowLocationSheet(true);
-    if (!savedAddresses.length) {
-      const res = await getAddresses();
-      if (res?.success !== false) {
-        setSavedAddresses(listAddresses(res));
-      }
+    const res = await getAddresses();
+    if (res?.success !== false) {
+      setSavedAddresses(listAddresses(res));
     }
   };
 

@@ -97,6 +97,7 @@ export const useQuestionnaireFlow = (mode) => {
         return;
       }
 
+      await submitKnowPrakriti(false);
       const questions = cachedPrakritiQuestions.current;
       if (!questions.length) {
         showSuccessToast('No prakriti questions found', 'error');
@@ -144,8 +145,9 @@ export const useQuestionnaireFlow = (mode) => {
       return !!response?.success;
     }
     const experienceType = isPrakriti ? 'prakriti' : 'medical_history';
+    const { knowPrakriti: _omit, prakritiType: _omit2, ...prakritiAnswers } = answers;
     const payload = isPrakriti
-      ? answers
+      ? prakritiAnswers
       : formatMedicalAnswers(answers, basics.height?.id);
     const response = await submitQuestionnaire(experienceType, payload);
     return !!response?.success;

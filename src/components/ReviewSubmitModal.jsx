@@ -3,7 +3,7 @@ import { ImagePlus, ShieldCheck, Star, X } from "lucide-react";
 
 import { Button, Modal } from "./ui";
 import { showSuccessToast } from "../config/key";
-import { submitReview } from "../services/reviewService";
+import { createReview } from "../services/reviewService";
 
 import "../design/components/review-modal.css";
 
@@ -86,19 +86,17 @@ export default function ReviewSubmitModal({
     setSubmitting(true);
 
     try {
-      const formData = new FormData();
-
-      formData.append("product_id", product.product_id || product.id);
-      formData.append("variant_id", product.variant_id || product.id);
-      formData.append("rating", String(rating));
-      formData.append("title", title.trim());
-      formData.append("comment", comment.trim());
-
-      images.forEach((image, index) => {
-        formData.append(`image_${index}`, image);
+      const result = await createReview({
+        entityType: "product",
+        variantId: product.variant_id || product.id,
+        orderId: product.order_id,
+        reviewData: {
+          rating,
+          review: comment.trim(),
+          variant_id: product.variant_id || product.id,
+          order_id: product.order_id,
+        },
       });
-
-      const result = await submitReview(formData);
 
       if (result?.success !== false) {
         showSuccessToast("Review submitted successfully!", "success");
