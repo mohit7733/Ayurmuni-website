@@ -18,7 +18,6 @@ import {
 import AppShell from '../components/AppShell';
 import DietitianBadge from '../components/DietitianBadge';
 import { getConsultationFeeQuote, getDoctorById } from '../services/consultService';
-import { parseFeeQuoteConfig } from '../cart/feeQuote';
 import { isApiSuccess } from '../consult/consultPayment';
 import { invalidateApiCache } from '../services/apiClient';
 import {
@@ -30,6 +29,8 @@ import {
   doctorQualification,
   doctorRating,
   formatRupee,
+  listedConsultationFee,
+  readGlobalConsultationFee,
   generateMonthDates,
   groupSlotsByTime,
   isSlotBookable,
@@ -89,8 +90,7 @@ export default function DoctorSlot() {
   const [pickedFile, setPickedFile] = useState(null);
   const [recordName, setRecordName] = useState('');
   const [recordType, setRecordType] = useState('');
-  const [quotedFee, setQuotedFee] = useState(null);
-  const [feeLoading, setFeeLoading] = useState(false);
+  const [globalFee, setGlobalFee] = useState(null);
 
   const monthLabel = useMemo(
     () =>
@@ -165,44 +165,27 @@ export default function DoctorSlot() {
 
   useEffect(() => {
     const slotId = selectedSlot?.id;
-    if (!slotId) {
-      setQuotedFee(null);
-      setFeeLoading(false);
-      return undefined;
-    }
+    if (!slotId || globalFee != null) return undefined;
     let cancelled = false;
-    setFeeLoading(true);
     (async () => {
       try {
         const response = await getConsultationFeeQuote(slotId);
+        if (cancelled || !isApiSuccess(response)) return;
         const raw = response?.data ?? response;
-        const parsed = parseFeeQuoteConfig(raw, 0);
-        if (cancelled) return;
-        if (
-          parsed &&
-          raw?.package_funding?.can_fund === true &&
-          Number(parsed.summaryTotalPayable) === 0
-        ) {
-          parsed.summaryTotalPayable = null;
-        }
-        const payable = Number(parsed?.summaryTotalPayable);
-        const listed = Number(parsed?.baseAmount);
-        const amount = payable > 0 ? payable : listed > 0 ? listed : null;
-        setQuotedFee(isApiSuccess(response) ? amount : null);
+        const published = readGlobalConsultationFee(raw);
+        if (published != null && published > 0) setGlobalFee(published);
       } catch {
-        if (!cancelled) setQuotedFee(null);
-      } finally {
-        if (!cancelled) setFeeLoading(false);
+        /* keep the doctor's own fee */
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [selectedSlot?.id]);
+  }, [selectedSlot?.id, globalFee]);
 
   const grouped = useMemo(() => groupSlotsByTime(slots, selectedDate), [slots, selectedDate]);
-  // The doctor record and the slot both carry ₹5. Only the fee-quote is the payable amount.
-  const feeLabel = quotedFee != null ? formatRupee(quotedFee) : T.calculating;
+  const fee = globalFee != null && globalFee > 0 ? globalFee : listedConsultationFee(doctor);
+  const feeLabel = fee ? formatRupee(fee) : '';
   const image = doctorImage(doctor);
   const name = formatDoctorDisplayName(doctorDisplayName(doctor));
   const canContinue =

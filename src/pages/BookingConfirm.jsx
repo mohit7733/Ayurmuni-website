@@ -273,7 +273,7 @@ export default function BookingConfirm() {
   return (
     <AppShell tab="consult">
       <div className="bk-page bk-confirm-page">
-        <StepIndicator steps={T.steps} current={2} label={T.stepsLabel} />
+        <StepIndicator steps={T.steps} current={T.steps.length} label={T.stepsLabel} />
 
         <section className="bk-success" aria-labelledby="bk-confirm-title">
           <span className="bk-success__icon" aria-hidden>

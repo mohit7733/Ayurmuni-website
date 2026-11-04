@@ -21,7 +21,7 @@ export default function PaymentHistoryTimeline({ history = [] }) {
             <span className="pht__dot" aria-hidden />
             <div className="pht__body">
               <div className="pht__title">
-                <strong>{formatPaymentStatusLabel(entry.status)}</strong>
+                <strong>{entry.label || formatPaymentStatusLabel(entry.status)}</strong>
                 {entry.amount != null ? <span>{formatRupee(entry.amount)}</span> : null}
               </div>
               {time ? <small>{time}</small> : null}

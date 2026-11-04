@@ -26,6 +26,7 @@ import {
   doctorImage,
   doctorQualification,
   formatSlotTime,
+  listedConsultationFee,
   resolveDoctorSpecializations,
 } from "../consult/doctors";
 import { formatDoctorDisplayName } from "../consult/appointmentUtils";
@@ -34,6 +35,7 @@ import {
   consultationCheckout,
   isApiSuccess,
   isConsultationPaymentConfirmed,
+  isConsultationPaymentSettled,
   isDuplicateGatewayOrder,
   isPaymentAlreadyExists,
   pickConsultPaymentData,
@@ -160,7 +162,7 @@ export default function ConsultPay() {
   const [planQuoteLoading, setPlanQuoteLoading] = useState(false);
   const planPromptShownRef = useRef(false);
 
-  const slotAmount = Number(slot.amount || doctor.consultation_fee || 0);
+  const slotAmount = listedConsultationFee(doctor);
 
   const loadFeeQuote = useCallback(
     async (couponCode) => {
@@ -355,8 +357,11 @@ export default function ConsultPay() {
           paid.hospital_name || doctor?.hospital_name || doctor?.clinic_name,
         doctor_specialization:
           paid.doctor_specialization || resolveDoctorSpecializations(doctor),
-        appointment_status:
-          paid.appointment_status || paid.booking?.status || "",
+        appointment_status: ["confirmed", "completed"].includes(
+          String(paid.appointment_status || paid.booking?.status || "").toLowerCase(),
+        )
+          ? String(paid.appointment_status || paid.booking?.status).toLowerCase()
+          : "confirmed",
       }),
     );
     showSuccessToast(message || "Payment Successful", "success");
@@ -437,7 +442,6 @@ export default function ConsultPay() {
             medical_record_ids: booking.medical_record_ids,
             coupon_code: appliedCoupon?.code,
             payment_gateway: apiGateway,
-            skip_package_funding: true,
           });
           const existing = consultationCheckout(paymentResponse);
           const duplicateAppointmentId = isDuplicateGatewayOrder(paymentResponse)
@@ -471,17 +475,29 @@ export default function ConsultPay() {
         paymentResponse?.data?.funded_by_package === true &&
         !hasGatewayOrder(paymentResponse?.data)
       ) {
+        if (isConsultationPaymentConfirmed(paymentResponse)) {
+          finish(
+            paymentResponse,
+            paymentResponse?.message || "Appointment confirmed with your plan",
+          );
+          return;
+        }
         showSuccessToast(
-          "A plan covered this visit instead of opening payment. Choose Pay normally again.",
+          paymentResponse?.message || "The plan did not confirm this visit.",
           "error",
         );
         return;
       }
       if (!isApiSuccess(paymentResponse)) {
+        const alreadyBooked = String(paymentResponse?.message || "")
+          .toLowerCase()
+          .includes("already paid and booked");
         showSuccessToast(
           isDuplicateGatewayOrder(paymentResponse)
             ? "A payment for this slot is already in progress. Please try again in a minute or choose another payment method."
-            : paymentResponse?.message || "Unable to start payment",
+            : alreadyBooked
+              ? "This visit is already booked with your plan. Pick another slot to pay normally."
+              : paymentResponse?.message || "Unable to start payment",
           "error",
         );
         return;
@@ -556,7 +572,7 @@ export default function ConsultPay() {
             gateway_signature: String(rz.razorpay_signature ?? ""),
             payment_gateway: "razorpay",
           });
-          if (isConsultationPaymentConfirmed(verify)) {
+          if (isConsultationPaymentSettled(verify)) {
             clearPending(slot.id);
             finish(verify);
           } else {
@@ -629,7 +645,7 @@ export default function ConsultPay() {
           verifyConsultationPayment,
           payload,
         );
-        if (isConsultationPaymentConfirmed(verify)) {
+        if (isConsultationPaymentSettled(verify)) {
           clearPending(slot.id);
           clearCashfreePending();
           finish(verify);
@@ -694,7 +710,9 @@ export default function ConsultPay() {
   const records = booking.medical_records || [];
   const payDisabled =
     paying || planQuoteLoading || (usingPlan ? false : feeQuoteLoading || !feeQuote);
-  const priceLoading = usingPlan ? planQuoteLoading : feeQuoteLoading || planQuoteLoading;
+  const priceLoading =
+    !listedConsultationFee(doctor) &&
+    (usingPlan ? planQuoteLoading : feeQuoteLoading || planQuoteLoading);
   const whenLabel = [
     formatDisplayDate(booking.date),
     formatSlotTime(slot.start_time) || slot.displayTime,

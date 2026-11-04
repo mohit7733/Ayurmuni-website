@@ -52,11 +52,36 @@ export const isPaymentAlreadyExists = (response) => {
  * Verify-payment (or a package book-slot) finished the visit.
  * Payment status is "success"; appointment status is "confirmed".
  */
+const appointmentStates = (payload) =>
+  [payload?.appointment_status, payload?.booking?.status, payload?.booking?.appointment_status]
+    .map((value) => String(value || '').trim().toLowerCase())
+    .filter(Boolean);
+
+const paymentSettled = (payload) => {
+  const status = String(payload?.status || payload?.payment_status || '').trim().toLowerCase();
+  return status === 'success' || status === 'paid';
+};
+
 export const isConsultationPaymentConfirmed = (response) => {
   const payload = consultationCheckout(response) || response?.data || {};
-  const appointment = String(payload.appointment_status || payload.booking?.status || '').toLowerCase();
-  if (payload.funded_by_package === true) return appointment === 'confirmed';
-  return String(payload.status || '').toLowerCase() === 'success' && appointment === 'confirmed';
+  const states = appointmentStates(payload);
+  const confirmed = states.some((value) => value === 'confirmed' || value === 'completed');
+  if (payload.funded_by_package === true) return confirmed;
+  return paymentSettled(payload) && confirmed;
+};
+
+/**
+ * Cashfree/Razorpay verify succeeded, so the pay step can advance.
+ * A still-pending book-slot response is not settled.
+ */
+export const isConsultationPaymentSettled = (response) => {
+  if (isConsultationPaymentConfirmed(response)) return true;
+  const payload = consultationCheckout(response) || response?.data || {};
+  if (!paymentSettled(payload) || payload?.payment_session_id) return false;
+  const states = appointmentStates(payload);
+  return !states.some((value) =>
+    ['cancelled', 'canceled', 'failed', 'missed', 'expired', 'no_show', 'noshow'].includes(value),
+  );
 };
 
 const PAID_STATUSES = ['success', 'paid', 'captured', 'completed', 'confirmed'];

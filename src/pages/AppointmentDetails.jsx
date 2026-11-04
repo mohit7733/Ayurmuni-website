@@ -244,7 +244,10 @@ export default function AppointmentDetails() {
   });
   const showCancel = canOfferCancel(status, schedule.date, schedule.time);
   const showButtons = showReschedule || showCancel;
-  const paymentHistory = useMemo(() => getPaymentHistory(detail, appointment), [detail, appointment]);
+  const paymentHistory = useMemo(
+    () => getPaymentHistory(detail, appointment),
+    [detail, appointment],
+  );
   const isRescheduleRequest = status === 'reschedule';
   const showAddToCalendar = detail?.appointment
     ? !isAppointmentInPast({

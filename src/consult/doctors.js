@@ -34,8 +34,11 @@ export const readGlobalConsultationFee = (source) => {
   if (!source || typeof source !== 'object') return null;
   const candidates = [
     source?.configurations?.consultation?.global_fee,
+    source?.configurations?.consultation?.fee?.global_fee,
     source?.configuration?.consultation?.global_fee,
+    source?.configuration?.consultation?.fee?.global_fee,
     source?.doctor?.configurations?.consultation?.global_fee,
+    source?.doctor?.configurations?.consultation?.fee?.global_fee,
   ];
   for (const raw of candidates) {
     const fee = toFeeNumber(raw);
@@ -218,6 +221,15 @@ export const doctorExperience = (item) => {
   const raw = item?.experience_display || item?.experience_years || item?.experience || '';
   const match = String(raw).match(/(\d+)/);
   return match ? `${match[1]} yrs exp` : String(raw || '').trim();
+};
+
+/** Published global fee when set, otherwise the doctor's own consultation fee. Never a slot amount. */
+export const listedConsultationFee = (doctor) => {
+  const globalFee = readGlobalConsultationFee(doctor);
+  if (globalFee != null && globalFee > 0) return globalFee;
+  const own = toFeeNumber(doctor?.consultation_fee ?? doctor?.consult_fee);
+  if (own != null && own >= 0) return own;
+  return 0;
 };
 
 export const doctorConsultFee = (item) => {
