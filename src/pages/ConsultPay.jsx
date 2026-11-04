@@ -442,6 +442,7 @@ export default function ConsultPay() {
             medical_record_ids: booking.medical_record_ids,
             coupon_code: appliedCoupon?.code,
             payment_gateway: apiGateway,
+            skip_package_funding: true,
           });
           const existing = consultationCheckout(paymentResponse);
           const duplicateAppointmentId = isDuplicateGatewayOrder(paymentResponse)
@@ -475,15 +476,8 @@ export default function ConsultPay() {
         paymentResponse?.data?.funded_by_package === true &&
         !hasGatewayOrder(paymentResponse?.data)
       ) {
-        if (isConsultationPaymentConfirmed(paymentResponse)) {
-          finish(
-            paymentResponse,
-            paymentResponse?.message || "Appointment confirmed with your plan",
-          );
-          return;
-        }
         showSuccessToast(
-          paymentResponse?.message || "The plan did not confirm this visit.",
+          "Pay normally should open the payment gateway. This visit was booked with your plan instead.",
           "error",
         );
         return;
