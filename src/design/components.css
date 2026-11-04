@@ -1336,12 +1336,16 @@
     var(--am-primary),
     var(--am-green-500, var(--am-primary))
   );
-  animation: am-line-grow 600ms var(--am-ease-out);
+  transform: scaleX(1);
   transform-origin: left;
+  animation: am-line-grow 600ms var(--am-ease-out);
 }
 @keyframes am-line-grow {
   from {
     transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
   }
 }
 .am-step__dot {

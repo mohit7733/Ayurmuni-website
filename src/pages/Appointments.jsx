@@ -27,7 +27,7 @@ import { showSuccessToast } from "../config/key";
 import { useJoinWindowTick } from "../hooks/useJoinWindow";
 import { mapAppointment } from "../profile/map";
 import { formatRupee } from "../home/catalog";
-import { formatPaymentTimestamp, getCompletedRefund } from "../utils/paymentHistoryUtils";
+import { formatPaymentTimestamp, getRefundProgress } from "../utils/paymentHistoryUtils";
 import { requireAuth } from "../services/guestAuth";
 import { getConsultHistory } from "../services/consultService";
 import { invalidateApiCache } from "../services/apiClient";
@@ -439,7 +439,7 @@ export default function Appointments() {
               const hasRx = itemHasPrescription(item);
               const showViewDetails = hasRx && PAST_STATUS.includes(status);
               const showJoinCall = isAppointmentJoinable(item);
-              const refund = getCompletedRefund(status, item.raw, item);
+              const refund = getRefundProgress(status, item.raw, item);
               const therapy =
                 item.therapies || item.specialty || "Ayurvedic consultation";
               const followUp = item.followUpDate;
@@ -508,7 +508,7 @@ export default function Appointments() {
                   </div>
                   {refund ? (
                     <p className="appoint-followup">
-                      Refunded {refund.amount != null ? formatRupee(refund.amount) : ""}
+                      {refund.title} {refund.amount != null ? formatRupee(refund.amount) : ""}
                       {refund.at ? ` · ${formatPaymentTimestamp(refund.at)}` : ""}
                     </p>
                   ) : null}

@@ -4,7 +4,7 @@ import AppShell from '../components/AppShell';
 import { Button, EmptyState } from '../components/ui';
 import '../design/pages/checkout.css';
 import { CHECKOUT_KEY, ORDER_RESULT_KEY } from '../cart/mapCart';
-import { isConsultationPaymentConfirmed } from '../consult/consultPayment';
+import { isConsultationPaymentSettled } from '../consult/consultPayment';
 import { CONSULT_BOOKING_KEY, CONSULT_PAY_KEY, CONSULT_PENDING_PAYMENT_KEY } from '../consult/doctors';
 import {
   buildCashfreeVerifyPayload,
@@ -85,7 +85,7 @@ export default function PaymentReturn() {
         if (cancelled) return;
         const confirmed =
           pending.kind === 'consultation'
-            ? isConsultationPaymentConfirmed(verify)
+            ? isConsultationPaymentSettled(verify)
             : isCashfreePaymentVerified(verify);
         if (!confirmed) {
           setPhase('failed');
@@ -98,9 +98,14 @@ export default function PaymentReturn() {
           sessionStorage.removeItem(CONSULT_PAY_KEY);
           sessionStorage.removeItem(CONSULT_PENDING_PAYMENT_KEY);
           const paid = verify?.data && typeof verify.data === 'object' ? verify.data : {};
+          const paidStatus = String(paid.appointment_status || paid.booking?.status || '').toLowerCase();
           sessionStorage.setItem(
             CONSULT_BOOKING_KEY,
-            JSON.stringify({ ...(pending.confirmBase || {}), ...paid }),
+            JSON.stringify({
+              ...(pending.confirmBase || {}),
+              ...paid,
+              appointment_status: paidStatus === 'completed' ? 'completed' : 'confirmed',
+            }),
           );
           navigate('/consult/booking-confirm', { replace: true });
           return;
