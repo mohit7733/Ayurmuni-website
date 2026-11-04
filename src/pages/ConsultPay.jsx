@@ -31,9 +31,11 @@ import {
 import { formatDoctorDisplayName } from "../consult/appointmentUtils";
 import {
   getConsultBenefit,
+  consultationCheckout,
   isApiSuccess,
-  isBookingAlreadyPaid,
+  isConsultationPaymentConfirmed,
   isDuplicateGatewayOrder,
+  isPaymentAlreadyExists,
   pickConsultPaymentData,
   pickConsultRazorpayKey,
   pickConsultRazorpayOrderId,
@@ -46,7 +48,6 @@ import { openRazorpayCheckout, toRazorpayPaise } from "../payment/razorpayChecko
 import {
   createConsultationPayment,
   getConsultationFeeQuote,
-  getConsultationPayment,
   retryConsultationPayment,
   verifyConsultationPayment,
 } from "../services/consultService";
@@ -60,14 +61,12 @@ import { showSuccessToast } from "../config/key";
 import {
   buildCashfreeVerifyPayload,
   clearCashfreePending,
-  enrichCashfreeVerifyPayload,
   extractCashfreeCheckout,
-  isCashfreePaymentVerified,
-  isRecordUuid,
   openCashfreeCheckout,
   preloadCashfree,
   saveCashfreePending,
   shouldVerifyCashfreePayment,
+  verifyCashfreeUntilSettled,
 } from "../payment/cashfree";
 import {
   Button,
@@ -80,13 +79,6 @@ import "../design/pages/booking.css";
 import "../design/components/consult-plan.css";
 
 
-
-const isPendingPayment = (data) => {
-  const status = String(
-    data?.status ?? data?.payment_status ?? "",
-  ).toLowerCase();
-  return status === "pending" || status === "created" || status === "initiated";
-};
 
 const patientName = (patient) =>
   `${patient?.first_name || ""} ${patient?.last_name || ""}`.trim() ||
@@ -364,7 +356,7 @@ export default function ConsultPay() {
         doctor_specialization:
           paid.doctor_specialization || resolveDoctorSpecializations(doctor),
         appointment_status:
-          paid.appointment_status || paid.status || "CONFIRMED",
+          paid.appointment_status || paid.booking?.status || "",
       }),
     );
     showSuccessToast(message || "Payment Successful", "success");
@@ -381,7 +373,7 @@ export default function ConsultPay() {
       const pending = planPurchaseId ? null : readPending(slot.id);
       let paymentResponse;
       if (planPurchaseId) {
-        // Plan-funded booking: package_purchase_id; payment_gateway only when a balance is still due.
+        // Package booking does not open Cashfree. A balance still due includes the gateway.
         paymentResponse = await createConsultationPayment({
           slot_id: slot.id,
           package_purchase_id: planPurchaseId,
@@ -389,24 +381,24 @@ export default function ConsultPay() {
           medical_record_ids: booking.medical_record_ids,
           ...(planPayable > 0 ? { payment_gateway: apiGateway } : {}),
         });
+        if (paymentResponse?.data?.funded_by_package === true) {
+          if (!isConsultationPaymentConfirmed(paymentResponse)) {
+            showSuccessToast(
+              paymentResponse?.message || "The plan did not confirm this visit.",
+              "error",
+            );
+            return;
+          }
+          finish(
+            paymentResponse,
+            paymentResponse?.message || "Appointment confirmed with your plan",
+          );
+          return;
+        }
         if (!isApiSuccess(paymentResponse)) {
           showSuccessToast(
             paymentResponse?.message || "Unable to book with this plan",
             "error",
-          );
-          return;
-        }
-        // Plan covers the consultation - appointment is confirmed, no gateway.
-        if (!hasGatewayOrder(paymentResponse?.data)) {
-          finish(
-            {
-              ...paymentResponse,
-              data: {
-                ...(paymentResponse?.data || {}),
-                funded_by_package: paymentResponse?.data?.funded_by_package !== false,
-              },
-            },
-            paymentResponse?.message || "Appointment confirmed with your plan",
           );
           return;
         }
@@ -447,11 +439,21 @@ export default function ConsultPay() {
             payment_gateway: apiGateway,
             skip_package_funding: true,
           });
+          const existing = consultationCheckout(paymentResponse);
           const duplicateAppointmentId = isDuplicateGatewayOrder(paymentResponse)
             ? readAppointmentId(pickConsultPaymentData(paymentResponse)) ||
               readAppointmentId(paymentResponse?.data?.errors)
-            : "";
-          if (duplicateAppointmentId) {
+            : isPaymentAlreadyExists(paymentResponse)
+              ? readAppointmentId(existing) || pending?.appointment_id
+              : "";
+          if (isPaymentAlreadyExists(paymentResponse) && existing?.payment_session_id) {
+            paymentResponse = {
+              success: true,
+              status: 200,
+              message: paymentResponse.message,
+              data: existing,
+            };
+          } else if (duplicateAppointmentId) {
             try {
               const retryResponse = await retryConsultationPayment(
                 duplicateAppointmentId,
@@ -459,7 +461,7 @@ export default function ConsultPay() {
               );
               if (isApiSuccess(retryResponse)) paymentResponse = retryResponse;
             } catch {
-              // keep the original (duplicate) response
+              // keep the original response
             }
           }
         }
@@ -492,30 +494,6 @@ export default function ConsultPay() {
           pending?.appointment_id ||
           "",
       ).trim();
-      const razorpayReady =
-        apiGateway === "razorpay" &&
-        pickConsultRazorpayKey(pickConsultPaymentData(paymentResponse)) &&
-        pickConsultRazorpayOrderId(pickConsultPaymentData(paymentResponse));
-      if (
-        appointmentId &&
-        !pending?.appointment_id &&
-        isPendingPayment(payment) &&
-        !razorpayReady
-      ) {
-        try {
-          const retry = await retryConsultationPayment(appointmentId, apiGateway);
-          if (isApiSuccess(retry) && retry?.data) {
-            payment = {
-              ...payment,
-              ...retry.data,
-              summary: retry.data?.summary ?? payment?.summary,
-              configurations: retry.data?.configurations ?? payment?.configurations,
-            };
-          }
-        } catch {
-          // keep original payload
-        }
-      }
       const paymentData = pickConsultPaymentData({
         ...paymentResponse,
         data: { ...(paymentResponse?.data || {}), ...payment },
@@ -528,15 +506,7 @@ export default function ConsultPay() {
       if (!checkout.paymentId && payment.payment_id) {
         checkout.paymentId = String(payment.payment_id);
       }
-      // Backend already confirmed the booking (auto-applied package / zero payable) - no gateway.
-      if (
-        !checkout.sessionId &&
-        (payable <= 0 ||
-          (!hasGatewayOrder(paymentData) && isBookingAlreadyPaid(paymentData)))
-      ) {
-        finish(paymentResponse, paymentResponse?.message);
-        return;
-      }
+      // Creating the payment only holds the slot. Confirmation happens after verify.
       if (appointmentId) {
         savePending(slot.id, appointmentId, payment.payment_id, apiGateway);
       }
@@ -586,8 +556,9 @@ export default function ConsultPay() {
             gateway_signature: String(rz.razorpay_signature ?? ""),
             payment_gateway: "razorpay",
           });
-          if (isApiSuccess(verify)) {
-            finish(verify?.data ? verify : paymentResponse);
+          if (isConsultationPaymentConfirmed(verify)) {
+            clearPending(slot.id);
+            finish(verify);
           } else {
             showSuccessToast(
               verify?.message || "Payment verification failed",
@@ -629,7 +600,6 @@ export default function ConsultPay() {
           consultation_mode: "Video consultation",
           hospital_name: doctor?.hospital_name || doctor?.clinic_name,
           doctor_specialization: resolveDoctorSpecializations(doctor),
-          appointment_status: "CONFIRMED",
         },
       });
       const cfResult = await openCashfreeCheckout({
@@ -638,43 +608,38 @@ export default function ConsultPay() {
         paymentId: checkout.paymentId,
       });
       if (cfResult?.redirect) return;
-      if (!shouldVerifyCashfreePayment(cfResult)) {
-        clearCashfreePending();
+      if (cfResult?.error || !shouldVerifyCashfreePayment(cfResult)) {
         showSuccessToast(
-          "Payment cancelled. You can try again anytime.",
+          cfResult?.error?.message || "Payment cancelled. You can try again anytime.",
           "error",
         );
         return;
       }
       setVerifying(true);
       try {
-        let payload = buildCashfreeVerifyPayload(checkout, cfResult);
-        if (!payload.gateway_payment_id && isRecordUuid(checkout.paymentId)) {
-          payload = await enrichCashfreeVerifyPayload(payload, [
-            () => getConsultationPayment(checkout.paymentId),
-          ]);
-        }
-        if (!payload.gateway_payment_id) {
+        const payload = buildCashfreeVerifyPayload(checkout, cfResult);
+        if (!payload.payment_id || !payload.gateway_order_id) {
           showSuccessToast(
-            "Cashfree has not returned the payment id yet. Wait a few seconds, then confirm the booking again.",
+            "Payment details missing. Please try again.",
             "error",
           );
           return;
         }
-        const verify = await verifyConsultationPayment(payload);
-        if (isCashfreePaymentVerified(verify)) {
-          finish(verify?.data ? verify : paymentResponse);
-        } else if (cfResult?.paymentDetails) {
-          showSuccessToast(
-            verify?.message || "Payment verification failed",
-            "error",
-          );
-        } else {
+        const verify = await verifyCashfreeUntilSettled(
+          verifyConsultationPayment,
+          payload,
+        );
+        if (isConsultationPaymentConfirmed(verify)) {
+          clearPending(slot.id);
           clearCashfreePending();
+          finish(verify);
+        } else {
+          const pendingPayment = String(verify?.message || "").toLowerCase().includes("pending");
           showSuccessToast(
-            cfResult?.error?.message ||
-              verify?.message ||
-              "Payment cancelled. You can try again anytime.",
+            verify?.message ||
+              (pendingPayment
+                ? "Payment is still pending. Confirm the booking again in a moment."
+                : "Payment verification failed"),
             "error",
           );
         }

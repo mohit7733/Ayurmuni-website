@@ -143,18 +143,21 @@ export const getConsultationFeeQuote = async (slotId, couponCode, packagePurchas
 };
 
 /**
- * Required: { payment_id, gateway_order_id, gateway_payment_id, gateway_signature }.
- * Optional `payment_gateway` lets the backend pick the Cashfree vs Razorpay verifier.
+ * Cashfree: payment_id + gateway_order_id. The server loads the payment from Cashfree.
+ * Razorpay also needs gateway_payment_id + gateway_signature.
  */
 export const verifyConsultationPayment = async (data) => {
   const body = {
     payment_id: data?.payment_id,
     gateway_order_id: data?.gateway_order_id,
-    gateway_payment_id: data?.gateway_payment_id,
-    gateway_signature: data?.gateway_signature,
   };
+  const paymentRef = String(data?.gateway_payment_id || '').trim();
+  const signature = String(data?.gateway_signature || '').trim();
+  if (paymentRef) body.gateway_payment_id = paymentRef;
+  if (signature) body.gateway_signature = signature;
   const gateway = String(data?.payment_gateway ?? '').trim();
   if (gateway) body.payment_gateway = gateway;
+  if (gateway === 'cashfree' && paymentRef) body.cf_payment_id = paymentRef;
   return apiClient('payments/customer/consultation/payment/verify-payment/', {
     method: 'POST',
     body: JSON.stringify(body),

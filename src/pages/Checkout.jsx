@@ -20,7 +20,6 @@ import { calculateOrderFees, feeRateLabel, parseFeeQuoteConfig } from '../cart/f
 import {
   buildCartItemIds,
   buildOrderPayload,
-  getOrderById,
   getOrderFeeQuote,
   placeOrder,
   verifyOrderPayment,
@@ -35,14 +34,13 @@ import '../design/pages/checkout.css';
 import {
   buildCashfreeVerifyPayload,
   clearCashfreePending,
-  enrichCashfreeVerifyPayload,
   extractCashfreeCheckout,
   isCashfreePaymentVerified,
-  isRecordUuid,
   openCashfreeCheckout,
   preloadCashfree,
   saveCashfreePending,
   shouldVerifyCashfreePayment,
+  verifyCashfreeUntilSettled,
 } from '../payment/cashfree';
 import { pickPaymentData as pickRazorpayPayment, pickRazorpayKey, pickRazorpayOrderId } from '../payment/razorpay';
 import { openRazorpayCheckout, toRazorpayPaise } from '../payment/razorpayCheckout';
@@ -494,26 +492,14 @@ export default function Checkout() {
       }
       setVerifying(true);
       try {
-        let payload = buildCashfreeVerifyPayload(checkout, cfResult);
-        if (!payload.gateway_payment_id) {
-          const recordIds = [...new Set(
-            [result?.data?.id, result?.data?.order?.id, result?.data?.order_id]
-              .map((value) => String(value || '').trim())
-              .filter((id) => isRecordUuid(id)),
-          )];
-          payload = await enrichCashfreeVerifyPayload(
-            payload,
-            recordIds.map((id) => () => getOrderById(id)),
-          );
-        }
-        if (!payload.gateway_payment_id) {
-          const failMsg =
-            'Cashfree has not returned the payment id yet. Wait a few seconds, then try the payment again.';
+        const payload = buildCashfreeVerifyPayload(checkout, cfResult);
+        if (!payload.payment_id || !payload.gateway_order_id) {
+          const failMsg = 'Payment details missing. Please try again.';
           setOrderError(failMsg);
           showSuccessToast(failMsg, 'error');
           return;
         }
-        const verify = await verifyOrderPayment(payload);
+        const verify = await verifyCashfreeUntilSettled(verifyOrderPayment, payload);
         const completed = Boolean(cfResult?.paymentDetails);
         if (isCashfreePaymentVerified(verify)) {
           clearCashfreePending();

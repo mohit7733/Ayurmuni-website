@@ -4,17 +4,17 @@ import AppShell from '../components/AppShell';
 import { Button, EmptyState } from '../components/ui';
 import '../design/pages/checkout.css';
 import { CHECKOUT_KEY, ORDER_RESULT_KEY } from '../cart/mapCart';
+import { isConsultationPaymentConfirmed } from '../consult/consultPayment';
 import { CONSULT_BOOKING_KEY, CONSULT_PAY_KEY, CONSULT_PENDING_PAYMENT_KEY } from '../consult/doctors';
 import {
   buildCashfreeVerifyPayload,
   clearCashfreePending,
-  enrichCashfreeVerifyPayload,
   isCashfreePaymentVerified,
-  isRecordUuid,
   readCashfreePending,
+  verifyCashfreeUntilSettled,
 } from '../payment/cashfree';
-import { getConsultationPayment, verifyConsultationPayment } from '../services/consultService';
-import { getOrderById, verifyOrderPayment } from '../services/orderService';
+import { verifyConsultationPayment } from '../services/consultService';
+import { verifyOrderPayment } from '../services/orderService';
 import { verifyPendingPackage } from '../payment/packageCheckout';
 import { showSuccessToast } from '../config/key';
 import { useCart } from '../hooks/useCart';
@@ -67,33 +67,27 @@ export default function PaymentReturn() {
         sessionId: pending.sessionId,
       };
       try {
-        let payload = buildCashfreeVerifyPayload(checkout, {
+        const payload = buildCashfreeVerifyPayload(checkout, {
           gateway: pending.gateway,
           searchParams: Object.fromEntries(params.entries()),
           rawMessage: pending.placed,
         });
-        if (!payload.gateway_payment_id) {
-          const loaders =
-            pending.kind === 'consultation' && isRecordUuid(pending.paymentId)
-              ? [() => getConsultationPayment(pending.paymentId)]
-              : [pending.recordId, pending.placed?.data?.id, pending.placed?.data?.order?.id]
-                  .map((value) => String(value || '').trim())
-                  .filter((id) => isRecordUuid(id))
-                  .map((id) => () => getOrderById(id));
-          payload = await enrichCashfreeVerifyPayload(payload, loaders);
-        }
-        if (!payload.gateway_payment_id) {
+        if (!payload.payment_id || !payload.gateway_order_id) {
           if (cancelled) return;
           setPhase('failed');
-          setMessage('Cashfree has not returned the payment id yet. Wait a few seconds and open this page again.');
+          setMessage('Payment details missing. Start checkout again.');
           return;
         }
-        const verify =
-          pending.kind === 'consultation'
-            ? await verifyConsultationPayment(payload)
-            : await verifyOrderPayment(payload);
+        const verify = await verifyCashfreeUntilSettled(
+          pending.kind === 'consultation' ? verifyConsultationPayment : verifyOrderPayment,
+          payload,
+        );
         if (cancelled) return;
-        if (!isCashfreePaymentVerified(verify)) {
+        const confirmed =
+          pending.kind === 'consultation'
+            ? isConsultationPaymentConfirmed(verify)
+            : isCashfreePaymentVerified(verify);
+        if (!confirmed) {
           setPhase('failed');
           setMessage(verify?.message || 'Payment was not completed. You can try again.');
           return;
