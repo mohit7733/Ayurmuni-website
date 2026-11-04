@@ -815,7 +815,7 @@ export default function ConsultPay() {
             <div className="bk-card bk-payment-hero">
               <div className="bk-payment-hero__head">
                 <span className="bk-payment-tag">Total payable</span>
-                <strong>{money(totalAmount)}</strong>
+                <strong>{priceLoading ? T.calculating : money(totalAmount)}</strong>
               </div>
               <p>{planIsFree ? `Paid via ${selectedPlan?.name || "plan"}` : "Secure payment at checkout"}</p>
             </div>
@@ -897,8 +897,7 @@ export default function ConsultPay() {
               </div>
               {priceLoading ? (
                 <p className="bk-card__hint">{T.calculating}</p>
-              ) : null}
-              {usingPlan ? (
+              ) : usingPlan ? (
                 <dl className="bk-bill">
                   <div className="bk-bill__row">
                     <dt>Consultation total</dt>
@@ -975,7 +974,7 @@ export default function ConsultPay() {
         aria-label={T.payNow}
       >
         <div className="bk-sticky__meta">
-          <strong>{money(totalAmount)}</strong>
+          <strong>{priceLoading ? T.calculating : money(totalAmount)}</strong>
           <small>{T.toPay}</small>
         </div>
         <Button

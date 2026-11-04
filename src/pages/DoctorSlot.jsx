@@ -17,11 +17,12 @@ import {
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import DietitianBadge from '../components/DietitianBadge';
-import { getDoctorById } from '../services/consultService';
+import { getConsultationFeeQuote, getDoctorById } from '../services/consultService';
+import { parseFeeQuoteConfig } from '../cart/feeQuote';
+import { isApiSuccess } from '../consult/consultPayment';
 import { invalidateApiCache } from '../services/apiClient';
 import {
   CONSULT_PAY_KEY,
-  doctorConsultFee,
   doctorDisplayName,
   doctorExperience,
   doctorImage,
@@ -88,6 +89,8 @@ export default function DoctorSlot() {
   const [pickedFile, setPickedFile] = useState(null);
   const [recordName, setRecordName] = useState('');
   const [recordType, setRecordType] = useState('');
+  const [quotedFee, setQuotedFee] = useState(null);
+  const [feeLoading, setFeeLoading] = useState(false);
 
   const monthLabel = useMemo(
     () =>
@@ -160,9 +163,46 @@ export default function DoctorSlot() {
     setSelectedSlot(first);
   }, [slots, selectedDate, loading]);
 
+  useEffect(() => {
+    const slotId = selectedSlot?.id;
+    if (!slotId) {
+      setQuotedFee(null);
+      setFeeLoading(false);
+      return undefined;
+    }
+    let cancelled = false;
+    setFeeLoading(true);
+    (async () => {
+      try {
+        const response = await getConsultationFeeQuote(slotId);
+        const raw = response?.data ?? response;
+        const parsed = parseFeeQuoteConfig(raw, 0);
+        if (cancelled) return;
+        if (
+          parsed &&
+          raw?.package_funding?.can_fund === true &&
+          Number(parsed.summaryTotalPayable) === 0
+        ) {
+          parsed.summaryTotalPayable = null;
+        }
+        const payable = Number(parsed?.summaryTotalPayable);
+        const listed = Number(parsed?.baseAmount);
+        const amount = payable > 0 ? payable : listed > 0 ? listed : null;
+        setQuotedFee(isApiSuccess(response) ? amount : null);
+      } catch {
+        if (!cancelled) setQuotedFee(null);
+      } finally {
+        if (!cancelled) setFeeLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedSlot?.id]);
+
   const grouped = useMemo(() => groupSlotsByTime(slots, selectedDate), [slots, selectedDate]);
-  const fee = doctorConsultFee(selectedSlot) || doctorConsultFee(doctor);
-  const feeLabel = fee ? formatRupee(fee) : '';
+  // The doctor record and the slot both carry ₹5. Only the fee-quote is the payable amount.
+  const feeLabel = quotedFee != null ? formatRupee(quotedFee) : T.calculating;
   const image = doctorImage(doctor);
   const name = formatDoctorDisplayName(doctorDisplayName(doctor));
   const canContinue =

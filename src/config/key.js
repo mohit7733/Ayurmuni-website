@@ -1,4 +1,4 @@
-const API_BASE_URL = String(import.meta.env.VITE_API_BASE || 'https://scarce-derby-voice.ngrok-free.dev/').replace(
+const API_BASE_URL = String(import.meta.env.VITE_API_BASE || 'https://ayurmuni.aimantra.info/').replace(
   /\/*$/,
   '/',
 );
@@ -15,10 +15,19 @@ export const Method = {
   PUT: 'PUT',
 };
 
+/** Backend success copy must not use the red warning toast. */
+export const toastTone = (message, fallback = 'error') => {
+  const text = String(message || '').toLowerCase();
+  if (/verified successfully|payment successful|activated successfully|confirmed successfully/.test(text)) {
+    return 'success';
+  }
+  return fallback;
+};
+
 export const showSuccessToast = (message, type = 'success') => {
   window.dispatchEvent(
     new CustomEvent('ayurmuni-toast', {
-      detail: { message, type },
+      detail: { message, type: toastTone(message, type) },
     }),
   );
 };
