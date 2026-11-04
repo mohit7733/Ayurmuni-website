@@ -199,6 +199,22 @@ const isUnpaidStatus = (value) =>
     value,
   );
 
+/**
+ * Ask verify-payment until Cashfree Get Payments has captured the order.
+ * The payment id from the modal is optional; the API confirms with payment_id + gateway_order_id.
+ */
+export const verifyCashfreeUntilSettled = async (verifyFn, payload, { attempts = 4, waitMs = 1200 } = {}) => {
+  let last = null;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    last = await verifyFn(payload);
+    if (isCashfreePaymentVerified(last)) return last;
+    const pending = String(last?.message || '').toLowerCase().includes('pending');
+    if (!pending || attempt === attempts - 1) return last;
+    await sleep(waitMs);
+  }
+  return last;
+};
+
 /** True when the backend verify call says the Cashfree payment is paid. */
 export const isCashfreePaymentVerified = (response) => {
   if (!response || typeof response !== 'object') return false;

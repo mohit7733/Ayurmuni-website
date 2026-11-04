@@ -63,6 +63,12 @@ describe('consultService plan + gateway plumbing', () => {
     });
     await consult.verifyConsultationPayment({ payment_id: 'p', gateway_order_id: 'o', gateway_payment_id: 'g', gateway_signature: 's' });
     expect(JSON.parse(apiClient.mock.calls[1][1].body)).not.toHaveProperty('payment_gateway');
+    await consult.verifyConsultationPayment({
+      payment_id: 'p', gateway_order_id: 'cf_1', gateway_payment_id: 'cfpay_1', payment_gateway: 'cashfree',
+    });
+    expect(JSON.parse(apiClient.mock.calls[2][1].body)).toEqual({
+      payment_id: 'p', gateway_order_id: 'cf_1', gateway_payment_id: 'cfpay_1', cf_payment_id: 'cfpay_1', payment_gateway: 'cashfree',
+    });
   });
 });
 
@@ -105,6 +111,38 @@ describe('gateways helpers', () => {
 });
 
 describe('consultPayment helpers', () => {
+  it('confirms only a verified payment or a funded package', () => {
+    expect(cp.isConsultationPaymentConfirmed({
+      success: true,
+      data: { status: 'success', appointment_status: 'confirmed' },
+    })).toBe(true);
+    expect(cp.isConsultationPaymentConfirmed({
+      success: true,
+      data: { status: 'pending', appointment_status: 'pending', payment_session_id: 'session_1' },
+    })).toBe(false);
+    expect(cp.isConsultationPaymentConfirmed({
+      success: true,
+      data: { funded_by_package: true, booking: { status: 'confirmed' } },
+    })).toBe(true);
+    expect(cp.isConsultationPaymentConfirmed({
+      success: true,
+      data: { status: 'success', appointment_status: 'pending' },
+    })).toBe(false);
+  });
+
+  it('reuses the checkout nested in a 409', () => {
+    const session = { payment_id: 'pay-1', payment_session_id: 'session_1', gateway_order_id: 'cf_1', appointment_id: 'apt-1' };
+    const conflict = {
+      success: false,
+      status: 409,
+      message: 'Payment already exists for this appointment.',
+      data: { success: false, message: 'Payment already exists for this appointment.', data: session },
+    };
+    expect(cp.isPaymentAlreadyExists(conflict)).toBe(true);
+    expect(cp.consultationCheckout(conflict)).toEqual(session);
+    expect(cp.consultationCheckout({ success: true, data: session })).toEqual(session);
+  });
+
   it('detects bookings that need no gateway', () => {
     expect(cp.isBookingAlreadyPaid({ status: 'CONFIRMED' })).toBe(true);
     expect(cp.isBookingAlreadyPaid({ funded_by_package: true })).toBe(true);

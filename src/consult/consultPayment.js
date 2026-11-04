@@ -19,6 +19,46 @@ export const readAppointmentId = (data) =>
     data?.appointment_id || data?.appointmentId || data?.consultation_id || data?.appointment?.id || '',
   ).trim();
 
+const looksLikeCheckout = (node) =>
+  Boolean(
+    node &&
+      typeof node === 'object' &&
+      (node.payment_session_id ||
+        node.gateway_order_id ||
+        node.funded_by_package === true ||
+        node.payment_id),
+  );
+
+/** book-slot payload, whether it is a 201 body or the checkout nested in a 409. */
+export const consultationCheckout = (response) => {
+  const body = response?.data;
+  if (!looksLikeCheckout(body)) {
+    return looksLikeCheckout(body?.data) ? body.data : null;
+  }
+  if (response?.success === true || response?.success === 'true' || body.payment_session_id || body.funded_by_package === true) {
+    return body;
+  }
+  return looksLikeCheckout(body.data) ? body.data : null;
+};
+
+/** HTTP 409 while a hold is still open. The reusable session is on `data`. */
+export const isPaymentAlreadyExists = (response) => {
+  const status = Number(response?.status ?? response?.data?.status_code);
+  const message = String(response?.message || response?.data?.message || '').toLowerCase();
+  return status === 409 || message.includes('payment already exists');
+};
+
+/**
+ * Verify-payment (or a package book-slot) finished the visit.
+ * Payment status is "success"; appointment status is "confirmed".
+ */
+export const isConsultationPaymentConfirmed = (response) => {
+  const payload = consultationCheckout(response) || response?.data || {};
+  const appointment = String(payload.appointment_status || payload.booking?.status || '').toLowerCase();
+  if (payload.funded_by_package === true) return appointment === 'confirmed';
+  return String(payload.status || '').toLowerCase() === 'success' && appointment === 'confirmed';
+};
+
 const PAID_STATUSES = ['success', 'paid', 'captured', 'completed', 'confirmed'];
 
 /** book-slot finished the booking itself - nothing to pay at a gateway. */
