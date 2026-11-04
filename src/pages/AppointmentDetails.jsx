@@ -28,6 +28,7 @@ import DietitianBadge from '../components/DietitianBadge';
 import PaymentHistoryTimeline from '../components/PaymentHistoryTimeline';
 import { getPaymentHistory } from '../utils/paymentHistoryUtils';
 import { Button, Chip, Modal, SectionHold, Textarea } from '../components/ui';
+import { validateReschedule } from '../consult/appointmentActions';
 import {
   DetailCard,
   DetailEmpty,
@@ -152,6 +153,7 @@ export default function AppointmentDetails() {
   const [slots, setSlots] = useState([]);
   const [slotId, setSlotId] = useState('');
   const [rescheduleReason, setRescheduleReason] = useState('');
+  const [rescheduleError, setRescheduleError] = useState('');
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [reviewStars, setReviewStars] = useState(0);
@@ -370,6 +372,7 @@ export default function AppointmentDetails() {
     }
     setSlotDate(date || dates[0]?.fullDate || '');
     setRescheduleReason('');
+    setRescheduleError('');
     setRescheduleOpen(true);
     loadSlots(date || dates[0]?.fullDate || '');
   };
@@ -825,6 +828,7 @@ export default function AppointmentDetails() {
 
         <Modal
           open={rescheduleOpen}
+          className="dx-resched"
           onClose={() => !saving && setRescheduleOpen(false)}
           title={isRescheduleRequest ? 'Request change' : 'Reschedule appointment'}
           description={`Pick a new slot with ${doctorName}.`}
@@ -836,13 +840,18 @@ export default function AppointmentDetails() {
               <Button
                 loading={saving}
                 disabled={!slotId}
-                onClick={() =>
+                onClick={() => {
+                  const problem = validateReschedule({ reason: rescheduleReason, isRescheduleRequest });
+                  if (problem) {
+                    setRescheduleError(problem);
+                    return;
+                  }
                   runAction({
                     action: isRescheduleRequest ? 'confirm_reschedule' : 'reschedule',
                     availability: slotId,
                     ...(!isRescheduleRequest ? { reschedule_reason: rescheduleReason.trim() } : {}),
-                  })
-                }
+                  });
+                }}
               >
                 Confirm
               </Button>
@@ -887,7 +896,7 @@ export default function AppointmentDetails() {
             (() => {
               const open = slots.filter((slot) => isSlotBookable(slot, slotDate));
               return open.length ? (
-                <div className="dx-chip-group">
+                <div className="dx-chip-group dx-resched__slots">
                   {open.map((slot) => (
                     <Chip
                       key={slot.id}
@@ -899,7 +908,7 @@ export default function AppointmentDetails() {
                   ))}
                 </div>
               ) : (
-                <p className="dx-note">No open slots on this day. Try another date.</p>
+                <p className="dx-note dx-resched__empty">No open slots on this day. Try another date.</p>
               );
             })()
           )}
@@ -908,7 +917,11 @@ export default function AppointmentDetails() {
               rows={3}
               placeholder="Reason for reschedule"
               value={rescheduleReason}
-              onChange={(e) => setRescheduleReason(e.target.value)}
+              error={rescheduleError}
+              onChange={(e) => {
+                setRescheduleReason(e.target.value);
+                if (rescheduleError) setRescheduleError('');
+              }}
             />
           ) : null}
         </Modal>

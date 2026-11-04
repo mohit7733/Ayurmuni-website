@@ -285,9 +285,6 @@ export default function AddCalendar() {
               <Button size="lg" block onClick={goBack}>
                 {T.calDone}
               </Button>
-              <Button variant="ghost" onClick={goBack}>
-                {T.calLater}
-              </Button>
             </div>
           </aside>
         </div>

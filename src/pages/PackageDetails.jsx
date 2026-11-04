@@ -5,6 +5,7 @@ import AppShell from "../components/AppShell";
 import { Button, EmptyState, ErrorState, SectionHold } from "../components/ui";
 import { formatRupee } from "../home/catalog";
 import PlanTransferModal from "../components/PlanTransferModal";
+import PackagePaymentModal from "../components/PackagePaymentModal";
 import usePackagePurchase from "../hooks/usePackagePurchase";
 import { isAuthenticated, requireAuth } from "../services/guestAuth";
 import { loadPackageById } from "../services/packageService";
@@ -60,7 +61,7 @@ export default function PackageDetails() {
     setItem((current) => (current ? { ...current, purchased: true } : current));
     await load({ silent: true });
   }, [load]);
-  const { start, busyId, prompt, confirm, cancel } = usePackagePurchase({ onPurchased });
+  const { start, busyId, prompt, confirm, cancel, sheet } = usePackagePurchase({ onPurchased });
   const busy = Boolean(busyId);
   const buy = () => {
     if (item) start(item);
@@ -195,7 +196,7 @@ export default function PackageDetails() {
                 </div>
               ) : null}
               <div className="is-total">
-                <span>You pay</span>
+                <span>Package price</span>
                 <strong>{formatRupee(item.price)}</strong>
               </div>
             </div>
@@ -211,6 +212,7 @@ export default function PackageDetails() {
           </article>
         ) : null}
         <PlanTransferModal prompt={prompt} onYes={confirm} onNo={cancel} />
+        <PackagePaymentModal {...sheet} />
       </section>
     </AppShell>
   );

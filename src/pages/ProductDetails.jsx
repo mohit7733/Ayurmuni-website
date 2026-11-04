@@ -43,8 +43,8 @@ import { extractAPlusBlocks, splitHighlightLines } from '../product/detailConten
 import {
   getProductByVariant,
   getReviews,
-  toggleWishlistProduct,
 } from '../services/productService';
+import { isItemWishlisted, subscribeWishlist, toggleWishlistItem } from '../product/wishlistSync';
 import { requireAuth } from '../services/guestAuth';
 import { findReviewableProductOrder } from '../services/reviewService';
 import { showPrescriptionRequired } from '../services/prescriptionGate';
@@ -116,6 +116,16 @@ export default function ProductDetails({ medicine = false } = {}) {
         setLoading(false);
         return;
       }
+      // Opening another product (related / trending rails): clear the old one and reset the UI
+      // so the skeleton shows instead of stale content (same as the app's useProductData).
+      setProduct(null);
+      setReviews([]);
+      setSelected(null);
+      setPendingCta(null);
+      setDescExpanded(false);
+      setExpandedDetail('');
+      setWish(false);
+      setWishBusy(false);
       setLoading(true);
       try {
         const [productRes, reviewRes] = await Promise.all([
@@ -314,10 +324,23 @@ export default function ProductDetails({ medicine = false } = {}) {
   };
 
   useEffect(() => {
-    setWish(Boolean(active?.is_wishlist_item ?? product?.is_wishlist_item));
+    // Shared heart cache: a toggle made on a card / list shows here too (same as the app).
+    setWish(
+      isItemWishlisted({
+        variant_id: cartVariantId,
+        is_wishlist_item: active?.is_wishlist_item ?? product?.is_wishlist_item,
+      }),
+    );
     setQty(cartQty > 0 ? cartQty : 1);
     setImageIndex(0);
   }, [cartVariantId, product, cartQty, active?.is_wishlist_item]);
+
+  useEffect(() => {
+    if (!cartVariantId) return undefined;
+    return subscribeWishlist((payload) => {
+      if (String(payload?.variantId) === cartVariantId) setWish(Boolean(payload.isWishlisted));
+    });
+  }, [cartVariantId]);
 
   const increaseQty = () => {
     setQty((current) => {
@@ -366,16 +389,17 @@ export default function ProductDetails({ medicine = false } = {}) {
       return;
     }
     const previous = wish;
-    setWish(!previous);
     setWishBusy(true);
     try {
-      const res = await toggleWishlistProduct(cartVariantId);
-      if (res?.success === false) throw new Error(res?.message || 'Wishlist update failed');
-      setSelected((prev) => (prev ? { ...prev, is_wishlist_item: !previous } : prev));
-      showSuccessToast(previous ? 'Removed from wishlist' : 'Added to wishlist', 'success');
-    } catch (error) {
-      setWish(previous);
-      showSuccessToast(error?.message || 'Unable to update wishlist', 'error');
+      const result = await toggleWishlistItem({ variant_id: cartVariantId, is_wishlist_item: previous });
+      const next = isItemWishlisted({ variant_id: cartVariantId });
+      setWish(next);
+      setSelected((prev) => (prev ? { ...prev, is_wishlist_item: next } : prev));
+      if (result === 'ok') {
+        showSuccessToast(next ? 'Added to wishlist' : 'Removed from wishlist', 'success');
+      } else {
+        showSuccessToast('Unable to update wishlist', 'error');
+      }
     } finally {
       setWishBusy(false);
     }

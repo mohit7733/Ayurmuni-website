@@ -37,10 +37,10 @@ import "../design/pages/appointments.css";
 const PAGE_SIZE = 20;
 
 const UPCOMING_STATUS = [
+  "pending",
   "confirmed",
   "reschedule",
   "rescheduled",
-  "cancelled",
   "upcoming",
   "booked",
 ];
@@ -62,7 +62,7 @@ const FOLLOW_UP_FILTERS = [
 
 const UPCOMING_STATUS_FILTERS = [
   { key: "all", label: "Any status" },
-  { key: "cancelled", label: "Cancelled" },
+  { key: "pending", label: "Pending" },
   { key: "confirmed", label: "Confirmed" },
   { key: "reschedule", label: "Reschedule" },
 ];
@@ -79,6 +79,8 @@ const STATUS_STYLE = {
   upcoming: { background: "#e3f3ec", color: "#0b6b4f" },
   booked: { background: "#e3f3ec", color: "#0b6b4f" },
   pending: { background: "#fff4dc", color: "#a8650c" },
+  testing: { background: "#f3f4f6", color: "#64748b" },
+  processing: { background: "#f3f4f6", color: "#64748b" },
   cancelled: { background: "#fbe9e7", color: "#a8453a" },
   completed: { background: "#e3f3ec", color: "#0b6b4f" },
   missed: { background: "#f3f4f6", color: "#6b7280" },
@@ -91,6 +93,8 @@ const STATUS_STYLE = {
 
 const formatStatusLabel = (status) => {
   if (status === "cancellation_requested") return "Confirmed";
+  // Patient-facing label for internal statuses (same as the app).
+  if (["testing", "test"].includes(String(status || "").toLowerCase())) return "Processing";
   const raw = String(status || "")
     .replace(/_/g, " ")
     .trim();

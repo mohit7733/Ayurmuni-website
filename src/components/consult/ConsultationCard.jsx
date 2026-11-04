@@ -23,7 +23,10 @@ const STATUS_TONE = {
 
 export const consultStatusTone = (status) => STATUS_TONE[String(status || '').toLowerCase()] || 'neutral';
 
-const formatStatusLabel = (status) => String(status || '').replace(/_/g, ' ').trim();
+const formatStatusLabel = (status) =>
+  ['testing', 'test'].includes(String(status || '').toLowerCase())
+    ? 'Processing'
+    : String(status || '').replace(/_/g, ' ').trim();
 
 export default function ConsultationCard({ item, onOpen, onReceipt, onBook }) {
   const schedule = getConsultationScheduleLabels(item);

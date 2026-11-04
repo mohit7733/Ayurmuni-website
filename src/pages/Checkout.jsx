@@ -177,12 +177,7 @@ export default function Checkout() {
     let alive = true;
     setFeeLoading(true);
     (async () => {
-      try {
-        const res = await getOrderFeeQuote({
-          cart_item_ids: cartItemIds,
-          coupon_code: appliedCoupon?.code,
-        });
-        if (!alive) return;
+      const parseQuote = (res) => {
         const quoteData = res?.data ?? res;
         const summary = quoteData?.summary ?? {};
         const hasRates = Boolean(
@@ -216,13 +211,31 @@ export default function Checkout() {
               { ignoreConsultationFee: true },
             )
           : null;
-        if (parsed && !parsed.quotedCouponCode) parsed.quotedCouponCode = String(appliedCoupon?.code || '').trim();
+        return parsed;
+      };
+      try {
+        const couponCode = String(appliedCoupon?.code || '').trim();
+        const res = await getOrderFeeQuote({
+          cart_item_ids: cartItemIds,
+          coupon_code: appliedCoupon?.code,
+        });
+        if (!alive) return;
+        let parsed = parseQuote(res);
+        let failMessage = res?.message || res?.data?.message;
+        if (parsed && !parsed.quotedCouponCode) parsed.quotedCouponCode = couponCode;
+        // Coupon / product mismatch: retry the base quote without the coupon (same as the app).
+        if (!parsed && couponCode) {
+          const baseRes = await getOrderFeeQuote({ cart_item_ids: cartItemIds });
+          if (!alive) return;
+          parsed = parseQuote(baseRes);
+          if (!parsed) failMessage = baseRes?.message || baseRes?.data?.message || failMessage;
+        }
         setFeeConfig(parsed);
-        setFeeError(parsed ? null : 'Unable to load order fees. Please try again.');
-      } catch {
+        setFeeError(parsed ? null : failMessage || 'Unable to load order fees. Please try again.');
+      } catch (error) {
         if (alive) {
           setFeeConfig(null);
-          setFeeError('Unable to load order fees. Please try again.');
+          setFeeError(error?.message || 'Unable to load order fees. Please try again.');
         }
       } finally {
         if (alive) setFeeLoading(false);
