@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowRight,
+  ChevronLeft,
+  ChevronRight,
   History,
   RefreshCw,
   SearchX,
@@ -47,7 +49,6 @@ import {
   SectionHeader,
   SkeletonGrid,
   Tile,
-  TileGrid,
 } from "../components/ui";
 import { CONSULT_COPY as T } from "../content/consult";
 import { DUMMY_LAB_TESTS } from "../data/homeDummySections";
@@ -81,6 +82,10 @@ export default function Consult() {
   const [debounced, setDebounced] = useState("");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const concernsTrackRef = useRef(null);
+  const [canScrollConcernsLeft, setCanScrollConcernsLeft] = useState(false);
+  const [canScrollConcernsRight, setCanScrollConcernsRight] = useState(false);
+  const hasConcernOverflow = canScrollConcernsLeft || canScrollConcernsRight;
   const productFilter = useMemo(
     () => (debounced ? { search: debounced } : {}),
     [debounced],
@@ -205,6 +210,48 @@ export default function Consult() {
     refreshProducts();
   };
 
+  const updateConcernsScroll = useCallback(() => {
+    const element = concernsTrackRef.current;
+    if (!element) return;
+
+    setCanScrollConcernsLeft(element.scrollLeft > 2);
+    setCanScrollConcernsRight(
+      element.scrollLeft + element.clientWidth < element.scrollWidth - 2,
+    );
+  }, []);
+
+  const scrollConcerns = useCallback((direction) => {
+    const element = concernsTrackRef.current;
+    if (!element) return;
+
+    element.scrollBy({
+      left:
+        direction === "left"
+          ? -element.clientWidth * 0.75
+          : element.clientWidth * 0.75,
+      behavior: "smooth",
+    });
+  }, []);
+
+  useEffect(() => {
+    const element = concernsTrackRef.current;
+    if (!element) return;
+
+    updateConcernsScroll();
+    element.addEventListener("scroll", updateConcernsScroll, { passive: true });
+
+    const resizeObserver = new ResizeObserver(updateConcernsScroll);
+    resizeObserver.observe(element);
+    Array.from(element.children).forEach((child) =>
+      resizeObserver.observe(child),
+    );
+
+    return () => {
+      element.removeEventListener("scroll", updateConcernsScroll);
+      resizeObserver.disconnect();
+    };
+  }, [concerns.length, updateConcernsScroll]);
+
   return (
     <AppShell tab="consult">
       <div className="cs-page">
@@ -307,30 +354,63 @@ export default function Consult() {
               title={T.concernsTitle}
               description={T.concernsText}
             />
-            <TileGrid label={T.concernsTitle}>
-              {concerns.map((item) => (
-                <Tile
-                  key={item.id}
-                  image={item.image_url}
-                  label={item.name}
-                  onClick={() =>
-                    navigate(
-                      `/consult/concern/${item.id}?name=${encodeURIComponent(item.name)}${
-                        item.description
-                          ? `&desc=${encodeURIComponent(item.description)}`
-                          : ""
-                      }`,
-                      {
-                        state: {
-                          categoryName: item.name,
-                          categoryDesc: item.description,
+            <div
+              className={`cs-concerns-rail${hasConcernOverflow ? " is-scrollable" : ""}`}
+            >
+              {hasConcernOverflow ? (
+                <button
+                  type="button"
+                  className="cs-conditions-rail__arrow"
+                  onClick={() => scrollConcerns("left")}
+                  disabled={!canScrollConcernsLeft}
+                  aria-controls="cs-concerns-track"
+                  aria-label="Scroll to previous health concerns"
+                >
+                  <ChevronLeft size={19} />
+                </button>
+              ) : null}
+              <ul
+                id="cs-concerns-track"
+                className="am-tile-grid cs-concerns-rail__track"
+                aria-label={T.concernsTitle}
+                ref={concernsTrackRef}
+              >
+                {concerns.map((item) => (
+                  <Tile
+                    key={item.id}
+                    image={item.image_url}
+                    label={item.name}
+                    onClick={() =>
+                      navigate(
+                        `/consult/concern/${item.id}?name=${encodeURIComponent(item.name)}${
+                          item.description
+                            ? `&desc=${encodeURIComponent(item.description)}`
+                            : ""
+                        }`,
+                        {
+                          state: {
+                            categoryName: item.name,
+                            categoryDesc: item.description,
+                          },
                         },
-                      },
-                    )
-                  }
-                />
-              ))}
-            </TileGrid>
+                      )
+                    }
+                  />
+                ))}
+              </ul>
+              {hasConcernOverflow ? (
+                <button
+                  type="button"
+                  className="cs-conditions-rail__arrow"
+                  onClick={() => scrollConcerns("right")}
+                  disabled={!canScrollConcernsRight}
+                  aria-controls="cs-concerns-track"
+                  aria-label="Scroll to next health concerns"
+                >
+                  <ChevronRight size={19} />
+                </button>
+              ) : null}
+            </div>
           </Reveal>
         ) : null}
 

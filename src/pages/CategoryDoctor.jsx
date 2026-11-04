@@ -1,26 +1,42 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowRight, Flower2, Leaf, Salad } from 'lucide-react';
-import AppShell from '../components/AppShell';
-import AutoScrollRail from '../components/AutoScrollRail';
-import DoctorCard from '../components/DoctorCard';
-import PageHeader from '../components/PageHeader';
-import ProductCard from '../components/ProductCard';
-import dietCoverImg from '/images/login/14.jpg';
-import yogaPosterImg from '/images/login/8.png';
-import { mapDietPlanForHome, mapProductCategory, normalizeApiList } from '../home/catalog';
-import { getDoctors } from '../services/consultService';
-import { getDietPlans } from '../services/dietService';
-import { getHealthCategories } from '../services/productService';
-import { getYogaSession } from '../services/yogaService';
-import { getDoctorId, listDoctors } from '../consult/doctors';
-import { normalizeDietPlanList } from '../diet/utils';
-import useCategoryProducts from '../hooks/useCategoryProducts';
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
+import {
+  ArrowRight,
+  Flower2,
+  Leaf,
+  Salad,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import AppShell from "../components/AppShell";
+import AutoScrollRail from "../components/AutoScrollRail";
+import DoctorCard from "../components/DoctorCard";
+import PageHeader from "../components/PageHeader";
+import ProductCard from "../components/ProductCard";
+import dietCoverImg from "/images/login/14.jpg";
+import yogaPosterImg from "/images/login/8.png";
+import {
+  mapDietPlanForHome,
+  mapProductCategory,
+  normalizeApiList,
+} from "../home/catalog";
+import { getDoctors } from "../services/consultService";
+import { getDietPlans } from "../services/dietService";
+import { getHealthCategories } from "../services/productService";
+import { getYogaSession } from "../services/yogaService";
+import { getDoctorId, listDoctors } from "../consult/doctors";
+import { normalizeDietPlanList } from "../diet/utils";
+import useCategoryProducts from "../hooks/useCategoryProducts";
 import {
   itemMatchesHealthConcern,
   normalizeYogaSessionList,
   resolveYogaThumbnailUri,
-} from '../yoga/utils';
+} from "../yoga/utils";
 import {
   Button,
   Chip,
@@ -32,15 +48,20 @@ import {
   SectionHeader,
   Skeleton,
   SkeletonGrid,
-} from '../components/ui';
-import { CONSULT_COPY as T } from '../content/consult';
-import '../design/pages/consult.css';
+} from "../components/ui";
+import { CONSULT_COPY as T } from "../content/consult";
+import "../design/pages/consult.css";
 
 const PREVIEW = 6;
 
 function ViewAll({ onClick }) {
   return (
-    <Button variant="ghost" size="sm" onClick={onClick} trailingIcon={<ArrowRight size={16} aria-hidden />}>
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={onClick}
+      trailingIcon={<ArrowRight size={16} aria-hidden />}
+    >
       {T.viewAll}
     </Button>
   );
@@ -51,15 +72,15 @@ export default function CategoryDoctor() {
   const location = useLocation();
   const { categoryId } = useParams();
   const [params] = useSearchParams();
-  const concernId = String(categoryId || params.get('category') || '').trim();
+  const concernId = String(categoryId || params.get("category") || "").trim();
   const categoryName =
-    params.get('name') || location.state?.categoryName || T.concernFallback;
-  const categoryDesc = params.get('desc') || location.state?.categoryDesc || '';
+    params.get("name") || location.state?.categoryName || T.concernFallback;
+  const categoryDesc = params.get("desc") || location.state?.categoryDesc || "";
   const categorySubscription =
-    params.get('subscription') || location.state?.categorySubscription || '';
+    params.get("subscription") || location.state?.categorySubscription || "";
 
-  const [search, setSearch] = useState('');
-  const [debounced, setDebounced] = useState('');
+  const [search, setSearch] = useState("");
+  const [debounced, setDebounced] = useState("");
   const [selectedDiseaseId, setSelectedDiseaseId] = useState(null);
   const [diseases, setDiseases] = useState([]);
   const [diseasesLoading, setDiseasesLoading] = useState(false);
@@ -94,9 +115,10 @@ export default function CategoryDoctor() {
       setDiseases(
         raw
           .filter((item) => {
-            const id = String(item?.id ?? item?.health_category_id ?? '');
+            const id = String(item?.id ?? item?.health_category_id ?? "");
             if (!id || id === parent) return false;
-            const itemParent = item?.parent_id != null ? String(item.parent_id) : '';
+            const itemParent =
+              item?.parent_id != null ? String(item.parent_id) : "";
             return itemParent ? itemParent === parent : true;
           })
           .map(mapProductCategory)
@@ -110,7 +132,9 @@ export default function CategoryDoctor() {
   }, [concernId]);
 
   const selectedDiseaseName = useMemo(
-    () => diseases.find((item) => String(item.id) === String(selectedDiseaseId))?.name,
+    () =>
+      diseases.find((item) => String(item.id) === String(selectedDiseaseId))
+        ?.name,
     [diseases, selectedDiseaseId],
   );
 
@@ -126,7 +150,10 @@ export default function CategoryDoctor() {
   );
 
   const filterByConcern = useCallback(
-    (list) => (Array.isArray(list) ? list : []).filter((item) => itemMatchesHealthConcern(item, concernMatch)),
+    (list) =>
+      (Array.isArray(list) ? list : []).filter((item) =>
+        itemMatchesHealthConcern(item, concernMatch),
+      ),
     [concernMatch],
   );
 
@@ -157,7 +184,9 @@ export default function CategoryDoctor() {
             if (selectedDiseaseId) return false;
             const docDiseases = doctor?.health_diseases;
             if (!Array.isArray(docDiseases)) return false;
-            return docDiseases.some((entry) => diseaseIdSet.has(String(entry?.id ?? entry)));
+            return docDiseases.some((entry) =>
+              diseaseIdSet.has(String(entry?.id ?? entry)),
+            );
           });
       setDoctors(next);
       setDoctorsLoading(false);
@@ -173,18 +202,25 @@ export default function CategoryDoctor() {
       ...(concernId
         ? {
             health_category_id: concernId,
-            ...(selectedDiseaseId ? { health_disease_id: selectedDiseaseId } : {}),
+            ...(selectedDiseaseId
+              ? { health_disease_id: selectedDiseaseId }
+              : {}),
           }
         : {}),
       ...(debounced ? { search: debounced } : {}),
     };
   }, [concernId, selectedDiseaseId, debounced]);
 
-  const { products, loading: productsLoading, loadingMore, hasMore, loadMore } = useCategoryProducts(
-    productFilter,
-    [],
-    { enabled: Boolean(concernId) || Boolean(debounced), pageSize: 20 },
-  );
+  const {
+    products,
+    loading: productsLoading,
+    loadingMore,
+    hasMore,
+    loadMore,
+  } = useCategoryProducts(productFilter, [], {
+    enabled: Boolean(concernId) || Boolean(debounced),
+    pageSize: 20,
+  });
 
   useEffect(() => {
     let alive = true;
@@ -195,7 +231,7 @@ export default function CategoryDoctor() {
       }
       setDietLoading(true);
       const res = await getDietPlans({
-        type: 'all',
+        type: "all",
         page: 1,
         page_size: 24,
         ...(selectedDiseaseId
@@ -236,7 +272,9 @@ export default function CategoryDoctor() {
         ...(debounced ? { search: debounced } : {}),
       });
       if (!alive) return;
-      setYogaSessions(filterByConcern(normalizeYogaSessionList(res)).slice(0, PREVIEW));
+      setYogaSessions(
+        filterByConcern(normalizeYogaSessionList(res)).slice(0, PREVIEW),
+      );
       setYogaLoading(false);
     })();
     return () => {
@@ -255,21 +293,25 @@ export default function CategoryDoctor() {
     return [];
   }, [concernId, productMatchList, products]);
   const showingGeneralProducts =
-    Boolean(concernId) && productMatchList.length === 0 && scopedProducts.length > 0;
+    Boolean(concernId) &&
+    productMatchList.length === 0 &&
+    scopedProducts.length > 0;
 
   const doctorsQuery = selectedDiseaseId
     ? `disease=${encodeURIComponent(selectedDiseaseId)}&name=${encodeURIComponent(selectedDiseaseName || categoryName)}`
     : `category=${encodeURIComponent(concernId)}&name=${encodeURIComponent(categoryName)}`;
   const catalogQuery = [
-    concernId ? `category=${encodeURIComponent(concernId)}` : '',
-    selectedDiseaseId ? `disease=${encodeURIComponent(selectedDiseaseId)}` : '',
+    concernId ? `category=${encodeURIComponent(concernId)}` : "",
+    selectedDiseaseId ? `disease=${encodeURIComponent(selectedDiseaseId)}` : "",
     `name=${encodeURIComponent(selectedDiseaseName || categoryName)}`,
   ]
     .filter(Boolean)
-    .join('&');
+    .join("&");
 
   const scopeName = selectedDiseaseName || categoryName || T.related;
-  const productTitle = showingGeneralProducts ? T.generalProducts : T.productsFor(scopeName);
+  const productTitle = showingGeneralProducts
+    ? T.generalProducts
+    : T.productsFor(scopeName);
 
   const nothingFound =
     !doctorsLoading &&
@@ -281,14 +323,73 @@ export default function CategoryDoctor() {
     yogaSessions.length === 0 &&
     scopedProducts.length === 0;
 
+  const conditionsTrackRef = useRef(null);
+
+  const [canScrollConditionsLeft, setCanScrollConditionsLeft] = useState(false);
+
+  const [canScrollConditionsRight, setCanScrollConditionsRight] =
+    useState(false);
+
+  const updateConditionsScroll = () => {
+    const element = conditionsTrackRef.current;
+    if (!element) return;
+
+    setCanScrollConditionsLeft(element.scrollLeft > 2);
+
+    setCanScrollConditionsRight(
+      element.scrollLeft + element.clientWidth < element.scrollWidth - 2,
+    );
+  };
+
+  const scrollConditions = (direction) => {
+    const element = conditionsTrackRef.current;
+    if (!element) return;
+
+    element.scrollBy({
+      left:
+        direction === "left"
+          ? -element.clientWidth * 0.75
+          : element.clientWidth * 0.75,
+      behavior: "smooth",
+    });
+  };
+
+  useEffect(() => {
+    const element = conditionsTrackRef.current;
+    if (!element) return;
+
+    updateConditionsScroll();
+
+    element.addEventListener("scroll", updateConditionsScroll, {
+      passive: true,
+    });
+
+    const resizeObserver = new ResizeObserver(updateConditionsScroll);
+
+    resizeObserver.observe(element);
+
+    Array.from(element.children).forEach((child) => {
+      resizeObserver.observe(child);
+    });
+
+    return () => {
+      element.removeEventListener("scroll", updateConditionsScroll);
+      resizeObserver.disconnect();
+    };
+  }, [diseasesLoading, diseases.length]);
+
   return (
     <AppShell tab="consult">
       <div className="cs-page cs-category-page">
-        <PageHeader title={categoryName} subtitle={T.concernSubtitle} eyebrow={T.concernsEyebrow}>
+        <PageHeader
+          title={categoryName}
+          subtitle={T.concernSubtitle}
+          eyebrow={T.concernsEyebrow}
+        >
           <SearchField
             value={search}
             onChange={setSearch}
-            onSubmit={(value) => setDebounced(String(value || '').trim())}
+            onSubmit={(value) => setDebounced(String(value || "").trim())}
             placeholder={T.concernSearch}
           />
         </PageHeader>
@@ -300,16 +401,22 @@ export default function CategoryDoctor() {
             </span>
             <div>
               {categoryDesc ? <p>{categoryDesc}</p> : null}
-              {categorySubscription ? <small>{categorySubscription}</small> : null}
+              {categorySubscription ? (
+                <small>{categorySubscription}</small>
+              ) : null}
             </div>
           </div>
         ) : null}
 
         {concernId && (diseasesLoading || diseases.length > 0) ? (
-          <section className="cs-conditions" aria-labelledby="cs-conditions-title">
+          <section
+            className="cs-conditions"
+            aria-labelledby="cs-conditions-title"
+          >
             <h2 id="cs-conditions-title" className="cs-conditions__title">
               {T.conditions}
             </h2>
+
             {diseasesLoading && diseases.length === 0 ? (
               <div className="cs-chip-row" aria-hidden>
                 {Array.from({ length: 5 }, (_, i) => (
@@ -317,20 +424,57 @@ export default function CategoryDoctor() {
                 ))}
               </div>
             ) : (
-              <div className="cs-chip-row">
-                <Chip selected={!selectedDiseaseId} onClick={() => setSelectedDiseaseId(null)}>
-                  {T.allConditions}
-                </Chip>
-                {diseases.map((item) => (
+              <div className="cs-conditions-rail">
+                {/* Previous button */}
+                <button
+                  type="button"
+                  className="cs-conditions-rail__arrow"
+                  onClick={() => scrollConditions("left")}
+                  disabled={!canScrollConditionsLeft}
+                  aria-label="Scroll to previous conditions"
+                >
+                  <ChevronLeft size={19} />
+                </button>
+
+                {/* Scrollable tabs */}
+                <div className="cs-chip-row" ref={conditionsTrackRef}>
                   <Chip
-                    key={item.id}
-                    selected={String(selectedDiseaseId) === String(item.id)}
-                    onClick={() => setSelectedDiseaseId(item.id)}
-                    icon={item.image_url ? <img src={item.image_url} alt="" className="cs-chip-img" /> : null}
+                    selected={!selectedDiseaseId}
+                    onClick={() => setSelectedDiseaseId(null)}
                   >
-                    {item.name}
+                    {T.allConditions}
                   </Chip>
-                ))}
+
+                  {diseases.map((item) => (
+                    <Chip
+                      key={item.id}
+                      selected={String(selectedDiseaseId) === String(item.id)}
+                      onClick={() => setSelectedDiseaseId(item.id)}
+                      icon={
+                        item.image_url ? (
+                          <img
+                            src={item.image_url}
+                            alt=""
+                            className="cs-chip-img"
+                          />
+                        ) : null
+                      }
+                    >
+                      {item.name}
+                    </Chip>
+                  ))}
+                </div>
+
+                {/* Next button */}
+                <button
+                  type="button"
+                  className="cs-conditions-rail__arrow"
+                  onClick={() => scrollConditions("right")}
+                  disabled={!canScrollConditionsRight}
+                  aria-label="Scroll to next conditions"
+                >
+                  <ChevronRight size={19} />
+                </button>
               </div>
             )}
           </section>
@@ -341,13 +485,24 @@ export default function CategoryDoctor() {
             <SectionHeader
               id="cs-cd-doctors"
               title={T.doctorsFor(categoryName || T.related)}
-              action={doctors.length > 0 ? <ViewAll onClick={() => navigate(`/consult/doctors?${doctorsQuery}`)} /> : null}
+              action={
+                doctors.length > 0 ? (
+                  <ViewAll
+                    onClick={() => navigate(`/consult/doctors?${doctorsQuery}`)}
+                  />
+                ) : null
+              }
             />
             {doctorsLoading && doctors.length === 0 ? (
-              <SkeletonGrid variant="doctor" count={3} label={T.loadingDoctors} className="am-doctor-grid" />
+              <SkeletonGrid
+                variant="doctor"
+                count={3}
+                label={T.loadingDoctors}
+                className="am-doctor-grid"
+              />
             ) : (
               <ul className="am-doctor-grid">
-                {doctors.map((item) => (
+                {doctors.slice(0, 4).map((item) => (
                   <li key={getDoctorId(item) || item.full_name}>
                     <DoctorCard item={item} />
                   </li>
@@ -362,7 +517,13 @@ export default function CategoryDoctor() {
             <SectionHeader
               id="cs-cd-diet"
               title={T.dietFor(scopeName)}
-              action={dietPlans.length > 0 ? <ViewAll onClick={() => navigate(`/diet?view=all&${catalogQuery}`)} /> : null}
+              action={
+                dietPlans.length > 0 ? (
+                  <ViewAll
+                    onClick={() => navigate(`/diet?view=all&${catalogQuery}`)}
+                  />
+                ) : null
+              }
             />
             {dietLoading && dietPlans.length === 0 ? (
               <RailSkeleton size="wide" count={3} />
@@ -373,20 +534,24 @@ export default function CategoryDoctor() {
                 trackClassName="cs-category-auto-rail__track"
                 itemClassName="cs-category-auto-rail__item"
               >
-                {dietPlans.map((item) => (
+                {dietPlans.slice(0, 4).map((item) => (
                   <MediaCard
                     key={item.id}
                     image={item.thumbnail_url || dietCoverImg}
                     title={item.title}
                     fallbackIcon={Salad}
-                    onClick={() => navigate(`/diet/${item.id}`, { state: { item } })}
+                    onClick={() =>
+                      navigate(`/diet/${item.id}`, { state: { item } })
+                    }
                   />
                 ))}
               </AutoScrollRail>
             )}
             {dietPlans.length > 0 ? (
               <div className="cs-category-page__diet-viewall">
-                <ViewAll onClick={() => navigate(`/diet?view=all&${catalogQuery}`)} />
+                <ViewAll
+                  onClick={() => navigate(`/diet?view=all&${catalogQuery}`)}
+                />
               </div>
             ) : null}
           </section>
@@ -397,7 +562,11 @@ export default function CategoryDoctor() {
             <SectionHeader
               id="cs-cd-yoga"
               title={T.yogaFor(scopeName)}
-              action={yogaSessions.length > 0 ? <ViewAll onClick={() => navigate(`/yoga?${catalogQuery}`)} /> : null}
+              action={
+                yogaSessions.length > 0 ? (
+                  <ViewAll onClick={() => navigate(`/yoga?${catalogQuery}`)} />
+                ) : null
+              }
             />
             {yogaLoading && yogaSessions.length === 0 ? (
               <RailSkeleton size="wide" count={3} />
@@ -408,13 +577,15 @@ export default function CategoryDoctor() {
                 trackClassName="cs-category-auto-rail__track"
                 itemClassName="cs-category-auto-rail__item"
               >
-                {yogaSessions.map((item) => (
+                {yogaSessions.slice(0, 4).map((item) => (
                   <MediaCard
                     key={item.id}
                     image={resolveYogaThumbnailUri(item) || yogaPosterImg}
                     title={item.title || item.name}
                     fallbackIcon={Flower2}
-                    onClick={() => navigate(`/yoga/${item.id}`, { state: { item } })}
+                    onClick={() =>
+                      navigate(`/yoga/${item.id}`, { state: { item } })
+                    }
                   />
                 ))}
               </AutoScrollRail>
@@ -427,13 +598,15 @@ export default function CategoryDoctor() {
             <SectionHeader
               id="cs-cd-products"
               title={productTitle}
-              description={showingGeneralProducts ? T.generalProductsNote : undefined}
+              description={
+                showingGeneralProducts ? T.generalProductsNote : undefined
+              }
             />
             {productsLoading && scopedProducts.length === 0 ? (
               <SkeletonGrid count={4} className="am-product-grid" />
             ) : (
               <ul className="am-product-grid">
-                {scopedProducts.map((item) => (
+                {scopedProducts.slice(0, 4).map((item) => (
                   <li key={item.variant_id || item.id}>
                     <ProductCard item={item} />
                   </li>
@@ -442,7 +615,11 @@ export default function CategoryDoctor() {
             )}
             {hasMore && scopedProducts.length > 0 ? (
               <div className="cs-more">
-                <Button variant="secondary" loading={loadingMore} onClick={loadMore}>
+                <Button
+                  variant="secondary"
+                  loading={loadingMore}
+                  onClick={loadMore}
+                >
                   {loadingMore ? T.loadingMore : T.loadMore}
                 </Button>
               </div>
@@ -451,7 +628,11 @@ export default function CategoryDoctor() {
         ) : null}
 
         {nothingFound ? (
-          <EmptyState icon={<Leaf size={28} />} title={T.concernEmpty} description={T.concernEmptyText} />
+          <EmptyState
+            icon={<Leaf size={28} />}
+            title={T.concernEmpty}
+            description={T.concernEmptyText}
+          />
         ) : null}
 
         <footer className="cs-foot">

@@ -548,7 +548,6 @@
     var(--am-green-700, var(--am-primary-hover))
   );
   color: var(--am-on-primary);
-  box-shadow: 0 6px 16px rgba(13, 97, 78, 0.28);
 }
 .am-chip__count {
   padding: 0 6px;

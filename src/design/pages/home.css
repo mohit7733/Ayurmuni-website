@@ -1344,13 +1344,12 @@
 }
 .hm-body .hm-diet-card {
   height: 330px;
-  min-height: 330px;
-  padding: 16px 16px 0;
+  padding: 12px 12px 6px;
   box-sizing: border-box;
 }
 .hm-body .hm-yoga-card {
-  height: 320px;
-  padding: 16px 16px 0;
+  height: auto;
+  padding: 12px 12px 12px;
   min-height: 0;
 }
 .hm-body .hm-yoga-card .am-media-card__img {
@@ -1363,9 +1362,9 @@
   object-fit: cover;
 }
 .hm-body .hm-yoga-card .am-media-card__body {
-  flex: 1 0 auto;
-  min-height: 70px;
-  padding: 14px 4px 18px;
+  flex: 0 0 auto;
+  min-height: 0;
+  padding: 10px 4px 8px;
   box-sizing: border-box;
 }
 .hm-body .hm-diet-card .am-media-card__img {
@@ -1376,9 +1375,9 @@
 }
 .hm-body .hm-diet-card .am-media-card__body {
   box-sizing: border-box;
-  flex: 0 0 auto;
+  flex: 1 1 auto;
   min-height: 0;
-  padding: 14px 4px 8px;
+  padding: 10px 4px 8px;
 }
 .hm-body .hm-diet-card .am-media-card__body h3 button {
   display: -webkit-box;
