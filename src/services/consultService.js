@@ -203,11 +203,30 @@ export const getAppointmentDetail = async (lookupId) => {
   return response;
 };
 
-export const appointmentActionAPI = async (appointmentId, payload) =>
-  apiClient(`customers/doctors/appointments/action/?id=${encodeURIComponent(String(appointmentId))}`, {
+export const appointmentActionAPI = async (appointmentId, payload = {}) => {
+  const body = { action: payload.action };
+
+  if (payload.action === 'reschedule') {
+    body.availability = String(payload.availability || '').trim();
+    body.reschedule_reason = String(payload.reschedule_reason || '').trim();
+  } else if (payload.action === 'confirm_reschedule') {
+    body.availability = String(payload.availability || '').trim();
+  } else if (payload.action === 'cancel') {
+    body.cancellation_reason = String(payload.cancellation_reason || '').trim();
+    const detail = String(payload.cancellation_reason_detail || '').trim();
+    if (body.cancellation_reason === 'other_reasonable_circumstance' && detail) {
+      body.cancellation_reason_detail = detail;
+    }
+  } else if (payload.action === 'mark_doctor_missed') {
+    const missed = String(payload.missed_reason || '').trim();
+    if (missed) body.missed_reason = missed;
+  }
+
+  return apiClient(`customers/doctors/appointments/action/?id=${encodeURIComponent(String(appointmentId))}`, {
     method: 'POST',
-    body: JSON.stringify(payload),
+    body: JSON.stringify(body),
   });
+};
 
 const pdfUrlFromJson = (json) =>
   json?.data?.url ||
