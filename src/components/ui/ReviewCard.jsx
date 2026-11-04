@@ -9,8 +9,12 @@ export default function ReviewCard({
   text,
   media = [],
   onMediaClick,
+  maxMedia,
   className,
 }) {
+  const limit = maxMedia > 0 ? maxMedia : media.length;
+  const shown = media.slice(0, limit);
+  const extra = media.length - shown.length;
   const initial = String(name || "A")
     .trim()
     .charAt(0)
@@ -28,9 +32,9 @@ export default function ReviewCard({
         <Rating value={rating} />
       </header>
       {text ? <p className="am-review__text">{text}</p> : null}
-      {media.length ? (
+      {shown.length ? (
         <ul className="am-review__media">
-          {media.map((item, index) => (
+          {shown.map((item, index) => (
             <li key={item.url || index}>
               <button
                 type="button"
@@ -44,6 +48,9 @@ export default function ReviewCard({
                 ) : (
                   <img src={item.url} alt="" loading="lazy" decoding="async" />
                 )}
+                {extra > 0 && index === shown.length - 1 ? (
+                  <span className="am-review__more" aria-hidden>+{extra}</span>
+                ) : null}
               </button>
             </li>
           ))}

@@ -1,0 +1,503 @@
+/* Page content aligns with the navbar: the header bar is full width with --am-gutter
+   padding, so every route container uses the same full width + --am-gutter.
+   Selectors start at .app-shell so they win over lazily loaded page CSS without !important.
+   Only the outer container is touched; inner layouts are unchanged. */
+
+/* Wrappers that capped width (detail 1200px, notifications 980px, product 1320px at 1440+) or subtracted the gutter
+   twice (width: min(container, 100% - 2 * gutter) plus gutter padding). */
+.app-shell .app-shell-body > .catalog-page,
+.app-shell .app-shell-body > .detail-page,
+.app-shell .app-shell-body > .dx-page,
+.app-shell .app-shell-body > .nt-page,
+.app-shell .app-shell-body > .pd-page {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+  padding-inline: var(--am-gutter);
+  box-sizing: border-box;
+}
+
+/* Product detail: the gallery was centred inside its column, leaving a gap at the left edge. */
+.app-shell .pd-page--brand .pd-gallery {
+  margin-inline: 0;
+}
+
+/* Navbar logo: greenlogo.png has transparent padding on the left of about 0.406x its height
+   (104px of a 1024x256 image). Pull the image left by that much so the visible mark sits on
+   the shared gutter, the same line the page content starts on. Desktop only: below 1024px the
+   menu button comes before the logo. */
+@media (min-width: 1024px) {
+  /* On the link, not the img: a negative margin on the img shrank the auto grid column and
+     squashed the logo. 40px logo -> 16.25px padding; 36px when the header is scrolled. */
+  .app-shell .site-brand {
+    margin-left: -16.25px;
+  }
+  .app-shell .site-header.is-elevated .site-brand {
+    margin-left: -14.6px;
+  }
+}
+
+/* Back buttons start on the content edge instead of hanging 8px outside it. */
+.app-shell .app-shell-body .am-back {
+  margin-left: 0;
+}
+
+/* Product detail: size the gallery column to the gallery itself (its height-capped width) so the
+   info card sits one grid gap away instead of leaving empty space inside a wide column. */
+@media (min-width: 860px) {
+  .app-shell .pd-page--brand .pd-layout {
+    grid-template-columns:
+      minmax(0, min(52%, max(320px, calc(100vh - var(--am-header-h, 64px) - 140px))))
+      minmax(0, 1fr);
+  }
+}
+
+/* Product detail: Reviews -> end of page, homepage rail pattern.
+   Arrows float over the track edges (no side gutters), cards use the
+   homepage product-rail sizes: 2 / 4 (>=768) / 6 (>=1280) per row, 8px gap. */
+.app-shell .pd-page--brand .pd-auto-rail:not(.is-static) {
+  display: block;
+  position: relative;
+  padding-bottom: 6px;
+}
+.app-shell .pd-page--brand .pd-auto-rail__bar { left: 0; right: 0; }
+.app-shell .pd-page--brand .pd-auto-rail__control {
+  position: absolute;
+  top: calc(50% - 21px);
+  z-index: 2;
+  width: 34px;
+  height: 34px;
+  background: color-mix(in srgb, var(--am-surface) 92%, transparent);
+  backdrop-filter: blur(4px);
+}
+.app-shell .pd-page--brand .pd-auto-rail__control:first-child { left: -6px; }
+.app-shell .pd-page--brand .pd-auto-rail__control:not(:first-child) { right: -6px; }
+.app-shell .pd-page--brand .pd-auto-rail:not(.is-static) .pd-discovery__grid,
+.app-shell .pd-page--brand .pd-auto-rail:not(.is-static) .pd-review-list {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+.app-shell .pd-page--brand .pd-discovery__grid,
+.app-shell .pd-page--brand .pd-review-list {
+  gap: 8px;
+  padding: 2px 0 8px;
+  scroll-padding-inline: 0;
+}
+.app-shell .pd-page--brand .pd-discovery__item {
+  flex: 0 0 calc((100% - 8px) / 2);
+  width: auto;
+  padding-block: 0;
+}
+.app-shell .pd-page--brand .pd-review-item {
+  flex: 0 0 86%;
+  width: auto;
+}
+@media (min-width: 640px) {
+  .app-shell .pd-page--brand .pd-review-item { flex-basis: calc((100% - 16px) / 3); }
+}
+@media (min-width: 768px) {
+  .app-shell .pd-page--brand .pd-discovery__item { flex-basis: calc((100% - 24px) / 4); }
+}
+@media (min-width: 1024px) {
+  .app-shell .pd-page--brand .pd-review-item { flex-basis: calc((100% - 24px) / 4); }
+}
+@media (min-width: 1280px) {
+  .app-shell .pd-page--brand .pd-discovery__item { flex-basis: calc((100% - 40px) / 6); }
+}
+@media (max-width: 639px) {
+  .app-shell .pd-page--brand .pd-auto-rail__control { display: none; }
+}
+
+/* Review cards: name + date, rating, 3-line text, neat square thumbs */
+.app-shell .pd-page--brand .pd-review-item > .am-review {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--am-line);
+  border-radius: 14px;
+  background: var(--am-surface);
+  box-shadow: var(--am-shadow-xs);
+}
+.app-shell .pd-page--brand .pd-review-item .am-review__head { margin: 0; }
+.app-shell .pd-page--brand .pd-review-item .am-review__text {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+.app-shell .pd-page--brand .pd-review-item .am-review__media {
+  display: flex;
+  gap: 6px;
+  margin: auto 0 0;
+  padding: 0;
+}
+.app-shell .pd-page--brand .pd-review-item .am-review__media button,
+.app-shell .pd-page--brand .pd-review-item .am-review__media img {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+/* Product detail info accordion: compact cards, 2 per row from 768px */
+.app-shell .pd-page--brand .pd-details { padding: 16px; gap: 10px; }
+.app-shell .pd-page--brand .pd-accordion {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+}
+@media (min-width: 768px) {
+  .app-shell .pd-page--brand .pd-accordion { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.app-shell .pd-page--brand .pd-accordion__item {
+  min-width: 0;
+  border: 1px solid var(--am-line);
+  border-radius: 12px;
+  background: var(--am-surface);
+  box-shadow: var(--am-shadow-xs);
+}
+.app-shell .pd-page--brand .pd-accordion__item.is-open { border-color: var(--am-line-strong); }
+.app-shell .pd-page--brand .pd-accordion__btn { padding: 10px 12px; }
+.app-shell .pd-page--brand .pd-accordion__btn em {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.app-shell .pd-page--brand .pd-accordion__item p { margin: 0; padding: 0 12px 12px; }
+/* Highlights + About this item: side by side from 768px, same grid/gap as the accordion */
+.app-shell .pd-page--brand .pd-details:has(> div > .pd-highlights, > div > .pd-about) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 12px 8px;
+}
+.app-shell .pd-page--brand .pd-details:has(> div > .pd-highlights, > div > .pd-about) > div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.app-shell .pd-page--brand .pd-details .pd-highlights--grid {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  margin: 0;
+}
+.app-shell .pd-page--brand .pd-details .pd-highlights--grid li { width: auto; max-width: none; }
+.app-shell .pd-page--brand .pd-details .pd-about { margin: 0; }
+@media (min-width: 768px) {
+  .app-shell .pd-page--brand .pd-details:has(> div > .pd-highlights):has(> div > .pd-about) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.app-shell .pd-page--brand .pd-details > div > .pd-more { align-self: flex-start; }
+
+/* Info card: pack cards left, qty + Add to cart + Buy now stacked on the right (>=768px).
+   Phones keep the stacked layout + sticky bar. */
+.app-shell .pd-page--brand .pd-pack-buy {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+/* Stepper bug: product-card-home.css paints every .am-stepper on the page solid
+   green, so the green - / + icons vanished and only a solid "1" block showed. */
+.app-shell .pd-page--brand .pd-purchase .am-stepper {
+  justify-content: space-between;
+  border: 1px solid var(--pd-hair, var(--am-line));
+  border-radius: 999px;
+  background: #fffdf8;
+  color: var(--pd-ink, var(--am-text));
+  box-shadow: none;
+}
+.app-shell .pd-page--brand .pd-purchase .am-stepper button { color: var(--am-brand-green); }
+.app-shell .pd-page--brand .pd-purchase .am-stepper.is-off { opacity: 0.6; }
+@media (min-width: 768px) {
+  .app-shell .pd-page--brand .pd-pack-buy {
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 12px;
+  }
+  .app-shell .pd-page--brand .pd-pack-buy > .pd-field { flex: 0 1 auto; min-width: 0; max-width: 62%; }
+  .app-shell .pd-page--brand .pd-pack-buy .pd-packs { flex-wrap: wrap; overflow: visible; gap: 8px; }
+  .app-shell .pd-page--brand .pd-pack-buy > .pd-purchase {
+    flex: 1 1 0;
+    min-width: 180px;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 8px;
+    padding-bottom: 6px;
+  }
+  .app-shell .pd-page--brand .pd-pack-buy .pd-purchase .am-stepper { align-self: stretch; height: 44px; }
+  .app-shell .pd-page--brand .pd-pack-buy .pd-purchase .pd-buy {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .app-shell .pd-page--brand .pd-pack-buy .pd-purchase .pd-buy .am-btn {
+    flex: none;
+    width: 100%;
+    height: 44px;
+    min-height: 44px;
+  }
+}
+/* 768-1023: the buttons now live in the card, so the sticky bar is not needed there */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .app-shell .pd-page--brand .pd-sticky { display: none; }
+}@media (min-width: 768px) {
+  .app-shell .pd-page--brand .pd-pack-buy > .pd-field { flex: 0 1 max-content; max-width: calc(100% - 212px); }
+  .app-shell .pd-page--brand .pd-pack-buy > .pd-purchase { min-width: 200px; }
+  .app-shell .pd-page--brand .pd-pack-buy .pd-purchase .pd-buy { width: 100%; max-width: none; }
+}@media (min-width: 768px) {
+  /* top-align the action column with the first row of pack cards (below the PACK label) */
+  .app-shell .pd-page--brand .pd-pack-buy { align-items: flex-start; }
+  .app-shell .pd-page--brand .pd-pack-buy > .pd-field + .pd-purchase { margin-top: 30px; padding-bottom: 0; }
+}
+/* Product detail discovery rails: two panels per row from 1024px; arrows only when the rail overflows */
+.app-shell .pd-page--brand .pd-auto-rail__control:disabled { display: none; }
+@media (min-width: 1024px) {
+  .app-shell .pd-page--brand .pd-discovery {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 24px;
+  }
+  /* half-width panels use the homepage half-panel card sizes: 2 per row, 3 from 1280px */
+  .app-shell .pd-page--brand .pd-discovery .pd-discovery__item { flex-basis: calc((100% - 8px) / 2); }
+}
+@media (min-width: 1280px) {
+  .app-shell .pd-page--brand .pd-discovery .pd-discovery__item { flex-basis: calc((100% - 16px) / 3); }
+}
+/* t60u: Reviews - fill width when few, balanced compact cards */
+.app-shell .pd-page--brand .pd-review-item > .am-review { min-height: 132px; justify-content: flex-start; gap: 10px; }
+.app-shell .pd-page--brand .pd-review-item > .am-review:hover { transform: none; }
+.app-shell .pd-page--brand .pd-review-item .am-review__head { align-items: center; gap: 10px; }
+.app-shell .pd-page--brand .pd-review-item .am-review__avatar {
+  width: 38px; height: 38px; font-size: 15px;
+  background: var(--am-green-50); color: var(--am-brand-green);
+  box-shadow: inset 0 0 0 1px var(--am-green-200);
+}
+.app-shell .pd-page--brand .pd-review-item .am-review__head .am-rating {
+  padding: 3px 8px; border-radius: 999px; background: var(--am-green-50); flex-shrink: 0;
+}
+.app-shell .pd-page--brand .pd-review-item .am-review__text {
+  display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; color: var(--am-text-soft);
+}
+.app-shell .pd-page--brand .pd-review-item .am-review__media { margin: 0; gap: 8px; overflow: visible; }
+.app-shell .pd-page--brand .pd-review-item .am-review__media button {
+  position: relative; width: 60px; height: 60px; border-radius: 10px; overflow: hidden;
+  border: 1px solid var(--am-line); padding: 0;
+}
+.app-shell .pd-page--brand .pd-review-item .am-review__media img { width: 100%; height: 100%; border-radius: 0; object-fit: cover; }
+.app-shell .pd-page--brand .am-review__more {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: rgba(11, 59, 48, 0.55); color: #fff; font-weight: 600; font-size: 14px;
+}
+@media (min-width: 640px) {
+  .app-shell .pd-page--brand .pd-review-list.pd-review-list--few {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    overflow: visible; gap: 12px;
+  }
+  .app-shell .pd-page--brand .pd-review-list--few > .pd-review-item { width: auto; flex: none; }
+}
+
+/* t61u: cap the action column next to the pack cards; no stray backgrounds behind buttons */
+@media (min-width: 768px) {
+  .app-shell .pd-page--brand .pd-pack-buy { justify-content: flex-start; }
+  .app-shell .pd-page--brand .pd-pack-buy > .pd-purchase {
+    flex: 0 1 340px; width: 100%; max-width: 340px; min-width: 200px;
+  }
+  .app-shell .pd-page--brand .pd-pack-buy .pd-purchase,
+  .app-shell .pd-page--brand .pd-pack-buy .pd-purchase .pd-buy {
+    background: none; box-shadow: none; border: 0;
+  }
+  .app-shell .pd-page--brand .pd-pack-buy .pd-purchase::before,
+  .app-shell .pd-page--brand .pd-pack-buy .pd-purchase::after,
+  .app-shell .pd-page--brand .pd-pack-buy .pd-purchase .pd-buy::after { content: none; display: none; }
+  .app-shell .pd-page--brand .pd-pack-buy .pd-purchase .pd-buy .am-btn--secondary { background: #fffdf8; box-shadow: none; }
+  .app-shell .pd-page--brand .pd-pack-buy .pd-purchase .pd-buy .am-btn--secondary:hover:not(:disabled) { background: var(--am-green-50); }
+}
+
+/* t63u: gallery - one clean edge, subtle progress line, flat image-filled thumbs */
+.app-shell .pd-page--brand .pd-gallery__main {
+  border: 1px solid var(--am-line);
+  box-shadow: 0 10px 28px -18px rgba(16, 83, 67, 0.28);
+  outline: 0;
+}
+.app-shell .pd-page--brand .pd-gallery__main::before,
+.app-shell .pd-page--brand .pd-gallery__main::after { content: none; display: none; }
+.app-shell .pd-page--brand .pd-gallery__progress {
+  left: 24px; right: 24px; bottom: 10px; height: 2px;
+  background: rgba(16, 83, 67, 0.12);
+}
+.app-shell .pd-page--brand .pd-gallery__progress::after { background: rgba(16, 83, 67, 0.55); }
+.app-shell .pd-page--brand .pd-thumbs { gap: 8px; padding: 2px; }
+.app-shell .pd-page--brand .pd-thumb {
+  flex: 0 0 68px; width: 68px; height: 68px;
+  padding: 0; overflow: hidden;
+  border: 1px solid var(--am-line); border-radius: 10px;
+  background: var(--am-surface-sunken, #f3eee3);
+  box-shadow: none; opacity: 0.72;
+}
+.app-shell .pd-page--brand .pd-thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 0; }
+.app-shell .pd-page--brand .pd-thumb:hover { opacity: 1; transform: none; }
+.app-shell .pd-page--brand .pd-thumb.is-on {
+  opacity: 1; border-color: var(--am-brand-green);
+  box-shadow: inset 0 0 0 1px var(--am-brand-green);
+}
+.app-shell .pd-page--brand .pd-thumb, .app-shell .pd-page--brand .pd-thumb.is-on { transform: none; }
+
+/* t64u: pack cards like gallery thumbs; action column clean (no clipped shadow strip) */
+.app-shell .pd-page--brand .pd-pack {
+  flex: 0 0 104px; width: 104px; min-height: 0;
+  gap: 2px; padding: 0 0 8px; overflow: hidden;
+  border: 1px solid var(--am-line); border-radius: 12px;
+  background: var(--am-surface, #fffdf8); box-shadow: none;
+}
+.app-shell .pd-page--brand .pd-pack.is-on {
+  border-color: var(--am-brand-green);
+  box-shadow: inset 0 0 0 1px var(--am-brand-green);
+}
+.app-shell .pd-page--brand .pd-pack__img {
+  width: 100%; height: 80px; margin-bottom: 4px;
+  background: var(--am-surface-sunken, #f3eee3); overflow: hidden;
+}
+.app-shell .pd-page--brand .pd-pack__img img {
+  width: 100%; height: 100%; max-width: none; max-height: none;
+  object-fit: cover; border-radius: 0;
+}
+.app-shell .pd-page--brand .pd-pack__size,
+.app-shell .pd-page--brand .pd-pack__price { padding-inline: 8px; line-height: 1.25; }
+.app-shell .pd-page--brand .pd-pack__size { font-size: 12px; }
+.app-shell .pd-page--brand .pd-pack__price { font-size: 14px; }
+.app-shell .pd-page--brand .pd-pack__check {
+  top: 6px; right: 6px; width: 16px; height: 16px;
+  box-shadow: 0 0 0 2px rgba(255, 253, 248, 0.9);
+}
+.app-shell .pd-page--brand .pd-pack__check svg { width: 10px; height: 10px; }
+.app-shell .pd-page--brand .pd-pack__best { top: 6px; left: 6px; z-index: 1; }
+.app-shell .pd-page--brand .pd-purchase .am-stepper { border-color: var(--am-line); }
+/* Root cause of the strip: the column clipped Buy now's drop shadow (and the hover lift) to a
+   square box. Let it overflow and keep the action buttons flat. */
+.app-shell .pd-page--brand .pd-pack-buy,
+.app-shell .pd-page--brand .pd-pack-buy .pd-purchase,
+.app-shell .pd-page--brand .pd-pack-buy .pd-purchase .pd-buy { overflow: visible; }
+.app-shell .pd-page--brand .pd-pack-buy .pd-purchase .pd-buy .am-btn,
+.app-shell .pd-page--brand .pd-pack-buy .pd-purchase .pd-buy .am-btn:hover:not(:disabled) {
+  box-shadow: none; transform: none; height: 44px; min-height: 44px;
+}
+@media (min-width: 768px) {
+  .app-shell .pd-page--brand .pd-pack-buy > .pd-field { flex: 0 0 auto; max-width: none; }
+  .app-shell .pd-page--brand .pd-pack-buy .pd-packs {
+    display: grid; grid-template-columns: repeat(1, 104px); gap: 8px; overflow: visible;
+  }
+  .app-shell .pd-page--brand .pd-pack-buy .pd-packs:has(> .pd-pack:nth-child(2)) { grid-template-columns: repeat(2, 104px); }
+  .app-shell .pd-page--brand .pd-pack-buy > .pd-purchase { flex: 1 1 200px; max-width: 340px; }
+}
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .app-shell .pd-page--brand .pd-pack-buy .pd-packs:has(> .pd-pack:nth-child(2)) { grid-template-columns: 104px; }
+}
+
+/* t65u: Product detail top grid = exact 50/50 (gallery | info) wherever the columns sit side by side */
+@media (min-width: 860px) {
+  .app-shell .pd-page--brand .pd-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+}
+/* t67u: image box keeps its previous height (old square size) at the 50/50 width; image covers */
+@media (min-width: 860px) {
+  .app-shell .pd-page--brand .pd-layout { container-type: inline-size; }
+  .app-shell .pd-page--brand .pd-gallery__main {
+    aspect-ratio: auto;
+    height: min(52cqw, max(320px, calc(100vh - var(--am-header-h, 64px) - 140px)));
+  }
+}
+
+/* t68u: the brand CSS caps .pd-gallery at (100vh - header - 140px); on short viewports (zoom, small screens) that made
+   the image narrower than its 50% column. Drop the width cap; the image box height rule above still uses the same cap. */
+@media (min-width: 860px) {
+  .app-shell .pd-page--brand .pd-gallery { max-width: none; }
+}
+
+/* t70u: buttons never overflow the info card. Cause: the pack column was flex: 0 0 auto (no shrink) and the
+   button column had min-width: 200px, so in a narrow 50/50 info column pack + gap + 200px was wider than the
+   card and the card clipped the buttons and the trust row. Now sized from the actual width of the pack/buy row. */
+.app-shell .pd-page--brand .pd-info { container: pdinfo / inline-size; min-width: 0; }
+.app-shell .pd-page--brand .pd-pack-buy { container: pdbuy / inline-size; width: 100%; }
+@media (min-width: 768px) {
+  .app-shell .pd-page--brand .pd-pack-buy > .pd-purchase { min-width: 0; flex: 1 1 0; max-width: 340px; }
+  .app-shell .pd-page--brand .pd-pack-buy .pd-purchase .pd-buy,
+  .app-shell .pd-page--brand .pd-pack-buy .pd-purchase .am-stepper,
+  .app-shell .pd-page--brand .pd-pack-buy .pd-purchase .pd-buy .am-btn { min-width: 0; max-width: 100%; box-sizing: border-box; }
+}
+/* two pack cards side by side need 220px; drop to one column of packs before squeezing the buttons */
+@container pdbuy (max-width: 400px) {
+  .app-shell .pd-page--brand .pd-pack-buy .pd-packs:has(> .pd-pack:nth-child(2)) { grid-template-columns: 104px; }
+}
+/* not enough room for pack card + 170px buttons: buttons go under the pack card, full width */
+@container pdbuy (max-width: 290px) {
+  .app-shell .pd-page--brand .pd-pack-buy { flex-direction: column; align-items: stretch; }
+  .app-shell .pd-page--brand .pd-pack-buy > .pd-field + .pd-purchase { margin-top: 0; }
+  .app-shell .pd-page--brand .pd-pack-buy > .pd-purchase { flex: none; width: 100%; max-width: none; }
+}
+/* trust row: shrink/wrap text instead of being cut off */
+.app-shell .pd-page--brand .pd-trust li { min-width: 0; overflow-wrap: anywhere; }
+@container pdinfo (max-width: 360px) {
+  .app-shell .pd-page--brand .pd-trust { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* t71u: balanced pack row. Compact 40px controls (3 x 40 + 2 x 8 = 136px stack), pack card stretched to the same 136px
+   so tops and bottoms line up; action column capped at 300px; one border weight and colour everywhere. */
+@media (min-width: 768px) {
+  .app-shell .pd-page--brand .pd-pack-buy > .pd-purchase { flex: 1 1 0; max-width: 300px; gap: 8px; }
+  .app-shell .pd-page--brand .pd-pack-buy .pd-purchase .pd-buy { gap: 8px; }
+  .app-shell .pd-page--brand .pd-pack-buy .pd-purchase .am-stepper {
+    height: 40px; min-height: 40px; padding: 0 4px; border: 1px solid var(--am-line); font-size: 15px; font-weight: 600;
+  }
+  .app-shell .pd-page--brand .pd-pack-buy .pd-purchase .am-stepper button {
+    width: 32px; height: 32px; min-width: 32px; min-height: 32px; padding: 0; border-radius: 999px; font-size: 16px;
+  }
+  .app-shell .pd-page--brand .pd-pack-buy .pd-purchase .am-stepper button:hover:not(:disabled) { background: var(--am-green-50); }
+  .app-shell .pd-page--brand .pd-pack-buy .pd-purchase .pd-buy .am-btn,
+  .app-shell .pd-page--brand .pd-pack-buy .pd-purchase .pd-buy .am-btn:hover:not(:disabled) {
+    height: 40px; min-height: 40px; padding-inline: 16px; font-size: 15px; border-width: 1px;
+  }
+  .app-shell .pd-page--brand .pd-pack-buy .pd-pack { height: 136px; display: flex; flex-direction: column; }
+  .app-shell .pd-page--brand .pd-pack-buy .pd-pack__img { flex: 1 1 auto; height: auto; min-height: 0; }
+}
+
+/* t72u: Highlights and About this item share one card treatment (same border, radius, padding, background, type)
+   and stretch to equal height in the two-column layout. */
+.app-shell .pd-page--brand .pd-details:has(> div > .pd-highlights, > div > .pd-about-card) { align-items: stretch; }
+.app-shell .pd-page--brand .pd-details .pd-highlights--grid,
+.app-shell .pd-page--brand .pd-details .pd-about-card {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid rgba(216, 204, 180, 0.8);
+  border-radius: 14px;
+  background: #fffdf8;
+  box-sizing: border-box;
+}
+.app-shell .pd-page--brand .pd-details .pd-highlights--grid li {
+  padding: 0; border: 0; border-radius: 0; background: none;
+  font-size: 14.5px; line-height: 1.55; color: #33433e;
+}
+.app-shell .pd-page--brand .pd-details .pd-about-card .pd-about {
+  margin: 0; max-width: none; font-size: 14.5px; line-height: 1.55; color: #33433e;
+}
+.app-shell .pd-page--brand .pd-details .pd-about-card .pd-more { align-self: flex-start; margin: 0; }
+
+/* t72u-b: two columns again now that About sits in .pd-about-card; buttons stay 40px in the 768-1023 range too */
+@media (min-width: 768px) {
+  .app-shell .pd-page--brand .pd-details:has(> div > .pd-highlights):has(> div > .pd-about-card) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .app-shell .pd-page--brand .pd-info .pd-pack-buy .pd-purchase .pd-buy .am-btn { height: 40px; min-height: 40px; }
+}

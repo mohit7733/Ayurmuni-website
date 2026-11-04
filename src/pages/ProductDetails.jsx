@@ -86,6 +86,12 @@ const galleryFromProduct = (product, variant) => {
   return urls;
 };
 
+const formatReviewDate = (value) => {
+  if (!value) return '';
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+};
+
 export default function ProductDetails({ medicine = false } = {}) {
   const { variantId } = useParams();
   const navigate = useNavigate();
@@ -680,6 +686,7 @@ export default function ProductDetails({ medicine = false } = {}) {
               </span>
             </p>
 
+            <div className="pd-pack-buy">
             {variants.length > 0 ? (
               <div className="pd-field">
                 <div className="pd-field__row">
@@ -754,6 +761,7 @@ export default function ProductDetails({ medicine = false } = {}) {
               </div>
               {renderBuyActions()}
             </div>
+            </div>
             {maxQty != null && maxQty > 0 && maxQty <= LOW_STOCK_THRESHOLD && qty >= maxQty ? (
               <p className="pd-qty-note">
                 {maxQty === 1 ? T.onlyOne : `Only ${maxQty} items available.`}
@@ -799,12 +807,14 @@ export default function ProductDetails({ medicine = false } = {}) {
             {fullDescription ? (
               <div>
                 <h2 className="pd-details__title">{T.about}</h2>
-                <p className="pd-about">{aboutPreview}</p>
-                {fullDescription.length > 140 ? (
-                  <button type="button" className="pd-more" onClick={() => setDescExpanded((open) => !open)}>
-                    {descExpanded ? T.showLess : T.readMore}
-                  </button>
-                ) : null}
+                <div className="pd-about-card">
+                  <p className="pd-about">{aboutPreview}</p>
+                  {fullDescription.length > 140 ? (
+                    <button type="button" className="pd-more" onClick={() => setDescExpanded((open) => !open)}>
+                      {descExpanded ? T.showLess : T.readMore}
+                    </button>
+                  ) : null}
+                </div>
               </div>
             ) : null}
           </section>
@@ -857,7 +867,6 @@ export default function ProductDetails({ medicine = false } = {}) {
                       >
                         <span>
                           <strong>{link.label}</strong>
-                          {!open ? <em>{link.preview}</em> : null}
                         </span>
                         <ChevronDown size={16} aria-hidden />
                       </button>
@@ -909,7 +918,7 @@ export default function ProductDetails({ medicine = false } = {}) {
             <AutoScrollRail
               label="Product reviews"
               className="pd-auto-rail"
-              trackClassName="pd-review-list"
+              trackClassName={reviews.length <= 3 ? 'pd-review-list pd-review-list--few' : 'pd-review-list'}
               itemClassName="pd-review-item"
             >
               {reviews.slice(0, 5).map((item, index) => {
@@ -922,8 +931,10 @@ export default function ProductDetails({ medicine = false } = {}) {
                     key={item.id || index}
                     name={item.patient_name || 'Patient'}
                     rating={item.rating}
+                    date={formatReviewDate(item.created_at || item.updated_at || item.date)}
                     text={item.comment || item.review || item.message || ''}
                     media={media}
+                    maxMedia={4}
                     onMediaClick={(mediaIndex) =>
                       navigate('/reviews/gallery', {
                         state: { images: item.image_urls, selectedIndex: mediaIndex },

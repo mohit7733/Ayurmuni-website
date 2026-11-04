@@ -1,5 +1,6 @@
 import { Utils } from '../common/utils';
 import { BaseUrl } from '../config/key';
+import { roundMoney } from '../cart/feeQuote';
 import { toApiPaymentGateway } from '../payment/gateways';
 import { apiClient } from './apiClient';
 
@@ -50,7 +51,7 @@ export const buildOrderPayload = ({
       shipping_method,
       shipping_charges: Number(shipping_charges) || 0,
       cod_charges: isCod ? Number(cod_charges) || 0 : 0,
-      prepaid_amount: Math.max(0, Math.round(Number(prepaid_amount) || 0)),
+      prepaid_amount: roundMoney(Math.max(0, Number(prepaid_amount) || 0)),
       cart_item_ids: buildCartItemIds(cartItems),
       gift_wrap_item_ids: buildGiftWrapItemIds(cartItems),
     },

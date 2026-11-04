@@ -258,6 +258,15 @@ export default function Checkout() {
     [feeConfig, subtotal, couponDiscount, method, appliedCoupon?.code],
   );
 
+  const quotedLineTotal = (item) => {
+    const id = String(item.cart_item_id || item.id || '');
+    const quoted = (feeConfig?.items || []).find((row) => row.id && row.id === id);
+    if (quoted?.sellingPrice > 0) {
+      return quoted.sellingPrice * (quoted.quantity || Number(item.quantity) || 1);
+    }
+    return Number(item.price) * Number(item.quantity);
+  };
+
   const shipping = feeBreakdown.shipping;
   const gst = feeBreakdown.gst;
   const platform = feeBreakdown.platformFee;
@@ -641,7 +650,7 @@ export default function Checkout() {
                     <small>{T.qty(item.quantity)}</small>
                   </p>
                   <strong className="co-item__price">
-                    {money(Number(item.price) * Number(item.quantity))}
+                    {money(quotedLineTotal(item))}
                   </strong>
                 </button>
               ))}
