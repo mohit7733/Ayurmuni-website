@@ -34,7 +34,7 @@ import {
   getConsultBenefit,
   consultationCheckout,
   isApiSuccess,
-  isConsultationPaymentConfirmed,
+  isBookingAlreadyPaid,
   isConsultationPaymentSettled,
   isDuplicateGatewayOrder,
   isPaymentAlreadyExists,
@@ -173,17 +173,7 @@ export default function ConsultPay() {
       setFeeQuoteLoading(true);
       try {
         const response = await getConsultationFeeQuote(slot.id, couponCode);
-        const raw = response?.data ?? response;
-        const parsed = parseFeeQuoteConfig(raw, slotAmount);
-        // Fee-quote sets total_payable_amount to 0 whenever a plan can fund the slot.
-        // That zero is only for "use plan". Pay normally must keep the cash total.
-        if (
-          parsed &&
-          raw?.package_funding?.can_fund === true &&
-          Number(parsed.summaryTotalPayable) === 0
-        ) {
-          parsed.summaryTotalPayable = null;
-        }
+        const parsed = parseFeeQuoteConfig(response?.data ?? response, slotAmount);
         setQuotedCouponCode(String(couponCode || "").trim());
         setFeeQuote(isApiSuccess(response) && parsed ? parsed : null);
       } catch {
@@ -386,24 +376,17 @@ export default function ConsultPay() {
           medical_record_ids: booking.medical_record_ids,
           ...(planPayable > 0 ? { payment_gateway: apiGateway } : {}),
         });
-        if (paymentResponse?.data?.funded_by_package === true) {
-          if (!isConsultationPaymentConfirmed(paymentResponse)) {
-            showSuccessToast(
-              paymentResponse?.message || "The plan did not confirm this visit.",
-              "error",
-            );
-            return;
-          }
-          finish(
-            paymentResponse,
-            paymentResponse?.message || "Appointment confirmed with your plan",
-          );
-          return;
-        }
         if (!isApiSuccess(paymentResponse)) {
           showSuccessToast(
             paymentResponse?.message || "Unable to book with this plan",
             "error",
+          );
+          return;
+        }
+        if (!hasGatewayOrder(paymentResponse?.data)) {
+          finish(
+            paymentResponse,
+            paymentResponse?.message || "Appointment confirmed with your plan",
           );
           return;
         }
@@ -442,7 +425,6 @@ export default function ConsultPay() {
             medical_record_ids: booking.medical_record_ids,
             coupon_code: appliedCoupon?.code,
             payment_gateway: apiGateway,
-            skip_package_funding: true,
           });
           const existing = consultationCheckout(paymentResponse);
           const duplicateAppointmentId = isDuplicateGatewayOrder(paymentResponse)
@@ -471,17 +453,6 @@ export default function ConsultPay() {
           }
         }
       }
-      if (
-        !planPurchaseId &&
-        paymentResponse?.data?.funded_by_package === true &&
-        !hasGatewayOrder(paymentResponse?.data)
-      ) {
-        showSuccessToast(
-          "Pay normally should open the payment gateway. This visit was booked with your plan instead.",
-          "error",
-        );
-        return;
-      }
       if (!isApiSuccess(paymentResponse)) {
         const alreadyBooked = String(paymentResponse?.message || "")
           .toLowerCase()
@@ -508,6 +479,13 @@ export default function ConsultPay() {
         ...paymentResponse,
         data: { ...(paymentResponse?.data || {}), ...payment },
       });
+      if (isBookingAlreadyPaid(paymentData)) {
+        finish(
+          paymentResponse,
+          paymentResponse?.message || "Appointment confirmed",
+        );
+        return;
+      }
       const payable = consultPayableRupees(payment, totalAmount);
       const checkout = extractCashfreeCheckout({
         ...paymentResponse,
