@@ -35,7 +35,6 @@ import {
   consultationCheckout,
   isApiSuccess,
   isBookingAlreadyPaid,
-  isConsultationPaymentConfirmed,
   isConsultationPaymentSettled,
   isDuplicateGatewayOrder,
   isPaymentAlreadyExists,
@@ -46,7 +45,7 @@ import {
   readAppointmentId,
   readPlanFunding,
 } from "../consult/consultPayment";
-import { toApiPaymentGateway } from "../payment/gateways";
+import { hasGatewayOrder, toApiPaymentGateway } from "../payment/gateways";
 import { openRazorpayCheckout, toRazorpayPaise } from "../payment/razorpayCheckout";
 import {
   createConsultationPayment,
@@ -377,24 +376,17 @@ export default function ConsultPay() {
           medical_record_ids: booking.medical_record_ids,
           ...(planPayable > 0 ? { payment_gateway: apiGateway } : {}),
         });
-        if (paymentResponse?.data?.funded_by_package === true) {
-          if (!isConsultationPaymentConfirmed(paymentResponse)) {
-            showSuccessToast(
-              paymentResponse?.message || "The plan did not confirm this visit.",
-              "error",
-            );
-            return;
-          }
-          finish(
-            paymentResponse,
-            paymentResponse?.message || "Appointment confirmed with your plan",
-          );
-          return;
-        }
         if (!isApiSuccess(paymentResponse)) {
           showSuccessToast(
             paymentResponse?.message || "Unable to book with this plan",
             "error",
+          );
+          return;
+        }
+        if (!hasGatewayOrder(paymentResponse?.data)) {
+          finish(
+            paymentResponse,
+            paymentResponse?.message || "Appointment confirmed with your plan",
           );
           return;
         }
@@ -487,8 +479,7 @@ export default function ConsultPay() {
         ...paymentResponse,
         data: { ...(paymentResponse?.data || {}), ...payment },
       });
-      // Same as the app: no gateway order means the visit is already confirmed.
-      if (!planPurchaseId && isBookingAlreadyPaid(paymentData)) {
+      if (isBookingAlreadyPaid(paymentData)) {
         finish(
           paymentResponse,
           paymentResponse?.message || "Appointment confirmed",
