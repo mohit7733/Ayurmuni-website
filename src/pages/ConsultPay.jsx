@@ -34,6 +34,7 @@ import {
   getConsultBenefit,
   consultationCheckout,
   isApiSuccess,
+  isBookingAlreadyPaid,
   isConsultationPaymentConfirmed,
   isConsultationPaymentSettled,
   isDuplicateGatewayOrder,
@@ -45,7 +46,7 @@ import {
   readAppointmentId,
   readPlanFunding,
 } from "../consult/consultPayment";
-import { hasGatewayOrder, toApiPaymentGateway } from "../payment/gateways";
+import { toApiPaymentGateway } from "../payment/gateways";
 import { openRazorpayCheckout, toRazorpayPaise } from "../payment/razorpayCheckout";
 import {
   createConsultationPayment,
@@ -173,17 +174,7 @@ export default function ConsultPay() {
       setFeeQuoteLoading(true);
       try {
         const response = await getConsultationFeeQuote(slot.id, couponCode);
-        const raw = response?.data ?? response;
-        const parsed = parseFeeQuoteConfig(raw, slotAmount);
-        // Fee-quote sets total_payable_amount to 0 whenever a plan can fund the slot.
-        // That zero is only for "use plan". Pay normally must keep the cash total.
-        if (
-          parsed &&
-          raw?.package_funding?.can_fund === true &&
-          Number(parsed.summaryTotalPayable) === 0
-        ) {
-          parsed.summaryTotalPayable = null;
-        }
+        const parsed = parseFeeQuoteConfig(response?.data ?? response, slotAmount);
         setQuotedCouponCode(String(couponCode || "").trim());
         setFeeQuote(isApiSuccess(response) && parsed ? parsed : null);
       } catch {
@@ -442,7 +433,6 @@ export default function ConsultPay() {
             medical_record_ids: booking.medical_record_ids,
             coupon_code: appliedCoupon?.code,
             payment_gateway: apiGateway,
-            skip_package_funding: true,
           });
           const existing = consultationCheckout(paymentResponse);
           const duplicateAppointmentId = isDuplicateGatewayOrder(paymentResponse)
@@ -471,17 +461,6 @@ export default function ConsultPay() {
           }
         }
       }
-      if (
-        !planPurchaseId &&
-        paymentResponse?.data?.funded_by_package === true &&
-        !hasGatewayOrder(paymentResponse?.data)
-      ) {
-        showSuccessToast(
-          "Pay normally should open the payment gateway. This visit was booked with your plan instead.",
-          "error",
-        );
-        return;
-      }
       if (!isApiSuccess(paymentResponse)) {
         const alreadyBooked = String(paymentResponse?.message || "")
           .toLowerCase()
@@ -508,6 +487,14 @@ export default function ConsultPay() {
         ...paymentResponse,
         data: { ...(paymentResponse?.data || {}), ...payment },
       });
+      // Same as the app: no gateway order means the visit is already confirmed.
+      if (!planPurchaseId && isBookingAlreadyPaid(paymentData)) {
+        finish(
+          paymentResponse,
+          paymentResponse?.message || "Appointment confirmed",
+        );
+        return;
+      }
       const payable = consultPayableRupees(payment, totalAmount);
       const checkout = extractCashfreeCheckout({
         ...paymentResponse,
