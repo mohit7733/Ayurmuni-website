@@ -157,9 +157,14 @@
 
 /* Clear chip (5th child only exists when filters are active) */
 .payments-page .payments-filters .chip:nth-child(5) {
-  border-style: dashed;
-  background: transparent;
+  background: var(--am-surface);
   color: var(--am-danger);
+}
+
+.payments-page .payments-filters .chip:nth-child(5):hover {
+  border-color: var(--am-danger);
+  color: var(--am-danger);
+  box-shadow: none;
 }
 
 .payments-page .payments-source .chip:focus-visible,

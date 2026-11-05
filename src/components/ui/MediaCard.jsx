@@ -1,9 +1,16 @@
-import { Leaf } from 'lucide-react';
-import { cx } from './cx';
+import { Leaf } from "lucide-react";
+import { cx } from "./cx";
 
-export default function MediaCard({ image, title, subtitle, fallbackIcon: FallbackIcon = Leaf, onClick, className }) {
+export default function MediaCard({
+  image,
+  title,
+  subtitle,
+  fallbackIcon: FallbackIcon = Leaf,
+  onClick,
+  className,
+}) {
   return (
-    <article className={cx('am-media-card', className)}>
+    <article className={cx("am-media-card", className)}>
       <div className="am-media-card__img">
         {image ? (
           <img src={image} alt="" loading="lazy" decoding="async" />
@@ -12,7 +19,7 @@ export default function MediaCard({ image, title, subtitle, fallbackIcon: Fallba
         )}
       </div>
       <div className="am-media-card__body">
-        <h3>
+        <h3 title={title}>
           <button type="button" className="am-stretched" onClick={onClick}>
             {title}
           </button>

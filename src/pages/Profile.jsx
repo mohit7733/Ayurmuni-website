@@ -1,27 +1,33 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ChevronRight, LogOut } from 'lucide-react';
-import AppShell from '../components/AppShell';
-import PageHeader from '../components/PageHeader';
-import ReferralCard from '../components/ReferralCard';
-import { Utils } from '../common/utils';
-import { showSuccessToast } from '../config/key';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { ChevronRight, LogOut, Phone, Mail } from "lucide-react";
+import AppShell from "../components/AppShell";
+import PageHeader from "../components/PageHeader";
+import ReferralCard from "../components/ReferralCard";
+import { Utils } from "../common/utils";
+import { showSuccessToast } from "../config/key";
 import {
   getAccessLevel,
   isProfileComplete,
   navigateToCompleteDetails,
   resolveAccessLikeProfile,
-} from '../services/guestAuth';
-import { deleteAccount } from '../services/profileService';
-import { useLocation as useDeliveryLocation } from '../context/LocationContext';
-import { Button, Disclaimer, Modal, Skeleton, SkeletonText } from '../components/ui';
+} from "../services/guestAuth";
+import { deleteAccount } from "../services/profileService";
+import { useLocation as useDeliveryLocation } from "../context/LocationContext";
+import {
+  Button,
+  Disclaimer,
+  Modal,
+  Skeleton,
+  SkeletonText,
+} from "../components/ui";
 import {
   PROFILE_ACCOUNT,
   PROFILE_COPY as T,
   PROFILE_EXPLORE,
   PROFILE_PREFERENCE,
-} from '../content/profile';
-import '../design/pages/profile.css';
+} from "../content/profile";
+import "../design/pages/profile.css";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -38,21 +44,25 @@ export default function Profile() {
     let alive = true;
     (async () => {
       const access = await getAccessLevel();
-      if (access === 'logged_out') {
+      if (access === "logged_out") {
         if (alive) {
-          setLevel('logged_out');
+          setLevel("logged_out");
           setUser(null);
         }
         return;
       }
       const resolved = await resolveAccessLikeProfile();
       if (!alive) return;
-      if (resolved.isComplete || resolved.level === 'full' || isProfileComplete(resolved.profile)) {
-        setLevel('full');
+      if (
+        resolved.isComplete ||
+        resolved.level === "full" ||
+        isProfileComplete(resolved.profile)
+      ) {
+        setLevel("full");
         setUser(resolved.profile);
         return;
       }
-      setLevel(resolved.level === 'guest' ? 'guest' : 'full');
+      setLevel(resolved.level === "guest" ? "guest" : "full");
       setUser(resolved.profile);
     })();
     return () => {
@@ -63,8 +73,8 @@ export default function Profile() {
   const logout = async () => {
     await clearLocationSession();
     await Utils.clearAllData();
-    showSuccessToast('Signed out successfully', 'success');
-    navigate('/welcome', { replace: true });
+    showSuccessToast("Signed out successfully", "success");
+    navigate("/welcome", { replace: true });
   };
 
   const onDelete = async () => {
@@ -73,7 +83,7 @@ export default function Profile() {
     const res = await deleteAccount();
     setDeleting(false);
     if (res?.success === false) {
-      showSuccessToast(res?.message || 'Unable to delete account', 'error');
+      showSuccessToast(res?.message || "Unable to delete account", "error");
       return;
     }
     const days = Number(res?.data?.retention_days ?? res?.retention_days ?? 30);
@@ -85,7 +95,7 @@ export default function Profile() {
   const finishDelete = async () => {
     await clearLocationSession();
     await Utils.clearAllData();
-    navigate('/welcome', { replace: true });
+    navigate("/welcome", { replace: true });
   };
 
   const go = (item) => {
@@ -102,7 +112,9 @@ export default function Profile() {
         <section className="pf-page" aria-busy="true" aria-label={T.loading}>
           <PageHeader title={T.title} subtitle={T.subtitle} hideBack />
           <div className="pf-skel">
-            <Skeleton style={{ height: 96, borderRadius: 'var(--am-radius-xl)' }} />
+            <Skeleton
+              style={{ height: 96, borderRadius: "var(--am-radius-xl)" }}
+            />
             <SkeletonText lines={4} />
           </div>
         </section>
@@ -110,13 +122,13 @@ export default function Profile() {
     );
   }
 
-  if (level === 'logged_out') {
+  if (level === "logged_out") {
     return (
       <AppShell tab="profile">
         <section className="pf-page pf-gate">
           <PageHeader title={T.gateTitle} hideBack />
           <p className="pf-guest__text">{T.gateText}</p>
-          <Button variant="primary" onClick={() => navigate('/login')}>
+          <Button variant="primary" onClick={() => navigate("/login")}>
             {T.logIn}
           </Button>
         </section>
@@ -124,7 +136,7 @@ export default function Profile() {
     );
   }
 
-  if (level === 'guest') {
+  if (level === "guest") {
     return (
       <AppShell tab="profile">
         <section className="pf-page pf-gate">
@@ -140,7 +152,7 @@ export default function Profile() {
               block
               onClick={() =>
                 navigateToCompleteDetails(
-                  'Complete your profile and prakriti assessment to continue.',
+                  "Complete your profile and prakriti assessment to continue.",
                 )
               }
             >
@@ -172,9 +184,10 @@ export default function Profile() {
     );
   }
 
-  const name = `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || 'Member';
-  const photo = String(user?.profile_picture || '').trim();
-  const phone = String(user?.phone_number || '').slice(-10);
+  const name =
+    `${user?.first_name || ""} ${user?.last_name || ""}`.trim() || "Member";
+  const photo = String(user?.profile_picture || "").trim();
+  const phone = String(user?.phone_number || "").slice(-10);
 
   return (
     <AppShell tab="profile">
@@ -184,30 +197,54 @@ export default function Profile() {
           subtitle={T.subtitle}
           hideBack
           actions={
-            <Button variant="secondary" size="sm" onClick={() => navigate('/profile/edit')}>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => navigate("/profile/edit")}
+            >
               {T.edit}
             </Button>
           }
         />
 
         <div className="pf-hero">
-          <div className="pf-hero__avatar" aria-hidden>
-            {photo ? <img src={photo} alt="" /> : <span>{name.charAt(0)}</span>}
+          <div className="pf-hero__avatar-wrap">
+            <div className="pf-hero__avatar" aria-hidden="true">
+              {photo ? (
+                <img src={photo} alt="" />
+              ) : (
+                <span>{name?.charAt(0)?.toUpperCase() || "U"}</span>
+              )}
+            </div>
           </div>
+
           <div className="pf-hero__copy">
-            <h2>{name}</h2>
-            <p className="pf-hero__meta">
-              {phone ? `+91 ${phone}` : ''}
-              {user?.email ? `${phone ? ' · ' : ''}${user.email}` : ''}
-            </p>
-            <Button
-              className="pf-hero__link"
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/prakriti-profile')}
-            >
-              {T.viewPrakriti}
-            </Button>
+            <div className="pf-hero__heading">
+              <span className="pf-hero__eyebrow">MY ACCOUNT</span>
+              <h2 title={name}>{name || "User"}</h2>
+            </div>
+
+            <div className="pf-hero__details">
+              {phone && (
+                <div className="pf-hero__detail">
+                  <span className="pf-hero__detail-icon">
+                    <Phone size={16} />
+                  </span>
+                  <span className="pf-hero__detail-text">+91 {phone}</span>
+                </div>
+              )}
+
+              {user?.email && (
+                <div className="pf-hero__detail">
+                  <span className="pf-hero__detail-icon">
+                    <Mail size={16} />
+                  </span>
+                  <span className="pf-hero__detail-text" title={user.email}>
+                    {user.email}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -235,7 +272,12 @@ export default function Profile() {
             <h3>{T.accountSection}</h3>
             <div className="pf-menu__list">
               {PROFILE_ACCOUNT.map((item) => (
-                <button key={item.title} type="button" className="pf-menu__row" onClick={() => go(item)}>
+                <button
+                  key={item.title}
+                  type="button"
+                  className="pf-menu__row"
+                  onClick={() => go(item)}
+                >
                   <span>{item.title}</span>
                   <em aria-hidden>
                     <ChevronRight size={18} />
@@ -259,7 +301,12 @@ export default function Profile() {
             <h3>{T.preferenceSection}</h3>
             <div className="pf-menu__list">
               {PROFILE_PREFERENCE.map((item) => (
-                <button key={item.title} type="button" className="pf-menu__row" onClick={() => go(item)}>
+                <button
+                  key={item.title}
+                  type="button"
+                  className="pf-menu__row"
+                  onClick={() => go(item)}
+                >
                   <span>{item.title}</span>
                   <em aria-hidden>
                     <ChevronRight size={18} />
@@ -308,7 +355,11 @@ export default function Profile() {
         dismissible={!deleting}
         footer={
           <>
-            <Button variant="secondary" disabled={deleting} onClick={() => setDeleteOpen(false)}>
+            <Button
+              variant="secondary"
+              disabled={deleting}
+              onClick={() => setDeleteOpen(false)}
+            >
               {T.deleteCancel}
             </Button>
             <Button variant="danger" loading={deleting} onClick={onDelete}>

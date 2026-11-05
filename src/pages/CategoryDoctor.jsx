@@ -325,6 +325,8 @@ export default function CategoryDoctor() {
 
   const conditionsTrackRef = useRef(null);
 
+  const [hasConditionsOverflow, setHasConditionsOverflow] = useState(false);
+
   const [canScrollConditionsLeft, setCanScrollConditionsLeft] = useState(false);
 
   const [canScrollConditionsRight, setCanScrollConditionsRight] =
@@ -334,6 +336,10 @@ export default function CategoryDoctor() {
     const element = conditionsTrackRef.current;
     if (!element) return;
 
+    const rail = element.parentElement;
+    setHasConditionsOverflow(
+      Boolean(rail && element.scrollWidth > rail.clientWidth + 2),
+    );
     setCanScrollConditionsLeft(element.scrollLeft > 2);
 
     setCanScrollConditionsRight(
@@ -366,6 +372,7 @@ export default function CategoryDoctor() {
 
     const resizeObserver = new ResizeObserver(updateConditionsScroll);
 
+    if (element.parentElement) resizeObserver.observe(element.parentElement);
     resizeObserver.observe(element);
 
     Array.from(element.children).forEach((child) => {
@@ -424,20 +431,28 @@ export default function CategoryDoctor() {
                 ))}
               </div>
             ) : (
-              <div className="cs-conditions-rail">
-                {/* Previous button */}
-                <button
-                  type="button"
-                  className="cs-conditions-rail__arrow"
-                  onClick={() => scrollConditions("left")}
-                  disabled={!canScrollConditionsLeft}
-                  aria-label="Scroll to previous conditions"
-                >
-                  <ChevronLeft size={19} />
-                </button>
+              <div
+                className={`cs-conditions-rail${hasConditionsOverflow ? " is-scrollable" : ""}`}
+              >
+                {hasConditionsOverflow ? (
+                  <button
+                    type="button"
+                    className="cs-conditions-rail__arrow"
+                    onClick={() => scrollConditions("left")}
+                    disabled={!canScrollConditionsLeft}
+                    aria-controls="cs-conditions-track"
+                    aria-label="Scroll to previous conditions"
+                  >
+                    <ChevronLeft size={19} />
+                  </button>
+                ) : null}
 
                 {/* Scrollable tabs */}
-                <div className="cs-chip-row" ref={conditionsTrackRef}>
+                <div
+                  id="cs-conditions-track"
+                  className="cs-chip-row"
+                  ref={conditionsTrackRef}
+                >
                   <Chip
                     selected={!selectedDiseaseId}
                     onClick={() => setSelectedDiseaseId(null)}
@@ -465,16 +480,18 @@ export default function CategoryDoctor() {
                   ))}
                 </div>
 
-                {/* Next button */}
-                <button
-                  type="button"
-                  className="cs-conditions-rail__arrow"
-                  onClick={() => scrollConditions("right")}
-                  disabled={!canScrollConditionsRight}
-                  aria-label="Scroll to next conditions"
-                >
-                  <ChevronRight size={19} />
-                </button>
+                {hasConditionsOverflow ? (
+                  <button
+                    type="button"
+                    className="cs-conditions-rail__arrow"
+                    onClick={() => scrollConditions("right")}
+                    disabled={!canScrollConditionsRight}
+                    aria-controls="cs-conditions-track"
+                    aria-label="Scroll to next conditions"
+                  >
+                    <ChevronRight size={19} />
+                  </button>
+                ) : null}
               </div>
             )}
           </section>
