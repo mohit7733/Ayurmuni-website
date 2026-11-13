@@ -27,7 +27,6 @@
 /* ---------- Button ---------- */
 .am-btn {
   --btn-h: var(--am-control-h);
-  margin-bottom: var(--am-space-3);
   position: relative;
   display: inline-flex;
   align-items: center;
