@@ -187,12 +187,12 @@ function PlanCard({ plan, highlighted, planNames }) {
 
         {plan.billing_mode || plan.cancel_at_period_end ? (
           <div className="mp-chips">
-            {plan.billing_mode ? (
+            {/* {plan.billing_mode ? (
               <span className="mp-chip">
                 {autopay ? <RefreshCw size={12} aria-hidden /> : <CreditCard size={12} aria-hidden />}
                 {autopay ? 'Autopay' : 'One-time payment'}
               </span>
-            ) : null}
+            ) : null} */}
             {autopay && plan.autopay_status ? (
               <span className="mp-chip">
                 <Zap size={12} aria-hidden />

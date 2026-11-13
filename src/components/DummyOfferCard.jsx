@@ -1,8 +1,43 @@
 import { useState } from 'react';
-import { Star } from 'lucide-react';
+import { Check, Leaf } from 'lucide-react';
 import { formatRupee } from '../home/catalog';
-import PlanMark from '../packages/PlanMark';
-import { getPlanTheme, isCarePlan, planCta, planDiscount, planDuration, themeStyle } from '../packages/planTheme';
+import { formatPlanMoney, planCta, planDiscount, planDuration } from '../packages/planTheme';
+import '../design/pages/packages-premium.css';
+
+const textList = (value) =>
+  Array.isArray(value) ? value.map((line) => String(line || '').trim()).filter(Boolean) : [];
+
+const amount = (value) => {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+};
+
+/** Mapped catalog plan, or the raw packages/plans row. */
+const readOfferPlan = (item = {}) => {
+  const fees = item.fees && typeof item.fees === 'object' ? item.fees : {};
+  const includes = textList(item.includes?.length ? item.includes : item.benefits?.includes);
+  const price = amount(item.price ?? fees.selling_price ?? fees.selling ?? item.selling_price);
+  const mrp = amount(item.mrp ?? item.original_price);
+  return {
+    ...item,
+    name: String(item.name || 'Plan').trim() || 'Plan',
+    group: String(item.group || item.category_name || 'Plan').trim() || 'Plan',
+    categoryCode: String(item.categoryCode || item.category_code || '').trim(),
+    image: String(item.image || item.image_url || '').trim(),
+    description: String(item.description || '').trim(),
+    includes,
+    price,
+    mrp,
+    validityDays: amount(item.validityDays || item.validity_days),
+    purchaseType: String(item.purchaseType || item.purchase_type || '').trim(),
+    canBePurchased: item.canBePurchased ?? item.can_be_purchased,
+    buttonAction: String(item.buttonAction || item.button_action || '').trim(),
+    billingMode: String(item.billingMode || item.billing_mode || 'one_time'),
+    billingPeriod: String(item.billingPeriod || item.billing_period || '').trim(),
+    billingInterval: amount(item.billingInterval ?? item.billing_interval) || 1,
+    purchased: Boolean(item.purchased),
+  };
+};
 
 const CTA = {
   package: 'Buy plan',
@@ -12,7 +47,7 @@ const CTA = {
 
 export default function DummyOfferCard({ item, kind = 'lab', onClick, cta }) {
   const [imageFailed, setImageFailed] = useState(false);
-  const image = String(item.image || '').trim();
+  const image = String(item.image || item.image_url || '').trim();
   const showImage = Boolean(image) && !imageFailed;
   const off =
     item.mrp && item.mrp > item.price
@@ -38,45 +73,67 @@ export default function DummyOfferCard({ item, kind = 'lab', onClick, cta }) {
   );
 
   if (kind === 'package') {
-    const theme = getPlanTheme(item);
-    const care = isCarePlan(item);
-    const discount = planDiscount(item);
-    const owned = Boolean(item.purchased);
+    const plan = readOfferPlan(item);
+    const discount = planDiscount(plan);
+    const owned = Boolean(plan.purchased);
+    const lines = plan.includes.slice(0, 2);
+    const more = Math.max(0, plan.includes.length - lines.length);
+    const saving = plan.mrp > plan.price ? plan.mrp - plan.price : 0;
+    const banner = Boolean(plan.image) && !imageFailed;
+
     return (
-      <button
-        type="button"
-        className="am-plan-rail"
-        style={themeStyle(theme)}
-        onClick={onClick}
-        aria-label={item.name}
-      >
-        <span className="am-plan-rail__fill">
-          <span className="am-plan-rail__orb am-plan-rail__orb--lg" />
-          <span className="am-plan-rail__orb am-plan-rail__orb--sm" />
-          <span className="am-plan-rail__top">
-            <span className="am-plan-rail__icon">
-              {showImage ? <img src={image} alt="" onError={() => setImageFailed(true)} /> : <PlanMark name={theme.icon} size={14} color="#fff" />}
+      <button type="button" className="pp-rail" onClick={onClick} aria-label={plan.name}>
+        <span className="pp-rail__banner" aria-hidden>
+          {banner ? (
+            <img
+              src={plan.image}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              onError={() => setImageFailed(true)}
+            />
+          ) : (
+            <span className="pp-rail__fall">
+              <Leaf size={26} strokeWidth={1.5} />
+              <span>AyurMuni Care</span>
             </span>
-            <span className="am-plan-rail__cat">{item.group || 'Plan'}</span>
-            {care ? (
-              <span className="am-plan-rail__badge"><Star size={9} aria-hidden /> CARE PLAN</span>
-            ) : discount > 0 ? (
-              <span className="am-plan-rail__off">{discount}% OFF</span>
-            ) : null}
+          )}
+          <span className="pp-rail__shade" />
+          <span className="pp-rail__flags">
+            <span className="pp-rail__cat">{plan.group}</span>
+            {discount > 0 ? <span className="pp-rail__off">{discount}% OFF</span> : null}
           </span>
-          <span className="am-plan-rail__copy">
-            <span className="am-plan-rail__name">{item.name}</span>
-            <span className="am-plan-rail__dur">{planDuration(item)}</span>
-          </span>
-          <span className="am-plan-rail__bottom">
-            <span className="am-plan-rail__price">
-              <strong>{formatRupee(item.price)}</strong>
-              {item.mrp && item.mrp > item.price ? <s>{formatRupee(item.mrp)}</s> : null}
-            </span>
-            <span className="am-plan-rail__cta">{cta || planCta(item, { owned, rail: true })}</span>
-          </span>
-          <span className="am-plan-rail__line" />
         </span>
+
+        <span className="pp-rail__body">
+          <span className="pp-rail__name">{plan.name}</span>
+          <span className="pp-rail__dur">{planDuration(plan)}</span>
+          {lines.length ? (
+            <ul className="pp-rail__benefits">
+              {lines.map((line, index) => (
+                <li key={`${line}-${index}`}>
+                  <Check size={11} strokeWidth={3} aria-hidden />
+                  <span>{line}</span>
+                </li>
+              ))}
+              {more > 0 ? <li className="pp-rail__more">+{more} more benefits</li> : null}
+            </ul>
+          ) : (
+            <p className="pp-rail__blurb">
+              {plan.description || 'Personalised Ayurvedic care with expert guidance.'}
+            </p>
+          )}
+        </span>
+
+        <span className="pp-rail__priceblock">
+          <span className="pp-rail__price">
+            <strong>{formatPlanMoney(plan.price)}</strong>
+            {plan.mrp > plan.price ? <s>{formatPlanMoney(plan.mrp)}</s> : null}
+          </span>
+          {saving > 0 ? <span className="pp-rail__save">Save {formatPlanMoney(saving)}</span> : null}
+        </span>
+
+        <span className="pp-rail__cta">{cta || planCta(plan, { owned, rail: true })}</span>
       </button>
     );
   }
@@ -114,4 +171,3 @@ export default function DummyOfferCard({ item, kind = 'lab', onClick, cta }) {
     </article>
   );
 }
-

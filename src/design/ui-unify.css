@@ -1,0 +1,391 @@
+/*
+ * One control language for the whole site.
+ * Pages import their own CSS after App.jsx, so the locked properties use
+ * !important. Shape and type come from tokens. Colour stays with the variant:
+ * primary green, secondary outline, danger red. Search, chips, icon buttons,
+ * steppers, and image crops are left alone.
+ */
+
+.app-shell :is(.cta, .ghost, .am-btn, .ap-btn, .cp-btn, .do-card__book):not(.am-btn--link) {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: var(--am-space-2) !important;
+  min-height: var(--am-control-h) !important;
+  height: auto !important;
+  padding: 0 var(--am-space-4) !important;
+  border-radius: var(--am-radius-md) !important;
+  font-family: var(--am-font-body) !important;
+  font-size: var(--am-text-sm) !important;
+  font-weight: var(--am-weight-semibold) !important;
+  line-height: 1.2 !important;
+  letter-spacing: 0 !important;
+  text-decoration: none !important;
+  text-transform: none !important;
+}
+
+.app-shell :is(
+  .am-btn--lg,
+  .checkout-sticky .cta,
+  .cart-footer .cta,
+  .booking-home-bar .cta,
+  .doc-sticky .detail-cta .cta,
+  .co-sticky :is(.am-btn, .cta),
+  .cp-btn--checkout,
+  .pd-buy .am-btn,
+  .pd-sticky .am-btn,
+  .pk-cta__action
+) {
+  min-height: 46px !important;
+  padding-inline: var(--am-space-5) !important;
+}
+
+.app-shell :is(.cta, .am-btn--primary, .ap-btn--primary, .cp-btn, .do-card__book):not(.danger):not(.ghost):not(.cp-btn--ghost):not(.am-btn--secondary):not(.am-btn--ghost):not(.am-btn--danger):not(.am-btn--accent):not(.am-btn--link):not(.do-card--lab .do-card__book):not(.do-card--therapy .do-card__book) {
+  border: 1px solid transparent !important;
+  background: linear-gradient(
+    180deg,
+    var(--am-green-500, var(--am-primary)) -60%,
+    var(--am-primary) 40%,
+    var(--am-primary-hover) 140%
+  ) !important;
+  color: var(--am-on-primary) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 1px 2px rgba(10, 40, 32, 0.2) !important;
+}
+
+.app-shell :is(.cta, .am-btn--primary, .ap-btn--primary, .cp-btn, .do-card__book):not(.danger):not(.ghost):not(.cp-btn--ghost):not(.am-btn--secondary):not(.am-btn--ghost):not(.am-btn--danger):not(.am-btn--accent):not(.am-btn--link):not(.do-card--lab .do-card__book):not(.do-card--therapy .do-card__book):hover:not(:disabled) {
+  background: linear-gradient(
+    180deg,
+    var(--am-primary) -40%,
+    var(--am-primary-hover) 140%
+  ) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 8px 20px rgba(13, 97, 78, 0.3) !important;
+}
+
+.app-shell :is(.cta.danger, .am-btn--danger) {
+  border: 1px solid transparent !important;
+  background: linear-gradient(
+    180deg,
+    var(--am-danger),
+    color-mix(in srgb, var(--am-danger) 82%, #000)
+  ) !important;
+  color: #fff !important;
+}
+
+.app-shell :is(.ghost, .am-btn--secondary, .ap-btn--ghost, .cp-btn--ghost),
+.app-shell :is(.do-card--lab, .do-card--therapy) .do-card__book {
+  border: 1px solid var(--am-line-strong) !important;
+  background: var(--am-surface) !important;
+  color: var(--am-primary-strong) !important;
+  box-shadow: 0 1px 2px rgba(10, 40, 32, 0.05) !important;
+}
+
+.app-shell :is(.ghost, .am-btn--secondary, .ap-btn--ghost, .cp-btn--ghost):hover:not(:disabled),
+.app-shell :is(.do-card--lab, .do-card--therapy) .do-card__book:hover:not(:disabled) {
+  border-color: var(--am-primary) !important;
+  background: var(--am-primary-soft) !important;
+  color: var(--am-primary-strong) !important;
+}
+
+.app-shell .am-btn--ghost:not(.am-btn--with-arrow) {
+  border-color: transparent !important;
+  background: transparent !important;
+  color: var(--am-primary) !important;
+  box-shadow: none !important;
+}
+
+.app-shell .am-btn--ghost:not(.am-btn--with-arrow):hover:not(:disabled) {
+  background: var(--am-primary-soft) !important;
+  border-color: transparent !important;
+}
+
+.app-shell :is(.cta, .ghost, .am-btn, .ap-btn, .cp-btn, .do-card__book):disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.app-shell .detail-cta :is(.cta, .ghost) {
+  flex: 1 1 0 !important;
+  width: auto !important;
+}
+
+.app-shell :is(.detail-cta, .am-page-header__actions) {
+  gap: var(--am-space-3) !important;
+}
+
+/* Fields. Checkboxes, radios, files, and the pill search stay as they are. */
+.app-shell :is(.form-field input, .form-field select, .am-input):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="hidden"]):not(.am-textarea) {
+  width: 100%;
+  min-height: var(--am-control-h) !important;
+  height: var(--am-control-h) !important;
+  padding: 0 var(--am-space-4) !important;
+  border: 1px solid var(--am-border-input) !important;
+  border-radius: var(--am-radius-md) !important;
+  background: var(--am-surface) !important;
+  color: var(--am-text) !important;
+  font-size: var(--am-text-sm) !important;
+  font-weight: var(--am-weight-regular) !important;
+  box-shadow: inset 0 1px 2px rgba(10, 40, 32, 0.04) !important;
+}
+
+.app-shell :is(.form-field textarea, .am-textarea) {
+  min-height: 112px !important;
+  padding: var(--am-space-3) var(--am-space-4) !important;
+  border: 1px solid var(--am-border-input) !important;
+  border-radius: var(--am-radius-md) !important;
+  background: var(--am-surface) !important;
+  color: var(--am-text) !important;
+  font-size: var(--am-text-sm) !important;
+  font-weight: var(--am-weight-regular) !important;
+  line-height: var(--am-leading-normal) !important;
+}
+
+.app-shell :is(.form-field input, .form-field select, .form-field textarea, .am-input):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="hidden"]):focus {
+  outline: none !important;
+  border-color: var(--am-primary) !important;
+  background: #fff !important;
+  box-shadow: var(--am-focus-ring) !important;
+}
+
+.app-shell .form-field {
+  gap: var(--am-space-2) !important;
+  margin-bottom: var(--am-space-4) !important;
+  color: var(--am-text-soft) !important;
+  font-size: var(--am-text-sm) !important;
+  font-weight: var(--am-weight-semibold) !important;
+}
+
+.app-shell .app-shell-body :is(h1, h2, h3) {
+  font-family: var(--am-font-display) !important;
+  letter-spacing: var(--am-tracking-display) !important;
+  font-weight: var(--am-weight-semibold) !important;
+}
+
+.app-shell :is(.catalog-head h1, .am-page-header__title) {
+  margin: 0 !important;
+  font-size: var(--am-text-2xl) !important;
+  line-height: var(--am-leading-tight) !important;
+  color: var(--am-text) !important;
+}
+
+.app-shell :is(.catalog-head p, .am-page-header__subtitle, .detail-copy p, .am-section-header__desc) {
+  color: var(--am-text-muted) !important;
+  font-size: var(--am-text-sm) !important;
+  line-height: 1.6 !important;
+}
+
+.app-shell .catalog-head {
+  gap: var(--am-space-3) !important;
+  margin-bottom: var(--am-space-4) !important;
+}
+
+.app-shell .am-section-header {
+  gap: var(--am-space-4) !important;
+  margin-bottom: var(--am-space-4) !important;
+}
+
+.app-shell .am-page-header {
+  gap: var(--am-space-3) !important;
+  margin-bottom: var(--am-space-5) !important;
+}
+
+.app-shell .detail-cta {
+  gap: var(--am-space-3) !important;
+  margin-top: var(--am-space-5) !important;
+}
+
+/* Shared corner on content cards and list rows. Icons, photos, and badges keep their own radius. */
+.app-shell :is(
+  [class$="card"],
+  [class*="card "],
+  [class*="card--"],
+  .am-card,
+  .pcard,
+  .menu-row,
+  .faq-row,
+  .yoga-row,
+  .patient-row,
+  .record-row,
+  .notif-row,
+  .appoint-filters,
+  .phone-pill
+):not([class*="icon"]):not([class*="badge"]):not([class*="avatar"]):not([class*="media"]):not([class*="thumb"]):not([class*="img"]):not([class*="image"]):not([class*="photo"]) {
+  border-radius: var(--am-radius-lg) !important;
+}
+
+.app-shell .phone-pill {
+  border-color: var(--am-border-input) !important;
+}
+
+/*
+ * Second pass: action buttons that were still on their own sizes
+ * (diet, plans, location, welcome, profile, prakriti, notifications).
+ * Banner rows such as the panchakarma .pk-cta are not included.
+ */
+.app-shell :is(
+  .dt-btn,
+  .am-plan__cta,
+  .am-plan-rail__cta,
+  .am-detail__cta,
+  .locp-cta,
+  .welcome-cta,
+  .skip-btn,
+  .logout-btn,
+  .ns-quick-action,
+  .dt-card__cta,
+  .am-diet-active__cta,
+  .am-diet-toast__cta,
+  .cart-float__cta,
+  .referral-actions button,
+  .pk-page .pk-cta,
+  .pk-page .pk-ghost
+) {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: var(--am-space-2) !important;
+  min-height: var(--am-control-h) !important;
+  height: auto !important;
+  padding: 0 var(--am-space-4) !important;
+  border-radius: var(--am-radius-md) !important;
+  font-family: var(--am-font-body) !important;
+  font-size: var(--am-text-sm) !important;
+  font-weight: var(--am-weight-semibold) !important;
+  line-height: 1.2 !important;
+  letter-spacing: 0 !important;
+  text-decoration: none !important;
+  text-transform: none !important;
+}
+
+.app-shell :is(.dt-btn--primary, .am-detail__cta, .locp-cta, .welcome-cta) {
+  min-height: 46px !important;
+  padding-inline: var(--am-space-5) !important;
+}
+
+.app-shell :is(
+  .dt-btn--primary,
+  .am-plan.is-care .am-plan__cta,
+  .am-detail__cta,
+  .locp-cta,
+  .am-diet-active__cta,
+  .pk-page .pk-cta
+) {
+  border: 1px solid transparent !important;
+  background: linear-gradient(
+    180deg,
+    var(--am-green-500, var(--am-primary)) -60%,
+    var(--am-primary) 40%,
+    var(--am-primary-hover) 140%
+  ) !important;
+  color: var(--am-on-primary) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 1px 2px rgba(10, 40, 32, 0.2) !important;
+}
+
+.app-shell :is(
+  .dt-btn--primary,
+  .am-plan.is-care .am-plan__cta,
+  .am-detail__cta,
+  .locp-cta,
+  .am-diet-active__cta,
+  .pk-page .pk-cta
+):hover:not(:disabled) {
+  background: linear-gradient(
+    180deg,
+    var(--am-primary) -40%,
+    var(--am-primary-hover) 140%
+  ) !important;
+  color: var(--am-on-primary) !important;
+}
+
+.app-shell :is(
+  .dt-btn--secondary,
+  .dt-btn--ghost,
+  .am-plan__cta,
+  .skip-btn,
+  .ns-quick-action,
+  .dt-card__cta,
+  .pk-page .pk-ghost
+):not(.ns-quick-action--danger):not(.am-plan.is-care .am-plan__cta) {
+  border: 1px solid var(--am-line-strong) !important;
+  background: var(--am-surface) !important;
+  color: var(--am-primary-strong) !important;
+  box-shadow: 0 1px 2px rgba(10, 40, 32, 0.05) !important;
+}
+
+.app-shell :is(
+  .dt-btn--secondary,
+  .dt-btn--ghost,
+  .am-plan__cta,
+  .skip-btn,
+  .ns-quick-action,
+  .dt-card__cta,
+  .pk-page .pk-ghost
+):not(.ns-quick-action--danger):not(.am-plan.is-care .am-plan__cta):hover:not(:disabled) {
+  border-color: var(--am-primary) !important;
+  background: var(--am-primary-soft) !important;
+  color: var(--am-primary-strong) !important;
+}
+
+.app-shell :is(.welcome-cta, .cart-float__cta) {
+  border: 1px solid transparent !important;
+  background: linear-gradient(
+    135deg,
+    var(--am-gold-300) 0%,
+    var(--am-accent) 55%,
+    var(--am-gold-500, var(--am-accent)) 130%
+  ) !important;
+  color: var(--am-ink-900) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 1px 2px rgba(120, 80, 10, 0.25) !important;
+}
+
+.app-shell :is(.logout-btn, .ns-quick-action--danger) {
+  border: 1px solid transparent !important;
+  background: linear-gradient(
+    180deg,
+    var(--am-danger),
+    color-mix(in srgb, var(--am-danger) 82%, #000)
+  ) !important;
+  color: #fff !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+}
+
+.app-shell :is(
+  .dt-btn,
+  .am-plan__cta,
+  .am-detail__cta,
+  .locp-cta,
+  .welcome-cta,
+  .skip-btn,
+  .logout-btn,
+  .ns-quick-action,
+  .cart-float__cta,
+  .pk-page .pk-cta,
+  .pk-page .pk-ghost
+):disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.app-shell :is(.form-field input, .form-field select, .am-input, .onboard input):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="hidden"]):not(.am-textarea) {
+  min-height: var(--am-control-h) !important;
+  height: var(--am-control-h) !important;
+  padding: 0 var(--am-space-4) !important;
+  border: 1px solid var(--am-border-input) !important;
+  border-radius: var(--am-radius-md) !important;
+  background: var(--am-surface) !important;
+  color: var(--am-text) !important;
+  font-size: var(--am-text-sm) !important;
+  font-weight: var(--am-weight-regular) !important;
+  box-shadow: inset 0 1px 2px rgba(10, 40, 32, 0.04) !important;
+}

@@ -72,7 +72,7 @@ import { loadConsultPackages } from '../services/packageService';
 import '../design/pages/home.css';
 import '../design/pages/dummy-offers.css';
 import '../design/pages/plan-cards.css';
-import { isCarePlan } from '../packages/planTheme';
+import { isCarePlan, planDiscount } from '../packages/planTheme';
 import '../design/pages/orange-lab.css';
 
 let prakritiModalShownThisSession = false;
@@ -1021,7 +1021,7 @@ export default function Home() {
               </p>
               <Rail label={T.packagesTitle} className="hm-package-rail" auto interval={3200} controls>
                 {[...consultPackages]
-                  .sort((a, b) => Number(isCarePlan(b)) - Number(isCarePlan(a)))
+                  .sort((a, b) => Number(isCarePlan(b)) - Number(isCarePlan(a)) || planDiscount(b) - planDiscount(a))
                   .slice(0, 8)
                   .map((item) => (
                     <RailItem key={item.id}>

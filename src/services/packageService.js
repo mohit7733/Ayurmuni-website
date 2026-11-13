@@ -112,9 +112,11 @@ function purchaseIsActive(entry) {
 /** Plan card shape used by the packages page. Purchase vs consult follows the catalog flags. */
 export const mapConsultPackage = (row) => {
   if (!row?.id) return null;
-  const includes = Array.isArray(row?.benefits?.includes)
-    ? row.benefits.includes.map((line) => String(line || '').trim()).filter(Boolean)
-    : [];
+  const lines = (value) =>
+    Array.isArray(value) ? value.map((line) => String(line || '').trim()).filter(Boolean) : [];
+  const includes = lines(row?.benefits?.includes);
+  const feeRow = row.fees && typeof row.fees === 'object' ? row.fees : null;
+  const price = money(feeRow?.selling_price ?? row.selling_price);
   const tags = Array.isArray(row?.tags)
     ? row.tags.map((tag) => String(tag || '').trim()).filter(Boolean)
     : [];
@@ -131,8 +133,18 @@ export const mapConsultPackage = (row) => {
     id: String(row.id),
     name: String(row.name || '').trim() || 'Package',
     description: String(row.description || '').trim(),
-    price: money(row.selling_price),
+    price,
     mrp: money(row.original_price),
+    fees: {
+      selling: price,
+      gstPercent: money(feeRow?.gst_percent),
+      gstAmount: money(feeRow?.gst_amount),
+      platformFeePercent: money(feeRow?.platform_fee_percent),
+      platformFee: money(feeRow?.platform_fee),
+      totalPayable: money(feeRow?.total_payable_amount ?? price),
+    },
+    notIncluded: lines(row.not_included),
+    disclaimer: lines(row.disclaimer),
     group: String(row.category_name || 'Packages').trim() || 'Packages',
     categoryCode: String(row.category_code || '').trim(),
     badge: tags[0] || '',

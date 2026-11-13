@@ -1,23 +1,26 @@
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, Calendar, Check, CreditCard, ShieldCheck, Star, Users } from "lucide-react";
+import { ArrowLeft, ArrowRight, Calendar, Check, CreditCard, Leaf, ShieldCheck, Star, Users } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { Button, EmptyState, ErrorState, SectionHold } from "../components/ui";
-import { formatRupee } from "../home/catalog";
+import { formatPlanMoney, isCarePlan, planBilling, planCta, planDiscount, planDuration } from "../packages/planTheme";
 import PlanTransferModal from "../components/PlanTransferModal";
 import PackagePaymentModal from "../components/PackagePaymentModal";
 import usePackagePurchase from "../hooks/usePackagePurchase";
 import { isAuthenticated, requireAuth } from "../services/guestAuth";
 import { loadPackageById } from "../services/packageService";
-import PlanMark from "../packages/PlanMark";
-import { getPlanTheme, isCarePlan, planBilling, planCta, planDiscount, planDuration, themeStyle } from "../packages/planTheme";
 import "../design/pages/packages-premium.css";
-import "../design/pages/plan-cards.css";
 
 const formatDate = (value) => {
   const time = new Date(value).getTime();
   if (!Number.isFinite(time)) return "";
   return new Date(time).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+};
+
+const rate = (value) => {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n <= 0) return "";
+  return `${Number.isInteger(n) ? n : Number(n.toFixed(2))}%`;
 };
 
 export default function PackageDetails() {
@@ -27,7 +30,6 @@ export default function PackageDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [needsLogin, setNeedsLogin] = useState(false);
-
 
   const load = useCallback(async ({ silent = false } = {}) => {
     if (!silent) setLoading(true);
@@ -63,9 +65,6 @@ export default function PackageDetails() {
   }, [load]);
   const { start, busyId, prompt, confirm, cancel, sheet } = usePackagePurchase({ onPurchased });
   const busy = Boolean(busyId);
-  const buy = () => {
-    if (item) start(item);
-  };
 
   const onCta = () => {
     if (!item) return;
@@ -75,23 +74,26 @@ export default function PackageDetails() {
       });
       return;
     }
-    buy();
+    start(item);
   };
 
   const owned = Boolean(item && item.mode === "purchase" && item.purchased);
-  const theme = item ? getPlanTheme(item) : null;
   const discount = item ? planDiscount(item) : 0;
   const saving = item && item.mrp > item.price ? item.mrp - item.price : 0;
+  const gst = Number(item?.fees?.gstAmount) || 0;
+  const platform = Number(item?.fees?.platformFee) || 0;
+  const payable = Number(item?.fees?.totalPayable) > 0 ? Number(item.fees.totalPayable) : item?.price || 0;
   const ctaLabel = item ? planCta(item, { owned }) : "";
 
   return (
     <AppShell tab="home">
-      <section className="pp-page pd-page">
+      <section className="pp-page">
         <header className="pp-head">
           <button type="button" className="pp-head__back" onClick={back} aria-label="Back">
             <ArrowLeft size={18} aria-hidden />
           </button>
           <div className="pp-head__copy">
+            <p className="pp-head__eyebrow">AyurMuni care</p>
             <h1 className="pp-head__title">Package details</h1>
           </div>
         </header>
@@ -117,100 +119,164 @@ export default function PackageDetails() {
         ) : null}
 
         {!loading && !error && item ? (
-          <article className="am-detail" style={themeStyle(theme)}>
-            <div className="am-detail__head">
-              <div className="am-detail__row">
-                <span className="am-detail__icon">
-                  {item.image ? <img src={item.image} alt="" /> : <PlanMark name={theme.icon} size={20} color="#fff" />}
-                </span>
-                <span className="am-detail__cat">{item.group}</span>
+          <article className="pp-detail">
+            <div className="pp-detail__hero">
+              <div className="pp-detail__hero-top">
                 {isCarePlan(item) ? (
-                  <span className="am-detail__ribbon"><Star size={10} aria-hidden /> CARE PLAN</span>
-                ) : null}
+                  <span className="pp-detail__badge"><Star size={10} aria-hidden /> Care plan</span>
+                ) : (
+                  <span className="pp-detail__badge is-quiet">{item.group}</span>
+                )}
+                {discount > 0 ? <span className="pp-detail__off">{discount}% OFF</span> : null}
               </div>
-              <h2>{item.name}</h2>
-              <p className="am-detail__dur">{planDuration(item)}</p>
-              <span className="am-detail__line" />
-            </div>
-            {item.description ? <p className="am-detail__desc">{item.description}</p> : null}
-            {owned && (item.remaining != null || item.expiresAt) ? (
-              <p className="am-detail__note">
-                {item.remaining != null ? `${item.remaining} ${item.remaining === 1 ? "session" : "sessions"} left` : ""}
-                {item.remaining != null && item.expiresAt ? " · " : ""}
-                {item.expiresAt && formatDate(item.expiresAt) ? `valid till ${formatDate(item.expiresAt)}` : ""}
-              </p>
-            ) : null}
-            <ul className="am-detail__facts">
-              <li>
-                <ShieldCheck size={15} aria-hidden />
-                <span>
-                  <small>Plan type</small>
-                  <strong>{item.purchaseType === "prepaid_package" ? "Prepaid package" : "Open plan"}</strong>
-                </span>
-              </li>
-              <li>
-                <Calendar size={15} aria-hidden />
-                <span>
-                  <small>Validity</small>
-                  <strong>{item.validityDays ? `${item.validityDays} days` : planDuration(item)}</strong>
-                </span>
-              </li>
-              <li>
-                <CreditCard size={15} aria-hidden />
-                <span>
-                  <small>Billing</small>
-                  <strong>{planBilling(item)}</strong>
-                </span>
-              </li>
-              <li>
-                <Users size={15} aria-hidden />
-                <span>
-                  <small>Available for</small>
-                  <strong>{item.availableToAll ? "All users" : "Selected users"}</strong>
-                </span>
-              </li>
-            </ul>
-            {item.includes?.length ? (
-              <>
-                <h3>What&apos;s included ({item.includes.length})</h3>
-                <ul className="am-detail__benefits">
-                  {item.includes.map((line) => (
-                    <li key={line}>
-                      <span className="am-detail__check"><Check size={12} strokeWidth={3} aria-hidden /></span>
-                      <span>{line}</span>
-                    </li>
-                  ))}
-                </ul>
-              </>
-            ) : null}
-            <h3>Price details</h3>
-            <div className="am-detail__price">
-              <div>
-                <span>Plan price</span>
-                <span>{formatRupee(item.mrp || item.price)}</span>
+              <div className="pp-detail__media" aria-hidden>
+                {item.image ? (
+                  <img src={item.image} alt="" />
+                ) : (
+                  <div className="pp-detail__fall">
+                    <Leaf size={34} strokeWidth={1.5} />
+                    <span>AyurMuni Care</span>
+                  </div>
+                )}
               </div>
-              {saving > 0 ? (
-                <div className="is-save">
-                  <span>Discount ({discount}%)</span>
-                  <span>- {formatRupee(saving)}</span>
-                </div>
+              <h2 className="pp-detail__name">{item.name}</h2>
+              <p className="pp-detail__dur">{planDuration(item)}</p>
+              <div className="pp-detail__price-row">
+                <strong>{formatPlanMoney(payable)}</strong>
+                {item.mrp > item.price ? <s>{formatPlanMoney(item.mrp)}</s> : null}
+              </div>
+              {owned && (item.remaining != null || item.expiresAt) ? (
+                <p className="pp-detail__note">
+                  {item.remaining != null ? `${item.remaining} ${item.remaining === 1 ? "session" : "sessions"} left` : ""}
+                  {item.remaining != null && item.expiresAt ? " · " : ""}
+                  {item.expiresAt && formatDate(item.expiresAt) ? `valid till ${formatDate(item.expiresAt)}` : ""}
+                </p>
+              ) : saving > 0 ? (
+                <p className="pp-detail__note">You save {formatPlanMoney(saving)}</p>
               ) : null}
-              <div className="is-total">
-                <span>Package price</span>
-                <strong>{formatRupee(item.price)}</strong>
-              </div>
-            </div>
-            <div className="am-detail__footer">
-              <div>
-                <p className="am-detail__pay">{formatRupee(item.price)}</p>
-                {saving > 0 ? <p className="am-detail__save">You save {formatRupee(saving)}</p> : null}
-              </div>
-              <button type="button" className="am-detail__cta" disabled={busy} onClick={onCta}>
+              <button type="button" className="pp-detail__cta" disabled={busy} onClick={onCta}>
                 {busy ? "Please wait..." : ctaLabel}
+                {!busy ? <ArrowRight size={15} aria-hidden /> : null}
               </button>
+            </div>
+
+            <div className="pp-detail__body">
+              {item.description ? (
+                <section className="pp-detail__panel">
+                  <h3>About this plan</h3>
+                  <p>{item.description}</p>
+                </section>
+              ) : null}
+
+              <section className="pp-detail__panel">
+                <h3>Plan overview</h3>
+                <ul className="pp-detail__facts">
+                  <li>
+                    <ShieldCheck size={15} aria-hidden />
+                    <span>
+                      <small>Plan type</small>
+                      <strong>{item.purchaseType === "prepaid_package" ? "Prepaid package" : "Open plan"}</strong>
+                    </span>
+                  </li>
+                  <li>
+                    <Calendar size={15} aria-hidden />
+                    <span>
+                      <small>Validity</small>
+                      <strong>{item.validityDays ? `${item.validityDays} days` : planDuration(item)}</strong>
+                    </span>
+                  </li>
+                  {/* <li>
+                    <CreditCard size={15} aria-hidden />
+                    <span>
+                      <small>Billing</small>
+                      <strong>{planBilling(item)}</strong>
+                    </span>
+                  </li> */}
+                  {/* <li>
+                    <Users size={15} aria-hidden />
+                    <span>
+                      <small>Available for</small>
+                      <strong>{item.availableToAll ? "All users" : "Selected users"}</strong>
+                    </span>
+                  </li> */}
+                </ul>
+              </section>
+
+              {item.includes?.length ? (
+                <section className="pp-detail__panel">
+                  <h3>What&apos;s included ({item.includes.length})</h3>
+                  <ul className="pp-detail__benefits">
+                    {item.includes.map((line, index) => (
+                      <li key={`${line}-${index}`}>
+                        <span className="pp-detail__check"><Check size={12} strokeWidth={3} aria-hidden /></span>
+                        <span>{line}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ) : null}
+
+              {item.notIncluded?.length ? (
+                <section className="pp-detail__panel">
+                  <h3>Not included</h3>
+                  <ul className="pp-detail__exclude">
+                    {item.notIncluded.map((line, index) => (
+                      <li key={`${line}-${index}`}>{line}</li>
+                    ))}
+                  </ul>
+                </section>
+              ) : null}
+
+              {item.disclaimer?.length ? (
+                <section className="pp-detail__panel">
+                  <h3>Disclaimer</h3>
+                  <ul className="pp-detail__exclude">
+                    {item.disclaimer.map((line, index) => (
+                      <li key={`${line}-${index}`}>{line}</li>
+                    ))}
+                  </ul>
+                </section>
+              ) : null}
+
+              <section className="pp-detail__panel">
+                <h3>Price details</h3>
+                <div className="pp-detail__bill">
+                  <div>
+                    <span>Plan price</span>
+                    <span>{formatPlanMoney(item.mrp || item.price)}</span>
+                  </div>
+                  {saving > 0 ? (
+                    <div className="is-save">
+                      <span>Discount ({discount}%)</span>
+                      <span>- {formatPlanMoney(saving)}</span>
+                    </div>
+                  ) : null}
+                  <div>
+                    <span>Package price</span>
+                    <span>{formatPlanMoney(item.price)}</span>
+                  </div>
+                  {gst > 0 ? (
+                    <div>
+                      <span>GST{rate(item.fees?.gstPercent) ? ` (${rate(item.fees.gstPercent)})` : ""}</span>
+                      <span>{formatPlanMoney(gst)}</span>
+                    </div>
+                  ) : null}
+                  {platform > 0 ? (
+                    <div>
+                      <span>Platform fee{rate(item.fees?.platformFeePercent) ? ` (${rate(item.fees.platformFeePercent)})` : ""}</span>
+                      <span>{formatPlanMoney(platform)}</span>
+                    </div>
+                  ) : null}
+                  <div className="is-total">
+                    <span>Total payable</span>
+                    <strong>{formatPlanMoney(payable)}</strong>
+                  </div>
+                </div>
+              </section>
             </div>
           </article>
         ) : null}
+
         <PlanTransferModal prompt={prompt} onYes={confirm} onNo={cancel} />
         <PackagePaymentModal {...sheet} />
       </section>

@@ -868,17 +868,26 @@
 .cta {
   width: 100%;
   min-height: var(--am-control-h);
-  padding: 0 var(--am-space-5);
+  padding: 0 var(--am-space-4);
+  border: 1px solid transparent;
   border-radius: var(--am-radius-md);
-  background: var(--am-primary);
+  background: linear-gradient(
+    180deg,
+    var(--am-green-500, var(--am-primary)) -60%,
+    var(--am-primary) 40%,
+    var(--am-primary-hover) 140%
+  );
   color: var(--am-on-primary);
   font-weight: var(--am-weight-semibold);
   font-size: var(--am-text-sm);
-  display: flex;
+  line-height: 1.2;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  box-shadow: var(--am-shadow-xs);
+  gap: var(--am-space-2);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 1px 2px rgba(10, 40, 32, 0.2);
 }
 
 .cta:active:not(:disabled),
@@ -3043,11 +3052,20 @@
 }
 
 .ghost {
-  min-height: var(--am-tap-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--am-space-2);
+  min-height: var(--am-control-h);
+  padding: 0 var(--am-space-4);
   border: 1px solid var(--am-line-strong);
+  border-radius: var(--am-radius-md);
   background: var(--am-surface);
   color: var(--am-primary-strong);
+  font-size: var(--am-text-sm);
   font-weight: var(--am-weight-semibold);
+  line-height: 1.2;
+  box-shadow: 0 1px 2px rgba(10, 40, 32, 0.05);
 }
 
 .muted {
@@ -3066,7 +3084,7 @@
 
 .catalog-page,
 .detail-page {
-  padding: 12px var(--page-gutter) 20px;
+  padding: var(--am-space-4) var(--page-gutter) var(--am-space-6);
   max-width: var(--container);
   margin: 0 auto;
 }
@@ -3075,8 +3093,8 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 8px;
+  gap: var(--am-space-3);
+  margin-bottom: var(--am-space-4);
 }
 
 .catalog-head .text-back {
@@ -3086,14 +3104,19 @@
 
 .catalog-head h1 {
   margin: 0;
-  font-size: 22px;
-  color: var(--am-primary-strong);
+  font-family: var(--am-font-display);
+  font-size: var(--am-text-2xl);
+  font-weight: var(--am-weight-semibold);
+  letter-spacing: var(--am-tracking-display);
+  line-height: var(--am-leading-tight);
+  color: var(--am-text);
 }
 
 .catalog-head p {
-  margin: 2px 0 0;
-  color: var(--am-text-subtle);
-  font-size: 13px;
+  margin: var(--am-space-2) 0 0;
+  color: var(--am-text-muted);
+  font-size: var(--am-text-sm);
+  line-height: 1.6;
 }
 
 .catalog-head-actions {
@@ -3486,16 +3509,16 @@
 }
 
 .detail-copy p {
-  margin: 0 0 8px;
+  margin: 0 0 var(--am-space-2);
   color: var(--am-text-muted);
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: var(--am-text-sm);
+  line-height: var(--am-leading-normal);
 }
 
 .detail-cta {
   display: flex;
-  gap: 8px;
-  margin-top: 18px;
+  gap: var(--am-space-3);
+  margin-top: var(--am-space-5);
   bottom: 76px;
 }
 
@@ -4828,29 +4851,37 @@ button.checkout-item {
 .form-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-bottom: 12px;
-  color: var(--am-primary-strong);
-  font-weight: 600;
-  font-size: 13px;
+  gap: var(--am-space-2);
+  margin-bottom: var(--am-space-4);
+  color: var(--am-text-soft);
+  font-weight: var(--am-weight-semibold);
+  font-size: var(--am-text-sm);
 }
 
-.form-field input {
-  height: 46px;
-  border: 1px solid var(--am-line);
-  border-radius: 12px;
-  padding: 0 12px;
+.form-field input,
+.form-field select {
+  min-height: var(--am-control-h);
+  border: 1px solid var(--am-border-input);
+  border-radius: var(--am-radius-md);
+  padding: 0 var(--am-space-4);
+  background: var(--am-surface);
+  color: var(--am-text);
   font: inherit;
-  font-weight: 400;
+  font-size: var(--am-text-sm);
+  font-weight: var(--am-weight-regular);
 }
 
 .form-field textarea {
-  min-height: 96px;
-  border: 1px solid var(--am-line);
-  border-radius: 12px;
-  padding: 12px;
+  min-height: 112px;
+  border: 1px solid var(--am-border-input);
+  border-radius: var(--am-radius-md);
+  padding: var(--am-space-3) var(--am-space-4);
+  background: var(--am-surface);
+  color: var(--am-text);
   font: inherit;
-  font-weight: 400;
+  font-size: var(--am-text-sm);
+  font-weight: var(--am-weight-regular);
+  line-height: var(--am-leading-normal);
   resize: vertical;
 }
 

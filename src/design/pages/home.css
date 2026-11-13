@@ -2785,13 +2785,21 @@ button.hm-pose {
 .hm-page .hm-well .am-rail { padding-top: 6px; padding-bottom: 14px; }
 .hm-page .hm-plan-band .hm-package-rail {
   margin: 0;
-  padding: 4px 8px 10px 0;
+  padding: 2px 8px 4px 0;
   scroll-padding-inline: 0;
+  gap: 12px;
 }
 .hm-page .hm-package-rail > .am-rail__item {
-  flex: 0 0 248px;
-  width: 248px;
-  height: 228px;
+  flex: 0 0 clamp(230px, calc((100% - 48px) / 5), 268px);
+  width: clamp(230px, calc((100% - 48px) / 5), 268px);
+  height: 340px;
+}
+@media (max-width: 900px) {
+  .hm-page .hm-package-rail > .am-rail__item {
+    flex-basis: 250px;
+    width: 250px;
+    height: 340px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
