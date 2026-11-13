@@ -129,7 +129,7 @@ function HeroBackgroundVideo() {
     if (!video || !src) return;
     video.muted = true;
     if (reduced) video.pause();
-    else video.play?.().catch(() => {});
+    else video.play?.().catch(() => { });
   }, [src, reduced]);
 
   return (
@@ -391,7 +391,7 @@ export default function Home() {
       .then((rows) => {
         if (!cancelled && rows.length) setConsultPackages(rows);
       })
-      .catch(() => {});
+      .catch(() => { });
     return () => {
       cancelled = true;
     };
@@ -588,9 +588,9 @@ export default function Home() {
 
   const prakritiName = String(
     customerData?.prakriti_type ||
-      customerData?.prakriti_result ||
-      customerData?.prakriti_name ||
-      '',
+    customerData?.prakriti_result ||
+    customerData?.prakriti_name ||
+    '',
   ).trim();
 
   const hasAnyContent =
@@ -648,8 +648,8 @@ export default function Home() {
         <section className="hm-hero" aria-labelledby="hm-hero-title">
           <HeroBackgroundVideo />
           <div className="hm-hero__inner">
-            
-            
+
+
             <div className="hm-hero__copy">
               <p className="hm-hero__hello">
                 {name ? `NAMASTE, ${name.toUpperCase()}` : 'NAMASTE'}
@@ -760,282 +760,283 @@ export default function Home() {
           <ActiveDietToast plan={activeDiet} />
 
           {bannersLoading || bannerItems.length ? (
-          <div className="hm-dash">
-            <div className="hm-dash__main">
-              <BannerCarousel
-                items={bannerItems}
-                initialIndex={0}
-                interval={6000}
-                onSelect={handleBannerPress}
-                loading={bannersLoading}
-                copy={bannerCopy}
-              />
+            <div className="hm-dash">
+              <div className="hm-dash__main">
+                <BannerCarousel
+                  items={bannerItems}
+                  initialIndex={0}
+                  interval={6000}
+                  onSelect={handleBannerPress}
+                  loading={bannersLoading}
+                  copy={bannerCopy}
+                />
+              </div>
             </div>
-          </div>
           ) : null}
 
           <LazyBlock blockRef={concernsRef} done={isSectionDone('concerns')} minHeight={120} skeleton={<SectionHold label={T.concernsTitle} minHeight={120} variant="chips" />}>
-          {healthConcerns.length > 0 ? (
-            <Reveal as="section" className="hm-section hm-panel hm-concerns-panel" aria-labelledby="hm-concerns-title">
-              <SectionHeader
-                id="hm-concerns-title"
-                className="hm-concerns-head"
-                title={T.concernsTitle}
-                description={T.concernsText}
-                action={healthConcerns.length > 1 ? <ViewAll label={T.concernsTitle} onClick={() => navigate('/consult')} /> : null}
-              />
-              <ConcernCarousel label={T.concernsTitle} marquee>
-                {healthConcerns.map((item) => (
-                  <Tile
-                    cutout
-                    key={item.id}
-                    image={item.image_url}
-                    label={item.name}
-                    onClick={() =>
-                      navigate(
-                        `/consult/concern/${item.id}?name=${encodeURIComponent(item.name)}${
-                          item.description ? `&desc=${encodeURIComponent(item.description)}` : ''
-                        }`,
-                        { state: { categoryName: item.name, categoryDesc: item.description } },
-                      )
-                    }
-                  />
-                ))}
-              </ConcernCarousel>
-            </Reveal>
-          ) : null}
+            {healthConcerns.length > 0 ? (
+              <Reveal as="section" className="hm-section hm-panel hm-concerns-panel" aria-labelledby="hm-concerns-title">
+                <SectionHeader
+                  id="hm-concerns-title"
+                  className="hm-concerns-head"
+                  title={T.concernsTitle}
+                  description={T.concernsText}
+                  action={healthConcerns.length > 1 ? <ViewAll label={T.concernsTitle} onClick={() => navigate('/consult')} /> : null}
+                />
+                <ConcernCarousel label={T.concernsTitle} marquee>
+                  {healthConcerns.map((item) => (
+                    <Tile
+                      cutout
+                      key={item.id}
+                      image={item.image_url}
+                      label={item.name}
+                      onClick={() =>
+                        navigate(
+                          `/consult/concern/${item.id}?name=${encodeURIComponent(item.name)}${item.description ? `&desc=${encodeURIComponent(item.description)}` : ''
+                          }`,
+                          { state: { categoryName: item.name, categoryDesc: item.description } },
+                        )
+                      }
+                    />
+                  ))}
+                </ConcernCarousel>
+              </Reveal>
+            ) : null}
           </LazyBlock>
 
           <LazyBlock blockRef={ourDocsRef} done={ourDoctorsDone} minHeight={120} skeleton={<HomeDoctorsSkeleton label="Loading our doctors" />}>
-          {ourDoctors.length > 0 ? (
-            <Reveal as="section" className="hm-section hm-panel hm-odocs" aria-labelledby="hm-odocs-title">
-              <SectionHeader
-                className="hm-head-inline"
-                id="hm-odocs-title"
-                title="Our doctors"
-                description="Certified Ayurvedic experts, ready to consult."
-                action={<ViewAll label="Our doctors" onClick={() => navigate('/consult/doctors')} />}
-              />
-              <Rail label="Our doctors">
-                {ourDoctors.map((item, index) => {
-                  const id = getDoctorId(item);
-                  return (
-                    <RailItem key={id}>
-                      <OurDoctorCard
-                        item={item}
-                        index={index}
-                        onOpen={() => navigate(`/consult/doctors/${id}`)}
-                      />
-                    </RailItem>
-                  );
-                })}
-              </Rail>
-            </Reveal>
-          ) : null}
+            {ourDoctors.length > 0 ? (
+              <Reveal as="section" className="hm-section hm-panel hm-odocs" aria-labelledby="hm-odocs-title">
+                <SectionHeader
+                  className="hm-head-inline"
+                  id="hm-odocs-title"
+                  title="Our doctors"
+                  description="Certified Ayurvedic experts, ready to consult."
+                  action={<ViewAll label="Our doctors" onClick={() => navigate('/consult/doctors')} />}
+                />
+                <Rail label="Our doctors">
+                  {ourDoctors.map((item, index) => {
+                    const id = getDoctorId(item);
+                    return (
+                      <RailItem key={id}>
+                        <OurDoctorCard
+                          item={item}
+                          index={index}
+                          onOpen={() => navigate(`/consult/doctors/${id}`)}
+                        />
+                      </RailItem>
+                    );
+                  })}
+                </Rail>
+              </Reveal>
+            ) : null}
           </LazyBlock>
 
           <LazyBlock blockRef={brandsRef} done={brandsSeen && !brandsLoading} minHeight={120} skeleton={<SectionHold label={T.brandsTitle} minHeight={120} variant="chips" />}>
-          {brands.length > 0 ? (
-            <Reveal as="section" className="hm-section hm-panel hm-brands-panel" aria-labelledby="hm-brands-title">
-              <SectionHeader
-                className="hm-head-inline"
-                id="hm-brands-title"
-                title={T.brandsTitle}
-                description={T.brandsText}
-                action={<ViewAll label={T.brandsTitle} onClick={() => navigate('/products')} />}
-              />
-              <ConcernCarousel label={T.brandsTitle}>
-                {brands.map((item) => (
-                  <Tile
-                    key={item.id}
-                    className="hm-brand-tile"
-                    image={item.image_url || resolveImageUrl(item)}
-                    icon={Pill}
-                    label={item.name}
-                    onClick={() =>
-                      navigate(
-                        `/products/category?mode=product&brand=${item.id}&name=${encodeURIComponent(
-                          item.name,
-                        )}${medicineCategoryId ? `&service=${medicineCategoryId}` : ''}`,
-                      )
-                    }
-                  />
-                ))}
-              </ConcernCarousel>
-            </Reveal>
-          ) : null}
+            {brands.length > 0 ? (
+              <Reveal as="section" className="hm-section hm-panel hm-brands-panel" aria-labelledby="hm-brands-title">
+                <SectionHeader
+                  className="hm-head-inline"
+                  id="hm-brands-title"
+                  title={T.brandsTitle}
+                  description={T.brandsText}
+                  action={<ViewAll label={T.brandsTitle} onClick={() => navigate('/products')} />}
+                />
+                <ConcernCarousel label={T.brandsTitle}>
+                  {brands.map((item) => (
+                    <Tile
+                      key={item.id}
+                      className="hm-brand-tile"
+                      image={item.image_url || resolveImageUrl(item)}
+                      icon={Pill}
+                      label={item.name}
+                      onClick={() =>
+                        navigate(
+                          `/products/category?mode=product&brand=${item.id}&name=${encodeURIComponent(
+                            item.name,
+                          )}${medicineCategoryId ? `&service=${medicineCategoryId}` : ''}`,
+                        )
+                      }
+                    />
+                  ))}
+                </ConcernCarousel>
+              </Reveal>
+            ) : null}
           </LazyBlock>
 
           <LazyBlock blockRef={doctorRowRef} done={doctorRowSeen} minHeight={360}>
-          {showVisitedDoctors || showSuggestedDoctors ? (
-            <div className={splitDoctorRow ? 'hm-doctor-row hm-doctor-row--split' : 'hm-doctor-row'}>
-              {loadingVisitedDoctors && visitedDoctors.length === 0 ? (
-                <section className="hm-section" aria-busy="true">
-                  <DoctorRailHeader
-                    title={T.visitedTitle}
-                    description={T.visitedText}
-                    onViewAll={() => navigate('/consult')}
-                  />
-                  <SectionHold label={T.visitedTitle} minHeight={120} variant="list" count={2} />
-                </section>
-              ) : null}
+            {showVisitedDoctors || showSuggestedDoctors ? (
+              <div className={splitDoctorRow ? 'hm-doctor-row hm-doctor-row--split' : 'hm-doctor-row'}>
+                {loadingVisitedDoctors && visitedDoctors.length === 0 ? (
+                  <section className="hm-section" aria-busy="true">
+                    <DoctorRailHeader
+                      title={T.visitedTitle}
+                      description={T.visitedText}
+                      onViewAll={() => navigate('/consult')}
+                    />
+                    <SectionHold label={T.visitedTitle} minHeight={120} variant="list" count={2} />
+                  </section>
+                ) : null}
 
-              {visitedDoctors.length > 0 ? (
-                <Reveal as="section" className="hm-section hm-visited" aria-labelledby="hm-visited-title">
-                  <DoctorRailHeader
-                    id="hm-visited-title"
-                    title={T.visitedTitle}
-                    description={T.visitedText}
-                    reserveEyebrow={splitDoctorRow}
-                    onViewAll={() => navigate('/consult')}
-                  />
-                  <VisitedDoctorList
-                    items={recentDoctors}
-                    label={T.visitedTitle}
-                    fallbackSpeciality={T.ayurvedicDoctor}
-                  />
-                </Reveal>
-              ) : null}
+                {visitedDoctors.length > 0 ? (
+                  <Reveal as="section" className="hm-section hm-visited" aria-labelledby="hm-visited-title">
+                    <DoctorRailHeader
+                      id="hm-visited-title"
+                      title={T.visitedTitle}
+                      description={T.visitedText}
+                      reserveEyebrow={splitDoctorRow}
+                      onViewAll={() => navigate('/consult')}
+                    />
+                    <VisitedDoctorList
+                      items={recentDoctors}
+                      label={T.visitedTitle}
+                      fallbackSpeciality={T.ayurvedicDoctor}
+                    />
+                  </Reveal>
+                ) : null}
 
-              {!isSectionDone('doctors') && !doctors.length ? (
-                <section className="hm-section" aria-busy="true">
-                  <DoctorRailHeader
-                    eyebrow={T.doctorsEyebrow}
-                    title={T.doctorsTitle}
-                    description={T.doctorsText}
-                    onViewAll={() => navigate('/consult/doctors')}
-                  />
-                  <SectionHold label={T.doctorsTitle} minHeight={120} variant="list" count={3} />
-                </section>
-              ) : null}
+                {!isSectionDone('doctors') && !doctors.length ? (
+                  <section className="hm-section" aria-busy="true">
+                    <DoctorRailHeader
+                      eyebrow={T.doctorsEyebrow}
+                      title={T.doctorsTitle}
+                      description={T.doctorsText}
+                      onViewAll={() => navigate('/consult/doctors')}
+                    />
+                    <SectionHold label={T.doctorsTitle} minHeight={120} variant="list" count={3} />
+                  </section>
+                ) : null}
 
-              {doctors.length > 0 ? (
-                <Reveal as="section" className="hm-section" delay={120} aria-labelledby="hm-doctors-title">
-                  <DoctorRailHeader
-                    id="hm-doctors-title"
-                    eyebrow={T.doctorsEyebrow}
-                    title={T.doctorsTitle}
-                    description={T.doctorsText}
-                    onViewAll={() => navigate('/consult/doctors')}
-                  />
-                  <DoctorTable items={suggestedDoctors} label={T.doctorsTitle} />
-                </Reveal>
-              ) : null}
-            </div>
-          ) : null}
+                {doctors.length > 0 ? (
+                  <Reveal as="section" className="hm-section" delay={120} aria-labelledby="hm-doctors-title">
+                    <DoctorRailHeader
+                      id="hm-doctors-title"
+                      eyebrow={T.doctorsEyebrow}
+                      title={T.doctorsTitle}
+                      description={T.doctorsText}
+                      onViewAll={() => navigate('/consult/doctors')}
+                    />
+                    <DoctorTable items={suggestedDoctors} label={T.doctorsTitle} />
+                  </Reveal>
+                ) : null}
+              </div>
+            ) : null}
           </LazyBlock>
 
-          <LazyBlock blockRef={productsRef} done={isSectionDone('products')} minHeight={140} skeleton={<HomeProductsSkeleton label={T.productsTitle} />}>
-          {productPanels.length ? (
-            <div className="hm-product-row hm-product-grid">
-              {productPanels.map((panel) => (
-                <Reveal
-                  as="section"
-                  key={panel.key}
-                  className="hm-section hm-products"
-                  aria-labelledby={`hm-panel-${panel.key}`}
-                >
-                  <DoctorRailHeader
-                    id={`hm-panel-${panel.key}`}
-                    title={panel.title}
-                    description={panel.description}
-                    onViewAll={() => navigate(panel.to)}
-                  />
-                  {renderProductRail(panel.items, panel.title, true)}
-                </Reveal>
-              ))}
-            </div>
+          {consultPackages.length ? (
+            <Reveal as="section" className="hm-section hm-panel" aria-labelledby="hm-packages-title">
+              <SectionHeader
+                id="hm-packages-title"
+                title={T.packagesTitle}
+                action={<ViewAll label={T.packagesTitle} onClick={() => navigate('/packages')} />}
+              />
+              <div className="hm-plan-band">
+                <p className="hm-plan-band__tag">
+                  <span className="hm-plan-band__dot" aria-hidden />
+                  Save more with guided Ayurvedic care plans
+                </p>
+                <Rail label={T.packagesTitle} className="hm-package-rail" auto interval={3200} controls>
+                  {[...consultPackages]
+                    .sort((a, b) => Number(isCarePlan(b)) - Number(isCarePlan(a)) || planDiscount(b) - planDiscount(a))
+                    .slice(0, 8)
+                    .map((item) => (
+                      <RailItem key={item.id}>
+                        <DummyOfferCard
+                          item={item}
+                          kind="package"
+                          onClick={() => navigate(`/packages/${encodeURIComponent(item.id)}`)}
+                        />
+                      </RailItem>
+                    ))}
+                </Rail>
+              </div>
+            </Reveal>
           ) : null}
+
+          <LazyBlock blockRef={productsRef} done={isSectionDone('products')} minHeight={140} skeleton={<HomeProductsSkeleton label={T.productsTitle} />}>
+            {productPanels.length ? (
+              <div className="hm-product-row hm-product-grid">
+                {productPanels.map((panel) => (
+                  <Reveal
+                    as="section"
+                    key={panel.key}
+                    className="hm-section hm-products"
+                    aria-labelledby={`hm-panel-${panel.key}`}
+                  >
+                    <DoctorRailHeader
+                      id={`hm-panel-${panel.key}`}
+                      title={panel.title}
+                      description={panel.description}
+                      onViewAll={() => navigate(panel.to)}
+                    />
+                    {renderProductRail(panel.items, panel.title, true)}
+                  </Reveal>
+                ))}
+              </div>
+            ) : null}
           </LazyBlock>
 
           <LazyBlock blockRef={wellnessRef} done={isSectionDone('yoga') && isSectionDone('diet')} minHeight={140} skeleton={<YogaPoseRailSkeleton label={T.yogaTitle} count={4} />}>
 
-          {yogaSessions.length > 0 || dietProducts.length > 0 ? (
-            <div
-              className={`hm-wellness${yogaSessions.length > 0 && dietProducts.length > 0 ? ' hm-wellness--pair' : ''}`}
-            >
-              {yogaSessions.length > 0 ? (
-                <Reveal as="section" className="hm-well hm-well--move" aria-labelledby="hm-yoga-title">
-                  <div className="hm-well__head">
-                    <div className="hm-well__lead">
-                      <h2 id="hm-yoga-title" className="hm-well__title">
-                        {T.yogaTitle}
-                      </h2>
-                      <p className="hm-well__text">{T.yogaText}</p>
+            {yogaSessions.length > 0 || dietProducts.length > 0 ? (
+              <div
+                className={`hm-wellness${yogaSessions.length > 0 && dietProducts.length > 0 ? ' hm-wellness--pair' : ''}`}
+              >
+                {yogaSessions.length > 0 ? (
+                  <Reveal as="section" className="hm-well hm-well--move" aria-labelledby="hm-yoga-title">
+                    <div className="hm-well__head">
+                      <div className="hm-well__lead">
+                        <h2 id="hm-yoga-title" className="hm-well__title">
+                          {T.yogaTitle}
+                        </h2>
+                        <p className="hm-well__text">{T.yogaText}</p>
+                      </div>
+                      {yogaSessions.length > 1 ? (
+                        <ViewAll label={T.yogaTitle} onClick={() => navigate('/yoga')} />
+                      ) : null}
                     </div>
-                    {yogaSessions.length > 1 ? (
-                      <ViewAll label={T.yogaTitle} onClick={() => navigate('/yoga')} />
-                    ) : null}
-                  </div>
-                  <Rail label={T.yogaTitle} auto interval={3000} motionOverride controls className="hm-yoga-rail">
-                    {yogaSessions.map((item) => (
-                      <RailItem key={item.id}>
-                        <YogaSessionCard
-                          item={item}
-                          onClick={() => navigate(`/yoga/${item.id}`, { state: { item } })}
-                        />
-                      </RailItem>
-                    ))}
-                  </Rail>
-                </Reveal>
-              ) : null}
+                    <Rail label={T.yogaTitle} auto interval={3000} motionOverride controls className="hm-yoga-rail">
+                      {yogaSessions.map((item) => (
+                        <RailItem key={item.id}>
+                          <YogaSessionCard
+                            item={item}
+                            onClick={() => navigate(`/yoga/${item.id}`, { state: { item } })}
+                          />
+                        </RailItem>
+                      ))}
+                    </Rail>
+                  </Reveal>
+                ) : null}
 
-              {dietProducts.length > 0 ? (
-                <Reveal as="section" className="hm-well hm-well--nourish" aria-labelledby="hm-diet-title">
-                  <div className="hm-well__head">
-                    <div className="hm-well__lead">
-                      <h2 id="hm-diet-title" className="hm-well__title">
-                        {T.dietTitle}
-                      </h2>
-                      <p className="hm-well__text">{T.dietText}</p>
+                {dietProducts.length > 0 ? (
+                  <Reveal as="section" className="hm-well hm-well--nourish" aria-labelledby="hm-diet-title">
+                    <div className="hm-well__head">
+                      <div className="hm-well__lead">
+                        <h2 id="hm-diet-title" className="hm-well__title">
+                          {T.dietTitle}
+                        </h2>
+                        <p className="hm-well__text">{T.dietText}</p>
+                      </div>
+                      <ViewAll label={T.dietTitle} onClick={() => navigate('/diet?view=all')} />
                     </div>
-                    <ViewAll label={T.dietTitle} onClick={() => navigate('/diet?view=all')} />
-                  </div>
-                  <Rail label={T.dietTitle} auto controls className="hm-diet-rail">
-                    {dietProducts.filter((d, i, all) => all.findIndex((x) => x.id === d.id) === i).map((item) => (
-                      <RailItem key={item.id}>
-                        <DietPlanCard
-                          item={item}
-                          onClick={() => navigate(`/diet/${item.id}`, { state: { item } })}
-                        />
-                      </RailItem>
-                    ))}
-                  </Rail>
-                </Reveal>
-              ) : null}
-            </div>
-          ) : null}
+                    <Rail label={T.dietTitle} auto controls className="hm-diet-rail">
+                      {dietProducts.filter((d, i, all) => all.findIndex((x) => x.id === d.id) === i).map((item) => (
+                        <RailItem key={item.id}>
+                          <DietPlanCard
+                            item={item}
+                            onClick={() => navigate(`/diet/${item.id}`, { state: { item } })}
+                          />
+                        </RailItem>
+                      ))}
+                    </Rail>
+                  </Reveal>
+                ) : null}
+              </div>
+            ) : null}
           </LazyBlock>
 
-          {consultPackages.length ? (
-          <Reveal as="section" className="hm-section hm-panel" aria-labelledby="hm-packages-title">
-            <SectionHeader
-              id="hm-packages-title"
-              title={T.packagesTitle}
-              action={<ViewAll label={T.packagesTitle} onClick={() => navigate('/packages')} />}
-            />
-            <div className="hm-plan-band">
-              <p className="hm-plan-band__tag">
-                <span className="hm-plan-band__dot" aria-hidden />
-                Save more with guided Ayurvedic care plans
-              </p>
-              <Rail label={T.packagesTitle} className="hm-package-rail" auto interval={3200} controls>
-                {[...consultPackages]
-                  .sort((a, b) => Number(isCarePlan(b)) - Number(isCarePlan(a)) || planDiscount(b) - planDiscount(a))
-                  .slice(0, 8)
-                  .map((item) => (
-                    <RailItem key={item.id}>
-                      <DummyOfferCard
-                        item={item}
-                        kind="package"
-                        onClick={() => navigate(`/packages/${encodeURIComponent(item.id)}`)}
-                      />
-                    </RailItem>
-                  ))}
-              </Rail>
-            </div>
-          </Reveal>
-          ) : null}
+
 
           {/* TEMP hidden per Rohit — Health Lab (Home collection) + Panchakarma (Classical therapies) sections
           <Reveal as="section" className="hm-section hm-panel hm-lab" aria-labelledby="hm-lab-title">

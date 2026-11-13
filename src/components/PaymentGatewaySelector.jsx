@@ -6,10 +6,12 @@ import '../design/components/payment-gateway.css';
 /** "Pay using" chips. Renders nothing unless more than one gateway is enabled. */
 export default function PaymentGatewaySelector({ gateways, selected, onSelect, disabled }) {
   if (!Array.isArray(gateways) || gateways.length < 2) return null;
+  console.log('PaymentGatewaySelector enabled gateways:', gateways, 'selected:', selected);
   return (
     <div className="pgw" role="radiogroup" aria-label="Pay using">
       <span className="pgw__label">Pay using</span>
       {gateways.map((id) => (
+        id === selected &&
         <Chip
           key={id}
           role="radio"

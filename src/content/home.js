@@ -58,7 +58,7 @@ export const HOME_COPY = {
   yogaText: 'Gentle, guided practices from Ayurvedic experts - find your calm in just a few minutes a day.',
   dietTitle: 'Diet plans',
   dietText: 'Seasonal meals shaped around your constitution.',
-  packagesTitle: 'Consultation Packages',
+  packagesTitle: 'Care Plan Packages',
   brandsEyebrow: 'Authentic sourcing',
   brandsTitle: 'Trusted Brands',
   brandsText: 'Formulas from houses we stock.',
