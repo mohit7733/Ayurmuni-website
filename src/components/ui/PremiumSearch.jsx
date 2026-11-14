@@ -136,9 +136,7 @@ export default function PremiumSearch({
           <X size={14} aria-hidden />
         </button>
       ) : shortcut ? (
-        <kbd className="pm-search__kbd" aria-hidden>
-          /
-        </kbd>
+        ""
       ) : null}
       {submitText ? (
         <button type="submit" className="pm-search__submit">

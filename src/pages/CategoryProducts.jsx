@@ -295,10 +295,11 @@ export default function CategoryProducts() {
               onChange={setSearch}
               onSubmit={goSearch}
               placeholder={T.searchCollection}
-              label={T.searchCollection}
-            suggestions={searchSuggestions(subcategories, topCategories)}
+              label={T.searchCollection}
+
+            suggestions={searchSuggestions(products)}
             />
-            <kbd className="cp-kbd" aria-hidden>/</kbd>
+            {/* <kbd className="cp-kbd" aria-hidden>/</kbd> */}
           </div>
         </header>
 
