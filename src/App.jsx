@@ -477,6 +477,10 @@ export default function App() {
                         element={<VideoCall />}
                       />
                       <Route path="/medicines" element={<Medicines />} />
+                      <Route
+                        path="/medicines/category"
+                        element={<CategoryProducts />}
+                      />
                       {/* Health Lab disabled per Rohit
                   <Route path="/labs" element={<OrangeLab />} /> */}
                       <Route path="/packages" element={<Packages />} />

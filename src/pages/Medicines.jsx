@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Check, Leaf, Pill, SlidersHorizontal, X } from 'lucide-react';
+import { ArrowRight, Check, Leaf, Pill, SlidersHorizontal, X } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import ProductCard from '../components/ProductCard';
 import { DietPlanCard, SectionHead, ViewAll } from '../components/ServiceHome';
@@ -279,6 +279,14 @@ export default function Medicines() {
 
   const showAllMedicines = () => selectCategory('', '');
 
+  const openCategoryBrowse = (extra = {}) => {
+    const query = new URLSearchParams({ mode: 'product' });
+    if (medicineCategoryId) query.set('service', medicineCategoryId);
+    if (extra.category) query.set('category', extra.category);
+    if (extra.name) query.set('name', extra.name);
+    navigate(`/medicines/category?${query.toString()}`);
+  };
+
   useEffect(() => {
     if (!concernId || categoriesLoading) return;
     const match = categoryForConcern({ name: concernName });
@@ -305,16 +313,16 @@ export default function Medicines() {
 
   const placeBar = showSkeleton ? 'top' : 'all';
   const searchBar = (
-      <PageBar className="am-page-bar--slot" id="med-hero" title="Shop medicines">
-        <SearchField
-          value={search}
-          onChange={setSearch}
-          onSubmit={goSearch}
-          placeholder="Search medicines"
-          label="Search medicines"
+    <PageBar className="am-page-bar--slot" id="med-hero" title="Shop medicines">
+      <SearchField
+        value={search}
+        onChange={setSearch}
+        onSubmit={goSearch}
+        placeholder="Search medicines"
+        label="Search medicines"
         suggestions={searchSuggestions(products)}
-        />
-      </PageBar>
+      />
+    </PageBar>
   );
 
   return (
@@ -333,9 +341,14 @@ export default function Medicines() {
                     title={catalogTitle}
                     description={catalogText}
                     action={
-                      categoryId ? (
-                        <ViewAll label={T.allMedicines} onClick={showAllMedicines} />
-                      ) : null
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openCategoryBrowse({ name: T.allMedicines })}
+                        trailingIcon={<ArrowRight size={16} aria-hidden />}
+                      >
+                        {T.viewAll}
+                      </Button>
                     }
                   />
                   <div className="st-catalog">
@@ -387,96 +400,96 @@ export default function Medicines() {
                       ) : null}
                     </nav>
                     <div className="st-catalog__main">
-                  {products.length > 0 || hasActiveFilters || categoryId ? (
-                    <div className="st-controls">
-                      <div className="st-controls__info">
-                        <span>
-                          {filteredProducts.length}{' '}
-                          {filteredProducts.length === 1 ? 'medicine' : 'medicines'}
-                        </span>
-                        {hasActiveFilters ? (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={clearFilters}
-                            leadingIcon={<X size={14} />}
-                          >
-                            Clear filters
-                          </Button>
-                        ) : null}
-                      </div>
-                      {placeBar === 'all' ? searchBar : null}
-                      <div className="st-controls__actions">
-                        <select
-                          value={sortBy}
-                          onChange={(event) => setSortBy(event.target.value)}
-                          className="st-sort-select"
-                          aria-label="Sort medicines"
-                        >
-                          <option value="relevance">Sort: Relevance</option>
-                          <option value="price_low">Price: Low to High</option>
-                          <option value="price_high">Price: High to Low</option>
-                          <option value="rating">Highest Rated</option>
-                          <option value="name">Name: A-Z</option>
-                        </select>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => setShowFilters(true)}
-                          leadingIcon={<SlidersHorizontal size={16} />}
-                        >
-                          Filters
-                        </Button>
-                      </div>
-                    </div>
-                  ) : placeBar === 'all' ? (
-                    <div className="st-controls st-controls--search-only">{searchBar}</div>
-                  ) : null}
-                  {catalogLoading ? (
-                    <CatalogPageSkeleton count={8} label="Loading medicines" />
-                  ) : filteredProducts.length === 0 ? (
-                    <EmptyState
-                      icon={<Leaf size={28} />}
-                      title={
-                        hasActiveFilters
-                          ? 'No medicines match filters'
-                          : categoryId
-                            ? 'No medicines in this category'
-                            : 'No medicines available'
-                      }
-                      description={
-                        hasActiveFilters
-                          ? 'Try adjusting your filters'
-                          : categoryId
-                            ? 'Try another category, or view all medicines.'
-                            : 'Try another category, or search by medicine name.'
-                      }
-                      action={
-                        hasActiveFilters ? (
-                          <Button variant="secondary" onClick={clearFilters}>
-                            Clear filters
-                          </Button>
-                        ) : categoryId ? (
-                          <Button variant="secondary" onClick={showAllMedicines}>
-                            All medicines
-                          </Button>
-                        ) : null
-                      }
-                    />
-                  ) : (
-                    <ul className="svc-catalog">
-                      {filteredProducts.map((item) => (
-                        <li key={item.variant_id || item.id}>
-                          <ProductCard item={item} detailBase="/medicines" />
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  {hasMore ? (
-                    <div ref={moreRef} className="svc-more" aria-live="polite">
-                      {loadingMore ? 'Loading…' : ''}
-                    </div>
-                  ) : null}
+                      {products.length > 0 || hasActiveFilters || categoryId ? (
+                        <div className="st-controls">
+                          <div className="st-controls__info">
+                            <span>
+                              {filteredProducts.length}{' '}
+                              {filteredProducts.length === 1 ? 'medicine' : 'medicines'}
+                            </span>
+                            {hasActiveFilters ? (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={clearFilters}
+                                leadingIcon={<X size={14} />}
+                              >
+                                Clear filters
+                              </Button>
+                            ) : null}
+                          </div>
+                          {placeBar === 'all' ? searchBar : null}
+                          <div className="st-controls__actions">
+                            <select
+                              value={sortBy}
+                              onChange={(event) => setSortBy(event.target.value)}
+                              className="st-sort-select"
+                              aria-label="Sort medicines"
+                            >
+                              <option value="relevance">Sort: Relevance</option>
+                              <option value="price_low">Price: Low to High</option>
+                              <option value="price_high">Price: High to Low</option>
+                              <option value="rating">Highest Rated</option>
+                              <option value="name">Name: A-Z</option>
+                            </select>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => setShowFilters(true)}
+                              leadingIcon={<SlidersHorizontal size={16} />}
+                            >
+                              Filters
+                            </Button>
+                          </div>
+                        </div>
+                      ) : placeBar === 'all' ? (
+                        <div className="st-controls st-controls--search-only">{searchBar}</div>
+                      ) : null}
+                      {catalogLoading ? (
+                        <CatalogPageSkeleton count={8} label="Loading medicines" />
+                      ) : filteredProducts.length === 0 ? (
+                        <EmptyState
+                          icon={<Leaf size={28} />}
+                          title={
+                            hasActiveFilters
+                              ? 'No medicines match filters'
+                              : categoryId
+                                ? 'No medicines in this category'
+                                : 'No medicines available'
+                          }
+                          description={
+                            hasActiveFilters
+                              ? 'Try adjusting your filters'
+                              : categoryId
+                                ? 'Try another category, or view all medicines.'
+                                : 'Try another category, or search by medicine name.'
+                          }
+                          action={
+                            hasActiveFilters ? (
+                              <Button variant="secondary" onClick={clearFilters}>
+                                Clear filters
+                              </Button>
+                            ) : categoryId ? (
+                              <Button variant="secondary" onClick={showAllMedicines}>
+                                All medicines
+                              </Button>
+                            ) : null
+                          }
+                        />
+                      ) : (
+                        <ul className="svc-catalog">
+                          {filteredProducts.map((item) => (
+                            <li key={item.variant_id || item.id}>
+                              <ProductCard item={item} detailBase="/medicines" />
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      {hasMore ? (
+                        <div ref={moreRef} className="svc-more" aria-live="polite">
+                          {loadingMore ? 'Loading…' : ''}
+                        </div>
+                      ) : null}
                     </div>
                   </div>
                 </section>
@@ -534,7 +547,7 @@ export default function Medicines() {
                         key={item.id}
                         className={
                           categoryForConcern(item)?.id &&
-                          String(categoryForConcern(item).id) === String(categoryId)
+                            String(categoryForConcern(item).id) === String(categoryId)
                             ? 'is-on'
                             : undefined
                         }
@@ -569,7 +582,7 @@ export default function Medicines() {
                           navigate(
                             `/products/category?mode=product&brand=${item.id}&name=${encodeURIComponent(
                               item.name,
-                            )}${medicineCategoryId ? `&service=${medicineCategoryId}` : ''}`,
+                            )}`,
                           )
                         }
                       />

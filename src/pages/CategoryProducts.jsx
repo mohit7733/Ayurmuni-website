@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ArrowUpDown, Check, RefreshCw, SlidersHorizontal, X } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import ProductCard from '../components/ProductCard';
 import useProductCategories from '../hooks/useProductCategories';
 import useCategoryProducts from '../hooks/useCategoryProducts';
+import useDashboardCategories from '../hooks/useDashboardCategories';
 import { mapProductCategory, normalizeApiList } from '../home/catalog';
+import { getServiceCategoryId, resolveServiceCategoryKey } from '../home/serviceCategories';
 import { getHealthCategories } from '../services/productService';
+import { isPrescriptionRequired, isProductOutOfStock } from '../product/stock';
 import {
   Button,
   Chip,
@@ -35,18 +38,70 @@ const normalizeBrand = (value) =>
     .toLowerCase()
     .replace(/[^a-z0-9]/g, '');
 
+const itemServiceId = (item) =>
+  String(
+    item?.service_category_id ??
+      item?.service_category?.id ??
+      item?.serviceCategoryId ??
+      '',
+  );
+
 export default function CategoryProducts() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [params] = useSearchParams();
-  const mode = params.get('mode') === 'health' ? 'health' : 'product';
-  const serviceCategoryId = params.get('service') || null;
   const brandId = params.get('brand') || '';
+  const isBrandMix = Boolean(brandId);
+  const isMedicine = !isBrandMix && location.pathname.startsWith('/medicines');
+  const shellTab = isMedicine ? 'medicines' : 'products';
+  const detailBase = isMedicine ? '/medicines' : '/products';
+  const mode = params.get('mode') === 'health' ? 'health' : 'product';
+  // Brand browse is always mixed — ignore service so products + medicines both load.
+  const serviceCategoryId = isBrandMix ? null : params.get('service') || null;
   const initialCategory = params.get('category') || 'all';
   const title =
     params.get('name') ||
     (brandId ? 'Brand' : mode === 'health' ? 'Shop by concern' : 'Shop by category');
 
   const brandTitleKey = brandId ? normalizeBrand(params.get('name')) : '';
+  const { categories: dashboardCategories, loading: dashboardLoading } =
+    useDashboardCategories();
+  const medicineCategoryId = useMemo(
+    () => getServiceCategoryId(dashboardCategories, 'medicine'),
+    [dashboardCategories],
+  );
+  const productsCategoryId = useMemo(
+    () => getServiceCategoryId(dashboardCategories, 'products'),
+    [dashboardCategories],
+  );
+  const brandReady = isBrandMix && !dashboardLoading;
+  const canSplitBrand =
+    brandReady && Boolean(productsCategoryId) && Boolean(medicineCategoryId);
+
+  const resolveCatalogKind = (item) => {
+    if (item?.catalog_kind === 'medicine' || item?.catalog_kind === 'product') {
+      return item.catalog_kind;
+    }
+    const sid = itemServiceId(item);
+    if (medicineCategoryId && sid === String(medicineCategoryId)) return 'medicine';
+    if (productsCategoryId && sid === String(productsCategoryId)) return 'product';
+    const key = resolveServiceCategoryKey(
+      item?.service_category || {
+        id: sid,
+        name: item?.service_category_name || item?.service_category?.name,
+        service_category_code: item?.service_category_code,
+      },
+    );
+    if (key === 'medicine') return 'medicine';
+    if (key === 'products') return 'product';
+    if (isPrescriptionRequired(item)) return 'medicine';
+    return 'product';
+  };
+
+  const resolveDetailBase = (item) => {
+    if (!isBrandMix) return detailBase;
+    return resolveCatalogKind(item) === 'medicine' ? '/medicines' : '/products';
+  };
 
   // '/' focuses the collection search (ignored while typing in a field).
   useEffect(() => {
@@ -83,22 +138,23 @@ export default function CategoryProducts() {
   const [showFilters, setShowFilters] = useState(false);
   const [brandIds, setBrandIds] = useState(brandId ? [brandId] : []);
   const [brandNames, setBrandNames] = useState([]);
+  const [catalogKind, setCatalogKind] = useState('all');
   const { brands: brandRecords } = useBrands();
 
   const { categories: topCategories } = useProductCategories(
     null,
-    mode === 'product' ? serviceCategoryId : null,
+    mode === 'product' && !isBrandMix ? serviceCategoryId : null,
   );
   const { categories: subcategories } = useProductCategories(
     mode === 'product' && !brandId ? activeCategoryId : null,
-    mode === 'product' ? serviceCategoryId : null,
+    mode === 'product' && !isBrandMix ? serviceCategoryId : null,
   );
   const visibleSubs =
     mode === 'product' && !brandId && activeCategoryId ? subcategories : [];
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState(null);
 
   useEffect(() => {
-    if (mode !== 'health') return undefined;
+    if (mode !== 'health' || isBrandMix) return undefined;
     let alive = true;
     (async () => {
       const res = await getHealthCategories(
@@ -114,14 +170,11 @@ export default function CategoryProducts() {
     return () => {
       alive = false;
     };
-  }, [mode, serviceCategoryId]);
+  }, [mode, serviceCategoryId, isBrandMix]);
 
   const productFilter = useMemo(() => {
     if (brandId) {
-      return {
-        brand_name_id: brandId,
-        ...(serviceCategoryId ? { service_category_id: serviceCategoryId } : {}),
-      };
+      return { brand_name_id: brandId };
     }
     if (mode === 'health') {
       return {
@@ -143,20 +196,145 @@ export default function CategoryProducts() {
 
   // Price / rating / dosha / sort are also sent to the API (same params as the app); the
   // client-side pass below keeps results exact for rows the API leaves unrated.
-  const requestFilter = useMemo(
+  const sharedExtras = useMemo(
     () => ({
-      ...productFilter,
       min_price: priceRange[0] > 0 ? priceRange[0] : null,
       max_price: priceRange[1] < 10000 ? priceRange[1] : null,
       min_rating: minRating > 0 ? minRating : null,
       dosha_type: dosha === 'all' ? null : dosha,
       sort: toProductApiSort(sortBy),
     }),
-    [productFilter, priceRange, minRating, dosha, sortBy],
+    [priceRange, minRating, dosha, sortBy],
   );
 
-  const { products, loading, loadingMore, hasMore, loadMore, refresh, refreshing } =
-    useCategoryProducts(requestFilter, []);
+  const requestFilter = useMemo(
+    () => ({
+      ...productFilter,
+      ...sharedExtras,
+    }),
+    [productFilter, sharedExtras],
+  );
+
+  const brandProductFilter = useMemo(
+    () => ({
+      brand_name_id: brandId,
+      ...(productsCategoryId ? { service_category_id: productsCategoryId } : {}),
+      ...sharedExtras,
+    }),
+    [brandId, productsCategoryId, sharedExtras],
+  );
+
+  const brandMedicineFilter = useMemo(
+    () => ({
+      brand_name_id: brandId,
+      ...(medicineCategoryId ? { service_category_id: medicineCategoryId } : {}),
+      ...sharedExtras,
+    }),
+    [brandId, medicineCategoryId, sharedExtras],
+  );
+
+  const brandUnscopedFilter = useMemo(
+    () => ({
+      brand_name_id: brandId,
+      ...sharedExtras,
+    }),
+    [brandId, sharedExtras],
+  );
+
+  const regularCatalog = useCategoryProducts(requestFilter, [], {
+    enabled: !isBrandMix,
+  });
+  const brandProductCatalog = useCategoryProducts(brandProductFilter, [], {
+    enabled: canSplitBrand,
+  });
+  const brandMedicineCatalog = useCategoryProducts(brandMedicineFilter, [], {
+    enabled: canSplitBrand,
+  });
+  const brandUnscopedCatalog = useCategoryProducts(brandUnscopedFilter, [], {
+    enabled: brandReady && !canSplitBrand,
+  });
+
+  const products = useMemo(() => {
+    if (!isBrandMix) return regularCatalog.products;
+    if (!canSplitBrand) {
+      return brandUnscopedCatalog.products.map((item) => ({
+        ...item,
+        catalog_kind: resolveCatalogKind(item),
+      }));
+    }
+    const seen = new Set();
+    const merged = [];
+    brandProductCatalog.products.forEach((item) => {
+      const key = String(item.variant_id ?? item.id ?? '');
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+      merged.push({ ...item, catalog_kind: 'product' });
+    });
+    brandMedicineCatalog.products.forEach((item) => {
+      const key = String(item.variant_id ?? item.id ?? '');
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+      merged.push({ ...item, catalog_kind: 'medicine' });
+    });
+    return merged;
+  }, [
+    isBrandMix,
+    canSplitBrand,
+    regularCatalog.products,
+    brandUnscopedCatalog.products,
+    brandProductCatalog.products,
+    brandMedicineCatalog.products,
+    medicineCategoryId,
+    productsCategoryId,
+  ]);
+
+  const loading = isBrandMix
+    ? dashboardLoading ||
+      (canSplitBrand
+        ? brandProductCatalog.loading || brandMedicineCatalog.loading
+        : brandUnscopedCatalog.loading)
+    : regularCatalog.loading;
+  const loadingMore = isBrandMix
+    ? canSplitBrand
+      ? brandProductCatalog.loadingMore || brandMedicineCatalog.loadingMore
+      : brandUnscopedCatalog.loadingMore
+    : regularCatalog.loadingMore;
+  const refreshing = isBrandMix
+    ? canSplitBrand
+      ? brandProductCatalog.refreshing || brandMedicineCatalog.refreshing
+      : brandUnscopedCatalog.refreshing
+    : regularCatalog.refreshing;
+  const hasMore = isBrandMix
+    ? canSplitBrand
+      ? brandProductCatalog.hasMore || brandMedicineCatalog.hasMore
+      : brandUnscopedCatalog.hasMore
+    : regularCatalog.hasMore;
+
+  const loadMore = () => {
+    if (!isBrandMix) {
+      regularCatalog.loadMore();
+      return;
+    }
+    if (canSplitBrand) {
+      if (brandProductCatalog.hasMore) brandProductCatalog.loadMore();
+      if (brandMedicineCatalog.hasMore) brandMedicineCatalog.loadMore();
+      return;
+    }
+    brandUnscopedCatalog.loadMore();
+  };
+
+  const refresh = () => {
+    if (!isBrandMix) {
+      regularCatalog.refresh();
+      return;
+    }
+    if (canSplitBrand) {
+      brandProductCatalog.refresh();
+      brandMedicineCatalog.refresh();
+      return;
+    }
+    brandUnscopedCatalog.refresh();
+  };
 
   const brandOptions = useMemo(() => {
     if (brandRecords.length > 0) return brandRecords;
@@ -197,6 +375,10 @@ export default function CategoryProducts() {
       priceRange: 'all',
     });
 
+    if (isBrandMix && catalogKind !== 'all') {
+      filtered = filtered.filter((product) => resolveCatalogKind(product) === catalogKind);
+    }
+
     filtered = filtered.filter((product) => {
       const price = Number(product.price || product.selling_price || 0);
       return price >= priceRange[0] && price <= priceRange[1];
@@ -228,8 +410,30 @@ export default function CategoryProducts() {
       });
     }
 
+    // Keep out-of-stock items after in-stock, without changing the chosen sort within each group.
+    filtered = [...filtered].sort((a, b) => {
+      const aOut = isProductOutOfStock(a) ? 1 : 0;
+      const bOut = isProductOutOfStock(b) ? 1 : 0;
+      return aOut - bOut;
+    });
+
     return filtered;
-  }, [products, query, priceRange, minRating, inStockOnly, sortBy, brandIds, brandNames, brandId, brandTitleKey]);
+  }, [
+    products,
+    query,
+    priceRange,
+    minRating,
+    inStockOnly,
+    sortBy,
+    brandIds,
+    brandNames,
+    brandId,
+    brandTitleKey,
+    isBrandMix,
+    catalogKind,
+    medicineCategoryId,
+    productsCategoryId,
+  ]);
 
   const categoryList = brandId
     ? []
@@ -250,6 +454,7 @@ export default function CategoryProducts() {
     inStockOnly ||
     sortBy !== 'relevance' ||
     hasBrandFilter ||
+    (isBrandMix && catalogKind !== 'all') ||
     Boolean(query);
 
   const clearFilters = () => {
@@ -260,9 +465,21 @@ export default function CategoryProducts() {
     setSortBy('relevance');
     setBrandIds(brandId ? [brandId] : []);
     setBrandNames([]);
+    setCatalogKind('all');
     setSearch('');
     setQuery('');
   };
+
+  const countLabel = (() => {
+    const n = filteredAndSortedProducts.length;
+    if (isBrandMix) {
+      if (catalogKind === 'medicine') return n === 1 ? 'medicine' : 'medicines';
+      if (catalogKind === 'product') return n === 1 ? 'product' : 'products';
+      return n === 1 ? 'item' : 'items';
+    }
+    if (isMedicine) return n === 1 ? 'medicine' : 'medicines';
+    return n === 1 ? 'product' : 'products';
+  })();
 
   const goSearch = (value) => setQuery(String(value ?? search).trim());
 
@@ -272,7 +489,7 @@ export default function CategoryProducts() {
   };
 
   return (
-    <AppShell tab="products">
+    <AppShell tab={shellTab}>
       <div className="st-page cp-page">
         <header className="cp-hero">
           <div className="cp-hero__row">
@@ -285,7 +502,7 @@ export default function CategoryProducts() {
               <p className="cp-hero__count" aria-live="polite">
                 {loading && products.length === 0
                   ? T.refreshing
-                  : `${filteredAndSortedProducts.length} ${filteredAndSortedProducts.length === 1 ? 'product' : 'products'}`}
+                  : `${filteredAndSortedProducts.length} ${countLabel}`}
               </p>
             </div>
           </div>
@@ -294,14 +511,43 @@ export default function CategoryProducts() {
               value={search}
               onChange={setSearch}
               onSubmit={goSearch}
-              placeholder={T.searchCollection}
-              label={T.searchCollection}
-
-            suggestions={searchSuggestions(products)}
+              placeholder={
+                isBrandMix
+                  ? 'Search products & medicines'
+                  : isMedicine
+                    ? 'Search medicines'
+                    : T.searchCollection
+              }
+              label={
+                isBrandMix
+                  ? 'Search products & medicines'
+                  : isMedicine
+                    ? 'Search medicines'
+                    : T.searchCollection
+              }
+              suggestions={searchSuggestions(products)}
             />
             {/* <kbd className="cp-kbd" aria-hidden>/</kbd> */}
           </div>
         </header>
+
+        {isBrandMix ? (
+          <div className="cp-chips" role="tablist" aria-label="Catalog type">
+            {[
+              { id: 'all', name: 'All' },
+              { id: 'product', name: 'Products' },
+              { id: 'medicine', name: 'Medicines' },
+            ].map((item) => (
+              <Chip
+                key={item.id}
+                selected={catalogKind === item.id}
+                onClick={() => setCatalogKind(item.id)}
+              >
+                {item.name}
+              </Chip>
+            ))}
+          </div>
+        ) : null}
 
         {categoryList.length > 1 ? (
           <div className="cp-chips" role="tablist" aria-label={T.categories}>
@@ -377,7 +623,15 @@ export default function CategoryProducts() {
           <SkeletonGrid count={8} className="am-product-grid cp-grid" />
         ) : filteredAndSortedProducts.length === 0 ? (
           <EmptyState
-            title={hasActiveFilters ? 'No products match filters' : T.emptyCategory}
+            title={
+              hasActiveFilters
+                ? isBrandMix
+                  ? 'No items match filters'
+                  : isMedicine
+                    ? 'No medicines match filters'
+                    : 'No products match filters'
+                : T.emptyCategory
+            }
             description={hasActiveFilters ? 'Try adjusting your filters' : T.emptyCategoryText}
             action={
               hasActiveFilters ? (
@@ -390,8 +644,8 @@ export default function CategoryProducts() {
         ) : (
           <ul className="am-product-grid cp-grid">
             {filteredAndSortedProducts.map((item) => (
-              <li key={item.variant_id || item.id}>
-                <ProductCard item={item} cartButton />
+              <li key={`${item.catalog_kind || 'item'}-${item.variant_id || item.id}`}>
+                <ProductCard item={item} cartButton detailBase={resolveDetailBase(item)} />
               </li>
             ))}
           </ul>
@@ -410,8 +664,16 @@ export default function CategoryProducts() {
       <Modal
         open={showFilters}
         onClose={() => setShowFilters(false)}
-        title="Filter Products"
-        description="Fine-tune your selection to find the right products."
+        title={
+          isBrandMix ? 'Filter brand items' : isMedicine ? 'Filter medicines' : 'Filter Products'
+        }
+        description={
+          isBrandMix
+            ? 'Fine-tune products and medicines from this brand.'
+            : isMedicine
+              ? 'Fine-tune your selection to find the right medicines.'
+              : 'Fine-tune your selection to find the right products.'
+        }
         size="lg"
         className="st-filter-modal"
         footer={
@@ -558,7 +820,7 @@ export default function CategoryProducts() {
                 onChange={(e) => setInStockOnly(e.target.checked)}
               />
               <span>
-                <strong>In-stock products only</strong>
+                <strong>{isBrandMix ? 'In-stock items only' : 'In-stock products only'}</strong>
                 <small>Hide items that are currently unavailable</small>
               </span>
             </label>

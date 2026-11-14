@@ -856,7 +856,7 @@ export default function Home() {
                         navigate(
                           `/products/category?mode=product&brand=${item.id}&name=${encodeURIComponent(
                             item.name,
-                          )}${medicineCategoryId ? `&service=${medicineCategoryId}` : ''}`,
+                          )}`,
                         )
                       }
                     />
