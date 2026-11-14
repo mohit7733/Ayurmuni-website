@@ -1260,6 +1260,11 @@
     margin-top: var(--am-space-5);
   }
   .sx-contact-page__options {
+    grid-template-columns: 1fr;
+  }
+}
+@media (min-width: 430px) and (max-width: 640px) {
+  .sx-contact-page__options {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -1268,7 +1273,7 @@
     grid-template-columns: 1fr;
   }
   .sx-contact-page__card {
-    min-height: 280px;
+    min-height: 0;
   }
   .sx-contact-page__footer {
     justify-content: flex-start;

@@ -35,8 +35,9 @@ export default function Splash() {
     const routeUser = async () => {
       try {
         const token = await Utils.getData('_TOKEN');
+        // Logged out: open Home directly (do not force Login).
         if (!token) {
-          await finish(() => navigate('/welcome', { replace: true }));
+          await finish(() => navigate('/home', { replace: true }));
           return;
         }
 
@@ -69,12 +70,8 @@ export default function Splash() {
         }
 
         await finish(() => navigate('/home', { replace: true }));
-      } catch (error) {
-        if (error?.response?.status === 403) {
-          await finish(() => navigate('/login', { replace: true }));
-          return;
-        }
-        await markAsGuest();
+      } catch {
+        // Auth/profile failure while opening `/` → still land on Home, not Login.
         await finish(() => navigate('/home', { replace: true }));
       }
     };

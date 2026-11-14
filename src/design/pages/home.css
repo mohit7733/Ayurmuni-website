@@ -42,15 +42,15 @@
 }
 
 .hm-hero__inner {
-  --hm-hero-pad-y: 32px;
+  --hm-hero-pad-y: var(--am-space-6);
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--am-space-3);
   width: 100%;
-  max-width: var(--am-container);
+  max-width: var(--am-container-max, var(--am-container));
   margin: 0 auto;
-  padding: var(--hm-hero-pad-y) var(--hm-gutter) 28px;
+  padding: var(--hm-hero-pad-y) var(--hm-gutter) var(--am-space-5);
 }
 
 .hm-hero__copy {
@@ -86,7 +86,7 @@
   margin: 0;
   max-width: 11ch;
   font-family: var(--am-font-display);
-  font-size: clamp(2.4rem, 1.5rem + 2.8vw, 3.75rem);
+  font-size: clamp(2rem, 1.35rem + 2.4vw, 3.75rem);
   font-weight: 520;
   line-height: 0.98;
   letter-spacing: -0.035em;
@@ -468,15 +468,16 @@
 .hm-body {
   display: flex;
   flex-direction: column;
-  gap: var(--am-space-5);
+  gap: var(--am-section-gap, var(--am-space-6));
   width: 100%;
-  max-width: var(--am-container);
+  max-width: var(--am-container-max, var(--am-container));
   margin: 0 auto;
-  padding: 6px var(--hm-gutter) 0;
+  padding: var(--am-space-2) var(--hm-gutter) 0;
 }
 
 .hm-section {
   min-width: 0;
+  max-width: 100%;
 }
 
 /* Health concerns: title, sentence, and action on one tight line. */
@@ -847,6 +848,191 @@
 
   .hm-doc-table__profile:hover svg {
     transform: translateX(3px);
+  }
+}
+
+/* Desktop/tablet: hide mobile-only meta strip */
+.hm-doc-table__mobile-meta {
+  display: none;
+}
+
+/* Mobile: compact doctor cards — photo + copy | actions */
+@media (max-width: 639px) {
+  .hm-doc-table-wrap {
+    margin: var(--am-space-2) 0 0;
+    overflow-x: visible;
+    background: transparent;
+  }
+
+  .hm-doc-table {
+    min-width: 0;
+    width: 100%;
+    display: block;
+    background: transparent;
+  }
+
+  .hm-doc-table thead {
+    display: none;
+  }
+
+  .hm-doc-table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .hm-doc-table tbody tr {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--am-line);
+    border-radius: 14px;
+    background: var(--am-surface) !important;
+    box-shadow: var(--am-shadow-xs);
+    animation: none;
+  }
+
+  .hm-doc-table tbody tr:nth-child(even) th,
+  .hm-doc-table tbody tr:nth-child(even) td {
+    background: transparent;
+  }
+
+  .hm-doc-table tbody th,
+  .hm-doc-table tbody td {
+    display: block;
+    padding: 0;
+    border: 0;
+    background: transparent !important;
+    min-width: 0;
+  }
+
+  .hm-doc-table tbody th {
+    flex: 1 1 auto;
+  }
+
+  /* Table columns move into the mobile meta strip */
+  .hm-doc-table__col-exp,
+  .hm-doc-table__col-location,
+  .hm-doc-table__col-rating {
+    display: none !important;
+  }
+
+  .hm-doc-table__actions-cell {
+    flex: 0 0 auto;
+    width: auto;
+    align-self: center;
+  }
+
+  .hm-doc-table__doctor {
+    min-width: 0;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .hm-doc-table__photo {
+    width: 44px;
+    height: 44px;
+  }
+
+  .hm-doc-table__id {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .hm-doc-table__name {
+    font-size: 0.9rem;
+  }
+
+  .hm-doc-table__name button {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .hm-doc-table__cred {
+    margin-top: 0;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    font-size: 11px;
+  }
+
+  .hm-doc-table__mobile-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    margin-top: 4px;
+  }
+
+  .hm-doc-table__mobile-meta .hm-doc-table__rating,
+  .hm-doc-table__mobile-meta .hm-doc-table__meta {
+    white-space: nowrap;
+    font-size: 11px;
+    gap: 4px;
+  }
+
+  .hm-doc-table__mobile-meta .hm-doc-table__rating strong {
+    font-size: 11px;
+  }
+
+  .hm-doc-table__actions {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+  }
+
+  .hm-doc-table__actions .am-fav-btn {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+  }
+
+  .hm-doc-table__profile {
+    justify-content: center;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    padding: 0;
+    border-radius: 50%;
+  }
+
+  .hm-doc-table__profile span {
+    display: none;
+  }
+
+  .hm-doc-table__profile svg {
+    margin: 0;
+  }
+
+  .hm-doctor-row {
+    gap: 12px;
+  }
+
+  .hm-doctor-row > .hm-section {
+    padding: 12px;
+  }
+
+  .hm-doctor-head {
+    margin-bottom: 6px;
+  }
+
+  .hm-doctor-head__title {
+    font-size: 1.15rem;
+  }
+
+  .hm-doctor-head__desc {
+    margin-top: 2px;
+    font-size: 12px;
+    line-height: 1.35;
   }
 }
 

@@ -112,7 +112,7 @@ body.am-scroll-locked {
 
 .am-container {
   width: 100%;
-  max-width: var(--am-container);
+  max-width: var(--am-container-max, var(--am-container));
   margin-inline: auto;
   padding-inline: var(--am-gutter);
 }

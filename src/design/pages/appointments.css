@@ -11,10 +11,29 @@
   max-width: 100%;
   margin-left: auto;
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
   gap: var(--am-space-2);
+}
+
+@media (max-width: 430px) {
+  .appointments-page > .am-page-header .am-page-header__row {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .appointments-page > .am-page-header .am-page-header__actions {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .appointments-page > .am-page-header .am-page-header__actions > button,
+  .appointments-page.ap-premium > .am-page-header .am-page-header__actions > .ap-btn {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 0 10px;
+  }
 }
 
 .appointments-page > .am-page-header .am-page-header__actions > button {

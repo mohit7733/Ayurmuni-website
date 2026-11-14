@@ -635,11 +635,15 @@
 }
 
 .bk-slots-page .bk-month__label {
-  min-width: 90px;
+  min-width: 0;
+  flex: 1 1 auto;
   color: var(--am-text);
   font-size: var(--am-text-sm);
   font-weight: var(--am-weight-semibold);
   text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .bk-slots-page .bk-dates {
@@ -698,7 +702,7 @@
 
 .bk-slots-page .bk-slot-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
   gap: var(--am-space-2);
 }
 
@@ -934,6 +938,24 @@
 
   .bk-slots-page .bk-slot-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .bk-slots-sticky,
+  .bk-pay-sticky {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .bk-slots-sticky .bk-sticky__meta,
+  .bk-pay-sticky .bk-sticky__meta {
+    flex: 1 1 100%;
+  }
+
+  .bk-slots-sticky .am-btn,
+  .bk-pay-sticky .am-btn {
+    flex: 1 1 100%;
+    justify-content: center;
   }
 }
 

@@ -189,14 +189,28 @@
   --am-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --am-ease-in: cubic-bezier(0.4, 0, 1, 1);
 
+  /* ---------- Breakpoints (documentation aliases for media queries) ---------- */
+  --am-bp-sm: 640px;
+  --am-bp-md: 768px;
+  --am-bp-lg: 1024px;
+  --am-bp-xl: 1280px;
+  --am-bp-2xl: 1440px;
+
   /* ---------- Layout ---------- */
   --am-container: 100%;
+  --am-container-max: 1420px;
   --am-container-narrow: 760px;
   --am-gutter: 16px;
   --am-header-h: 56px;
   --am-tabbar-h: 56px;
   --am-tap-min: 36px;
   --am-control-h: 36px;
+  --am-sticky-cta-h: 44px;
+
+  /* Compact density — section rhythm + card padding */
+  --am-section-gap: var(--am-space-6);
+  --am-card-pad: var(--am-space-3);
+  --am-card-gap: var(--am-space-3);
 
   --am-z-tabbar: 40;
   --am-z-header: 50;
@@ -236,6 +250,8 @@
 @media (min-width: 640px) {
   :root {
     --am-gutter: 24px;
+    --am-section-gap: var(--am-space-8);
+    --am-card-pad: var(--am-space-4);
   }
 }
 
@@ -244,8 +260,18 @@
     --am-gutter: 32px;
     --am-header-h: 72px;
     --am-text-body: 0.875rem;
-    --am-control-h: 36px;
+    --am-control-h: 40px;
+    --am-sticky-cta-h: 44px;
+    --am-section-gap: var(--am-space-8);
+    --am-card-pad: var(--am-space-4);
     --type-title: var(--am-text-3xl);
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --am-control-h: 40px;
+    --am-tap-min: 40px;
   }
 }
 
@@ -254,13 +280,15 @@
     --am-container: 100%;
     --am-gutter: 40px;
     --am-header-h: 72px;
+    --am-section-gap: var(--am-space-10);
   }
 }
 
-/* Responsive: ≥44px touch targets on phones and tablets (desktop ≥1200px unchanged). */
-@media (max-width: 1199px) {
+/* ≥44px touch targets on phones and tablets (desktop ≥1024 uses compact 40px). */
+@media (max-width: 1023px) {
   :root {
     --am-tap-min: 44px;
     --am-control-h: 44px;
+    --am-sticky-cta-h: 44px;
   }
 }

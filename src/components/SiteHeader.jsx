@@ -387,7 +387,7 @@ export default function SiteHeader({ minimal = false }) {
           {menuOpen ? <X size={22} aria-hidden /> : <Menu size={22} aria-hidden />}
         </IconButton>
 
-        <Link to={loggedIn ? '/home' : '/welcome'} className="site-brand" aria-label="Ayurmuni home">
+        <Link to="/home" className="site-brand" aria-label="Ayurmuni home">
           <img src={logoImg} alt="" width="176" height="44" />
         </Link>
 

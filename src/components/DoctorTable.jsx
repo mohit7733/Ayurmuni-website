@@ -83,6 +83,26 @@ function DoctorTableRow({ item, fallbackSpeciality }) {
             </p>
             <DietitianBadge doctor={item} />
             {credential ? <p className="hm-doc-table__cred">{credential}</p> : null}
+            <div className="hm-doc-table__mobile-meta" aria-hidden="true">
+              {rating ? (
+                <span className="hm-doc-table__rating">
+                  <Star size={12} aria-hidden fill="currentColor" />
+                  <strong>{rating}</strong>
+                </span>
+              ) : null}
+              {experience ? (
+                <span className="hm-doc-table__meta">
+                  <Briefcase size={12} aria-hidden />
+                  {experience}
+                </span>
+              ) : null}
+              {location ? (
+                <span className="hm-doc-table__meta">
+                  <MapPin size={12} aria-hidden />
+                  {location}
+                </span>
+              ) : null}
+            </div>
           </div>
         </div>
       </th>
@@ -106,7 +126,7 @@ function DoctorTableRow({ item, fallbackSpeciality }) {
           <span className="hm-doc-table__empty">—</span>
         )}
       </td>
-      <td>
+      <td className="hm-doc-table__col-rating">
         {rating ? (
           <span className="hm-doc-table__rating">
             <Star size={13} aria-hidden fill="currentColor" />
@@ -144,7 +164,7 @@ export default function DoctorTable({ items, label, fallbackSpeciality = 'Ayurve
             <th scope="col">Doctor</th>
             <th className="hm-doc-table__col-exp" scope="col">Experience</th>
             <th className="hm-doc-table__col-location" scope="col">Location</th>
-            <th scope="col">Rating</th>
+            <th className="hm-doc-table__col-rating" scope="col">Rating</th>
             <th className="hm-doc-table__actions-cell" scope="col">
               <span className="am-sr-only">Actions</span>
             </th>

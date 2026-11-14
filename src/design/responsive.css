@@ -120,6 +120,31 @@
 
   /* ---- Media never distorts ---- */
   img { max-width: 100%; }
+
+  /* ---- Global overflow / flex safety ---- */
+  .app-shell-body,
+  .app-shell-body > *,
+  .am-page,
+  .screen {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .am-page-header__title,
+  .am-section-header__title,
+  h1, h2, h3 {
+    overflow-wrap: anywhere;
+  }
+
+  /* Sticky bars clear the floating tab chrome */
+  .pd-sticky,
+  .cart-footer,
+  .checkout-sticky,
+  .co-sticky,
+  .booking-home-bar,
+  .doc-sticky {
+    padding-bottom: max(var(--am-space-2), env(safe-area-inset-bottom));
+  }
 }
 
 /* =====================================================================

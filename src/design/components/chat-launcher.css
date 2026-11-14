@@ -1,13 +1,14 @@
 .ci-launch {
-  --ci-launch-bottom: calc(var(--am-tabbar-h) + var(--am-space-2) + 12px + env(safe-area-inset-bottom));
+  --ci-launch-bottom: calc(var(--am-tabbar-h) + var(--am-space-4) + 12px + env(safe-area-inset-bottom));
   position: fixed;
-  right: 16px;
+  right: max(12px, env(safe-area-inset-right));
   bottom: var(--ci-launch-bottom);
   z-index: 60;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 12px;
+  max-width: calc(100vw - 24px);
   pointer-events: none;
 }
 
@@ -238,8 +239,8 @@
   }
 
   .ci-launch__btn {
-    height: 50px;
-    padding: 0 18px 0 14px;
+    height: 48px;
+    padding: 0 16px 0 12px;
   }
 
   .ci-launch__label {
@@ -247,12 +248,14 @@
   }
 
   .ci-launch.is-open {
-    left: 8px;
-    right: 8px;
+    left: max(8px, env(safe-area-inset-left));
+    right: max(8px, env(safe-area-inset-right));
   }
 
   .ci-launch.is-open .ci-pop {
     width: 100%;
+    height: min(560px, calc(100dvh - var(--ci-launch-bottom) - 64px - env(safe-area-inset-top)));
+    max-height: calc(100dvh - var(--ci-launch-bottom) - 56px);
   }
 }
 

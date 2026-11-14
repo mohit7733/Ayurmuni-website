@@ -70,6 +70,7 @@ import {
   normalizePrescriptionPayload,
   saveBrowserFile,
 } from '../utils/prescriptionDetailUtils';
+import '../design/pages/doctor-slip.css';
 import { useCart } from '../hooks/useCart';
 import { nameInitial } from '../utils/initials';
 
@@ -222,9 +223,32 @@ export default function PrescriptionDetail() {
   ]
     .filter(Boolean)
     .join(' · ');
-  const statusLabel = String(prescription?.status || normalized.status || 'issued')
+  const appointmentStatusRaw = String(
+    appointment?.appointment_status_label ||
+      appointment?.appointment_status ||
+      payload?.appointment_status_label ||
+      payload?.appointment_status ||
+      appointment?.status ||
+      '',
+  )
     .replace(/_/g, ' ')
     .trim();
+  const appointmentStatusLabel = appointmentStatusRaw
+    ? appointmentStatusRaw.replace(/\b\w/g, (char) => char.toUpperCase())
+    : '';
+  const negativeVisit = /cancel|miss|no.?show|fail|reject|declin|expire|refused/i.test(
+    appointmentStatusRaw,
+  );
+  const statusLabel = String(
+    (negativeVisit && appointmentStatusLabel) ||
+      prescription?.status ||
+      normalized.status ||
+      appointmentStatusLabel ||
+      'issued',
+  )
+    .replace(/_/g, ' ')
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
   const presentingComplaint = symptomText;
 
   const openDietPlan = (diet) => {
@@ -272,10 +296,6 @@ export default function PrescriptionDetail() {
     }
   };
 
-  const onPrint = () => {
-    window.print();
-  };
-
   const onOrderMedicines = async () => {
     if (expiry.expired) {
       if (doctorId) {
@@ -312,7 +332,8 @@ export default function PrescriptionDetail() {
     navigate('/cart');
   };
 
-  const onDownloadPdf = async () => {
+  /** Download PDF and Print PDF use the same official designed document. */
+  const openOfficialPdf = async () => {
     if (downloadingPdf) return;
     const prescriptionId =
       normalized.prescriptionId ||
@@ -354,7 +375,7 @@ export default function PrescriptionDetail() {
           diets:
             response.prescriptionData.diets ?? payload?.diets ?? payload?.appointment?.diets,
         };
-        // Designed prescription (same layout as the app PDF): print dialog -> "Save as PDF".
+        // Designed prescription (same for Download PDF + Print PDF): print dialog -> "Save as PDF".
         const html = renderDocumentHtml(buildPrescriptionDocument(mergedPayload), `Prescription ${code}`);
         if (await printDocumentHtml(html)) return;
         const text = buildPrescriptionDownloadText(mergedPayload);
@@ -371,7 +392,7 @@ export default function PrescriptionDetail() {
       for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
       saveBrowserFile(new Blob([bytes], { type: 'application/pdf' }), fileName);
     } catch (error) {
-      showSuccessToast(error?.message || 'Unable to download prescription PDF', 'error');
+      showSuccessToast(error?.message || 'Unable to open prescription PDF', 'error');
     } finally {
       setDownloadingPdf(false);
     }
@@ -441,12 +462,17 @@ export default function PrescriptionDetail() {
                       variant="secondary"
                       leadingIcon={<Download size={16} aria-hidden />}
                       loading={downloadingPdf}
-                      onClick={onDownloadPdf}
+                      onClick={openOfficialPdf}
                     >
                       Download PDF
                     </Button>
-                    <Button variant="secondary" leadingIcon={<Printer size={16} aria-hidden />} onClick={onPrint}>
-                      Print
+                    <Button
+                      variant="secondary"
+                      leadingIcon={<Printer size={16} aria-hidden />}
+                      loading={downloadingPdf}
+                      onClick={openOfficialPdf}
+                    >
+                      Print PDF
                     </Button>
                   </ActionStack>
                 </DetailCard>
@@ -524,6 +550,13 @@ export default function PrescriptionDetail() {
                   ℞
                 </span>
               </header>
+
+              {negativeVisit ? (
+                <div className="am-slip__status-alert" role="status">
+                  This consultation is recorded as <strong>{appointmentStatusLabel}</strong>. The
+                  prescription record remains available for your official records.
+                </div>
+              ) : null}
 
               {diseaseTags.length ? (
                 <div className="dx-chips">

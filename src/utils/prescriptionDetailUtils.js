@@ -662,7 +662,6 @@ export const buildPrescriptionDownloadText = (data) => {
   if (familyHistory) sections.push('Family history', `  ${familyHistory}`, '');
   sections.push(...lineList('Personal history', personalHistory));
   sections.push(...lineList('Gynaecological history', gynaecological));
-  if (clinical) sections.push('Clinical notes', `  ${clinical}`, '');
   if (medicines.length) {
     sections.push('Medicines');
     medicines.forEach((med, i) => sections.push(medicineLine(med, i)));

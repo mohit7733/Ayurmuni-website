@@ -1,16 +1,25 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { ClipboardList } from 'lucide-react';
 import AppShell from '../components/AppShell';
-import AdvanceLoad from '../components/ui/AdvanceLoad';
 import {
   ConsultationTimeline,
   StitchedRegimenList,
   prescriptionPath,
   prescriptionState,
 } from '../components/consult/ConsultationTimeline';
+import {
+  DetailEmpty,
+  DetailPage,
+  DetailSkeleton,
+  DetailTop,
+} from '../components/detail/Detail';
 import { requireAuth } from '../services/guestAuth';
 import { getDoctorSlip } from '../services/consultService';
-import { getDoctorLocationLine } from '../utils/doctorSlipUtils';
+import { formatDoctorDisplayName } from '../consult/appointmentUtils';
+import { doctorDisplayName, formatDoctorSpecialization } from '../consult/doctors';
+import { getConsultationKey, getDoctorLocationLine } from '../utils/doctorSlipUtils';
+import '../design/pages/doctor-slip.css';
 
 export default function DoctorConsultationHistory() {
   const { doctorId } = useParams();
@@ -48,8 +57,17 @@ export default function DoctorConsultationHistory() {
     () => consultations.flatMap((item) => item?.prescription?.items || []),
     [consultations],
   );
-  const title = routeName || doctor?.doctor_name || 'Consultation History';
+  const doctorName = formatDoctorDisplayName(
+    routeName || doctorDisplayName(doctor) || doctor?.doctor_name || 'Doctor',
+  );
+  const specialization = formatDoctorSpecialization(doctor);
   const cityLine = getDoctorLocationLine(doctor);
+
+  const openConsultation = (item) => {
+    const key = getConsultationKey(item);
+    if (!doctorId || !key) return;
+    navigate(`/consult/doctors/${doctorId}/slip?visit=${encodeURIComponent(key)}`);
+  };
 
   const openPrescription = (item, doc) => {
     const path = prescriptionPath(item);
@@ -59,42 +77,60 @@ export default function DoctorConsultationHistory() {
 
   return (
     <AppShell tab="consult">
-      <section className="catalog-page doc-history-page">
-        <header className="catalog-head">
-          <button type="button" className="text-back" onClick={() => navigate(-1)}>
-            ← Back
-          </button>
-          <div>
-            <h1>{title}</h1>
-            <p>{cityLine || 'All visits with this doctor'}</p>
-          </div>
+      <DetailPage className="am-slip am-slip--history">
+        <DetailTop
+          onBack={() => navigate(doctorId ? `/consult/doctors/${doctorId}/slip` : -1)}
+          backLabel="Back to slips"
+        />
+
+        <header className="am-slip-history-head">
+          <p className="dx-eyebrow">Consultation register</p>
+          <h1>{doctorName}</h1>
+          <p>
+            {[specialization, cityLine].filter(Boolean).join(' · ') ||
+              'All official visits with this physician'}
+          </p>
         </header>
 
-        {loading ? (
-          <AdvanceLoad variant="list" label="Loading consultation history" />
-        ) : (
+        {loading ? <DetailSkeleton label="Loading consultation history" /> : null}
+
+        {!loading && consultations.length === 0 ? (
+          <DetailEmpty
+            icon={ClipboardList}
+            title="No consultations found"
+            text="Completed visits with this doctor will appear in this register."
+          />
+        ) : null}
+
+        {!loading && consultations.length > 0 ? (
           <>
-            <h3 className="yoga-section">All consultations</h3>
-            {consultations.length > 0 ? (
+            <section className="am-slip-panel" aria-labelledby="history-register-heading">
+              <div className="am-slip-panel__head">
+                <h2 id="history-register-heading">All consultations</h2>
+                <span className="am-slip-panel__badge">{consultations.length}</span>
+              </div>
+              <p className="am-slip-panel__note">
+                Open any visit to view the consultation slip, download, print, or share.
+              </p>
               <ConsultationTimeline
                 consultations={consultations}
                 doctor={doctor}
+                onOpen={openConsultation}
                 onPrescription={openPrescription}
               />
-            ) : (
-              <div className="empty-copy">
-                <strong>No consultations found for this doctor.</strong>
-              </div>
-            )}
+            </section>
+
             {regimen.length > 0 ? (
-              <>
-                <h3 className="yoga-section">Medicines from visits</h3>
+              <section className="am-slip-panel" aria-labelledby="history-meds-heading">
+                <div className="am-slip-panel__head">
+                  <h2 id="history-meds-heading">Medicines across visits</h2>
+                </div>
                 <StitchedRegimenList items={regimen} />
-              </>
+              </section>
             ) : null}
           </>
-        )}
-      </section>
+        ) : null}
+      </DetailPage>
     </AppShell>
   );
 }

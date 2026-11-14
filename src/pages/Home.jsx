@@ -805,8 +805,9 @@ export default function Home() {
             ) : null}
           </LazyBlock>
 
-          <LazyBlock blockRef={ourDocsRef} done={ourDoctorsDone} minHeight={120} skeleton={<HomeDoctorsSkeleton label="Loading our doctors" />}>
-            {ourDoctors.length > 0 ? (
+          {/* Our doctors only when Suggested doctors is empty (null/0). */}
+          <LazyBlock blockRef={ourDocsRef} done={ourDoctorsDone || showSuggestedDoctors} minHeight={120} skeleton={showSuggestedDoctors ? null : <HomeDoctorsSkeleton label="Loading our doctors" />}>
+            {!showSuggestedDoctors && ourDoctors.length > 0 ? (
               <Reveal as="section" className="hm-section hm-panel hm-odocs" aria-labelledby="hm-odocs-title">
                 <SectionHeader
                   className="hm-head-inline"
@@ -936,7 +937,7 @@ export default function Home() {
                   <span className="hm-plan-band__dot" aria-hidden />
                   Save more with guided Ayurvedic care plans
                 </p>
-                <Rail label={T.packagesTitle} className="hm-package-rail" auto interval={3200} controls>
+                <Rail label={T.packagesTitle} className="hm-package-rail" auto interval={3200}>
                   {[...consultPackages]
                     .sort((a, b) => Number(isCarePlan(b)) - Number(isCarePlan(a)) || planDiscount(b) - planDiscount(a))
                     .slice(0, 8)

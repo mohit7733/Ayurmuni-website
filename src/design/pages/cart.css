@@ -259,6 +259,20 @@
   min-width: 9.5rem;
 }
 
+@media (max-width: 430px) {
+  .ct-sticky__row {
+    gap: var(--am-space-2);
+  }
+  .ct-sticky__row .am-btn:last-child {
+    min-width: 0;
+    flex: 1 1 auto;
+    padding-inline: 12px;
+  }
+  .ct-sticky__meta strong {
+    font-size: var(--am-text-md);
+  }
+}
+
 .ct-skel {
   display: flex;
   flex-direction: column;

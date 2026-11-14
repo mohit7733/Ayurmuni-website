@@ -449,15 +449,24 @@
 
 @media (max-width: 420px) {
   .diet-detail .diet-nutrition {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .diet-detail .diet-nutrition > div:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
   }
 
   .diet-detail .diet-nutrition strong {
     font-size: var(--am-text-md);
   }
 
+  .diet-detail .diet-nutrition > div {
+    padding: var(--am-space-2);
+  }
+
   .diet-detail .diet-cta > button {
-    min-width: calc(50% - var(--am-space-1));
+    min-width: 0;
+    flex: 1 1 calc(50% - var(--am-space-1));
   }
 }
 

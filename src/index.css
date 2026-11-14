@@ -97,3 +97,29 @@ img {
   box-shadow: 0 6px 16px rgba(13, 97, 78, 0.15);
   transform: translateY(-1px);
 }
+
+.au-or {
+  display: block;
+  text-align: center;
+  color: var(--am-text-muted);
+  font-weight: var(--am-weight-semibold);
+  font-size: var(--am-text-body);
+  line-height: var(--am-leading-normal);
+  letter-spacing: var(--am-tracking-normal);
+  text-transform: uppercase;
+  text-align: center;
+  text-decoration: none;
+  text-decoration: none;
+}
+
+.au-button--secondary {
+  background: var(--am-primary-soft);
+  color: var(--am-primary-strong);
+  border: 1px solid var(--am-border);
+  border-radius: var(--am-radius-pill);
+  padding: var(--am-space-3) var(--am-space-4);
+  font-size: var(--am-text-body);
+  line-height: var(--am-leading-normal);
+  letter-spacing: var(--am-tracking-normal);
+  font-weight: var(--am-weight-semibold);
+}

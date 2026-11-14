@@ -7,6 +7,12 @@
   background: #fdfdfb;
 }
 
+@media (max-width: 430px) {
+  .st-page--medicines {
+    padding: 8px 12px 24px;
+  }
+}
+
 .med-bar {
   display: flex;
   align-items: center;
@@ -426,9 +432,11 @@
 }
 
 .am-product-card--app .am-product-card__price {
-  height: 20px;
+  height: auto;
+  min-height: 20px;
   margin-top: 4px;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
 .am-product-card--app .am-product-card__price strong {

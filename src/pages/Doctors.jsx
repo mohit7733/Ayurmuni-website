@@ -290,7 +290,7 @@ export default function Doctors() {
           </aside>
 
           <div className="cs-results">
-            <div className="cs-toolbar">
+            {/* <div className="cs-toolbar">
               <p className="cs-count" role="status">
                 {loading ? T.loadingDoctors : failed ? '' : T.resultCount(doctors.length)}
               </p>
@@ -315,7 +315,7 @@ export default function Doctors() {
                 {T.filters}
                 {activeFilters.length ? <span className="cs-filter-btn__count">{activeFilters.length}</span> : null}
               </Button>
-            </div>
+            </div> */}
 
             {activeFilters.length ? (
               <ul className="cs-active" aria-label={T.filters}>

@@ -662,7 +662,7 @@ button.co-card:active {
   }
 }
 
-@media (max-width: 420px) {
+@media (max-width: 480px) {
   .co-address {
     align-items: flex-start;
     flex-direction: column;
@@ -677,7 +677,9 @@ button.co-card:active {
   }
 
   .co-pay__option {
-    min-height: 76px;
+    min-height: 72px;
+    padding: var(--am-space-3);
+    padding-right: calc(var(--am-space-3) + 24px);
   }
 }
 

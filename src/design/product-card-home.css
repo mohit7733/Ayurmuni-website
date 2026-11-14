@@ -57,6 +57,22 @@
   padding: 8px;
 }
 
+@media (max-width: 374px) {
+  :is(.hm-products, .st-page--products, .pd-page--brand, .svc-catalog, .am-product-grid, .catalog-grid, .cn-panel) .am-product-card__body {
+    padding: 6px 6px 0;
+    gap: 2px;
+  }
+  :is(.hm-products, .st-page--products, .pd-page--brand, .svc-catalog, .am-product-grid, .catalog-grid, .cn-panel) .am-product-card__name {
+    font-size: 11px;
+  }
+  :is(.hm-products, .st-page--products, .pd-page--brand, .svc-catalog, .am-product-grid, .catalog-grid, .cn-panel) .am-product-card__action {
+    padding: 6px;
+  }
+  :is(.hm-products, .st-page--products, .pd-page--brand, .svc-catalog, .am-product-grid, .catalog-grid, .cn-panel) .am-product-card__price strong {
+    font-size: 12px;
+  }
+}
+
 :is(.hm-products, .st-page--products, .pd-page--brand, .svc-catalog, .am-product-grid, .catalog-grid, .cn-panel) .am-stepper,
 :is(.hm-products, .st-page--products, .pd-page--brand, .svc-catalog, .am-product-grid, .catalog-grid, .cn-panel) .am-product-card__add {
   border-color: #115443;

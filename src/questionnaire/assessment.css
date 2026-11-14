@@ -497,6 +497,15 @@
   .assess-card__tags {
     flex-direction: column;
   }
+
+  .assess-card {
+    min-height: 0;
+    padding: var(--am-space-4);
+  }
+
+  .assess-hero {
+    padding-bottom: var(--am-space-8);
+  }
 }
 
 @media (min-width: 901px) {

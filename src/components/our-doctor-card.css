@@ -139,6 +139,24 @@
   .hm-odoc .hm-odoc__cta.am-stretched { padding: 0 10px; }
 }
 
+@media (max-width: 374px) {
+  .hm-odocs .am-rail__item { flex-basis: 92%; }
+  .hm-odoc {
+    grid-template-columns: 44px minmax(0, 1fr);
+    padding: 10px;
+  }
+  .hm-odoc__photo { width: 44px; height: 44px; font-size: 1rem; }
+  .hm-odoc__foot {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .hm-odoc__meta { flex-wrap: wrap; }
+  .hm-odoc .hm-odoc__cta.am-stretched {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 .hm-odoc .hm-odoc__cta.am-stretched {
   display: inline-flex;
   flex: none;

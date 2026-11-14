@@ -462,9 +462,16 @@
 }
 
 .pf-hub > .am-page-header .am-page-header__row {
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--am-space-3);
+  gap: var(--am-space-2) var(--am-space-3);
+}
+
+@media (max-width: 429px) {
+  .pf-hub > .am-page-header .am-page-header__actions {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+  }
 }
 
 .pf-hub > .am-page-header .am-page-header__copy {
@@ -724,7 +731,19 @@
 .pf-stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--am-space-3);
+  gap: var(--am-space-2);
+}
+
+@media (max-width: 429px) {
+  .pf-stats { gap: 6px; }
+  .pf-stat { padding: 8px 4px; }
+  .pf-stat strong { font-size: var(--am-text-lg); }
+  .pf-stat small {
+    font-size: 9px;
+    letter-spacing: 0.04em;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
 }
 
 .pf-stat {

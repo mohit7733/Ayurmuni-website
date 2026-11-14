@@ -4,6 +4,7 @@ import { BadgeCheck, Leaf, LockKeyhole, ShieldCheck } from 'lucide-react';
 import logoImg from '/greenlogo.png';
 import { COPY } from '../content/copy';
 import useLoggedIn from '../hooks/useLoggedIn';
+import { navigateToLogin } from '../services/guestAuth';
 import { FOOTER_COLUMNS, FOOTER_LEGAL } from '../site/nav';
 
 const TRUST_ICONS = {
@@ -13,21 +14,18 @@ const TRUST_ICONS = {
   private: ShieldCheck,
 };
 
-const PUBLIC_FOOTER_LINKS = new Set(['/about', '/contact', '/terms']);
+/** Open without login. Everything else still shows, but click asks to log in. */
+const PUBLIC_FOOTER_LINKS = new Set(['/about', '/contact', '/terms', '/home', '/profile/faq', '/profile/privacy','/profile/help-center','/profile/legal-policies']);
 
 export default function SiteFooter() {
   const loggedIn = useLoggedIn();
-  const columns = loggedIn
-    ? FOOTER_COLUMNS
-    : FOOTER_COLUMNS.map((column) => ({
-        ...column,
-        links: column.links.filter((item) => PUBLIC_FOOTER_LINKS.has(item.to)),
-      })).filter((column) => column.links.length > 0);
-  const legal = loggedIn
-    ? FOOTER_LEGAL
-    : FOOTER_LEGAL.filter((item) => PUBLIC_FOOTER_LINKS.has(item.to));
-
   const footerRef = useRef(null);
+
+  const onFooterLinkClick = (event, to) => {
+    if (loggedIn || PUBLIC_FOOTER_LINKS.has(to)) return;
+    event.preventDefault();
+    navigateToLogin('Please login to continue');
+  };
 
   // Pin the background mark so the emblem's top lines up with the CARE column's
   // CARE heading (top of the link columns). Falls back to the stacked layout when that row is absent.
@@ -104,13 +102,15 @@ export default function SiteFooter() {
           <p className="site-footer-tagline">{COPY.brandTagline}</p>
           <p>{COPY.brandMission}</p>
         </div>
-        {columns.map((column) => (
+        {FOOTER_COLUMNS.map((column) => (
           <nav key={column.title} className="site-footer-col" aria-label={column.title}>
             <h2>{column.title}</h2>
             <ul>
               {column.links.map((item) => (
                 <li key={item.to}>
-                  <Link to={item.to}>{item.label}</Link>
+                  <Link to={item.to} onClick={(event) => onFooterLinkClick(event, item.to)}>
+                    {item.label}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -128,8 +128,12 @@ export default function SiteFooter() {
         <div className="site-footer-legal">
           <span>© {new Date().getFullYear()} Ayurmuni. All rights reserved.</span>
           <nav aria-label="Legal">
-            {legal.map((item) => (
-              <Link key={item.to} to={item.to}>
+            {FOOTER_LEGAL.map((item) => (
+              <Link
+                key={item.to}
+                to={item.to}
+                onClick={(event) => onFooterLinkClick(event, item.to)}
+              >
                 {item.label}
               </Link>
             ))}

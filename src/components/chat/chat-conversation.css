@@ -357,6 +357,19 @@
   color: #a33a28;
   white-space: nowrap;
 }
+
+@media (max-width: 429px) {
+  .chat-lux .chat-error {
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-width: none;
+    transform: none;
+    white-space: normal;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
 .chat-lux .chat-error button { min-height: 32px; padding: 0 12px; border-radius: 999px; border: 0; background: #a33a28; color: #fff; cursor: pointer; }
 
 @media (max-width: 640px) {

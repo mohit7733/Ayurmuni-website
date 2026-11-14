@@ -36,7 +36,7 @@
   .pd-sticky .am-btn,
   .pk-cta__action
 ) {
-  min-height: 46px !important;
+  min-height: var(--am-sticky-cta-h, var(--am-control-h)) !important;
   padding-inline: var(--am-space-5) !important;
 }
 

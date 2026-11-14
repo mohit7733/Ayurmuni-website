@@ -72,6 +72,11 @@
 }
 .app-shell .pd-page--brand .pd-auto-rail__control:first-child { left: -6px; }
 .app-shell .pd-page--brand .pd-auto-rail__control:not(:first-child) { right: -6px; }
+@media (max-width: 639px) {
+  .app-shell .pd-page--brand .pd-auto-rail { overflow-x: clip; max-width: 100%; }
+  .app-shell .pd-page--brand .pd-auto-rail__control:first-child { left: 0; }
+  .app-shell .pd-page--brand .pd-auto-rail__control:not(:first-child) { right: 0; }
+}
 .app-shell .pd-page--brand .pd-auto-rail:not(.is-static) .pd-discovery__grid,
 .app-shell .pd-page--brand .pd-auto-rail:not(.is-static) .pd-review-list {
   -webkit-mask-image: none;

@@ -176,8 +176,12 @@
   .cp-stepper { height: 36px; }
   .cp-stepper button { width: 36px; position: relative; }
   .cp-stepper button::after { content: ''; position: absolute; inset: -4px 0; }
-  .cp-items__bar { padding: 0 12px; }
+  .cp-items__bar { display: flex; flex-wrap: wrap; min-height: 0; padding: 8px 12px; gap: 6px; }
+  .cp-selectall { margin-left: 0; white-space: normal; }
   .cp-tabs .am-tabs__tab, .cp-tabs [role='tab'] { min-height: 44px; }
+  .cp-bar { gap: 8px; padding-inline: 12px; }
+  .cp-bar .cp-btn { padding-inline: 12px; flex: 1 1 auto; min-width: 0; }
+  .cp-bar__meta strong { font-size: 16px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .cp-btn--checkout::before { display: none; }

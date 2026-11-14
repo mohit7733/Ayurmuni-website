@@ -259,7 +259,7 @@ export default function Products() {
           onSubmit={goSearch}
           placeholder={T.productsSearch}
           label={T.productsSearch}
-          suggestions={searchSuggestions(productCategories, listProducts)}
+          suggestions={searchSuggestions(listProducts)}
         />
       </PageBar>
   );

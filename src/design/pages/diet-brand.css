@@ -637,7 +637,7 @@
 /* Meal cards */
 .dt-meals {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
   gap: 8px;
   margin: 0;
   padding: 0;
@@ -729,7 +729,7 @@
   .dt-hero__row .dt-search { flex-basis: 100%; height: 44px; }
   .dt-hero__pill { height: 40px; }
   .dt-hero__chips { margin-right: -16px; padding-right: 16px; }
-  .dt-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dt-grid { grid-template-columns: minmax(0, 1fr); }
   .dt-card__title { font-size: 14px; }
   .dt-card__chips span:nth-child(n + 3) { display: none; }
   .dt-card__body { padding: 8px 10px 10px; }
@@ -744,8 +744,8 @@
   .dt-meal__img { width: 64px; height: 64px; }
   .dt-day { flex-basis: 84px; padding: 8px 10px; }
 }
-@media (max-width: 380px) {
-  .dt-grid { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 430px) and (max-width: 767px) {
+  .dt-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (prefers-reduced-motion: reduce) {
   .dt-hero__main > *, .dt-grid > li, .dt-meals > li { animation: none; }

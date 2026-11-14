@@ -2141,6 +2141,14 @@
 .am-rail__item--product {
   flex-basis: min(46%, 200px);
 }
+@media (max-width: 374px) {
+  .am-rail__item--product {
+    flex-basis: min(48%, 168px);
+  }
+  .am-rail__item {
+    flex-basis: min(78%, 200px);
+  }
+}
 .am-rail__item--wide {
   flex-basis: min(82%, 300px);
 }
@@ -2901,7 +2909,7 @@
   gap: var(--am-space-3);
   height: 100%;
   min-width: 0;
-  padding: var(--am-space-4);
+  padding: var(--am-card-pad, var(--am-space-3));
   overflow: hidden;
   border: 1px solid var(--am-line);
   border-radius: var(--am-radius-lg);
@@ -3035,10 +3043,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--am-space-3);
+  gap: var(--am-space-2) var(--am-space-3);
+  flex-wrap: wrap;
   margin-top: auto;
-  padding-top: var(--am-space-4);
+  padding-top: var(--am-space-3);
   border-top: 1px solid var(--am-line);
+  min-width: 0;
 }
 .am-doctor-card__fee {
   display: flex;

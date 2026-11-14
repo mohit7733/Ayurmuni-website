@@ -312,7 +312,7 @@ export default function Medicines() {
           onSubmit={goSearch}
           placeholder="Search medicines"
           label="Search medicines"
-        suggestions={searchSuggestions(concerns, brands)}
+        suggestions={searchSuggestions(products)}
         />
       </PageBar>
   );

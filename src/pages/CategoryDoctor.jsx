@@ -339,9 +339,11 @@ export default function CategoryDoctor() {
     </>
   );
 
-  // Suggested sections: with data (or still loading) they lead the page; empty ones drop to the end.
+  // Suggested vs Our: if a Suggested rail has items (or is still loading), hide the matching Our rail.
+  // "Top Doctors for You" with data => never show "Our Doctors".
+  const hasTopDoctors = doctorsLoading || doctors.length > 0;
   const suggestedEmpty = {
-    doctors: !doctorsLoading && doctors.length === 0,
+    doctors: !hasTopDoctors,
     products: !suggestedProductsLoading && suggestedProducts.length === 0,
     medicines: !suggestedMedicinesLoading && suggestedMedicines.length === 0,
   };
@@ -418,10 +420,10 @@ export default function CategoryDoctor() {
     if (pair.length) out.push(pair.join('+'));
     return out;
   };
+  // Only non-empty Suggested rails; empty ones are replaced by Our* sections below.
   const suggestedFirst = groupSuggested(false);
-  const suggestedLast = groupSuggested(true);
   const suggestedBlocks = {};
-  for (const key of [...suggestedFirst, ...suggestedLast]) {
+  for (const key of suggestedFirst) {
     const parts = key.split('+');
     suggestedBlocks[key] =
       parts.length > 1 ? (
@@ -487,24 +489,52 @@ export default function CategoryDoctor() {
         <div className="cn-stack">
           {suggestedFirst.map((key) => suggestedBlocks[key])}
 
+          {/* Our Doctors only when Top Doctors for You is empty; same for products/medicines. */}
           <div className="hm-page cn-home">
-            {ourDoctorsLoading ? <HomeDoctorsSkeleton label={`Loading ${C.ourDoctors}`} /> : null}
-            <HomeOurDoctors
-              id="cn-our-doctors"
-              items={ourDoctors}
-              title={C.ourDoctors}
-              description={C.ourDoctorsText}
-              onViewAll={() => navigate('/consult/doctors')}
-              onOpen={openDoctor}
-            />
-            {ourProductsLoading || ourMedicinesLoading ? <HomeProductsSkeleton label={`Loading ${C.ourProducts}`} /> : null}
-            <HomeProductPanels
-              idPrefix="cn-our"
-              panels={[
-                { key: 'medicines', title: C.ourMedicines, description: C.ourMedicinesText, items: ourMedicines, onViewAll: () => navigate('/medicines') },
-                { key: 'products', title: C.ourProducts, description: C.ourProductsText, items: ourProducts, onViewAll: () => navigate('/products') },
-              ]}
-            />
+            {!hasTopDoctors ? (
+              <>
+                {ourDoctorsLoading ? <HomeDoctorsSkeleton label={`Loading ${C.ourDoctors}`} /> : null}
+                <HomeOurDoctors
+                  id="cn-our-doctors"
+                  items={ourDoctors}
+                  title={C.ourDoctors}
+                  description={C.ourDoctorsText}
+                  onViewAll={() => navigate('/consult/doctors')}
+                  onOpen={openDoctor}
+                />
+              </>
+            ) : null}
+            {suggestedEmpty.products || suggestedEmpty.medicines ? (
+              <>
+                {(suggestedEmpty.medicines && ourMedicinesLoading) ||
+                (suggestedEmpty.products && ourProductsLoading) ? (
+                  <HomeProductsSkeleton label={`Loading ${C.ourProducts}`} />
+                ) : null}
+                <HomeProductPanels
+                  idPrefix="cn-our"
+                  panels={[
+                    suggestedEmpty.medicines
+                      ? {
+                          key: 'medicines',
+                          title: C.ourMedicines,
+                          description: C.ourMedicinesText,
+                          items: ourMedicines,
+                          onViewAll: () => navigate('/medicines'),
+                        }
+                      : null,
+                    suggestedEmpty.products
+                      ? {
+                          key: 'products',
+                          title: C.ourProducts,
+                          description: C.ourProductsText,
+                          items: ourProducts,
+                          onViewAll: () => navigate('/products'),
+                        }
+                      : null,
+                  ].filter(Boolean)}
+                />
+              </>
+            ) : null}
           </div>
 
           {dietLoading || dietPlans.length > 0 ? (
@@ -549,7 +579,7 @@ export default function CategoryDoctor() {
             </ConcernPanel>
           ) : null}
 
-          {suggestedLast.map((key) => suggestedBlocks[key])}
+          {/* Empty suggested panels are replaced by Our* sections above — do not re-show empty states. */}
         </div>
 
       </div>

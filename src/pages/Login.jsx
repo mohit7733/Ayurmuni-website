@@ -281,6 +281,8 @@ export default function Login() {
         >
           {isLoading ? T.sending : T.getOtp}
         </Button>
+        <span className="au-or">or</span>
+        <button onClick={() => navigate('/')} className="au-button au-button--secondary">As a guest</button>
       </div>
 
       <Modal

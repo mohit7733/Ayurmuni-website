@@ -46,7 +46,7 @@
 .dl-page .cs-toolbar { flex-wrap: wrap; gap: 8px 12px; min-height: 0; }
 .dl-page .cs-count { order: 0; font-size: 13px; font-weight: 600; color: #4d625b; white-space: nowrap; }
 /* T132: same search as Products/Medicines toolbar (.am-page-bar--slot) */
-.dl-page .cs-toolbar { flex-wrap: nowrap; align-items: center; padding: 0 0 10px; margin: 0;
+.dl-page .cs-toolbar { flex-wrap: wrap; align-items: center; padding: 0 0 10px; margin: 0;
   border-bottom: 1px solid transparent;
   border-image: linear-gradient(90deg, rgba(201,165,90,0), rgba(201,165,90,.5) 15%, rgba(201,165,90,.5) 85%, rgba(201,165,90,0)) 1; }
 .dl-page .cs-toolbar > .dl-bar { order: 1; }
@@ -271,16 +271,17 @@
 }
 @media (max-width: 479px) {
   /* one compact horizontal card per row */
-  .dl-card { display: grid; grid-template-columns: 64px minmax(0, 1fr); column-gap: 12px; padding: 11px; }
+  .dl-card { display: grid; grid-template-columns: 56px minmax(0, 1fr); column-gap: 10px; padding: 10px; }
   .dl-card__top { display: contents; }
-  .dl-card__ring { grid-column: 1; grid-row: 1 / span 4; align-self: start; }
-  .dl-card__rate { grid-column: 2; grid-row: 1; padding: 0 40px 3px 0; }
+  .dl-card__ring { grid-column: 1; grid-row: 1 / span 4; align-self: start; width: 56px; height: 56px; flex-basis: 56px; }
+  .dl-card__rate { grid-column: 2; grid-row: 1; padding: 0 36px 2px 0; }
   .dl-card__name { grid-column: 2; grid-row: 2; padding-right: 0; }
   .dl-card__cred { grid-column: 2; grid-row: 3; }
   .dl-card__facts { grid-column: 2; grid-row: 4; margin-top: 6px; }
-  .dl-card__foot { grid-column: 1 / -1; grid-row: 5; margin-top: 10px; }
-  .dl-card .dl-card__fav { top: 6px; right: 6px; width: 44px; height: 44px; }
-  .dl-card__cta { min-height: 40px; }
+  .dl-card__foot { grid-column: 1 / -1; grid-row: 5; margin-top: 8px; gap: 6px; flex-wrap: wrap; }
+  .dl-card .dl-card__fav { top: 4px; right: 4px; width: 36px; height: 36px; }
+  .dl-card__cta { min-height: 36px; padding: 0 10px; font-size: 12px; }
+  .dl-card__fee { font-size: 14px; min-width: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   .dl-card { transition: none; }

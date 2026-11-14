@@ -1,7 +1,7 @@
 .cart-float {
   --cf-h: 52px;
   --cf-gap: 10px;
-  --cf-bottom: calc(var(--am-tabbar-h) + var(--am-space-2) + var(--cf-gap) + env(safe-area-inset-bottom));
+  --cf-bottom: calc(var(--am-tabbar-h) + var(--am-space-4) + var(--cf-gap) + env(safe-area-inset-bottom));
   position: fixed;
   left: 50%;
   right: auto;
@@ -10,7 +10,7 @@
   display: flex;
   justify-content: center;
   width: max-content;
-  max-width: min(280px, calc(100vw - 24px));
+  max-width: min(280px, calc(100vw - 88px));
   transform: translateX(-50%);
   pointer-events: none;
   animation: cf-in 360ms var(--am-ease-out) both;
@@ -151,15 +151,30 @@
 @media (max-width: 767px) {
   /* Same baseline as the cart; the launcher goes icon-only so both fit side by side. */
   body:has(.cart-float) .ci-launch {
-    --ci-launch-bottom: calc(var(--am-tabbar-h) + var(--am-space-2) + 10px + env(safe-area-inset-bottom));
+    --ci-launch-bottom: calc(var(--am-tabbar-h) + var(--am-space-4) + 10px + env(safe-area-inset-bottom));
+    right: max(12px, env(safe-area-inset-right));
   }
   body:has(.cart-float) .ci-launch:not(.is-open) .ci-launch__label {
     display: none;
   }
   body:has(.cart-float) .ci-launch:not(.is-open) .ci-launch__btn {
-    width: 50px;
+    width: 48px;
+    height: 48px;
     padding: 0;
     justify-content: center;
+  }
+  body:has(.cart-float) .cart-float {
+    max-width: min(260px, calc(100vw - 96px));
+  }
+}
+
+@media (max-width: 360px) {
+  body:has(.cart-float) .cart-float {
+    max-width: min(220px, calc(100vw - 88px));
+  }
+  .cart-float__cta {
+    padding: 0 8px 0 10px;
+    font-size: 12px;
   }
 }
 

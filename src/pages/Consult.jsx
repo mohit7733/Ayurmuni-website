@@ -133,9 +133,9 @@ export default function Consult() {
   );
 
   const suggestedDoctorLimit = 6;
-  const showSuggestedDoctors =
-    (loading && suggestedDoctors.length === 0 && doctors.length > 0) ||
-    filteredSuggestedDoctors.length > 0;
+  // Prefer Suggested while loading; after load, Suggested if it has items, else Our doctors.
+  const showSuggestedDoctors = loading || filteredSuggestedDoctors.length > 0;
+  const showOurDoctors = !loading && filteredSuggestedDoctors.length === 0;
 
   const openSlots = (item) => {
     if (!item.doctorId) return;
@@ -179,7 +179,7 @@ export default function Consult() {
           onSubmit={(value) => setDebounced(String(value || '').trim())}
           placeholder={T.searchPlaceholder}
           label={T.searchLabel}
-          includeRecent
+          // includeRecent
         suggestions={searchSuggestions(concerns)}
         />
       </PageBar>
@@ -211,6 +211,8 @@ export default function Consult() {
             <SkeletonGrid variant="doctor" count={4} label={T.loadingDoctors} />
           ) : (
             <>
+              {/* Our doctors only when Suggested doctors is empty (null/0). */}
+              {showOurDoctors ? (
               <Reveal as="section" className="hm-section hm-panel" aria-labelledby="cs-doctors-title">
                 <SectionHead
                   id="cs-doctors-title"
@@ -219,7 +221,7 @@ export default function Consult() {
                   description={T.doctorsText}
                   action={
                     <div className="am-head-tools">
-                      {placeBar === 'doctors' ? searchBar : null}
+                      {/* {placeBar === 'doctors' ? searchBar : null} */}
                       {headActions}
                       <ViewAll label={T.doctorsTitle} onClick={() => navigate('/consult/doctors')} />
                     </div>
@@ -262,6 +264,7 @@ export default function Consult() {
                   </ul>
                 )}
               </Reveal>
+              ) : null}
 
             {filteredHistory.length > 0 ? (
               <div className="hm-product-row">
