@@ -1,20 +1,20 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, ArrowUpDown, Check, RefreshCw, SlidersHorizontal, X } from 'lucide-react';
+import { ArrowLeft, Check, ChevronDown, SlidersHorizontal, X } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import ProductCard from '../components/ProductCard';
 import useProductCategories from '../hooks/useProductCategories';
 import useCategoryProducts from '../hooks/useCategoryProducts';
 import useDashboardCategories from '../hooks/useDashboardCategories';
-import { mapProductCategory, normalizeApiList } from '../home/catalog';
+import { mapProductCategory, normalizeApiList, resolveImageUrl } from '../home/catalog';
 import { getServiceCategoryId, resolveServiceCategoryKey } from '../home/serviceCategories';
 import { getHealthCategories } from '../services/productService';
 import { isPrescriptionRequired, isProductOutOfStock } from '../product/stock';
 import {
   Button,
-  Chip,
   EmptyState,
   Modal,
+  PageBar,
   SearchField,
   searchSuggestions,
   SkeletonGrid,
@@ -29,6 +29,7 @@ import {
 import { STORE_COPY as T } from '../content/store';
 import { filterItemsByQuery } from '../home/concernCatalog';
 import '../design/pages/store.css';
+import '../design/pages/products.css';
 import '../design/brand.css';
 import '../design/product-card-home.css';
 import '../design/pages/category-products.css';
@@ -49,7 +50,7 @@ const itemServiceId = (item) =>
 export default function CategoryProducts() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [params] = useSearchParams();
+  const [params, setSearchParams] = useSearchParams();
   const brandId = params.get('brand') || '';
   const isBrandMix = Boolean(brandId);
   const isMedicine = !isBrandMix && location.pathname.startsWith('/medicines');
@@ -77,6 +78,15 @@ export default function CategoryProducts() {
   const brandReady = isBrandMix && !dashboardLoading;
   const canSplitBrand =
     brandReady && Boolean(productsCategoryId) && Boolean(medicineCategoryId);
+
+  const patchParams = (patch) => {
+    const next = new URLSearchParams(params);
+    Object.entries(patch).forEach(([key, value]) => {
+      if (value === null || value === undefined || value === '') next.delete(key);
+      else next.set(key, String(value));
+    });
+    setSearchParams(next);
+  };
 
   const resolveCatalogKind = (item) => {
     if (item?.catalog_kind === 'medicine' || item?.catalog_kind === 'product') {
@@ -119,17 +129,11 @@ export default function CategoryProducts() {
   }, []);
 
   const [selectedCategoryId, setSelectedCategoryId] = useState(initialCategory);
+  const [selectedSubcategoryId, setSelectedSubcategoryId] = useState(null);
   const activeCategoryId = selectedCategoryId === 'all' ? null : selectedCategoryId;
   const [healthCategories, setHealthCategories] = useState([]);
   const [search, setSearch] = useState('');
   const [query, setQuery] = useState('');
-  // Page search filters this page in place (debounced while typing; Search/Enter applies now).
-  useEffect(() => {
-    const timer = setTimeout(() => setQuery(search.trim()), 300);
-    return () => clearTimeout(timer);
-  }, [search]);
-  
-  // Filter & Sort States
   const [sortBy, setSortBy] = useState('relevance');
   const [priceRange, setPriceRange] = useState([0, 10000]);
   const [minRating, setMinRating] = useState(0);
@@ -139,26 +143,57 @@ export default function CategoryProducts() {
   const [brandIds, setBrandIds] = useState(brandId ? [brandId] : []);
   const [brandNames, setBrandNames] = useState([]);
   const [catalogKind, setCatalogKind] = useState('all');
+  const [openFilterPanel, setOpenFilterPanel] = useState(() =>
+    brandId ? 'brand' : mode === 'health' ? 'concern' : 'brand',
+  );
   const { brands: brandRecords } = useBrands();
+
+  const toggleFilterPanel = (panel) => {
+    setOpenFilterPanel((prev) => (prev === panel ? null : panel));
+  };
+
+  // Page search filters this page in place (debounced while typing; Search/Enter applies now).
+  useEffect(() => {
+    const timer = setTimeout(() => setQuery(search.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const urlCategory = params.get('category') || 'all';
+  // Keep local category selection aligned with the URL (brand / category / concern).
+  useEffect(() => {
+    setSelectedCategoryId(urlCategory);
+    setSelectedSubcategoryId(null);
+  }, [urlCategory, mode, brandId]);
+
+  useEffect(() => {
+    setBrandIds(brandId ? [brandId] : []);
+    if (brandId) setBrandNames([]);
+  }, [brandId]);
+
+  const productCategoryServiceId = isBrandMix
+    ? productsCategoryId
+    : mode === 'product'
+      ? serviceCategoryId
+      : productsCategoryId;
 
   const { categories: topCategories } = useProductCategories(
     null,
-    mode === 'product' && !isBrandMix ? serviceCategoryId : null,
+    productCategoryServiceId || null,
   );
   const { categories: subcategories } = useProductCategories(
-    mode === 'product' && !brandId ? activeCategoryId : null,
-    mode === 'product' && !isBrandMix ? serviceCategoryId : null,
+    mode === 'product' ? activeCategoryId : null,
+    productCategoryServiceId || null,
   );
-  const visibleSubs =
-    mode === 'product' && !brandId && activeCategoryId ? subcategories : [];
-  const [selectedSubcategoryId, setSelectedSubcategoryId] = useState(null);
+  const visibleSubs = mode === 'product' && activeCategoryId ? subcategories : [];
 
+  // Always load concerns so this page can filter medicines + products globally.
   useEffect(() => {
-    if (mode !== 'health' || isBrandMix) return undefined;
     let alive = true;
     (async () => {
       const res = await getHealthCategories(
-        serviceCategoryId ? { service_category_id: serviceCategoryId } : undefined,
+        !isBrandMix && serviceCategoryId
+          ? { service_category_id: serviceCategoryId }
+          : undefined,
       );
       if (!alive) return;
       setHealthCategories(
@@ -170,7 +205,7 @@ export default function CategoryProducts() {
     return () => {
       alive = false;
     };
-  }, [mode, serviceCategoryId, isBrandMix]);
+  }, [isBrandMix, serviceCategoryId]);
 
   const productFilter = useMemo(() => {
     if (brandId) {
@@ -215,31 +250,54 @@ export default function CategoryProducts() {
     [productFilter, sharedExtras],
   );
 
+  const brandCategoryFacet = useMemo(() => {
+    if (!activeCategoryId) return {};
+    if (mode === 'health') {
+      return {
+        health_category_id: activeCategoryId,
+        ...(selectedSubcategoryId ? { health_disease_id: selectedSubcategoryId } : {}),
+      };
+    }
+    return {
+      id: activeCategoryId,
+      ...(selectedSubcategoryId ? { product_subcategory_id: selectedSubcategoryId } : {}),
+    };
+  }, [activeCategoryId, selectedSubcategoryId, mode]);
+
   const brandProductFilter = useMemo(
     () => ({
       brand_name_id: brandId,
       ...(productsCategoryId ? { service_category_id: productsCategoryId } : {}),
+      ...brandCategoryFacet,
       ...sharedExtras,
     }),
-    [brandId, productsCategoryId, sharedExtras],
+    [brandId, productsCategoryId, brandCategoryFacet, sharedExtras],
   );
 
   const brandMedicineFilter = useMemo(
     () => ({
       brand_name_id: brandId,
       ...(medicineCategoryId ? { service_category_id: medicineCategoryId } : {}),
+      // Product categories don't map to medicines; concerns do.
+      ...(mode === 'health' ? brandCategoryFacet : {}),
       ...sharedExtras,
     }),
-    [brandId, medicineCategoryId, sharedExtras],
+    [brandId, medicineCategoryId, mode, brandCategoryFacet, sharedExtras],
   );
 
   const brandUnscopedFilter = useMemo(
     () => ({
       brand_name_id: brandId,
+      ...brandCategoryFacet,
       ...sharedExtras,
     }),
-    [brandId, sharedExtras],
+    [brandId, brandCategoryFacet, sharedExtras],
   );
+
+  // Product categories don't apply to medicines — hide medicine results while a
+  // product category facet is active on the brand page.
+  const productCategoryLocksMedicines =
+    isBrandMix && mode === 'product' && Boolean(activeCategoryId);
 
   const regularCatalog = useCategoryProducts(requestFilter, [], {
     enabled: !isBrandMix,
@@ -257,10 +315,15 @@ export default function CategoryProducts() {
   const products = useMemo(() => {
     if (!isBrandMix) return regularCatalog.products;
     if (!canSplitBrand) {
-      return brandUnscopedCatalog.products.map((item) => ({
-        ...item,
-        catalog_kind: resolveCatalogKind(item),
-      }));
+      return brandUnscopedCatalog.products
+        .map((item) => ({
+          ...item,
+          catalog_kind: resolveCatalogKind(item),
+        }))
+        .filter(
+          (item) =>
+            !productCategoryLocksMedicines || item.catalog_kind === 'product',
+        );
     }
     const seen = new Set();
     const merged = [];
@@ -270,16 +333,19 @@ export default function CategoryProducts() {
       seen.add(key);
       merged.push({ ...item, catalog_kind: 'product' });
     });
-    brandMedicineCatalog.products.forEach((item) => {
-      const key = String(item.variant_id ?? item.id ?? '');
-      if (!key || seen.has(key)) return;
-      seen.add(key);
-      merged.push({ ...item, catalog_kind: 'medicine' });
-    });
+    if (!productCategoryLocksMedicines) {
+      brandMedicineCatalog.products.forEach((item) => {
+        const key = String(item.variant_id ?? item.id ?? '');
+        if (!key || seen.has(key)) return;
+        seen.add(key);
+        merged.push({ ...item, catalog_kind: 'medicine' });
+      });
+    }
     return merged;
   }, [
     isBrandMix,
     canSplitBrand,
+    productCategoryLocksMedicines,
     regularCatalog.products,
     brandUnscopedCatalog.products,
     brandProductCatalog.products,
@@ -321,19 +387,6 @@ export default function CategoryProducts() {
       return;
     }
     brandUnscopedCatalog.loadMore();
-  };
-
-  const refresh = () => {
-    if (!isBrandMix) {
-      regularCatalog.refresh();
-      return;
-    }
-    if (canSplitBrand) {
-      brandProductCatalog.refresh();
-      brandMedicineCatalog.refresh();
-      return;
-    }
-    brandUnscopedCatalog.refresh();
   };
 
   const brandOptions = useMemo(() => {
@@ -435,15 +488,17 @@ export default function CategoryProducts() {
     productsCategoryId,
   ]);
 
-  const categoryList = brandId
-    ? []
-    : [
-        { id: 'all', name: T.all, image_url: '' },
-        ...(mode === 'health' ? healthCategories : topCategories),
-      ];
+  const categoryList = [
+    { id: 'all', name: T.all, image_url: '' },
+    ...topCategories,
+  ];
+  const concernList = [
+    { id: 'all', name: T.all, image_url: '' },
+    ...healthCategories,
+  ];
 
   const hasBrandFilter = brandId
-    ? brandIds.length !== 1 || brandIds[0] !== brandId
+    ? false
     : brandIds.length > 0 || brandNames.length > 0;
 
   const hasActiveFilters =
@@ -455,6 +510,7 @@ export default function CategoryProducts() {
     sortBy !== 'relevance' ||
     hasBrandFilter ||
     (isBrandMix && catalogKind !== 'all') ||
+    Boolean(activeCategoryId) ||
     Boolean(query);
 
   const clearFilters = () => {
@@ -468,6 +524,17 @@ export default function CategoryProducts() {
     setCatalogKind('all');
     setSearch('');
     setQuery('');
+    if (activeCategoryId) {
+      patchParams({
+        category: null,
+        mode: brandId || isMedicine ? mode : 'product',
+        name: brandId
+          ? brandOptions.find((b) => String(b.id) === String(brandId))?.name ||
+            params.get('name') ||
+            null
+          : null,
+      });
+    }
   };
 
   const countLabel = (() => {
@@ -483,181 +550,473 @@ export default function CategoryProducts() {
 
   const goSearch = (value) => setQuery(String(value ?? search).trim());
 
-  const selectCategory = (id) => {
-    setSelectedCategoryId(id);
+  const currentBrandName =
+    brandOptions.find((b) => String(b.id) === String(brandId))?.name ||
+    params.get('name') ||
+    '';
+
+  const selectBrand = (brand) => {
+    if (!brand) {
+      const keepCategory = activeCategoryId || null;
+      const keepName =
+        mode === 'health'
+          ? healthCategories.find((c) => c.id === keepCategory)?.name
+          : topCategories.find((c) => c.id === keepCategory)?.name;
+      patchParams({
+        brand: null,
+        name: keepName || null,
+        mode: keepCategory ? mode : params.get('mode') || 'product',
+      });
+      return;
+    }
+    if (String(brand.id) === String(brandId)) return;
+    patchParams({
+      brand: brand.id,
+      name: brand.name,
+      mode: params.get('mode') || 'product',
+    });
+    setCatalogKind('all');
+  };
+
+  const selectCategory = (id, name) => {
     setSelectedSubcategoryId(null);
+    if (!id || id === 'all') {
+      patchParams({
+        category: null,
+        mode: 'product',
+        name: brandId ? currentBrandName || null : null,
+      });
+      setSelectedCategoryId('all');
+      return;
+    }
+    patchParams({
+      category: id,
+      mode: 'product',
+      name: brandId ? currentBrandName || name || null : name || null,
+    });
+    setSelectedCategoryId(id);
+  };
+
+  const selectConcern = (id, name) => {
+    setSelectedSubcategoryId(null);
+    if (!id || id === 'all') {
+      patchParams({
+        category: null,
+        mode: 'product',
+        name: brandId ? currentBrandName || null : null,
+      });
+      setSelectedCategoryId('all');
+      return;
+    }
+    patchParams({
+      category: id,
+      mode: 'health',
+      name: brandId ? currentBrandName || name || null : name || null,
+    });
+    setSelectedCategoryId(id);
+  };
+
+  const isCategoryChipSelected = (id) => {
+    if (id === 'all') return mode !== 'product' || !activeCategoryId;
+    return mode === 'product' && selectedCategoryId === id;
+  };
+
+  const isConcernChipSelected = (id) => {
+    if (id === 'all') return mode !== 'health' || !activeCategoryId;
+    return mode === 'health' && selectedCategoryId === id;
+  };
+
+  const searchPlaceholder = isBrandMix
+    ? 'Search products & medicines'
+    : isMedicine
+      ? 'Search medicines'
+      : T.searchCollection;
+
+  const searchBar = (
+    <PageBar className="am-page-bar--slot" title={title}>
+      <SearchField
+        value={search}
+        onChange={setSearch}
+        onSubmit={goSearch}
+        placeholder={searchPlaceholder}
+        label={searchPlaceholder}
+        suggestions={searchSuggestions(products)}
+      />
+    </PageBar>
+  );
+
+  const filterMark = (item) => {
+    const image = item?.image_url || resolveImageUrl(item);
+    const initial = String(item?.name || '?').trim().charAt(0).toUpperCase() || '?';
+    return { image, initial };
   };
 
   return (
     <AppShell tab={shellTab}>
-      <div className="st-page cp-page">
-        <header className="cp-hero">
-          <div className="cp-hero__row">
-            <button type="button" className="cp-back" onClick={() => navigate(-1)} aria-label="Go back">
-              <ArrowLeft size={18} aria-hidden />
-            </button>
-            <div className="cp-hero__copy">
-              <p className="cp-hero__eyebrow">{brandId ? 'Brand' : mode === 'health' ? 'Health concern' : 'Collection'}</p>
-              <h1 className="cp-hero__title">{title}</h1>
-              <p className="cp-hero__count" aria-live="polite">
-                {loading && products.length === 0
-                  ? T.refreshing
-                  : `${filteredAndSortedProducts.length} ${countLabel}`}
-              </p>
+      <div className="st-page st-page--products cp-page">
+        <section className="st-section st-panel" aria-labelledby="cp-catalog-title">
+          <header className="cp-hero cp-hero--compact">
+            <div className="cp-hero__row">
+              <button type="button" className="cp-back" onClick={() => navigate(-1)} aria-label="Go back">
+                <ArrowLeft size={18} aria-hidden />
+              </button>
+              <div className="cp-hero__copy">
+                <p className="cp-hero__eyebrow">
+                  {brandId ? 'Brand' : mode === 'health' ? 'Health concern' : 'Collection'}
+                </p>
+                <h1 id="cp-catalog-title" className="cp-hero__title">
+                  {title}
+                </h1>
+              </div>
+            </div>
+          </header>
+
+          <div className="st-catalog">
+            <nav className="st-cat-col" aria-label="Catalog filters">
+              <p className="st-cat-col__eyebrow">Filter</p>
+
+              {brandOptions.length > 0 ? (
+                <div className={`cp-aside-group${openFilterPanel === 'brand' ? ' is-open' : ''}`}>
+                  <button
+                    type="button"
+                    className="cp-aside-toggle"
+                    id="cp-brands-title"
+                    aria-expanded={openFilterPanel === 'brand'}
+                    aria-controls="cp-brands-panel"
+                    onClick={() => toggleFilterPanel('brand')}
+                  >
+                    <span className="cp-aside-toggle__copy">
+                      <strong>Brand</strong>
+                      <em>{currentBrandName || 'All brands'}</em>
+                    </span>
+                    <ChevronDown size={16} aria-hidden className="cp-aside-toggle__icon" />
+                  </button>
+                  <div
+                    id="cp-brands-panel"
+                    className="cp-aside-panel"
+                    role="region"
+                    aria-labelledby="cp-brands-title"
+                    hidden={openFilterPanel !== 'brand'}
+                  >
+                    <ul className="st-cat-filter">
+                      <li>
+                        <button
+                          type="button"
+                          className={!brandId ? 'is-on' : ''}
+                          aria-pressed={!brandId}
+                          onClick={() => selectBrand(null)}
+                        >
+                          <span className="st-cat-filter__mark" aria-hidden>
+                            All
+                          </span>
+                          <span className="st-cat-filter__copy">
+                            <strong>All brands</strong>
+                            <em>Full catalogue</em>
+                          </span>
+                        </button>
+                      </li>
+                      {brandOptions.map((brand) => {
+                        const on = String(brandId) === String(brand.id);
+                        const { image, initial } = filterMark(brand);
+                        return (
+                          <li key={brand.id}>
+                            <button
+                              type="button"
+                              className={on ? 'is-on' : ''}
+                              aria-pressed={on}
+                              onClick={() => selectBrand(brand)}
+                            >
+                              <span className="st-cat-filter__mark" aria-hidden>
+                                {image ? <img src={image} alt="" /> : initial}
+                              </span>
+                              <span className="st-cat-filter__copy">
+                                <strong>{brand.name}</strong>
+                              </span>
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                </div>
+              ) : null}
+
+              {isBrandMix ? (
+                <div className={`cp-aside-group${openFilterPanel === 'type' ? ' is-open' : ''}`}>
+                  <button
+                    type="button"
+                    className="cp-aside-toggle"
+                    id="cp-type-title"
+                    aria-expanded={openFilterPanel === 'type'}
+                    aria-controls="cp-type-panel"
+                    onClick={() => toggleFilterPanel('type')}
+                  >
+                    <span className="cp-aside-toggle__copy">
+                      <strong>Type</strong>
+                      <em>
+                        {catalogKind === 'medicine'
+                          ? 'Medicines'
+                          : catalogKind === 'product'
+                            ? 'Products'
+                            : 'All'}
+                      </em>
+                    </span>
+                    <ChevronDown size={16} aria-hidden className="cp-aside-toggle__icon" />
+                  </button>
+                  <div
+                    id="cp-type-panel"
+                    className="cp-aside-panel"
+                    role="region"
+                    aria-labelledby="cp-type-title"
+                    hidden={openFilterPanel !== 'type'}
+                  >
+                    <ul className="st-cat-filter">
+                      {[
+                        { id: 'all', name: 'All', em: 'Products & medicines' },
+                        { id: 'product', name: 'Products', em: 'Wellness products' },
+                        { id: 'medicine', name: 'Medicines', em: 'Ayurvedic medicines' },
+                      ].map((item) => (
+                        <li key={item.id}>
+                          <button
+                            type="button"
+                            className={catalogKind === item.id ? 'is-on' : ''}
+                            aria-pressed={catalogKind === item.id}
+                            onClick={() => setCatalogKind(item.id)}
+                          >
+                            <span className="st-cat-filter__mark" aria-hidden>
+                              {item.name.charAt(0)}
+                            </span>
+                            <span className="st-cat-filter__copy">
+                              <strong>{item.name}</strong>
+                              <em>{item.em}</em>
+                            </span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ) : null}
+
+              {categoryList.length > 1 ? (
+                <div className={`cp-aside-group${openFilterPanel === 'category' ? ' is-open' : ''}`}>
+                  <button
+                    type="button"
+                    className="cp-aside-toggle"
+                    id="cp-cats-title"
+                    aria-expanded={openFilterPanel === 'category'}
+                    aria-controls="cp-cats-panel"
+                    onClick={() => toggleFilterPanel('category')}
+                  >
+                    <span className="cp-aside-toggle__copy">
+                      <strong>Category</strong>
+                      <em>
+                        {mode === 'product' && activeCategoryId
+                          ? topCategories.find((c) => c.id === activeCategoryId)?.name || 'Selected'
+                          : 'All categories'}
+                      </em>
+                    </span>
+                    <ChevronDown size={16} aria-hidden className="cp-aside-toggle__icon" />
+                  </button>
+                  <div
+                    id="cp-cats-panel"
+                    className="cp-aside-panel"
+                    role="region"
+                    aria-labelledby="cp-cats-title"
+                    hidden={openFilterPanel !== 'category'}
+                  >
+                    <ul className="st-cat-filter">
+                      {categoryList.map((item) => {
+                        const on = isCategoryChipSelected(item.id);
+                        const { image, initial } = filterMark(item);
+                        return (
+                          <li key={item.id}>
+                            <button
+                              type="button"
+                              className={on ? 'is-on' : ''}
+                              aria-pressed={on}
+                              onClick={() => selectCategory(item.id, item.name)}
+                            >
+                              <span className="st-cat-filter__mark" aria-hidden>
+                                {item.id === 'all' ? 'All' : image ? <img src={image} alt="" /> : initial}
+                              </span>
+                              <span className="st-cat-filter__copy">
+                                <strong>{item.id === 'all' ? 'All categories' : item.name}</strong>
+                                {item.id === 'all' ? <em>Any category</em> : null}
+                              </span>
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                </div>
+              ) : null}
+
+              {concernList.length > 1 ? (
+                <div className={`cp-aside-group${openFilterPanel === 'concern' ? ' is-open' : ''}`}>
+                  <button
+                    type="button"
+                    className="cp-aside-toggle"
+                    id="cp-concerns-title"
+                    aria-expanded={openFilterPanel === 'concern'}
+                    aria-controls="cp-concerns-panel"
+                    onClick={() => toggleFilterPanel('concern')}
+                  >
+                    <span className="cp-aside-toggle__copy">
+                      <strong>Concern</strong>
+                      <em>
+                        {mode === 'health' && activeCategoryId
+                          ? healthCategories.find((c) => c.id === activeCategoryId)?.name ||
+                            'Selected'
+                          : 'All concerns'}
+                      </em>
+                    </span>
+                    <ChevronDown size={16} aria-hidden className="cp-aside-toggle__icon" />
+                  </button>
+                  <div
+                    id="cp-concerns-panel"
+                    className="cp-aside-panel"
+                    role="region"
+                    aria-labelledby="cp-concerns-title"
+                    hidden={openFilterPanel !== 'concern'}
+                  >
+                    <ul className="st-cat-filter">
+                      {concernList.map((item) => {
+                        const on = isConcernChipSelected(item.id);
+                        const { image, initial } = filterMark(item);
+                        return (
+                          <li key={`concern-${item.id}`}>
+                            <button
+                              type="button"
+                              className={on ? 'is-on' : ''}
+                              aria-pressed={on}
+                              onClick={() => selectConcern(item.id, item.name)}
+                            >
+                              <span className="st-cat-filter__mark" aria-hidden>
+                                {item.id === 'all' ? 'All' : image ? <img src={image} alt="" /> : initial}
+                              </span>
+                              <span className="st-cat-filter__copy">
+                                <strong>{item.id === 'all' ? 'All concerns' : item.name}</strong>
+                                {item.id === 'all' ? <em>Any concern</em> : null}
+                              </span>
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                </div>
+              ) : null}
+            </nav>
+
+            <div className="st-catalog__main">
+              <div className="st-controls">
+                <div className="st-controls__info">
+                  <span>
+                    {loading && products.length === 0
+                      ? T.refreshing
+                      : `${filteredAndSortedProducts.length} ${countLabel}`}
+                  </span>
+                  {hasActiveFilters ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearFilters}
+                      leadingIcon={<X size={14} />}
+                    >
+                      Clear filters
+                    </Button>
+                  ) : null}
+                </div>
+                {searchBar}
+                <div className="st-controls__actions">
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="st-sort-select"
+                    aria-label="Sort products"
+                  >
+                    <option value="relevance">Sort: Relevance</option>
+                    <option value="price_low">Price: Low to High</option>
+                    <option value="price_high">Price: High to Low</option>
+                    <option value="popularity">Popularity</option>
+                    <option value="discount">Max Discount</option>
+                    <option value="rating">Highest Rated</option>
+                    <option value="name">Name: A-Z</option>
+                  </select>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setShowFilters(true)}
+                    leadingIcon={<SlidersHorizontal size={16} />}
+                  >
+                    Filters
+                  </Button>
+                </div>
+              </div>
+
+              {visibleSubs.length > 0 ? (
+                <div className="cp-subrow" role="group" aria-label="Subcategories">
+                  {visibleSubs.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className={`cp-subchip${selectedSubcategoryId === item.id ? ' is-on' : ''}`}
+                      aria-pressed={selectedSubcategoryId === item.id}
+                      onClick={() =>
+                        setSelectedSubcategoryId((prev) => (prev === item.id ? null : item.id))
+                      }
+                    >
+                      {item.name}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+
+              {loading && products.length === 0 ? (
+                <SkeletonGrid count={8} className="am-product-grid" />
+              ) : filteredAndSortedProducts.length === 0 ? (
+                <EmptyState
+                  title={
+                    hasActiveFilters
+                      ? isBrandMix
+                        ? 'No items match filters'
+                        : isMedicine
+                          ? 'No medicines match filters'
+                          : 'No products match filters'
+                      : T.emptyCategory
+                  }
+                  description={hasActiveFilters ? 'Try adjusting your filters' : T.emptyCategoryText}
+                  action={
+                    hasActiveFilters ? (
+                      <Button variant="secondary" onClick={clearFilters}>
+                        Clear filters
+                      </Button>
+                    ) : null
+                  }
+                />
+              ) : (
+                <ul className="am-product-grid">
+                  {filteredAndSortedProducts.map((item) => (
+                    <li key={`${item.catalog_kind || 'item'}-${item.variant_id || item.id}`}>
+                      <ProductCard item={item} cartButton detailBase={resolveDetailBase(item)} />
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {hasMore ? (
+                <div className="st-more">
+                  <Button variant="secondary" loading={loadingMore} onClick={loadMore}>
+                    {loadingMore ? T.loadingMore : T.loadMore}
+                  </Button>
+                </div>
+              ) : null}
+              {refreshing ? <p className="am-sr-only">{T.refreshing}</p> : null}
             </div>
           </div>
-          <div className="cp-hero__search">
-            <SearchField
-              value={search}
-              onChange={setSearch}
-              onSubmit={goSearch}
-              placeholder={
-                isBrandMix
-                  ? 'Search products & medicines'
-                  : isMedicine
-                    ? 'Search medicines'
-                    : T.searchCollection
-              }
-              label={
-                isBrandMix
-                  ? 'Search products & medicines'
-                  : isMedicine
-                    ? 'Search medicines'
-                    : T.searchCollection
-              }
-              suggestions={searchSuggestions(products)}
-            />
-            {/* <kbd className="cp-kbd" aria-hidden>/</kbd> */}
-          </div>
-        </header>
-
-        {isBrandMix ? (
-          <div className="cp-chips" role="tablist" aria-label="Catalog type">
-            {[
-              { id: 'all', name: 'All' },
-              { id: 'product', name: 'Products' },
-              { id: 'medicine', name: 'Medicines' },
-            ].map((item) => (
-              <Chip
-                key={item.id}
-                selected={catalogKind === item.id}
-                onClick={() => setCatalogKind(item.id)}
-              >
-                {item.name}
-              </Chip>
-            ))}
-          </div>
-        ) : null}
-
-        {categoryList.length > 1 ? (
-          <div className="cp-chips" role="tablist" aria-label={T.categories}>
-            {categoryList.map((item) => (
-              <Chip
-                key={item.id}
-                selected={selectedCategoryId === item.id}
-                onClick={() => selectCategory(item.id)}
-              >
-                {item.name}
-              </Chip>
-            ))}
-          </div>
-        ) : null}
-
-        {visibleSubs.length > 0 ? (
-          <div className="cp-chips cp-chips--sub" role="group" aria-label="Subcategories">
-            {visibleSubs.map((item) => (
-              <Chip
-                key={item.id}
-                selected={selectedSubcategoryId === item.id}
-                onClick={() =>
-                  setSelectedSubcategoryId((prev) => (prev === item.id ? null : item.id))
-                }
-              >
-                {item.name}
-              </Chip>
-            ))}
-          </div>
-        ) : null}
-
-        <div className="cp-toolbar">
-          <label className="cp-sort">
-            <span className="am-sr-only">Sort products</span>
-            <ArrowUpDown size={14} aria-hidden />
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} aria-label="Sort products">
-              <option value="relevance">Relevance</option>
-              <option value="price_low">Price: Low to High</option>
-              <option value="price_high">Price: High to Low</option>
-              <option value="popularity">Popularity</option>
-              <option value="discount">Max Discount</option>
-              <option value="rating">Highest Rated</option>
-              <option value="name">Name: A-Z</option>
-            </select>
-          </label>
-          <button
-            type="button"
-            className={`cp-chip-btn${hasActiveFilters && sortBy === 'relevance' ? ' is-on' : ''}`}
-            onClick={() => setShowFilters(true)}
-          >
-            <SlidersHorizontal size={14} aria-hidden />
-            Filters
-          </button>
-          {hasActiveFilters ? (
-            <button type="button" className="cp-chip-btn cp-chip-btn--ghost" onClick={clearFilters}>
-              <X size={14} aria-hidden />
-              Clear
-            </button>
-          ) : null}
-          <button
-            type="button"
-            className="cp-chip-btn cp-chip-btn--ghost cp-toolbar__refresh"
-            onClick={refresh}
-            disabled={refreshing}
-            aria-label={refreshing ? T.refreshing : T.refresh}
-          >
-            <RefreshCw size={14} aria-hidden className={refreshing ? 'is-spin' : ''} />
-            <span className="cp-toolbar__refresh-label">{T.refresh}</span>
-          </button>
-        </div>
-
-        {loading && products.length === 0 ? (
-          <SkeletonGrid count={8} className="am-product-grid cp-grid" />
-        ) : filteredAndSortedProducts.length === 0 ? (
-          <EmptyState
-            title={
-              hasActiveFilters
-                ? isBrandMix
-                  ? 'No items match filters'
-                  : isMedicine
-                    ? 'No medicines match filters'
-                    : 'No products match filters'
-                : T.emptyCategory
-            }
-            description={hasActiveFilters ? 'Try adjusting your filters' : T.emptyCategoryText}
-            action={
-              hasActiveFilters ? (
-                <Button variant="secondary" onClick={clearFilters}>
-                  Clear filters
-                </Button>
-              ) : null
-            }
-          />
-        ) : (
-          <ul className="am-product-grid cp-grid">
-            {filteredAndSortedProducts.map((item) => (
-              <li key={`${item.catalog_kind || 'item'}-${item.variant_id || item.id}`}>
-                <ProductCard item={item} cartButton detailBase={resolveDetailBase(item)} />
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {hasMore ? (
-          <div className="st-more">
-            <Button variant="secondary" loading={loadingMore} onClick={loadMore}>
-              {loadingMore ? T.loadingMore : T.loadMore}
-            </Button>
-          </div>
-        ) : null}
+        </section>
       </div>
 
       {/* Filter Modal */}
@@ -764,30 +1123,55 @@ export default function CategoryProducts() {
             </div>
           </section>
 
-          {!brandId ? (
-            <section
-              className="st-filter-section st-filter-section--brands"
-              aria-labelledby="st-filter-brand-title"
-            >
-              <div className="st-filter-section__heading">
-                <h3 id="st-filter-brand-title">Brand</h3>
-                {brandIds.length > 0 ? (
-                  <span>{brandIds.length} selected</span>
-                ) : (
-                  <span>Choose one or more</span>
-                )}
-              </div>
-              <div className="st-filter-brand-list">
-                {brandOptions.length === 0 ? (
-                  <p className="st-filter-empty">No brands available</p>
-                ) : (
-                  brandOptions.map((brand) => {
-                    const selected = brandIds.includes(brand.id);
+          <section
+            className="st-filter-section st-filter-section--brands"
+            aria-labelledby="st-filter-brand-title"
+          >
+            <div className="st-filter-section__heading">
+              <h3 id="st-filter-brand-title">Brand</h3>
+              {brandId ? (
+                <span>Switch brand</span>
+              ) : brandIds.length > 0 ? (
+                <span>{brandIds.length} selected</span>
+              ) : (
+                <span>Choose one or more</span>
+              )}
+            </div>
+            <div className="st-filter-brand-list">
+              {brandOptions.length === 0 ? (
+                <p className="st-filter-empty">No brands available</p>
+              ) : (
+                <>
+                  {brandId ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        selectBrand(null);
+                        setShowFilters(false);
+                      }}
+                      className={`st-filter-brand${!brandId ? ' is-selected' : ''}`}
+                      aria-pressed={!brandId}
+                    >
+                      <span>All brands</span>
+                      <span className="st-filter-brand__check" aria-hidden="true">
+                        {!brandId ? <Check size={15} /> : null}
+                      </span>
+                    </button>
+                  ) : null}
+                  {brandOptions.map((brand) => {
+                    const selected = brandId
+                      ? String(brandId) === String(brand.id)
+                      : brandIds.includes(brand.id);
                     return (
                       <button
                         key={brand.id}
                         type="button"
                         onClick={() => {
+                          if (brandId || isBrandMix) {
+                            selectBrand(brand);
+                            setShowFilters(false);
+                            return;
+                          }
                           const nextIds = selected
                             ? brandIds.filter((id) => id !== brand.id)
                             : [...brandIds, brand.id];
@@ -806,11 +1190,11 @@ export default function CategoryProducts() {
                         </span>
                       </button>
                     );
-                  })
-                )}
-              </div>
-            </section>
-          ) : null}
+                  })}
+                </>
+              )}
+            </div>
+          </section>
 
           <section className="st-filter-stock">
             <label className="st-filter-stock__label">
@@ -836,11 +1220,27 @@ export default function CategoryProducts() {
                 {minRating > 0 && <span>Rating: {minRating}★ and up</span>}
                 {dosha !== 'all' && <span>Dosha: {dosha}</span>}
                 {inStockOnly && <span>In stock only</span>}
-                {(brandIds.length > 0 || brandNames.length > 0) && (
+                {brandId ? <span>Brand: {currentBrandName || 'Selected'}</span> : null}
+                {!brandId && (brandIds.length > 0 || brandNames.length > 0) ? (
                   <span>
                     Brand: {brandNames.length ? brandNames.join(', ') : `${brandIds.length} selected`}
                   </span>
-                )}
+                ) : null}
+                {mode === 'product' && activeCategoryId ? (
+                  <span>
+                    Category:{' '}
+                    {topCategories.find((c) => c.id === activeCategoryId)?.name || 'Selected'}
+                  </span>
+                ) : null}
+                {mode === 'health' && activeCategoryId ? (
+                  <span>
+                    Concern:{' '}
+                    {healthCategories.find((c) => c.id === activeCategoryId)?.name || 'Selected'}
+                  </span>
+                ) : null}
+                {isBrandMix && catalogKind !== 'all' ? (
+                  <span>Type: {catalogKind === 'medicine' ? 'Medicines' : 'Products'}</span>
+                ) : null}
               </div>
             </div>
           ) : null}

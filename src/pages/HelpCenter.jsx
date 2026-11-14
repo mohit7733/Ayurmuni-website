@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, HelpCircle, Mail } from 'lucide-react';
+import { ChevronDown, HelpCircle, Mail } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import PageHeader from '../components/PageHeader';
-import { FAQ_CATEGORIES, getFaqList } from '../services/faqService';
+import {
+  buildFaqCategories,
+  getFaqList,
+  groupFaqsByCategory,
+} from '../services/faqService';
 import {
   Button,
   Chip,
@@ -21,12 +25,13 @@ export default function HelpCenter() {
   const [faqs, setFaqs] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [openId, setOpenId] = useState('');
 
   useEffect(() => {
     let alive = true;
     (async () => {
       setLoading(true);
-      const list = await getFaqList(category || undefined);
+      const list = await getFaqList();
       if (!alive) return;
       setFaqs(list);
       setLoading(false);
@@ -34,15 +39,28 @@ export default function HelpCenter() {
     return () => {
       alive = false;
     };
-  }, [category]);
+  }, []);
+
+  const categories = useMemo(() => buildFaqCategories(faqs), [faqs]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return faqs;
-    return faqs.filter((item) =>
-      `${item.question} ${item.answer}`.toLowerCase().includes(q),
-    );
-  }, [faqs, search]);
+    return faqs.filter((item) => {
+      if (category && item.categoryId !== category && item.categoryName !== category) {
+        return false;
+      }
+      if (!q) return true;
+      return `${item.question} ${item.answer} ${item.categoryName}`
+        .toLowerCase()
+        .includes(q);
+    });
+  }, [faqs, search, category]);
+
+  const grouped = useMemo(() => groupFaqsByCategory(filtered), [filtered]);
+
+  const toggleFaq = (id) => {
+    setOpenId((current) => (current === id ? '' : id));
+  };
 
   return (
     <AppShell tab="profile">
@@ -53,34 +71,30 @@ export default function HelpCenter() {
           onBack={() => (window.history.length > 1 ? navigate(-1) : navigate('/profile'))}
         />
 
-        <SearchField
-          value={search}
-          onChange={setSearch}
-          placeholder={T.faqSearch}
-          label={T.faqSearch}
-        />
+        <div className="sx-help-toolbar">
+          <SearchField
+            value={search}
+            onChange={setSearch}
+            placeholder={T.faqSearch}
+            label={T.faqSearch}
+          />
 
-        <div className="sx-filters" role="group" aria-label="FAQ categories">
-          {FAQ_CATEGORIES.map((item) => (
-            <Chip
-              key={item.key || 'all'}
-              selected={category === item.key}
-              onClick={() => setCategory(item.key)}
-            >
-              {item.title}
-            </Chip>
-          ))}
-        </div>
-
-        <div className="sx-help-results-head">
-          <div>
-            <span className="sx-help-eyebrow">Help library</span>
-            <h2>Frequently asked questions</h2>
-          </div>
-          {!loading ? (
-            <span className="sx-help-count">
-              {filtered.length} {filtered.length === 1 ? 'question' : 'questions'}
-            </span>
+          {categories.length > 1 ? (
+            <div className="sx-filters" role="group" aria-label="FAQ categories">
+              {categories.map((item) => (
+                <Chip
+                  key={item.key || 'all'}
+                  selected={category === item.key}
+                  title={item.title}
+                  onClick={() => {
+                    setCategory(item.key);
+                    setOpenId('');
+                  }}
+                >
+                  {item.title}
+                </Chip>
+              ))}
+            </div>
           ) : null}
         </div>
 
@@ -93,22 +107,82 @@ export default function HelpCenter() {
             description={T.faqEmptyText}
           />
         ) : (
-          <div className="sx-faq-list">
-            {filtered.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                className="sx-faq-row"
-                onClick={() => navigate(`/profile/faq/${item.id}`, { state: { faq: item } })}
-              >
-                <span className="sx-faq-row__copy">
-                  <strong>{item.question}</strong>
-                  {item.answer ? <p>{String(item.answer).slice(0, 140)}</p> : null}
-                </span>
-                <span className="sx-faq-row__arrow" aria-hidden="true">
-                  <ChevronRight size={18} />
-                </span>
-              </button>
+          <div className="sx-faq-groups">
+            {grouped.map((group) => (
+              <section key={group.key} className="sx-faq-group" aria-labelledby={`faq-cat-${group.key}`}>
+                <div className="sx-faq-panel">
+                  <header className="sx-faq-panel__head">
+                    <div className="sx-faq-panel__title-wrap">
+                      {group.imageUrl ? (
+                        <img
+                          className="sx-faq-panel__thumb"
+                          src={group.imageUrl}
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      ) : null}
+                      <h3 id={`faq-cat-${group.key}`}>{group.title}</h3>
+                    </div>
+                    <span className="sx-faq-panel__count">
+                      {group.items.length}
+                    </span>
+                  </header>
+
+                  <div className="sx-faq-accordion" role="list">
+                    {group.items.map((item) => {
+                      const isOpen = openId === item.id;
+                      const panelId = `faq-panel-${item.id}`;
+                      const buttonId = `faq-trigger-${item.id}`;
+                      return (
+                        <article
+                          key={item.id}
+                          className={`sx-faq-item${isOpen ? ' is-open' : ''}`}
+                          role="listitem"
+                        >
+                          <h4 className="sx-faq-item__title">
+                            <button
+                              id={buttonId}
+                              type="button"
+                              className="sx-faq-item__trigger"
+                              aria-expanded={isOpen}
+                              aria-controls={panelId}
+                              onClick={() => toggleFaq(item.id)}
+                            >
+                              <span>{item.question}</span>
+                              <span className="sx-faq-item__icon" aria-hidden="true">
+                                <ChevronDown size={18} />
+                              </span>
+                            </button>
+                          </h4>
+                          <div
+                            id={panelId}
+                            role="region"
+                            aria-labelledby={buttonId}
+                            className="sx-faq-item__panel"
+                            hidden={!isOpen}
+                          >
+                            {item.answer ? <p>{item.answer}</p> : null}
+                            {Array.isArray(item.image_urls) && item.image_urls.length ? (
+                              <div className="sx-faq-item__media">
+                                {item.image_urls.map((src) => (
+                                  <img
+                                    key={src}
+                                    src={src}
+                                    alt=""
+                                    loading="lazy"
+                                    decoding="async"
+                                  />
+                                ))}
+                              </div>
+                            ) : null}
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                </div>
+              </section>
             ))}
           </div>
         )}
@@ -127,7 +201,6 @@ export default function HelpCenter() {
             {T.faqEmail}
           </Button>
         </div>
-
       </section>
     </AppShell>
   );

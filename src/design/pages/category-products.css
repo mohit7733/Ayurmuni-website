@@ -102,6 +102,128 @@
   .cp-hero__search:not(:focus-within) .cp-kbd { display: inline-block; }
 }
 
+/* Match /products aside layout; stack Brand / Type / Category / Concern */
+.cp-page.st-page--products {
+  gap: 14px;
+}
+
+.cp-hero--compact {
+  padding: 12px 16px;
+}
+
+.cp-aside-group + .cp-aside-group {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(201, 165, 90, 0.28);
+}
+
+.cp-aside-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  padding: 8px 6px;
+  border: 0;
+  border-radius: 12px;
+  color: #1d2b27;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background 160ms ease;
+}
+
+.cp-aside-toggle:hover {
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.cp-aside-toggle:focus-visible {
+  outline: 2px solid var(--am-brand-green, #105343);
+  outline-offset: 2px;
+}
+
+.cp-aside-toggle__copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.cp-aside-toggle__copy strong {
+  font-family: var(--am-font-display, inherit);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.cp-aside-toggle__copy em {
+  overflow: hidden;
+  color: #6d7c76;
+  font-size: 11.5px;
+  font-style: normal;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cp-aside-toggle__icon {
+  flex: none;
+  color: #8a7445;
+  transition: transform 180ms ease;
+}
+
+.cp-aside-group.is-open .cp-aside-toggle__icon {
+  transform: rotate(180deg);
+}
+
+.cp-aside-group.is-open .cp-aside-toggle {
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.cp-aside-panel {
+  margin-top: 6px;
+}
+
+.cp-aside-panel[hidden] {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cp-aside-toggle__icon { transition: none; }
+}
+
+.cp-subrow {
+  display: flex;
+  gap: 6px;
+  margin: 0 0 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.cp-subrow::-webkit-scrollbar { display: none; }
+
+.cp-subchip {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid rgba(216, 204, 180, 0.95);
+  border-radius: 999px;
+  color: #105343;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.8rem;
+  background: #fffdf8;
+  cursor: pointer;
+}
+
+.cp-subchip.is-on,
+.cp-subchip:hover {
+  border-color: #105343;
+  color: #fbf6ea;
+  background: #105343;
+}
+
 /* Category / subcategory chips */
 .cp-chips {
   display: flex;

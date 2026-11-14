@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { BookOpen, CalendarClock, HelpCircle, ListChecks, Mail, MessageCircle } from 'lucide-react';
 import AppShell from '../components/AppShell';
-import { FAQ_CATEGORIES, formatFaqUpdatedLabel, getFaqDetail } from '../services/faqService';
+import { formatFaqUpdatedLabel, getFaqDetail } from '../services/faqService';
 import { Button } from '../components/ui';
 import {
   ActionStack,
@@ -45,13 +45,21 @@ export default function FaqDetail() {
   }, [faqId, seed]);
 
   const categoryLabel = useMemo(() => {
-    if (!faq?.category) return faq?.category_label || '';
-    const match = FAQ_CATEGORIES.find((item) => item.key === String(faq.category).toLowerCase());
-    return match?.title || faq.category_label || String(faq.category);
+    if (!faq) return '';
+    if (faq.categoryName) return faq.categoryName;
+    if (faq.category_label) return faq.category_label;
+    if (faq.category && typeof faq.category === 'object') {
+      return faq.category.name || faq.category.title || '';
+    }
+    if (typeof faq.category === 'string') return faq.category;
+    return '';
   }, [faq]);
 
   const steps = Array.isArray(faq?.steps) ? faq.steps : [];
-  const image = faq?.image_url || faq?.image || null;
+  const images = Array.isArray(faq?.image_urls)
+    ? faq.image_urls.filter(Boolean)
+    : [];
+  const image = images[0] || faq?.image_url || faq?.image || null;
   const updated = faq ? formatFaqUpdatedLabel(faq) : '';
 
   return (
@@ -106,7 +114,20 @@ export default function FaqDetail() {
               }
             >
               <DetailCard id="faq-answer" title="Answer" icon={HelpCircle}>
-                {image ? <img className="dx-figure-img" src={image} alt="" loading="lazy" decoding="async" /> : null}
+                {images.length ? (
+                  images.map((src) => (
+                    <img
+                      key={src}
+                      className="dx-figure-img"
+                      src={src}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ))
+                ) : image ? (
+                  <img className="dx-figure-img" src={image} alt="" loading="lazy" decoding="async" />
+                ) : null}
                 <p className="dx-prose">{faq.answer}</p>
               </DetailCard>
 

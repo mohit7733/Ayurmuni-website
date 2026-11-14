@@ -568,7 +568,14 @@ export default function Medicines() {
                     eyebrow="Trusted"
                     title="Brands"
                     description="Formulas from houses we stock."
-                    action={<ViewAll label="Trusted brands" onClick={() => navigate('/products')} />}
+                    action={
+                      <ViewAll
+                        label="Trusted brands"
+                        onClick={() =>
+                          navigate('/products/category?mode=product&name=Brands')
+                        }
+                      />
+                    }
                   />
                   <ConcernCarousel label="Trusted brands">
                     {brands.map((item) => (
