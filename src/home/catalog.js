@@ -168,8 +168,10 @@ export const doctorDisplayName = (item) =>
   ).trim() || 'Doctor';
 
 export const doctorFeeLabel = (item) => {
+  console.log(item);
+  
   const fee = Number(
-    item?.consultation_fee ?? item?.global_fee ?? item?.fee ?? item?.consult_fee,
+    item?.configurations?.consultation?.global_fee ?? item?.global_fee ?? item?.fee ?? item?.consult_fee,
   );
   if (!Number.isFinite(fee) || fee < 0) return '';
   return formatRupee(fee);

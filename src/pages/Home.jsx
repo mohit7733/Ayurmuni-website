@@ -619,7 +619,7 @@ export default function Home() {
   const splitDoctorRow = showVisitedDoctors && showSuggestedDoctors;
   // Rohit: homepage shows max 2 visited and 3 suggested doctors; View all opens the full list.
   const recentDoctors = visitedDoctors.slice(0, 2);
-  const suggestedDoctors = doctors.slice(0, 3);
+  const suggestedDoctors = doctors.slice(0, 4);
   const featuredProducts = sections.featured || [];
   const recentProducts = sections.recently_viewed || [];
 
@@ -646,8 +646,8 @@ export default function Home() {
     <AppShell tab="home">
       <div className="hm-page">
         <section className="hm-hero" aria-labelledby="hm-hero-title">
-          <HeroBackgroundVideo />
-          <div className="hm-hero__inner">
+          {/* <HeroBackgroundVideo /> */}
+          {/* <div className="hm-hero__inner">
 
 
             <div className="hm-hero__copy">
@@ -701,7 +701,6 @@ export default function Home() {
               </ul>
             </div>
 
-            {/* Empty slot keeps the original 3-column hero geometry. */}
             <div className="hm-hero__artwork" aria-hidden>
               <span className="hm-hero__spacer" />
             </div>
@@ -741,7 +740,21 @@ export default function Home() {
                 ))}
               </ul>
             </aside>
-          </div>
+          </div> */}
+          {bannersLoading || bannerItems.length ? (
+            <div className="hm-dash">
+              <div className="hm-dash__main">
+                <BannerCarousel
+                  items={bannerItems}
+                  initialIndex={0}
+                  interval={6000}
+                  onSelect={handleBannerPress}
+                  loading={bannersLoading}
+                  copy={bannerCopy}
+                />
+              </div>
+            </div>
+          ) : null}
         </section>
 
         <div className="hm-body">
@@ -759,7 +772,7 @@ export default function Home() {
           </div>
           <ActiveDietToast plan={activeDiet} />
 
-          {bannersLoading || bannerItems.length ? (
+          {/* {bannersLoading || bannerItems.length ? (
             <div className="hm-dash">
               <div className="hm-dash__main">
                 <BannerCarousel
@@ -772,7 +785,7 @@ export default function Home() {
                 />
               </div>
             </div>
-          ) : null}
+          ) : null} */}
 
           <LazyBlock blockRef={concernsRef} done={isSectionDone('concerns')} minHeight={120} skeleton={<SectionHold label={T.concernsTitle} minHeight={120} variant="chips" />}>
             {healthConcerns.length > 0 ? (
@@ -875,7 +888,8 @@ export default function Home() {
 
           <LazyBlock blockRef={doctorRowRef} done={doctorRowSeen} minHeight={360}>
             {showVisitedDoctors || showSuggestedDoctors ? (
-              <div className={splitDoctorRow ? 'hm-doctor-row hm-doctor-row--split' : 'hm-doctor-row'}>
+              // "hm-doctor-row--split"
+              <div className={splitDoctorRow ? 'hm-doctor-row ' : 'hm-doctor-row'}>
                 {loadingVisitedDoctors && visitedDoctors.length === 0 ? (
                   <section className="hm-section" aria-busy="true">
                     <DoctorRailHeader
@@ -991,6 +1005,29 @@ export default function Home() {
               <div
                 className={`hm-wellness${yogaSessions.length > 0 && dietProducts.length > 0 ? ' hm-wellness--pair' : ''}`}
               >
+                {dietProducts.length > 0 ? (
+                  <Reveal as="section" className="hm-well hm-well--nourish" aria-labelledby="hm-diet-title">
+                    <div className="hm-well__head">
+                      <div className="hm-well__lead">
+                        <h2 id="hm-diet-title" className="hm-well__title">
+                          {T.dietTitle}
+                        </h2>
+                        <p className="hm-well__text">{T.dietText}</p>
+                      </div>
+                      <ViewAll label={T.dietTitle} onClick={() => navigate('/diet?view=all')} />
+                    </div>
+                    <Rail label={T.dietTitle} auto controls className="hm-diet-rail">
+                      {dietProducts.filter((d, i, all) => all.findIndex((x) => x.id === d.id) === i).map((item) => (
+                        <RailItem key={item.id}>
+                          <DietPlanCard
+                            item={item}
+                            onClick={() => navigate(`/diet/${item.id}`, { state: { item } })}
+                          />
+                        </RailItem>
+                      ))}
+                    </Rail>
+                  </Reveal>
+                ) : null}
                 {yogaSessions.length > 0 ? (
                   <Reveal as="section" className="hm-well hm-well--move" aria-labelledby="hm-yoga-title">
                     <div className="hm-well__head">
@@ -1017,29 +1054,7 @@ export default function Home() {
                   </Reveal>
                 ) : null}
 
-                {dietProducts.length > 0 ? (
-                  <Reveal as="section" className="hm-well hm-well--nourish" aria-labelledby="hm-diet-title">
-                    <div className="hm-well__head">
-                      <div className="hm-well__lead">
-                        <h2 id="hm-diet-title" className="hm-well__title">
-                          {T.dietTitle}
-                        </h2>
-                        <p className="hm-well__text">{T.dietText}</p>
-                      </div>
-                      <ViewAll label={T.dietTitle} onClick={() => navigate('/diet?view=all')} />
-                    </div>
-                    <Rail label={T.dietTitle} auto controls className="hm-diet-rail">
-                      {dietProducts.filter((d, i, all) => all.findIndex((x) => x.id === d.id) === i).map((item) => (
-                        <RailItem key={item.id}>
-                          <DietPlanCard
-                            item={item}
-                            onClick={() => navigate(`/diet/${item.id}`, { state: { item } })}
-                          />
-                        </RailItem>
-                      ))}
-                    </Rail>
-                  </Reveal>
-                ) : null}
+
               </div>
             ) : null}
           </LazyBlock>

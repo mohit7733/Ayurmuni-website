@@ -377,10 +377,10 @@ export default function DoctorProfile() {
                 </DetailCard>
               ) : null}
 
-              <p className="dx-note">
+              {/* <p className="dx-note">
                 <ShieldCheck size={14} aria-hidden />
                 Verified BAMS / MD practitioners. Consultations are private and secure.
-              </p>
+              </p> */}
             </>
           }
         >

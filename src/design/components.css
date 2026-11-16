@@ -1814,7 +1814,7 @@
 /* ---------- Banner carousel (layered center-mode, home design tokens) ---------- */
 .am-banner {
   container-type: inline-size;
-  --am-banner-w: min(64cqw, 820px);
+  --am-banner-w: min(64cqw, 1020px);
   --am-banner-tilt: 22deg;
   /* centre-to-centre shift that parks a side card's outer edge ~14px inside the section */
   --am-banner-shift: calc(50cqw - 14px - var(--am-banner-w) * 0.43);

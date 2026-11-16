@@ -6,6 +6,7 @@ import {
   doctorDisplayName,
   doctorExperience,
   doctorFavorite,
+  doctorFeeLabel,
   doctorImage,
   doctorLocation,
   doctorQualification,
@@ -13,6 +14,8 @@ import {
   doctorSpeciality,
   favoriteFromToggle,
   getDoctorId,
+  resolveDoctorHealthDiseases,
+  resolveDoctorSpecializations,
 } from '../consult/doctors';
 import { showSuccessToast } from '../config/key';
 import { requireAuth } from '../services/guestAuth';
@@ -21,19 +24,39 @@ import FavButton from './ui/FavButton';
 import DietitianBadge from './DietitianBadge';
 import { nameInitial } from '../utils/initials';
 
-function DoctorTableRow({ item, fallbackSpeciality }) {
+/** Specialty / concern chips — skips values already shown as credential. */
+function focusTags(item, credential) {
+  const skip = String(credential || '').toLowerCase();
+  const seen = new Set();
+  const out = [];
+  const push = (value) => {
+    const label = String(value || '').trim();
+    if (!label) return;
+    const key = label.toLowerCase();
+    if (seen.has(key) || skip.includes(key)) return;
+    seen.add(key);
+    out.push(label);
+  };
+
+  resolveDoctorSpecializations(item).forEach(push);
+  resolveDoctorHealthDiseases(item).forEach(push);
+  return out.slice(0, 2);
+}
+
+function DoctorCard({ item, fallbackSpeciality, index }) {
   const navigate = useNavigate();
   const id = getDoctorId(item);
   const name = formatDoctorDisplayName(doctorDisplayName(item));
   const image = doctorImage(item);
-  const rating = doctorRating(item);
   const credential = doctorQualification(item) || doctorSpeciality(item) || fallbackSpeciality;
   const experience = doctorExperience(item);
   const location = doctorLocation(item);
+  const rating = doctorRating(item);
+  const fee = doctorFeeLabel(item);
   const reviewCount = Number(item?.total_reviews || item?.review_count || 0);
   const verified = Boolean(item?.is_verified);
+  const tags = focusTags(item, credential);
   const [fav, setFav] = useState(() => doctorFavorite(item));
-  const reviewLabel = reviewCount === 1 ? '1 review' : `${reviewCount} reviews`;
 
   const openProfile = () => {
     if (id) navigate(`/consult/doctors/${id}`);
@@ -62,124 +85,112 @@ function DoctorTableRow({ item, fallbackSpeciality }) {
   };
 
   return (
-    <tr>
-      <th scope="row">
-        <div className="hm-doc-table__doctor">
-          {image ? (
-            <img className="hm-doc-table__photo" src={image} alt="" loading="lazy" decoding="async" />
-          ) : (
-            <span className="hm-doc-table__photo hm-doc-table__photo--fallback" aria-hidden>
-              {nameInitial(name)}
+    <article className="hm-doc-card" style={{ '--hm-doc-i': index }}>
+      <div className={`hm-doc-card__media${image ? ' hm-doc-card__media--photo' : ''}`}>
+        {image ? (
+          <img className="hm-doc-card__photo" src={image} alt="" loading="lazy" decoding="async" />
+        ) : (
+          <span className="hm-doc-card__initial" aria-hidden>
+            {nameInitial(name)}
+          </span>
+        )}
+        <div className="hm-doc-card__media-scrim" aria-hidden />
+
+        <div className="hm-doc-card__chips">
+          {rating ? (
+            <span className="hm-doc-card__chip">
+              <Star size={11} aria-hidden fill="currentColor" />
+              {rating}
+              {reviewCount ? <em>({reviewCount})</em> : null}
             </span>
-          )}
-          <div className="hm-doc-table__id">
-            <p className="hm-doc-table__name">
-              <button type="button" onClick={openProfile}>
-                {name}
-              </button>
-              {verified ? (
-                <BadgeCheck size={14} aria-label="Verified" />
-              ) : null}
-            </p>
-            <DietitianBadge doctor={item} />
-            {credential ? <p className="hm-doc-table__cred">{credential}</p> : null}
-            <div className="hm-doc-table__mobile-meta" aria-hidden="true">
-              {rating ? (
-                <span className="hm-doc-table__rating">
-                  <Star size={12} aria-hidden fill="currentColor" />
-                  <strong>{rating}</strong>
-                </span>
-              ) : null}
-              {experience ? (
-                <span className="hm-doc-table__meta">
-                  <Briefcase size={12} aria-hidden />
-                  {experience}
-                </span>
-              ) : null}
-              {location ? (
-                <span className="hm-doc-table__meta">
-                  <MapPin size={12} aria-hidden />
-                  {location}
-                </span>
-              ) : null}
-            </div>
-          </div>
+          ) : null}
+          {verified ? (
+            <span className="hm-doc-card__chip hm-doc-card__chip--verified">
+              <BadgeCheck size={12} aria-hidden />
+              Verified
+            </span>
+          ) : null}
         </div>
-      </th>
-      <td className="hm-doc-table__col-exp">
-        {experience ? (
-          <span className="hm-doc-table__meta">
-            <Briefcase size={14} aria-hidden />
-            {experience}
-          </span>
-        ) : (
-          <span className="hm-doc-table__empty">—</span>
-        )}
-      </td>
-      <td className="hm-doc-table__col-location">
-        {location ? (
-          <span className="hm-doc-table__meta">
-            <MapPin size={14} aria-hidden />
-            {location}
-          </span>
-        ) : (
-          <span className="hm-doc-table__empty">—</span>
-        )}
-      </td>
-      <td className="hm-doc-table__col-rating">
-        {rating ? (
-          <span className="hm-doc-table__rating">
-            <Star size={13} aria-hidden fill="currentColor" />
-            <strong>{rating}</strong>
-            {reviewCount ? <span>{reviewLabel}</span> : null}
-          </span>
-        ) : (
-          <span className="hm-doc-table__empty">—</span>
-        )}
-      </td>
-      <td className="hm-doc-table__actions-cell">
-        <div className="hm-doc-table__actions">
+
+        <div className="hm-doc-card__fav">
           <FavButton
             on={fav}
             label={fav ? `Remove ${name} from favourites` : `Save ${name}`}
             onClick={toggleFav}
           />
-          <button type="button" className="hm-doc-table__profile" aria-label={`View ${name} profile`} onClick={openProfile}>
-            <span>View profile</span>
-            <ArrowRight size={14} aria-hidden />
-          </button>
         </div>
-      </td>
-    </tr>
+      </div>
+
+      <div className="hm-doc-card__body">
+        <div className="hm-doc-card__id">
+          <h3 className="hm-doc-card__name">
+            <button type="button" className="hm-doc-card__name-btn am-stretched" onClick={openProfile}>
+              {name}
+            </button>
+          </h3>
+          <DietitianBadge doctor={item} />
+          {credential ? <p className="hm-doc-card__cred">{credential}</p> : null}
+        </div>
+
+        {experience || location ? (
+          <ul className="hm-doc-card__facts">
+            {experience ? (
+              <li>
+                <Briefcase size={13} aria-hidden />
+                <span>{experience}</span>
+              </li>
+            ) : null}
+            {/* {location ? (
+              <li>
+                <MapPin size={13} aria-hidden />
+                <span>{location}</span>
+              </li>
+            ) : null} */}
+          </ul>
+        ) : null}
+
+        {tags.length ? (
+          <ul className="hm-doc-card__tags">
+            {tags.map((tag) => (
+              <li key={tag}>{tag}</li>
+            ))}
+          </ul>
+        ) : null}
+
+        <div className="hm-doc-card__foot">
+          {fee ? (
+            <span className="hm-doc-card__fee">
+              <small>Consult</small>
+              {fee}
+            </span>
+          ) : (
+            <span className="hm-doc-card__fee hm-doc-card__fee--empty">
+              <small>Consult</small>
+              —
+            </span>
+          )}
+          <span className="hm-doc-card__cta" aria-hidden>
+            View profile
+            <ArrowRight size={13} />
+          </span>
+        </div>
+      </div>
+    </article>
   );
 }
 
 export default function DoctorTable({ items, label, fallbackSpeciality = 'Ayurveda' }) {
   return (
-    <div className="hm-doc-table-wrap">
-      <table className="hm-doc-table">
-        <caption className="am-sr-only">{label}</caption>
-        <thead>
-          <tr>
-            <th scope="col">Doctor</th>
-            <th className="hm-doc-table__col-exp" scope="col">Experience</th>
-            <th className="hm-doc-table__col-location" scope="col">Location</th>
-            <th className="hm-doc-table__col-rating" scope="col">Rating</th>
-            <th className="hm-doc-table__actions-cell" scope="col">
-              <span className="am-sr-only">Actions</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((item) => (
-            <DoctorTableRow
-              key={getDoctorId(item) || item.doctor_id || item.id}
-              item={item}
-              fallbackSpeciality={fallbackSpeciality}
-            />
-          ))}
-        </tbody>
-      </table>
+    <div className="hm-doc-rail" role="list" aria-label={label}>
+      {items.map((item, index) => (
+        <div
+          key={getDoctorId(item) || item.doctor_id || item.id}
+          className="hm-doc-rail__item"
+          role="listitem"
+        >
+          <DoctorCard item={item} fallbackSpeciality={fallbackSpeciality} index={index} />
+        </div>
+      ))}
     </div>
   );
 }

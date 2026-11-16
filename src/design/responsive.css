@@ -13,7 +13,7 @@
       .site-account, .text-back, .pm-search__submit, .pm-search__clear,
       .note-close, .st-sort-select, .bkp-ghost, .skip-btn, .skip-link,
       .onboard-back, .ghost, .cta, .cp-chip-btn, .hm-prakriti__cta,
-      .hm-doc-table__profile, .do-card__book, .am-toast__close,
+      .do-card__book, .am-toast__close,
       .chat-back, .chat-attach, .chat-send, .am-stepper button,
       .am-page-header__actions button, .video-controls button,
       .video-error button, .catalog-head-actions button,
@@ -31,7 +31,6 @@
   }
 
   .am-fav-btn,
-  .hm-doc-table__profile,
   .am-icon-btn,
   .note-close,
   .chat-back,
@@ -64,7 +63,6 @@
   }
 
   /* ---- Inline text buttons: invisible vertical hit padding ---- */
-  .hm-doc-table__name button,
   .hm-doctor-head__link,
   .onboard-terms button,
   .au-terms__link {
