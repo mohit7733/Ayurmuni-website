@@ -153,6 +153,20 @@ export const pickConsultRazorpayOrderId = (paymentData) => {
   return '';
 };
 
+/**
+ * Normal checkout (no plan). A fee-quote total of 0 must not wipe a real consultation + GST.
+ * A positive server total is what the gateway charges. Zero only stands when the parts are also zero.
+ */
+export const normalConsultPayable = (serverPayable, partsTotal) => {
+  const parts = roundMoney(Math.max(0, Number(partsTotal) || 0));
+  const server =
+    serverPayable == null || serverPayable === '' || !Number.isFinite(Number(serverPayable))
+      ? null
+      : roundMoney(Math.max(0, Number(serverPayable)));
+  if (server != null && server > 0) return server;
+  return parts;
+};
+
 /** Payable after the plan is applied (fee-quote with package_purchase_id). Missing -> covered (0). */
 export const resolvePlanPayableRupees = (data) => {
   const summary = data?.summary ?? {};

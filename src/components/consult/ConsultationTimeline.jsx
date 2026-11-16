@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ChevronRight, FileText } from 'lucide-react';
-import { formatRupee, mapCatalogProductItem, resolveImageUrl } from '../../home/catalog';
+import { formatConsultationAmount, formatRupee, mapCatalogProductItem, resolveImageUrl } from '../../home/catalog';
 import { getProducts } from '../../services/productService';
 import {
   formatSlipDate,
@@ -248,8 +248,8 @@ export function VisitCard({ item, doctor, onOpen, onPrescription }) {
   const charge = consultationChargeLabel(item);
   const feeText =
     charge.amount != null && charge.amount > 0
-      ? [formatRupee(charge.amount), charge.note].filter(Boolean).join(' · ')
-      : charge.note || (charge.amount === 0 ? formatRupee(0) : '');
+      ? [formatConsultationAmount(charge.amount), charge.note].filter(Boolean).join(' · ')
+      : charge.note || (charge.amount === 0 ? formatConsultationAmount(0) : '');
   const rawTitle = getConsultationTitle(item);
   const title =
     rawTitle && rawTitle !== 'Consultation visit' && String(rawTitle).trim().length >= 4

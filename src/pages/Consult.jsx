@@ -22,12 +22,9 @@ import {
   Button,
   ConcernCarousel,
   EmptyState,
-  PageBar,
   Rail,
   RailItem,
   Reveal,
-  SearchField,
-  searchSuggestions,
   SkeletonGrid,
   Tile,
 } from '../components/ui';
@@ -63,7 +60,7 @@ export default function Consult() {
   const [doctors, setDoctors] = useState([]);
   const [suggestedDoctors, setSuggestedDoctors] = useState([]);
   const [history, setHistory] = useState([]);
-  const [search, setSearch] = useState('');
+  const [search] = useState('');
   const [debounced, setDebounced] = useState('');
   const [loading, setLoading] = useState(true);
   const productFilter = useMemo(() => (debounced ? { search: debounced } : {}), [debounced]);
@@ -170,21 +167,6 @@ export default function Consult() {
     return () => observer.disconnect();
   }, [hasMore, loadMore, products.length]);
 
-  const placeBar = loading && !concerns.length && !doctors.length ? 'top' : 'doctors';
-  const searchBar = (
-      <PageBar className="am-page-bar--slot" id="cs-hero" title="Consult a doctor">
-        <SearchField
-          value={search}
-          onChange={setSearch}
-          onSubmit={(value) => setDebounced(String(value || '').trim())}
-          placeholder={T.searchPlaceholder}
-          label={T.searchLabel}
-          // includeRecent
-        suggestions={searchSuggestions(concerns)}
-        />
-      </PageBar>
-  );
-
   const headActions = (
     <>
         <Button
@@ -205,8 +187,6 @@ export default function Consult() {
       <div className="hm-page svc-page">
         <div className="hm-body">
 
-          {placeBar === 'top' ? <div className="am-head-tools am-head-tools--top">{searchBar}{headActions}</div> : null}
-
           {loading && !concerns.length && !doctors.length ? (
             <SkeletonGrid variant="doctor" count={4} label={T.loadingDoctors} />
           ) : (
@@ -221,7 +201,6 @@ export default function Consult() {
                   description={T.doctorsText}
                   action={
                     <div className="am-head-tools">
-                      {/* {placeBar === 'doctors' ? searchBar : null} */}
                       {headActions}
                       <ViewAll label={T.doctorsTitle} onClick={() => navigate('/consult/doctors')} />
                     </div>

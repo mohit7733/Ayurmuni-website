@@ -2,11 +2,12 @@
 // (utils/buildConsultationDocumentPdf.ts createMedicalReceiptPdfBytes) and prescription
 // (utils/prescriptionPdfBuilder.ts buildPrescriptionPdfFromData). They return the structured input
 // that documentHtml.renderDocumentHtml turns into a print-ready page.
-import { formatRupee } from '../home/catalog';
+import { formatConsultationAmount, formatRupee } from '../home/catalog';
 import { getConsultationPaymentSource } from '../utils/doctorSlipUtils';
 import {
   buildConsultationReceiptBillRows,
   parseConsultationReceiptBreakdown,
+  rupeesToPaise,
 } from '../utils/consultationReceiptUtils';
 import { formatConsultationId, formatPrescriptionId, formatReceiptId } from '../utils/formatDisplayId';
 import {
@@ -259,7 +260,7 @@ export const buildReceiptDocument = (receipt) => {
       { label: 'Qty', value: String(lineItems.length) },
       { label: 'Rate', value: '-' },
       { label: 'Taxable', value: money(taxableSum) },
-      ...(Math.round(Number(gstAmount) || 0) !== 0 ? [{ label: 'GST', value: money(gstAmount) }] : []),
+      ...(rupeesToPaise(gstAmount) !== 0 ? [{ label: 'GST', value: money(gstAmount) }] : []),
       { label: 'Grand Total', value: money(grandTotal) },
     ],
     signatoryFor: doctorName || INVOICE_SELLER_FALLBACK.wellness_name,
@@ -305,7 +306,7 @@ const buildPaymentMeta = (data, appointment) => {
   const method = pick(data?.payment?.payment_method, data?.payment?.mode, appointment?.payment?.payment_method);
   const status = pick(data?.payment?.payment_status, data?.payment?.status, appointment?.payment?.payment_status);
   const parts = [
-    amount != null ? `Amount: ${formatRupee(amount, { decimals: 2 })}` : '',
+    amount != null ? `Amount: ${formatConsultationAmount(amount)}` : '',
     method ? `Method: ${method}` : '',
     status ? `Status: ${status}` : '',
   ].filter(Boolean);

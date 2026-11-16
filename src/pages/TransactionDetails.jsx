@@ -27,7 +27,7 @@ import {
   StatusPill,
   Timeline,
 } from '../components/detail/Detail';
-import { formatRupee } from '../home/catalog';
+import { formatConsultationAmount, formatRupee } from '../home/catalog';
 import { formatEventType, getStatusDetailLabel } from '../profile/transactions';
 import { getCustomerPaymentHistory } from '../services/orderService';
 import { requireAuth } from '../services/guestAuth';
@@ -193,7 +193,7 @@ export default function TransactionDetails() {
                     <small>{isCredit ? 'Credited' : 'Amount'}</small>
                     <strong>
                       {isCredit ? '+ ' : ''}
-                      {formatRupee(txn.amount ?? 0)}
+                      {txn.type === 'order' ? formatRupee(txn.amount ?? 0) : formatConsultationAmount(txn.amount ?? 0)}
                     </strong>
                   </div>
                 </>

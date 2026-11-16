@@ -36,7 +36,7 @@ import {
   formatDoctorDisplayName,
 } from '../consult/appointmentUtils';
 import { doctorDisplayName, doctorImage, getDoctorId } from '../consult/doctors';
-import { formatRupee } from '../home/catalog';
+import { formatConsultationAmount } from '../home/catalog';
 import { showSuccessToast } from '../config/key';
 import { requireAuth } from '../services/guestAuth';
 import { downloadPrescriptionFile, getAppointmentDetail } from '../services/consultService';
@@ -588,7 +588,7 @@ export default function PrescriptionDetail() {
                   ) : null}
                   {paymentAmount != null || paymentSource.line ? (
                     <span>
-                      {paymentAmount != null ? formatRupee(paymentAmount) : ''}
+                      {paymentAmount != null ? formatConsultationAmount(paymentAmount) : ''}
                       {paymentSource.line ? `${paymentAmount != null ? ' · ' : ''}${paymentSource.line}` : ''}
                       {paymentStatus ? ` · ${paymentStatus.replace(/_/g, ' ')}` : ''}
                     </span>

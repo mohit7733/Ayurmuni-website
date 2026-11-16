@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
 import AdvanceLoad from '../components/ui/AdvanceLoad';
 import { Button, Modal } from '../components/ui';
-import { formatRupee } from '../home/catalog';
+import { formatConsultationAmount, formatRupee } from '../home/catalog';
 import useCustomerPaymentHistory from '../hooks/useCustomerPaymentHistory';
 import { mapPaymentHistoryEntry, transactionIconGlyph } from '../profile/transactions';
 import { requireAuth } from '../services/guestAuth';
@@ -261,7 +261,7 @@ export default function Payments() {
                       <span className="txn-right">
                         <strong className={item.isCredit ? 'txn-credit' : undefined}>
                           {item.isCredit ? '+ ' : ''}
-                          {formatRupee(item.amount)}
+                          {item.raw?.type === 'order' ? formatRupee(item.amount) : formatConsultationAmount(item.amount)}
                         </strong>
                         <em className={`txn-status ${item.status.toLowerCase()}`}>{item.status}</em>
                       </span>

@@ -19,7 +19,7 @@ import {
 } from '../components/detail/Detail';
 import { formatDoctorDisplayName } from '../consult/appointmentUtils';
 import { doctorDisplayName, doctorImage, formatDoctorSpecialization } from '../consult/doctors';
-import { formatRupee } from '../home/catalog';
+import { formatConsultationAmount } from '../home/catalog';
 import { showSuccessToast } from '../config/key';
 import { requireAuth } from '../services/guestAuth';
 import { getAppointmentDetail, getMedicalReceipt } from '../services/consultService';
@@ -77,9 +77,9 @@ const buildReceiptText = (receipt, breakdown) => {
     specialization ? `Specialization: ${specialization}` : '',
     '----------------------------------------',
     ...buildConsultationReceiptBillRows(breakdown).map((row) =>
-      `${row.label}: ${row.effect === 'subtract' ? '− ' : ''}${formatRupee(row.amount)}`,
+      `${row.label}: ${row.effect === 'subtract' ? '− ' : ''}${formatConsultationAmount(row.amount)}`,
     ),
-    `Total Paid: ${formatRupee(breakdown.totalPaid)}`,
+    `Total Paid: ${formatConsultationAmount(breakdown.totalPaid)}`,
     '----------------------------------------',
     'THIS IS A COMPUTER GENERATED RECEIPT. NO SIGNATURE IS REQUIRED.',
   ]
@@ -247,7 +247,7 @@ export default function MedicalReceipt() {
               <div className="dx-doc__title">
                 <p className="dx-eyebrow">Medical receipt</p>
                 <h1 id="receipt-title" className="dx-title">
-                  {formatRupee(breakdown.totalPaid)}
+                  {formatConsultationAmount(breakdown.totalPaid)}
                 </h1>
                 <span className="dx-doc__sub">
                   {receiptNumber(receipt, breakdown)}
@@ -285,10 +285,10 @@ export default function MedicalReceipt() {
                 <SummaryRows
                   rows={billRows.map((row) => ({
                     label: row.label,
-                    value: row.effect === 'subtract' ? `− ${formatRupee(row.amount)}` : formatRupee(row.amount),
+                    value: row.effect === 'subtract' ? `− ${formatConsultationAmount(row.amount)}` : formatConsultationAmount(row.amount),
                     tone: row.effect === 'subtract' ? 'success' : undefined,
                   }))}
-                  total={{ label: 'Total paid', value: formatRupee(breakdown.totalPaid) }}
+                  total={{ label: 'Total paid', value: formatConsultationAmount(breakdown.totalPaid) }}
                 />
               </div>
 

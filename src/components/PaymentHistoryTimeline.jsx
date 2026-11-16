@@ -1,4 +1,4 @@
-import { formatRupee } from '../home/catalog';
+import { formatConsultationAmount } from '../home/catalog';
 import {
   formatPaymentReason,
   formatPaymentStatusLabel,
@@ -22,7 +22,7 @@ export default function PaymentHistoryTimeline({ history = [] }) {
             <div className="pht__body">
               <div className="pht__title">
                 <strong>{entry.label || formatPaymentStatusLabel(entry.status)}</strong>
-                {entry.amount != null ? <span>{formatRupee(entry.amount)}</span> : null}
+                {entry.amount != null ? <span>{formatConsultationAmount(entry.amount)}</span> : null}
               </div>
               {time ? <small>{time}</small> : null}
               {reason ? <p>{reason}</p> : null}

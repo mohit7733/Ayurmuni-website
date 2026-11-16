@@ -5,7 +5,7 @@ import AppShell from "../components/AppShell";
 import CouponApplyCard from "../components/CouponApplyCard";
 import PageHeader from "../components/PageHeader";
 import DietitianBadge from "../components/DietitianBadge";
-import { formatRupee } from "../home/catalog";
+import { formatConsultationAmount } from "../home/catalog";
 import { useCheckoutCoupons } from "../hooks/useCheckoutCoupons";
 import useConsultPlans from "../hooks/useConsultPlans";
 import usePaymentGateways from "../hooks/usePaymentGateways";
@@ -37,6 +37,7 @@ import {
   isBookingAlreadyPaid,
   isConsultationPaymentSettled,
   isDuplicateGatewayOrder,
+  normalConsultPayable,
   isPaymentAlreadyExists,
   pickConsultPaymentData,
   pickConsultRazorpayKey,
@@ -130,7 +131,7 @@ const formatDisplayDate = (value) => {
   });
 };
 
-const money = (value) => formatRupee(value, { decimals: 2 });
+const money = formatConsultationAmount;
 
 export default function ConsultPay() {
   const { doctorId } = useParams();
@@ -232,7 +233,6 @@ export default function ConsultPay() {
       platformFee: feeQuote?.platformFee ?? { flat: 0, percent: 0 },
       includeShipping: false,
       includeCod: false,
-      payable: serverPayable,
     });
     return {
       consultationFee: quote.baseAmount,
@@ -242,7 +242,7 @@ export default function ConsultPay() {
       gstLabel: feeRateLabel("GST", quote.gstRate),
       platformFee: quote.platformFee,
       platformLabel: feeRateLabel("Platform fee", quote.platformRate),
-      total: quote.total,
+      total: normalConsultPayable(serverPayable, quote.total),
     };
   }, [
     feeQuote,

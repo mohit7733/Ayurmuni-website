@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Star } from 'lucide-react';
 import { Button, Modal } from './ui';
-import { formatRupee } from '../home/catalog';
+import { formatConsultationAmount, formatRupee } from '../home/catalog';
 import { formatPlanDate } from '../utils/planUtils';
 import { getPlanConsultState, planRemainingLabel } from '../consult/consultPayment';
 import '../design/components/consult-plan.css';
@@ -99,7 +99,7 @@ export default function ConsultPlanPicker({ open, plans, eligibility, selectedId
               </span>
               <span className="cp-row__price">
                 {price > 0 ? <small>{formatRupee(price)}</small> : null}
-                {status.usable && payable != null ? <strong>Pay {formatRupee(payable)}</strong> : null}
+                {status.usable && payable != null ? <strong>Pay {formatConsultationAmount(payable)}</strong> : null}
               </span>
             </label>
           );

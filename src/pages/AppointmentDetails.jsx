@@ -64,7 +64,7 @@ import {
   getDoctorId,
   isSlotBookable,
 } from '../consult/doctors';
-import { formatRupee } from '../home/catalog';
+import { formatConsultationAmount } from '../home/catalog';
 import { consultationChargeLabel } from '../utils/doctorSlipUtils';
 import { nameInitials } from '../utils/initials';
 import { showSuccessToast } from '../config/key';
@@ -278,8 +278,8 @@ export default function AppointmentDetails() {
   const charge = consultationChargeLabel(detail || appointment);
   const feeValue =
     charge.amount != null && charge.amount > 0
-      ? [formatRupee(charge.amount), charge.note].filter(Boolean).join(' · ')
-      : charge.note || (charge.amount === 0 ? formatRupee(0) : '');
+      ? [formatConsultationAmount(charge.amount), charge.note].filter(Boolean).join(' · ')
+      : charge.note || (charge.amount === 0 ? formatConsultationAmount(0) : '');
 
   const runAction = async (payload) => {
     if (!actionId) return;

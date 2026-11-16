@@ -4,6 +4,7 @@ import {
   mergeReceiptPayment,
   parseConsultationReceiptBreakdown,
   receiptBreakdownIsIncomplete,
+  rupeesToPaise,
 } from '../src/utils/consultationReceiptUtils';
 
 const labels = (receiptOrBreakdown) =>
@@ -73,12 +74,6 @@ describe('parseConsultationReceiptBreakdown', () => {
       amount: 499,
     });
     expect(labels(baseOnly)).toEqual([['Consultation fee', 'add', 499]]);
-    expect(labels({
-      consultation_fee: 1,
-      gst_amount: 0.18,
-      gst_percent: 18,
-      amount: 1,
-    })).toEqual([['Consultation fee', 'add', 1]]);
     expect(baseOnly.totalsMatch).toBe(true);
     expect(receiptBreakdownIsIncomplete(baseOnly)).toBe(false);
 
@@ -122,6 +117,37 @@ describe('parseConsultationReceiptBreakdown', () => {
       ['Consultation fee', 'add', 499],
       ['Platform fee (10%)', 'add', 80],
       ['GST (18%)', 'add', 40],
+    ]);
+  });
+
+  it('keeps fractional paise (₹0.99 + ₹0.18 = ₹1.17) and still shows GST of ₹0.18', () => {
+    expect(rupeesToPaise(0.99) + rupeesToPaise(0.18)).toBe(rupeesToPaise(1.17));
+    const parsed = parseConsultationReceiptBreakdown({
+      consultation_fee: 0.99,
+      gst_amount: 0.18,
+      gst_percent: 18,
+      amount: 1.17,
+    });
+    expect(parsed.consultationFee).toBe(0.99);
+    expect(parsed.gstAmount).toBe(0.18);
+    expect(parsed.totalPaid).toBe(1.17);
+    expect(parsed.totalsMatch).toBe(true);
+    expect(receiptBreakdownIsIncomplete(parsed)).toBe(false);
+    expect(labels(parsed)).toEqual([
+      ['Consultation fee', 'add', 0.99],
+      ['GST (18%)', 'add', 0.18],
+    ]);
+
+    const fromStrings = parseConsultationReceiptBreakdown({
+      consultation_fee: '0.99',
+      gst_amount: '0.18',
+      gst_percent: '18',
+      amount: '1.17',
+    });
+    expect(fromStrings.totalsMatch).toBe(true);
+    expect(labels(fromStrings)).toEqual([
+      ['Consultation fee', 'add', 0.99],
+      ['GST (18%)', 'add', 0.18],
     ]);
   });
 });

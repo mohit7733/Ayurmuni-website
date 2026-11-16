@@ -31,7 +31,7 @@ import {
 import Button from '../components/ui/Button';
 import { showSuccessToast } from '../config/key';
 import { openDoctorSlipPdf } from '../documents/doctorSlipHtml';
-import { formatRupee } from '../home/catalog';
+import { formatConsultationAmount } from '../home/catalog';
 import { getDoctorSlip } from '../services/consultService';
 import { requireAuth } from '../services/guestAuth';
 import { formatDoctorDisplayName } from '../consult/appointmentUtils';
@@ -116,8 +116,8 @@ export default function DoctorSlip() {
   const charge = consultationChargeLabel(active);
   const feeText =
     charge.amount != null && charge.amount > 0
-      ? [formatRupee(charge.amount), charge.note].filter(Boolean).join(' · ')
-      : charge.note || (charge.amount === 0 ? formatRupee(0) : '');
+      ? [formatConsultationAmount(charge.amount), charge.note].filter(Boolean).join(' · ')
+      : charge.note || (charge.amount === 0 ? formatConsultationAmount(0) : '');
   const patientMeta = getPatientMeta(active?.patient);
   const timeRange = formatSlipTimeRange(active?.start_time, active?.end_time);
   const location = getDoctorLocationLine(doctor);

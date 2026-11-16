@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
-import { formatRupee } from '../home/catalog';
+import { formatConsultationAmount } from '../home/catalog';
 import { EMI_PLANS, loadMentorBooking, MENTOR } from '../mentor/data';
 import { showSuccessToast } from '../config/key';
 import { getPatientList, listPatients } from '../services/patientService';
@@ -122,16 +122,16 @@ export default function MentorCheckout() {
         <div className="mentor-summary">
           <div className="receipt-price">
             <span>Consultation fee</span>
-            <strong>{formatRupee(fee)}</strong>
+            <strong>{formatConsultationAmount(fee)}</strong>
           </div>
           <div className="receipt-price">
             <span>Promo applied</span>
-            <strong>- {formatRupee(discount)}</strong>
+            <strong>- {formatConsultationAmount(discount)}</strong>
           </div>
           <hr />
           <div className="receipt-total">
             <span>Grand total</span>
-            <strong>{formatRupee(total)}</strong>
+            <strong>{formatConsultationAmount(total)}</strong>
           </div>
           <button type="button" className="cta" onClick={() => setShowEmi(true)}>
             Choose Plan
@@ -149,7 +149,7 @@ export default function MentorCheckout() {
               </button>
             </div>
             <p className="muted">AMOUNT TO PAY</p>
-            <h2 className="mentor-emi-amount">{formatRupee(total)}</h2>
+            <h2 className="mentor-emi-amount">{formatConsultationAmount(total)}</h2>
             <p className="mentor-secure">Secure medical transaction</p>
             <h3>Select EMI Tenure</h3>
             <p className="muted">Choose a plan that fits your recovery journey.</p>
@@ -167,7 +167,7 @@ export default function MentorCheckout() {
                   <small>{item.sub}</small>
                 </span>
                 <b>
-                  {formatRupee(item.monthlyAmount)}
+                  {formatConsultationAmount(item.monthlyAmount)}
                   <small>/mo</small>
                 </b>
               </button>

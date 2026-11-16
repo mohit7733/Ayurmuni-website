@@ -4,6 +4,13 @@ const toNumber = (value) => {
   return Number.isFinite(n) ? n : 0;
 };
 
+/** Integer paise for sum / visibility checks. Not used for currency display. */
+export const rupeesToPaise = (value) => {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return 0;
+  return Number((n * 100).toFixed(0));
+};
+
 const asObject = (value) =>
   value && typeof value === 'object' && !Array.isArray(value) ? value : null;
 
@@ -208,7 +215,7 @@ export const parseConsultationReceiptBreakdown = (receipt) => {
     listedAmount: firstFinite(sources, ['listed_amount']) || consultationFee,
     totalPaid,
     partsSum,
-    totalsMatch: Math.abs(partsSum - totalPaid) < 0.05,
+    totalsMatch: rupeesToPaise(partsSum) === rupeesToPaise(totalPaid),
     apiLines,
     paymentMethod: methodLabel,
     paymentStatus: String(receipt?.payment_status || payment?.status || entity?.status || '').trim(),
@@ -245,11 +252,11 @@ export const receiptBreakdownIsIncomplete = (breakdown) => {
     breakdown.discount +
     breakdown.administrativeCharges +
     breakdown.digitalReportAccess;
-  return extras === 0 && Math.abs(breakdown.totalPaid - breakdown.consultationFee) > 0.05;
+  return rupeesToPaise(extras) === 0 && rupeesToPaise(breakdown.totalPaid) !== rupeesToPaise(breakdown.consultationFee);
 };
 
-/** A line that rounds to ₹0 is not a charge. GST at 18% of ₹1 is ₹0.18 and must not appear. */
-const showsOnBill = (amount) => Math.round(Number(amount) || 0) !== 0;
+/** A line with no paise is not a charge. GST of ₹0.18 must still appear. */
+const showsOnBill = (amount) => rupeesToPaise(amount) !== 0;
 
 export const buildConsultationReceiptBillRows = (breakdown) => {
   if (!breakdown) return [];
@@ -293,7 +300,7 @@ export const buildConsultationReceiptBillRows = (breakdown) => {
   if (
     !alreadyHasWallet &&
     breakdown.walletAmount > 0 &&
-    Math.abs(breakdown.walletAmount - breakdown.totalPaid) > 0.05
+    rupeesToPaise(breakdown.walletAmount) !== rupeesToPaise(breakdown.totalPaid)
   ) {
     push('wallet', 'Wallet', breakdown.walletAmount, 'subtract');
   }

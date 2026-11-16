@@ -20,6 +20,7 @@ import AppShell from '../components/AppShell';
 import DietitianBadge from '../components/DietitianBadge';
 import { getConsultationFeeQuote, getDoctorById } from '../services/consultService';
 import { isApiSuccess } from '../consult/consultPayment';
+import { formatConsultationAmount } from '../home/catalog';
 import { invalidateApiCache } from '../services/apiClient';
 import {
   CONSULT_PAY_KEY,
@@ -29,7 +30,6 @@ import {
   doctorLocation,
   doctorQualification,
   doctorRating,
-  formatRupee,
   listedConsultationFee,
   readGlobalConsultationFee,
   generateMonthDates,
@@ -186,7 +186,7 @@ export default function DoctorSlot() {
 
   const grouped = useMemo(() => groupSlotsByTime(slots, selectedDate), [slots, selectedDate]);
   const fee = globalFee != null && globalFee > 0 ? globalFee : listedConsultationFee(doctor);
-  const feeLabel = fee ? formatRupee(fee) : '';
+  const feeLabel = fee ? formatConsultationAmount(fee) : '';
   const image = doctorImage(doctor);
   const name = formatDoctorDisplayName(doctorDisplayName(doctor));
   const canContinue =

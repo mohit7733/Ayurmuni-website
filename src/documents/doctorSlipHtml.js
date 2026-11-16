@@ -1,4 +1,4 @@
-import { formatRupee } from '../home/catalog';
+import { formatConsultationAmount } from '../home/catalog';
 import { createPlainTextPdfBytes } from '../utils/plainPdf';
 import {
   buildDoctorSlipDownloadText,
@@ -89,8 +89,8 @@ export const buildDoctorSlipHtml = ({ doctor, consultation, visitCount = 1 }) =>
   const charge = consultationChargeLabel(consultation);
   const feeText =
     charge.amount != null && charge.amount > 0
-      ? [formatRupee(charge.amount), charge.note].filter(Boolean).join(' · ')
-      : charge.note || (charge.amount === 0 ? formatRupee(0) : '');
+      ? [formatConsultationAmount(charge.amount), charge.note].filter(Boolean).join(' · ')
+      : charge.note || (charge.amount === 0 ? formatConsultationAmount(0) : '');
   const timeRange = formatSlipTimeRange(consultation?.start_time, consultation?.end_time);
   const patientMeta = getPatientMeta(consultation?.patient);
   const location = getDoctorLocationLine(doctor);

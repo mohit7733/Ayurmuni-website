@@ -26,7 +26,7 @@ import {
 import { showSuccessToast } from "../config/key";
 import { useJoinWindowTick } from "../hooks/useJoinWindow";
 import { mapAppointment } from "../profile/map";
-import { formatRupee } from "../home/catalog";
+import { formatConsultationAmount } from "../home/catalog";
 import { formatPaymentTimestamp, getRefundProgress } from "../utils/paymentHistoryUtils";
 import { requireAuth } from "../services/guestAuth";
 import { getConsultHistory } from "../services/consultService";
@@ -609,7 +609,7 @@ export default function Appointments() {
                   </div>
                   {refund ? (
                     <p className="appoint-followup">
-                      {refund.title} {refund.amount != null ? formatRupee(refund.amount) : ""}
+                      {refund.title} {refund.amount != null ? formatConsultationAmount(refund.amount) : ""}
                       {refund.at ? ` · ${formatPaymentTimestamp(refund.at)}` : ""}
                     </p>
                   ) : null}

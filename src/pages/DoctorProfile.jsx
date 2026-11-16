@@ -30,7 +30,7 @@ import {
   SummaryRows,
 } from '../components/detail/Detail';
 import ShareButton from '../components/ShareButton';
-import { formatRupee } from '../home/catalog';
+import { formatConsultationAmount } from '../home/catalog';
 import { getDoctorById, toggleFavDoctor } from '../services/consultService';
 import { getReviews } from '../services/productService';
 import { requireAuth } from '../services/guestAuth';
@@ -160,7 +160,7 @@ export default function DoctorProfile() {
     setPhotoFailed(false);
   }, [image]);
   const fee = doctorConsultFee(doctor);
-  const feeLabel = fee ? formatRupee(fee) : '';
+  const feeLabel = fee ? formatConsultationAmount(fee) : '';
   const about = String(doctor?.bio || doctor?.about || doctor?.description || '')
     .replace(/\r\n/g, '\n')
     .trim();
