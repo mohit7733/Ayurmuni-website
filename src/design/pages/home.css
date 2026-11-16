@@ -613,7 +613,7 @@
 /* Suggested doctors — home hybrid of listing detail + focus tags */
 .hm-doc-rail {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 16px;
   margin-top: 6px;
 }
@@ -649,7 +649,7 @@
 
 .hm-doc-card__media {
   position: relative;
-  height: 250px;
+  height: 180px;
   overflow: hidden;
   padding: 0;
   background:
@@ -1374,7 +1374,7 @@
 }
 
 .hm-meal__media {
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 4 / 2;
   background: #fff;
   color: var(--am-green-700);
 }
@@ -2553,112 +2553,185 @@
   .hm-page .hm-concerns-panel .am-tile:hover { transform: none; }
 }
 
-/* ===== Trusted brands: premium brand cards ===== */
+/* ===== Featured brands: square cards + circular logo discs ===== */
 .hm-page .hm-brands-panel {
   position: relative;
   isolation: isolate;
-  background:
-    radial-gradient(70% 120% at 100% 0%, rgba(201, 151, 47, 0.1), transparent 60%),
-    radial-gradient(60% 100% at 0% 100%, rgba(16, 83, 67, 0.06), transparent 65%),
-    linear-gradient(180deg, #fffdf8 0%, #fbf7ee 100%);
+  padding: 4px 0 8px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
-.hm-page .hm-brands-panel::before {
+
+.hm-page .hm-brands-panel .hm-brands-head.am-section-header {
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.hm-page .hm-brands-panel .hm-brands-head .am-section-header__title {
+  position: relative;
+  padding-bottom: 8px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.hm-page .hm-brands-panel .hm-brands-head .am-section-header__title::after {
   content: "";
+  display: block;
   position: absolute;
-  inset: 0 24px auto;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--am-gold-300), transparent);
-  pointer-events: none;
+  left: 0;
+  bottom: 0;
+  width: 42px;
+  height: 3px;
+  border-radius: 3px;
+  background: #e8843a;
+  animation: none;
+  transform: none;
 }
-.hm-page .hm-brands-panel .am-eyebrow {
-  letter-spacing: 0.14em;
-  color: var(--am-accent-strong);
+
+.hm-page .hm-brands-panel .hm-brands-see-all.am-btn {
+  min-height: 34px;
+  height: auto;
+  padding: 6px 12px;
+  border: 1px solid #e8843a;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: none;
+  color: #e8843a;
+  font-weight: 600;
 }
-/* Brand tiles: ivory chip, 42px logo in a gold ring, Gilroy name. 6 or fewer fill the row as
-   equal columns; more (and phones) keep the left-aligned auto-carousel. */
-.hm-page .hm-brands-panel .am-concerns__viewport { padding-block: 4px 8px; margin-block: -4px -8px; }
-.hm-page .hm-brands-panel .am-concerns__track { gap: 10px; }
-.hm-page .hm-brands-panel .am-concerns__track > li { flex: 0 0 176px; max-width: none; }
-@media (min-width: 640px) {
-  .hm-page .hm-brands-panel .am-concerns__track:not(:has(> :nth-child(7))) {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    transform: none !important;
-  }
-  .hm-page .hm-brands-panel .am-concerns__track:not(:has(> :nth-child(7))) > li { flex: none; min-width: 0; }
+
+.hm-page .hm-brands-panel .hm-brands-see-all.am-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, #e8843a 8%, #fff);
+  border-color: #e8843a;
+  box-shadow: none;
+  color: #d96f24;
+}
+
+.hm-page .hm-brands-panel .am-concerns__viewport {
+  margin-inline: 0;
+  padding: 6px 2px 12px;
+  mask-image: none;
+}
+
+.hm-page .hm-brands-panel .am-concerns__track {
+  gap: 14px;
+}
+
+.hm-page .hm-brands-panel .am-concerns__track > li {
+  flex: 0 0 112px;
+  max-width: none;
 }
 
 .hm-page .hm-brands-panel .am-tile.hm-brand-tile {
   position: relative;
-  flex-direction: row;
-  justify-content: flex-start;
-  gap: 10px;
-  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  width: 112px;
   min-height: 0;
-  height: 56px;
-  padding: 6px 12px 6px 7px;
-  border: 1px solid rgba(176, 141, 72, 0.32);
-  border-radius: 14px;
-  background:
-    radial-gradient(120% 120% at 0% 0%, rgba(214, 186, 120, 0.14), transparent 55%),
-    linear-gradient(160deg, #fffdf8 0%, #f9f5ea 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 4px 12px rgba(16, 83, 67, 0.06);
-  transition: translate 220ms ease, rotate 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
-}
-.hm-page .hm-brands-panel .hm-brand-tile .am-tile__img {
-  flex: none;
-  width: 42px;
-  height: 42px;
-  overflow: hidden;
-  border-radius: 50%;
+  height: 112px;
+  aspect-ratio: 1;
+  padding: 4px;
+  border: 1px solid #ececec;
+  border-radius: 12px;
   background: #fff;
-  box-shadow: 0 0 0 1.5px #fffdf8, 0 0 0 2.5px rgba(176, 141, 72, 0.7);
+  box-shadow: none;
+  transition:
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    transform 220ms ease;
 }
+
+.hm-page .hm-brands-panel .hm-brand-tile .am-tile__img {
+  /* flex: none;
+  display: grid; */
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  /* padding: 10px;
+  overflow: hidden; */
+  /* border-radius: 50%; */
+  /* background: #fff; */
+  /* box-shadow: 0 6px 16px rgba(16, 24, 40, 0.12); */
+}
+
 .hm-page .hm-brands-panel .hm-brand-tile .am-tile__img img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
   transition: transform 320ms ease;
 }
+
 .hm-page .hm-brands-panel .hm-brand-tile .am-tile__label {
-  min-width: 0;
+  /* position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
   overflow: hidden;
-  color: #12261f;
-  font-family: "Gilroy", var(--am-font-body, sans-serif);
-  font-size: 0.9rem;
-  font-weight: 700;
-  text-align: left;
+  clip: rect(0, 0, 0, 0);
   white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow-wrap: normal;
-  transition: color 220ms ease;
+  border: 0; */
+
+  font-weight: 600;
+  padding: 10px 0 4px;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .hm-page .hm-brands-panel .am-tile.hm-brand-tile:hover {
-    translate: 0 -2px;
-    rotate: -0.6deg;
-    border-color: rgba(176, 141, 72, 0.65);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 10px 22px rgba(16, 83, 67, 0.11);
+    border-color: #ddd;
+    box-shadow: 0 8px 20px rgba(16, 24, 40, 0.08);
+    transform: translateY(-2px);
   }
-  .hm-page .hm-brands-panel .hm-brand-tile:hover .am-tile__img img { transform: scale(1.06); }
-  .hm-page .hm-brands-panel .hm-brand-tile:hover .am-tile__label { color: #105343; }
+
+  .hm-page .hm-brands-panel .am-tile.hm-brand-tile:hover .am-tile__img {
+    transform: none;
+  }
+
+  .hm-page .hm-brands-panel .hm-brand-tile:hover .am-tile__img img {
+    transform: scale(1.04);
+  }
 }
-.hm-page .hm-brands-panel .am-tile.hm-brand-tile:focus-visible { outline: 2px solid #105343; outline-offset: 2px; }
+
+.hm-page .hm-brands-panel .am-tile.hm-brand-tile:focus-visible {
+  outline: 2px solid #105343;
+  outline-offset: 2px;
+}
 
 @media (max-width: 639px) {
-  .hm-page .hm-brands-panel .am-concerns__track { gap: 8px; }
-  .hm-page .hm-brands-panel .am-concerns__track > li { flex: 0 0 150px; }
-  .hm-page .hm-brands-panel .am-tile.hm-brand-tile { height: 50px; padding: 5px 10px 5px 6px; gap: 8px; }
-  .hm-page .hm-brands-panel .hm-brand-tile .am-tile__img { width: 38px; height: 38px; }
-  .hm-page .hm-brands-panel .hm-brand-tile .am-tile__label { font-size: 0.84rem; }
+  .hm-page .hm-brands-panel .am-concerns__track {
+    gap: 10px;
+  }
+
+  .hm-page .hm-brands-panel .am-concerns__track > li,
+  .hm-page .hm-brands-panel .am-tile.hm-brand-tile {
+    flex-basis: 96px;
+    width: 96px;
+    height: 96px;
+  }
+
+  .hm-page .hm-brands-panel .hm-brand-tile .am-tile__img {
+    padding: 8px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .hm-page .hm-brands-panel .am-tile.hm-brand-tile,
-  .hm-page .hm-brands-panel .hm-brand-tile .am-tile__img img { transition: none; }
-  .hm-page .hm-brands-panel .am-tile.hm-brand-tile:hover { translate: none; rotate: none; }
-  .hm-page .hm-brands-panel .hm-brand-tile:hover .am-tile__img img { transform: none; }
+  .hm-page .hm-brands-panel .hm-brand-tile .am-tile__img img {
+    transition: none;
+  }
+
+  .hm-page .hm-brands-panel .am-tile.hm-brand-tile:hover {
+    transform: none;
+  }
+
+  .hm-page .hm-brands-panel .hm-brand-tile:hover .am-tile__img img {
+    transform: none;
+  }
 }
 
 /* Yoga sessions: exactly 3 cards per view on desktop, 2 on tablet; extra cards scroll in the rail. */

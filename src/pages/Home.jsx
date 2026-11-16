@@ -318,7 +318,7 @@ function DietPlanCard({ item, onClick }) {
             {item.title}
           </button>
         </h3>
-        {prakriti ? <p>{prakriti}</p> : null}
+        {/* {prakriti ? <p>{prakriti}</p> : null} */}
       </div>
     </article>
   );
@@ -619,7 +619,7 @@ export default function Home() {
   const splitDoctorRow = showVisitedDoctors && showSuggestedDoctors;
   // Rohit: homepage shows max 2 visited and 3 suggested doctors; View all opens the full list.
   const recentDoctors = visitedDoctors.slice(0, 2);
-  const suggestedDoctors = doctors.slice(0, 4);
+  const suggestedDoctors = doctors.slice(0, 5);
   const featuredProducts = sections.featured || [];
   const recentProducts = sections.recently_viewed || [];
 
@@ -627,7 +627,7 @@ export default function Home() {
   const productPanels = [
     { key: 'medicines', title: T.medicinesTitle, items: medicineProducts, to: '/medicines' },
     { key: 'products', title: T.productsTitle, items: storeProducts, to: '/products' },
-    { key: 'recently_viewed', title: sectionLabels.recently_viewed, items: recentProducts, to: '/products' },
+    // { key: 'recently_viewed', title: sectionLabels.recently_viewed, items: recentProducts, to: '/products' },
     { key: 'trending', title: sectionLabels.trending, description: T.trendingText, items: sections.trending || [], to: '/products' },
     { key: 'featured', title: sectionLabels.featured, description: T.featuredText, items: featuredProducts, to: '/products' },
   ].filter((panel) => panel.items?.length > 0);

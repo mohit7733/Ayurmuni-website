@@ -15,7 +15,7 @@ const TRUST_ICONS = {
 };
 
 /** Open without login. Everything else still shows, but click asks to log in. */
-const PUBLIC_FOOTER_LINKS = new Set(['/about', '/contact', '/terms', '/home', '/profile/faq', '/profile/privacy','/profile/help-center','/profile/legal-policies']);
+const PUBLIC_FOOTER_LINKS = new Set(['/about', '/contact', '/terms', '/home', '/profile/faq', '/profile/privacy', '/profile/help-center', '/profile/legal-policies']);
 
 export default function SiteFooter() {
   const loggedIn = useLoggedIn();
@@ -44,7 +44,7 @@ export default function SiteFooter() {
         const contentBottom = Math.max(
           ...[...inner.children].map((n) => n.getBoundingClientRect().bottom - fTop),
         );
-        footer.style.setProperty('--mark-top', `${Math.max(0, Math.round(contentBottom - mark.offsetHeight))}px`);
+        footer.style.setProperty('--mark-top', `${Math.max(350, Math.round(contentBottom - mark.offsetHeight))}px`);
         return;
       }
       const care = [...footer.querySelectorAll('.site-footer-col')].find(
@@ -55,7 +55,7 @@ export default function SiteFooter() {
       footer.classList.add('is-mark-pinned');
       const fTop = footer.getBoundingClientRect().top;
       const top = head.getBoundingClientRect().top - fTop;
-      footer.style.setProperty('--mark-top', `${Math.round(top)}px`);
+      footer.style.setProperty('--mark-top', `${Math.max(350, Math.round(top))}px`);
       const markBottom = top + mark.offsetHeight;
       // Lowest real content in the grid (ignores the inner's own padding).
       const contentBottom = Math.max(
@@ -96,11 +96,31 @@ export default function SiteFooter() {
         })}
       </ul>
 
+
       <div className="site-footer-inner">
         <div className="site-footer-brand">
           <img src={logoImg} alt="Ayurmuni" width="208" height="52" loading="lazy" />
           <p className="site-footer-tagline">{COPY.brandTagline}</p>
           <p>{COPY.brandMission}</p>
+          <div className="site-footer-app-store-links">
+            <ul className='site-footer-app-store-links-list'>
+              {/* <li>
+                <a href="https://www.facebook.com/ayurmuni" target="_blank" rel="noopener noreferrer"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 2H15C13.6739 2 13 2.67392 13 4V7H11V4C11 2.67392 10.3261 2 9 2H6C4.34315 2 3 3.34315 3 5V19C3 20.6569 4.34315 22 6 22H18C19.6569 22 21 20.6569 21 19V5C21 3.34315 19.6569 2 18 2Z" fill="currentColor"/></svg></a>
+              </li> */}
+              <li>
+                <a href="https://www.instagram.com/ayurmuniofficial?igsh=NjZ1MHJ0cXVvNndo" target="_blank" rel="noopener noreferrer"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-instagram h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line></svg></a>
+              </li>
+              <li>
+                <a href="https://www.linkedin.com/company/ayurmuni" target="_blank" rel="noopener noreferrer"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-linkedin h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect width="4" height="12" x="2" y="9"></rect><circle cx="4" cy="4" r="2"></circle></svg></a>
+              </li>
+              {/* <li>
+                <a href="https://www.twitter.com/ayurmuni" target="_blank" rel="noopener noreferrer">Twitter</a>
+              </li>
+              <li>
+                <a href="https://www.youtube.com/channel/UC_x-mryoa1Gqygz36q3_Brw" target="_blank" rel="noopener noreferrer">YouTube</a>
+              </li> */}
+            </ul>
+          </div>
         </div>
         {FOOTER_COLUMNS.map((column) => (
           <nav key={column.title} className="site-footer-col" aria-label={column.title}>
@@ -116,7 +136,13 @@ export default function SiteFooter() {
             </ul>
           </nav>
         ))}
+        <div className="site-footer-app-store">
+          <h2>Download the Ayurmuni app</h2>
+          <a href="https://play.google.com/store/apps/details?id=com.ayurmuniecosystem" target="_blank" rel="noopener noreferrer"><img src="public/images/playstore.avif" alt="App Store" className='' style={{ width: '150px' }} /></a>
+
+        </div>
       </div>
+
 
       {/* Original footer mark, now a background layer (adds no height). */}
       <div className="site-footer-mark" aria-hidden="true">
@@ -124,7 +150,7 @@ export default function SiteFooter() {
         <span>AYURMUNI</span>
       </div>
 
-      <div className="site-footer-bar">
+      <div className="site-footer-bar site-footer-bar-legal">
         <div className="site-footer-legal">
           <span>© {new Date().getFullYear()} Ayurmuni. All rights reserved.</span>
           <nav aria-label="Legal">
@@ -139,6 +165,7 @@ export default function SiteFooter() {
             ))}
           </nav>
         </div>
+
       </div>
     </footer>
   );

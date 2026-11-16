@@ -13,6 +13,12 @@ export const CONSULT_COPY = {
     { title: 'Consult on video', text: 'Get advice and a prescription online.' },
   ],
   stepsLabel: 'How it works',
+  promisesLabel: 'Consultation benefits',
+  promises: [
+    { id: 'talk', label: 'Talk within 30 min' },
+    { id: 'follow', label: 'Free follow up for 3 days' },
+    { id: 'rx', label: 'Get a valid prescription' },
+  ],
   recentTitle: 'Recent consultations',
   viewHistory: 'View history',
   concernsEyebrow: 'Find care',

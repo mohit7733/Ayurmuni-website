@@ -216,7 +216,7 @@
   .hm-page .hm-wellness--pair .hm-well--move .hm-pose { height: auto; }
   .hm-page .hm-wellness--pair .hm-well--move .hm-pose__media {
     flex: none;
-    aspect-ratio: 5 / 7;
+    aspect-ratio: 5 / 4;
     height: auto;
     min-height: 0;
   }
