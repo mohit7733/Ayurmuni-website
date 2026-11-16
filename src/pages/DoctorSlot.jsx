@@ -15,6 +15,7 @@ import {
   Upload,
   Video,
 } from 'lucide-react';
+import RecordPhotoButton from '../components/RecordPhotoButton';
 import AppShell from '../components/AppShell';
 import DietitianBadge from '../components/DietitianBadge';
 import { getConsultationFeeQuote, getDoctorById } from '../services/consultService';
@@ -542,21 +543,7 @@ export default function DoctorSlot() {
                 <p className="bk-card__hint">{T.noRecords}</p>
               )}
               <div className="bk-upload-row">
-                <label className={`bk-upload am-btn am-btn--secondary am-btn--sm${uploading ? ' is-loading' : ''}`}>
-                  <Upload size={16} aria-hidden />
-                  <span className="am-btn__label">{T.takePhoto}</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    disabled={uploading}
-                    onChange={(event) => {
-                      const file = event.target.files?.[0];
-                      event.target.value = '';
-                      pickFile(file);
-                    }}
-                  />
-                </label>
+                <RecordPhotoButton disabled={uploading} onPhoto={pickFile} />
                 <label className={`bk-upload am-btn am-btn--secondary am-btn--sm${uploading ? ' is-loading' : ''}`}>
                   <Upload size={16} aria-hidden />
                   <span className="am-btn__label">{uploading ? T.uploading : T.chooseFile}</span>

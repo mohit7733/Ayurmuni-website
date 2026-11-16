@@ -17,6 +17,7 @@ import {
   getPriceRangeBounds,
   toProductApiSort,
 } from "../utils/productSearchUtils";
+import { orderListedProducts } from "../products/listingOrder";
 
 function CatalogSearch() {
   const navigate = useNavigate();
@@ -66,14 +67,14 @@ function CatalogSearch() {
 
   const filteredProducts = useMemo(
     () =>
-      applyProductFilters({
+      orderListedProducts(applyProductFilters({
         products,
         sortBy,
         brandIds: brandIds.length > 0 ? brandIds : null,
         brandNames: brandNames.length > 0 ? brandNames : null,
         priceRange,
         minRating: rating,
-      }),
+      }), { sortBy }),
     [products, sortBy, brandIds, brandNames, priceRange, rating],
   );
 

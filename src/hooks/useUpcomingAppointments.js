@@ -21,9 +21,16 @@ export default function useUpcomingAppointments(pageSize = 50, enabled = true) {
         }
         if (!options.silent) setLoading(true);
         // App useUpcomingAppointmentsPreview: confirmed + upcoming + still-running completed calls, de-duplicated.
+        const now = new Date();
+        const fromDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         const [confirmedRes, upcomingRes, completedRes] = await Promise.all(
           ['confirmed', 'upcoming', 'completed'].map((appointment_status) =>
-            getConsultHistory({ page: 1, page_size: pageSize, appointment_status }).catch(() => null),
+            getConsultHistory({
+              page: 1,
+              page_size: pageSize,
+              appointment_status,
+              from_date: fromDate,
+            }).catch(() => null),
           ),
         );
         const listOf = (res) => {
@@ -35,12 +42,12 @@ export default function useUpcomingAppointments(pageSize = 50, enabled = true) {
           const key = String(item?.appointment_id || item?.consultation_id || '');
           if (key && seen.has(key)) return false;
           if (key) seen.add(key);
+          const callLive =
+            String(item?.call_status || item?.appointment?.call_status || '').toLowerCase() === 'in_progress';
+          if (!callLive && isAppointmentInPast(item)) return false;
           const status = String(item?.status || item?.appointment_status || '').toLowerCase();
-          if (status === 'completed') return !isAppointmentInPast(item);
-          return (
-            isActiveAppointmentStatus(status) ||
-            String(item?.call_status || item?.appointment?.call_status || '').toLowerCase() === 'in_progress'
-          );
+          if (status === 'completed') return true;
+          return callLive || isActiveAppointmentStatus(status);
         });
         setAppointments(sortAppointmentsByDateTime(active.map(mapAppointment)));
       } catch {

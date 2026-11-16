@@ -41,10 +41,10 @@ import {
   formatSlipStatusLabel,
   formatSlipTimeRange,
   getConsultationKey,
+  consultationChargeLabel,
   getConsultationTitle,
   getDoctorLocationLine,
   getPatientMeta,
-  getSlipFee,
   hasPrescribedData,
   isClosedNegativeStatus,
 } from '../utils/doctorSlipUtils';
@@ -113,7 +113,11 @@ export default function DoctorSlip() {
       active?.prescription?.history_of_past_illness || apiNotes.history_of_past_illness || '',
   };
   const medicines = Array.isArray(prescription.items) ? prescription.items : [];
-  const fee = getSlipFee(active);
+  const charge = consultationChargeLabel(active);
+  const feeText =
+    charge.amount != null && charge.amount > 0
+      ? [formatRupee(charge.amount), charge.note].filter(Boolean).join(' · ')
+      : charge.note || (charge.amount === 0 ? formatRupee(0) : '');
   const patientMeta = getPatientMeta(active?.patient);
   const timeRange = formatSlipTimeRange(active?.start_time, active?.end_time);
   const location = getDoctorLocationLine(doctor);
@@ -169,12 +173,12 @@ export default function DoctorSlip() {
       active?.concern || active?.consultation_concern
         ? `Concern: ${active.concern || active.consultation_concern}`
         : '',
-      fee != null ? `Fee: ${formatRupee(fee)}` : '',
+      feeText ? `Fee: ${feeText}` : '',
       'Shared from Ayurmuni',
     ]
       .filter(Boolean)
       .join('\n');
-  }, [active, doctorName, fee, refNo, statusLabel, timeRange]);
+  }, [active, doctorName, feeText, refNo, statusLabel, timeRange]);
 
   const shareUrl =
     typeof window !== 'undefined'
@@ -441,7 +445,7 @@ export default function DoctorSlip() {
                   <strong>Ref. {refNo}</strong>
                   <span>{formatSlipDate(active?.appointment_date || active?.date)}</span>
                   <span>{getConsultationTitle(active)}</span>
-                  {fee != null ? <span>{formatRupee(fee)}</span> : null}
+                  {feeText ? <span>{feeText}</span> : null}
                 </div>
               </div>
 

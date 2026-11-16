@@ -14,6 +14,7 @@ import {
 } from '../consult/appointmentUtils';
 import { getAppointmentShareMessage } from '../helper/shareMessage';
 import { formatRupee } from '../home/catalog';
+import { getConsultationPaymentSource } from '../utils/doctorSlipUtils';
 import { formatAppointmentId } from '../utils/formatDisplayId';
 import { showSuccessToast } from '../config/key';
 import { Utils } from '../common/utils';
@@ -221,12 +222,13 @@ export default function BookingConfirm() {
   const statusTone = BOOKING_STATUS_TONE[statusKey] || 'success';
   const statusLabel = bookingStatusLabel(booking.status);
   const dateDisplay = [booking.weekday, booking.dateLabel].filter(Boolean).join(', ');
-  const fundedByPackage = detail.funded_by_package === true;
-  const paidLabel = fundedByPackage
-    ? 'Covered by plan'
-    : booking.amount && Number(booking.amount) !== 0
-      ? formatRupee(booking.amount)
-      : '';
+  const paymentSource = getConsultationPaymentSource(detail);
+  const paidLabel =
+    paymentSource.kind === 'package'
+      ? paymentSource.line
+      : booking.amount && Number(booking.amount) !== 0
+        ? `${formatRupee(booking.amount)} · Normal consultation`
+        : '';
   const shareMessage = getAppointmentShareMessage({
     doctorName: booking.doctorName,
     patientPhone: booking.patientPhone || registeredPhone,

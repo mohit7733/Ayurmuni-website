@@ -26,6 +26,7 @@ import {
   DOSHA_OPTIONS,
   toProductApiSort,
 } from '../utils/productSearchUtils';
+import { orderListedProducts } from '../products/listingOrder';
 import { STORE_COPY as T } from '../content/store';
 import { filterItemsByQuery } from '../home/concernCatalog';
 import '../design/pages/store.css';
@@ -451,26 +452,8 @@ export default function CategoryProducts() {
       });
     }
 
-    if (sortBy === 'rating' || sortBy === 'name') {
-      filtered = [...filtered].sort((a, b) => {
-        if (sortBy === 'rating') {
-          return (
-            Number(b.rating || b.average_rating || 0) -
-            Number(a.rating || a.average_rating || 0)
-          );
-        }
-        return (a.name || '').localeCompare(b.name || '');
-      });
-    }
+    return orderListedProducts(filtered, { sortBy });
 
-    // Keep out-of-stock items after in-stock, without changing the chosen sort within each group.
-    filtered = [...filtered].sort((a, b) => {
-      const aOut = isProductOutOfStock(a) ? 1 : 0;
-      const bOut = isProductOutOfStock(b) ? 1 : 0;
-      return aOut - bOut;
-    });
-
-    return filtered;
   }, [
     products,
     query,

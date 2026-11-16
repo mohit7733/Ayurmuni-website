@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ChevronRight } from 'lucide-react';
+import { nameInitials } from '../../utils/initials';
 import { cx } from '../ui/cx';
 import SectionHold from '../ui/SectionHold';
 import '../../design/detail.css';
@@ -244,13 +245,7 @@ export function Timeline({ items }) {
 }
 
 export function PersonCard({ image, fallback, name, role, meta, action, onClick }) {
-  const initials = String(name || '')
-    .replace(/^dr\.?\s*/i, '')
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join('');
+  const initials = nameInitials(name, 2, '');
   const content = (
     <>
       <span className="dx-person__avatar" aria-hidden>

@@ -7,6 +7,7 @@ import CartAddButton from "../components/CartAddButton";
 import { getProductByVariant } from "../services/productService";
 import { getProductStockQty, hasStockInfo } from "../product/stock";
 import { getCatalogPrice, getCatalogRating } from "../utils/productSearchUtils";
+import { orderListedProducts } from "../products/listingOrder";
 import {
   formatRupee,
   resolveImageUrl,
@@ -185,29 +186,8 @@ export default function Products() {
       });
     }
 
-    // Sort products
-    filtered.sort((a, b) => {
-      const priceA = getCatalogPrice(a);
-      const priceB = getCatalogPrice(b);
-      const ratingA = getCatalogRating(a);
-      const ratingB = getCatalogRating(b);
+    return orderListedProducts(filtered, { sortBy });
 
-      switch (sortBy) {
-        case "price_low":
-          return priceA - priceB;
-        case "price_high":
-          return priceB - priceA;
-        case "rating":
-          return ratingB - ratingA;
-        case "name":
-          return (a.name || "").localeCompare(b.name || "");
-        case "relevance":
-        default:
-          return 0;
-      }
-    });
-
-    return filtered;
   }, [listProducts, query, priceRange, minRating, inStockOnly, sortBy]);
 
   const hasActiveFilters =

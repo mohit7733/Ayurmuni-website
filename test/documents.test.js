@@ -5,6 +5,8 @@ import { buildPrescriptionDocument, buildReceiptDocument } from '../src/document
 const receipt = {
   consultation_id: 'c-123',
   payment_id: 'p-9',
+  consultation_fees: 499,
+  amount: 519,
   info: { doctor_name: 'Dr. Rao', doctor_specialization: ['Ayurveda', 'Panchakarma'] },
   patient: { name: 'Asha', phone_number: '9999999999' },
   administrative_charges: 20,
@@ -32,7 +34,7 @@ describe('document html', () => {
     const html = renderDocumentHtml(buildReceiptDocument(receipt), 'Receipt');
     expect(html).toContain('CONSULTATION RECEIPT');
     expect(html).toContain('Online Consultation - Ayurveda, Panchakarma');
-    expect(html).toContain('Administrative Charges');
+    expect(html).toContain('Administrative charges');
     expect(html).toContain('<th>S.No</th>');
     expect(html).toContain('For Dr. Rao');
     expect(html).toContain('@page { size: A4');
