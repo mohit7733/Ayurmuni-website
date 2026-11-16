@@ -296,12 +296,14 @@ export default function Diet() {
                       ) : null}
                     </div>
                     <strong>{item.title || item.name}</strong>
-                    <small>
-                      {[item.prakriti, item.season, price]
-                        .filter(Boolean)
-                        .join(" • ")}
-                    </small>
-                    {rating ? <em>★ {rating}</em> : null}
+                    <div className="diet-card-meta">
+                      <small>
+                        {[item.prakriti, item.season, price]
+                          .filter(Boolean)
+                          .join(" • ")}
+                      </small>
+                      {rating ? <em>★ {rating}</em> : null}
+                    </div>
                     {item.short_description ? (
                       <p>{item.short_description}</p>
                     ) : null}
