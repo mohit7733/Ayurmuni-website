@@ -506,3 +506,9 @@
   }
   .app-shell .pd-page--brand .pd-info .pd-pack-buy .pd-purchase .pd-buy .am-btn { height: 40px; min-height: 40px; }
 }
+
+/* t73u: responsive.css lifts every .am-btn to min-height 44px !important at <=900px and on touch screens, which made
+   Add to cart / Buy now 44px in the pack row (stack 7px taller than the pack card). Only !important can beat it. */
+@media (min-width: 768px) {
+  .app-shell .pd-page--brand .pd-info .pd-pack-buy .pd-purchase .pd-buy .am-btn { height: 40px !important; min-height: 40px !important; }
+}

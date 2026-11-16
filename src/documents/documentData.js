@@ -2,8 +2,13 @@
 // (utils/buildConsultationDocumentPdf.ts createMedicalReceiptPdfBytes) and prescription
 // (utils/prescriptionPdfBuilder.ts buildPrescriptionPdfFromData). They return the structured input
 // that documentHtml.renderDocumentHtml turns into a print-ready page.
-import { formatRupee } from '../home/catalog';
-import { parseConsultationReceiptBreakdown } from '../utils/consultationReceiptUtils';
+import { formatConsultationAmount, formatRupee } from '../home/catalog';
+import { getConsultationPaymentSource } from '../utils/doctorSlipUtils';
+import {
+  buildConsultationReceiptBillRows,
+  parseConsultationReceiptBreakdown,
+  rupeesToPaise,
+} from '../utils/consultationReceiptUtils';
 import { formatConsultationId, formatPrescriptionId, formatReceiptId } from '../utils/formatDisplayId';
 import {
   formatIssuedLabel,
@@ -201,25 +206,31 @@ export const buildReceiptDocument = (receipt) => {
     : receipt?.info?.doctor_specialization || '';
   const doctorName = pick(receipt?.info?.doctor_name, receipt?.doctor_name);
   const breakdown = parseConsultationReceiptBreakdown(receipt);
-  const { consultationFee, platformFee, gstAmount } = breakdown;
-  const adminFee = Number(receipt?.administrative_charges ?? 0) || 0;
-  const digitalFee = Number(receipt?.digital_report_access ?? 0) || 0;
+  const { consultationFee, platformFee, gstAmount, discount, convenienceFee } = breakdown;
+  const adminFee = breakdown.administrativeCharges || 0;
+  const digitalFee = breakdown.digitalReportAccess || 0;
   const grandTotal =
     breakdown.totalPaid > 0
       ? breakdown.totalPaid
-      : consultationFee + platformFee + gstAmount + adminFee + digitalFee;
+      : consultationFee - discount + platformFee + convenienceFee + gstAmount + adminFee + digitalFee;
 
-  const lineItems = [
-    feeLine(1, `Online Consultation${specializationText ? ` - ${specializationText}` : ''}`, consultationFee),
-  ];
-  if (platformFee > 0) lineItems.push(feeLine(lineItems.length + 1, 'Platform Fee', platformFee));
-  if (gstAmount > 0) lineItems.push(feeLine(lineItems.length + 1, 'GST', gstAmount, money(gstAmount)));
-  if (adminFee > 0) lineItems.push(feeLine(lineItems.length + 1, 'Administrative Charges', adminFee));
-  if (digitalFee > 0) lineItems.push(feeLine(lineItems.length + 1, 'Digital Report Access', digitalFee));
+  const billRows = buildConsultationReceiptBillRows(breakdown);
+  const lineItems = billRows.map((row, index) => {
+    const signed = row.effect === 'subtract' ? -row.amount : row.amount;
+    const description =
+      row.key === 'consultation_fee' && specializationText
+        ? `Online Consultation - ${specializationText}`
+        : row.key === 'consultation_fee'
+          ? 'Online Consultation'
+          : row.label;
+    const tax = row.key === 'gst' ? money(row.amount) : '0.00';
+    return feeLine(index + 1, description, signed, tax);
+  });
 
-  const taxableSum = consultationFee + platformFee + adminFee + digitalFee;
+  const taxableSum = consultationFee - discount + platformFee + convenienceFee + adminFee + digitalFee;
   const patient = receipt?.patient ?? {};
   const paymentId = pick(breakdown.paymentId, receipt?.payment_id, receipt?.consultation_id);
+  const paymentSourceLine = getConsultationPaymentSource(receipt).line;
   const status = breakdown.paymentStatus
     ? breakdown.paymentStatus.charAt(0).toUpperCase() + breakdown.paymentStatus.slice(1)
     : '';
@@ -239,6 +250,7 @@ export const buildReceiptDocument = (receipt) => {
       { label: 'Consultation No', value: formatConsultationId(receipt?.consultation_id) },
       { label: 'Doctor', value: doctorName || '-' },
       { label: 'Payment Method', value: breakdown.paymentMethod || '-' },
+      ...(paymentSourceLine ? [{ label: 'Payment source', value: paymentSourceLine }] : []),
       ...(status ? [{ label: 'Payment Status', value: status }] : []),
       ...(breakdown.bank ? [{ label: 'Bank', value: breakdown.bank }] : []),
       ...(breakdown.bankTransactionId ? [{ label: 'Bank Txn ID', value: breakdown.bankTransactionId }] : []),
@@ -248,7 +260,7 @@ export const buildReceiptDocument = (receipt) => {
       { label: 'Qty', value: String(lineItems.length) },
       { label: 'Rate', value: '-' },
       { label: 'Taxable', value: money(taxableSum) },
-      { label: 'GST', value: money(gstAmount) },
+      ...(rupeesToPaise(gstAmount) !== 0 ? [{ label: 'GST', value: money(gstAmount) }] : []),
       { label: 'Grand Total', value: money(grandTotal) },
     ],
     signatoryFor: doctorName || INVOICE_SELLER_FALLBACK.wellness_name,
@@ -294,7 +306,7 @@ const buildPaymentMeta = (data, appointment) => {
   const method = pick(data?.payment?.payment_method, data?.payment?.mode, appointment?.payment?.payment_method);
   const status = pick(data?.payment?.payment_status, data?.payment?.status, appointment?.payment?.payment_status);
   const parts = [
-    amount != null ? `Amount: ${formatRupee(amount, { decimals: 2 })}` : '',
+    amount != null ? `Amount: ${formatConsultationAmount(amount)}` : '',
     method ? `Method: ${method}` : '',
     status ? `Status: ${status}` : '',
   ].filter(Boolean);

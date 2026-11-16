@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   BadgeCheck,
-  BriefcaseMedical,
   CalendarClock,
   ExternalLink,
   HeartPulse,
@@ -31,13 +30,14 @@ import {
   SummaryRows,
 } from '../components/detail/Detail';
 import ShareButton from '../components/ShareButton';
-import { formatRupee } from '../home/catalog';
+import { formatConsultationAmount } from '../home/catalog';
 import { getDoctorById, toggleFavDoctor } from '../services/consultService';
 import { getReviews } from '../services/productService';
 import { requireAuth } from '../services/guestAuth';
 import { invalidateApiCache } from '../services/apiClient';
 import { showSuccessToast } from '../config/key';
 import { formatDoctorDisplayName } from '../consult/appointmentUtils';
+import { nameInitial } from '../utils/initials';
 import {
   doctorConsultFee,
   doctorExperience,
@@ -114,6 +114,7 @@ export default function DoctorProfile() {
   const [fav, setFav] = useState(doctorFavorite(seeded));
   const [showFullAbout, setShowFullAbout] = useState(false);
   const [showAllConditions, setShowAllConditions] = useState(false);
+  const [photoFailed, setPhotoFailed] = useState(false);
 
   const load = useCallback(
     async (isRefresh = false) => {
@@ -155,8 +156,11 @@ export default function DoctorProfile() {
 
   const id = getDoctorId(doctor) || doctorId;
   const image = doctorImage(doctor);
+  useEffect(() => {
+    setPhotoFailed(false);
+  }, [image]);
   const fee = doctorConsultFee(doctor);
-  const feeLabel = fee ? formatRupee(fee) : '';
+  const feeLabel = fee ? formatConsultationAmount(fee) : '';
   const about = String(doctor?.bio || doctor?.about || doctor?.description || '')
     .replace(/\r\n/g, '\n')
     .trim();
@@ -167,6 +171,8 @@ export default function DoctorProfile() {
   const healthDiseases = useMemo(() => resolveDoctorHealthDiseases(doctor), [doctor]);
   const consultationModes = useMemo(() => resolveConsultationModes(doctor), [doctor]);
   const socialAccounts = useMemo(() => resolveSocialAccounts(doctor), [doctor]);
+  const conditionKeys = new Set(healthDiseases.map((item) => item.toLowerCase()));
+  const extraSpecializations = specializations.filter((item) => !conditionKeys.has(item.toLowerCase()));
   const visibleConditions = showAllConditions ? healthDiseases : healthDiseases.slice(0, 6);
   const hiddenConditions = Math.max(0, healthDiseases.length - 6);
   const qualification = doctorQualification(doctor);
@@ -276,8 +282,12 @@ export default function DoctorProfile() {
   ]
     .filter(Boolean)
     .join(' · ') || T.checkSlots;
-  const showQualification =
-    qualification && qualification.trim().toLowerCase() !== speciality.trim().toLowerCase();
+  const qualificationIsCondition = conditionKeys.has(qualification.trim().toLowerCase());
+  const heroLede = healthDiseases.length
+    ? qualification && !qualificationIsCondition
+      ? qualification
+      : ''
+    : extraSpecializations.join(', ') || (qualification && !qualificationIsCondition ? qualification : speciality);
 
   return (
     <AppShell tab="consult">
@@ -289,13 +299,15 @@ export default function DoctorProfile() {
           className="dp-hero--dx"
           titleId="dp-name"
           avatar={
-            <>
-              {image ? <img src={image} alt="" /> : displayName.replace(/^dr\.?\s*/i, '').charAt(0)}
-            </>
+            image && !photoFailed ? (
+              <img src={image} alt="" onError={() => setPhotoFailed(true)} />
+            ) : (
+              nameInitial(displayName, 'D')
+            )
           }
           eyebrow="Ayurveda doctor"
           title={displayName}
-          lede={showQualification ? `${speciality} · ${qualification}` : speciality}
+          lede={heroLede}
           chips={
             <>
               <DietitianBadge doctor={doctor} size="md" />
@@ -304,7 +316,6 @@ export default function DoctorProfile() {
                   {ratingValue} · {reviewCount} {T.reviews.toLowerCase()}
                 </MetaChip>
               ) : null}
-              {experienceLabel ? <MetaChip icon={BriefcaseMedical}>{experienceLabel}</MetaChip> : null}
               {locationLabel ? <MetaChip icon={MapPin}>{locationLabel}</MetaChip> : null}
               {consultationModes.length > 0 ? <MetaChip icon={Video}>{T.videoConsult}</MetaChip> : null}
             </>
@@ -359,7 +370,6 @@ export default function DoctorProfile() {
                     { label: T.consultVia, value: consultationModes.length > 0 ? T.videoConsult : '' },
                     { label: T.yearsExp, value: experienceLabel },
                   ]}
-                  total={{ label: 'Consultation fee', value: feeLabel }}
                 />
                 <ActionStack>
                   <Button onClick={book} disabled={!id} leadingIcon={<CalendarClock size={16} aria-hidden />}>
@@ -416,9 +426,9 @@ export default function DoctorProfile() {
             </DetailCard>
           ) : null}
 
-          {specializations.length > 0 ? (
+          {extraSpecializations.length > 0 ? (
             <DetailCard id="dp-specs" title={T.specializations} icon={Stethoscope}>
-              <ChipRow items={specializations} tone="primary" />
+              <ChipRow items={extraSpecializations} tone="primary" />
             </DetailCard>
           ) : null}
 
@@ -431,7 +441,6 @@ export default function DoctorProfile() {
                     variant="secondary"
                     size="sm"
                     onClick={() => openSocial(item.url)}
-                    trailingIcon={<ExternalLink size={14} aria-hidden />}
                   >
                     {item.label}
                   </Button>

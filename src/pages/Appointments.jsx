@@ -7,7 +7,6 @@ import {
   Plus,
 } from "lucide-react";
 import AppShell from "../components/AppShell";
-import { Chip, Tabs } from "../components/ui";
 import AdvanceLoad from "../components/ui/AdvanceLoad";
 import DietitianBadge from "../components/DietitianBadge";
 import PageHeader from "../components/PageHeader";
@@ -17,6 +16,7 @@ import {
   canOfferReschedule,
   hasAlreadyRescheduled,
   isAppointmentJoinable,
+  isAppointmentInPast,
   formatAppointmentDateFull,
   formatAppointmentTimeLabel,
   formatDoctorDisplayName,
@@ -26,7 +26,7 @@ import {
 import { showSuccessToast } from "../config/key";
 import { useJoinWindowTick } from "../hooks/useJoinWindow";
 import { mapAppointment } from "../profile/map";
-import { formatRupee } from "../home/catalog";
+import { formatConsultationAmount } from "../home/catalog";
 import { formatPaymentTimestamp, getRefundProgress } from "../utils/paymentHistoryUtils";
 import { requireAuth } from "../services/guestAuth";
 import { getConsultHistory } from "../services/consultService";
@@ -36,14 +36,6 @@ import "../design/pages/appointments.css";
 
 const PAGE_SIZE = 20;
 
-const UPCOMING_STATUS = [
-  "pending",
-  "confirmed",
-  "reschedule",
-  "rescheduled",
-  "upcoming",
-  "booked",
-];
 const PAST_STATUS = [
   "completed",
   "cancelled",
@@ -121,6 +113,45 @@ const paymentPendingOf = (item) => {
   return PAYMENT_PENDING_RE.test(value);
 };
 
+const LIVE_CALL = ["in_progress", "live", "ongoing", "started"];
+
+const apiDay = (date = new Date()) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const visitDate = (item) => {
+  const raw = item?.raw || {};
+  const appointment = raw.appointment || {};
+  return (
+    item?.date ||
+    appointment.appointment_date ||
+    raw.appointment_date ||
+    raw.date ||
+    ""
+  );
+};
+
+/** Calendar date is before today, even if the status is still Confirmed. */
+const isBeforeToday = (value) => {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value || "").trim());
+  if (!match) return false;
+  const day = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return day < today;
+};
+
+/** A finished visit belongs in Past: earlier calendar day, or today's slot has ended. */
+const isPastVisit = (item) => {
+  const call = String(item?.call_status || "").toLowerCase();
+  if (LIVE_CALL.includes(call)) return false;
+  if (isBeforeToday(visitDate(item))) return true;
+  return isAppointmentInPast(item);
+};
+
 const itemHasPrescription = (item) => {
   if (item?.hasPrescription) return true;
   const raw = item?.raw ?? item;
@@ -169,17 +200,58 @@ export default function Appointments() {
       else if (mode === "refresh") setRefreshing(true);
       else setLoading(true);
       try {
-        const res = await getConsultHistory({
-          page: pageNo,
-          page_size: PAGE_SIZE,
-          ...apiFilters,
-        });
-        if (requestId !== listRequestRef.current) return;
-        const list = res?.data?.results || res?.results || [];
-        const mapped = Array.isArray(list) ? list.map(mapAppointment) : [];
+        const mapList = (res) => {
+          const list = res?.data?.results || res?.results || [];
+          return Array.isArray(list) ? list.map(mapAppointment) : [];
+        };
+        const hasNext = (res, mapped) =>
+          Boolean(res?.data?.next || res?.next) || mapped.length >= PAGE_SIZE;
+
+        const today = apiDay();
+        let mapped = [];
+        let more = false;
+        if (listScope === "past" && statusFilter === "all") {
+          const followUp =
+            followUpFilter !== "all" ? { follow_up: followUpFilter } : {};
+          const [pastRes, activeRes] = await Promise.all([
+            getConsultHistory({
+              page: pageNo,
+              page_size: PAGE_SIZE,
+              appointment_status: "past",
+              ...followUp,
+            }),
+            getConsultHistory({
+              page: pageNo,
+              page_size: PAGE_SIZE,
+              to_date: today,
+              ...followUp,
+            }),
+          ]);
+          if (requestId !== listRequestRef.current) return;
+          const pastList = mapList(pastRes);
+          const endedActive = mapList(activeRes).filter(isPastVisit);
+          const seen = new Set();
+          mapped = [...pastList, ...endedActive].filter((item) => {
+            const key = String(item.consultationId || item.appointmentId || item.id);
+            if (!key || seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
+          more = hasNext(pastRes, pastList) || hasNext(activeRes, mapList(activeRes));
+        } else {
+          const res = await getConsultHistory({
+            page: pageNo,
+            page_size: PAGE_SIZE,
+            ...apiFilters,
+            ...(listScope === "upcoming" ? { from_date: today } : {}),
+          });
+          if (requestId !== listRequestRef.current) return;
+          mapped = mapList(res);
+          more = hasNext(res, mapped);
+        }
         setItems((prev) => (mode === "append" ? [...prev, ...mapped] : mapped));
         setPage(pageNo);
-        setHasMore(Boolean(res?.data?.next) || mapped.length >= PAGE_SIZE);
+        setHasMore(more);
       } finally {
         if (requestId === listRequestRef.current) {
           setLoading(false);
@@ -188,7 +260,7 @@ export default function Appointments() {
         }
       }
     },
-    [apiFilters],
+    [apiFilters, followUpFilter, listScope, statusFilter],
   );
 
   useEffect(() => {
@@ -201,22 +273,26 @@ export default function Appointments() {
   const handleTabChange = (nextTab) => {
     setTab(nextTab);
     setStatusFilter("all");
+    setFollowUpFilter("all");
   };
 
   const visible = useMemo(
     () =>
       items.filter((item) => {
         const status = String(item.status || "").toLowerCase();
+        const ended = isPastVisit(item);
         if (statusFilter === "all") {
-          const inScope =
-            listScope === "upcoming"
-              ? UPCOMING_STATUS.includes(status) ||
-                status === "upcoming" ||
-                !PAST_STATUS.includes(status)
-              : PAST_STATUS.includes(status) || status === "past";
-          if (!inScope && listScope === "past") return false;
-          if (listScope === "upcoming" && PAST_STATUS.includes(status))
+          if (listScope === "upcoming") {
+            if (PAST_STATUS.includes(status) || ended) return false;
+          } else if (
+            !PAST_STATUS.includes(status) &&
+            status !== "past" &&
+            !ended
+          ) {
             return false;
+          }
+        } else if (listScope === "upcoming" && ended) {
+          return false;
         } else if (status !== statusFilter && status !== `${statusFilter}d`) {
           if (
             !(
@@ -288,9 +364,14 @@ export default function Appointments() {
 
   const statusChips =
     listScope === "upcoming" ? UPCOMING_STATUS_FILTERS : PAST_STATUS_FILTERS;
+  const filtersOn = followUpFilter !== "all" || statusFilter !== "all";
   const resultLabel = loading
     ? "Loading…"
     : `${visible.length} ${visible.length === 1 ? "appointment" : "appointments"}`;
+  const clearFilters = () => {
+    setFollowUpFilter("all");
+    setStatusFilter("all");
+  };
 
   return (
     <AppShell tab="profile">
@@ -324,76 +405,96 @@ export default function Appointments() {
           }
         />
 
-        {!upcomingOnly ? (
-          <Tabs
-            label="When"
-            className="ap-when-tabs"
-            value={tab}
-            onChange={handleTabChange}
-            items={[
-              { id: "upcoming", label: "Upcoming" },
-              { id: "past", label: "Past" },
-            ]}
-          />
-        ) : null}
-        <div className="ap-toolbar" role="toolbar" aria-label="Filter appointments">
-          <div className="ap-toolbar__chips">
-            <div className="ap-toolbar__group" role="group" aria-label="Visit type">
-              {FOLLOW_UP_FILTERS.map((item) => (
-                <Chip
-                  key={item.key}
-                  selected={followUpFilter === item.key}
-                  onClick={() => setFollowUpFilter(item.key)}
-                >
-                  {item.label}
-                </Chip>
-              ))}
-            </div>
-            <span className="ap-toolbar__sep" aria-hidden />
-            <div className="ap-toolbar__group" role="group" aria-label="Status">
-              {statusChips.map((item) => (
-                <Chip
-                  key={item.key}
-                  selected={statusFilter === item.key}
-                  onClick={() => setStatusFilter(item.key)}
-                >
-                  {item.label}
-                </Chip>
-              ))}
-            </div>
-          </div>
-          <div className="ap-toolbar__meta">
-            <span className="ap-toolbar__count" aria-live="polite">{resultLabel}</span>
-            {followUpFilter !== "all" || statusFilter !== "all" ? (
-              <button
-                type="button"
-                className="ap-toolbar__clear"
-                onClick={() => {
-                  setFollowUpFilter("all");
-                  setStatusFilter("all");
-                }}
-              >
-                Clear filters
-              </button>
+        <div className="ap-layout">
+          <aside className="ap-side" aria-label="Filter appointments">
+            {!upcomingOnly ? (
+              <div className="ap-side__group">
+                <p className="ap-side__label" id="ap-when-label">When</p>
+                <div className="ap-side__list" role="tablist" aria-labelledby="ap-when-label">
+                  {[
+                    { id: "upcoming", label: "Upcoming" },
+                    { id: "past", label: "Past" },
+                  ].map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={tab === item.id}
+                      className={`ap-side__opt${tab === item.id ? " is-on" : ""}`}
+                      onClick={() => handleTabChange(item.id)}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             ) : null}
-          </div>
-        </div>
+            <div className="ap-side__group">
+              <p className="ap-side__label" id="ap-visit-label">Visit</p>
+              <div className="ap-side__list" role="group" aria-labelledby="ap-visit-label">
+                {FOLLOW_UP_FILTERS.map((item) => (
+                  <button
+                    key={item.key}
+                    type="button"
+                    aria-pressed={followUpFilter === item.key}
+                    className={`ap-side__opt${followUpFilter === item.key ? " is-on" : ""}`}
+                    onClick={() => setFollowUpFilter(item.key)}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="ap-side__group">
+              <p className="ap-side__label" id="ap-status-label">Status</p>
+              <div className="ap-side__list" role="group" aria-labelledby="ap-status-label">
+                {statusChips.map((item) => (
+                  <button
+                    key={item.key}
+                    type="button"
+                    aria-pressed={statusFilter === item.key}
+                    className={`ap-side__opt${statusFilter === item.key ? " is-on" : ""}`}
+                    onClick={() => setStatusFilter(item.key)}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </aside>
+          <div className="ap-layout__main">
+            <div className="ap-filters__meta">
+              <span className="ap-toolbar__count" aria-live="polite">{resultLabel}</span>
+              {filtersOn ? (
+                <button type="button" className="ap-toolbar__clear" onClick={clearFilters}>
+                  Clear filters
+                </button>
+              ) : null}
+            </div>
 
         {loading ? (
           <AdvanceLoad variant="list" label="Loading appointments" onRetry={() => loadPage(1, "replace")} />
         ) : visible.length === 0 ? (
           <div className="empty-copy">
             <strong>
-              {listScope === "upcoming"
-                ? "No upcoming appointments"
-                : "No past appointments"}
+              {filtersOn
+                ? "No visits match these filters"
+                : listScope === "upcoming"
+                  ? "No upcoming appointments"
+                  : "No past appointments"}
             </strong>
             <p>
-              {listScope === "upcoming"
-                ? "Book a doctor to schedule your next consultation."
-                : "Your completed and missed visits will appear here."}
+              {filtersOn
+                ? "Clear Visit or Status to see the rest of this list."
+                : listScope === "upcoming"
+                  ? "Book a doctor to schedule your next consultation."
+                  : "Finished visits show up here, including ones still marked confirmed."}
             </p>
-            {listScope === "upcoming" ? (
+            {filtersOn ? (
+              <button type="button" className="cta" onClick={clearFilters}>
+                Clear filters
+              </button>
+            ) : listScope === "upcoming" ? (
               <button
                 type="button"
                 className="cta"
@@ -508,7 +609,7 @@ export default function Appointments() {
                   </div>
                   {refund ? (
                     <p className="appoint-followup">
-                      {refund.title} {refund.amount != null ? formatRupee(refund.amount) : ""}
+                      {refund.title} {refund.amount != null ? formatConsultationAmount(refund.amount) : ""}
                       {refund.at ? ` · ${formatPaymentTimestamp(refund.at)}` : ""}
                     </p>
                   ) : null}
@@ -573,7 +674,7 @@ export default function Appointments() {
           </div>
         )}
 
-        {!loading && hasMore ? (
+        {!loading && hasMore && visible.length > 0 ? (
           <button
             type="button"
             className="ghost"
@@ -583,6 +684,8 @@ export default function Appointments() {
             {loadingMore ? "Loading…" : "Load more"}
           </button>
         ) : null}
+          </div>
+        </div>
       </section>
     </AppShell>
   );

@@ -36,7 +36,7 @@ import {
   formatDoctorDisplayName,
 } from '../consult/appointmentUtils';
 import { doctorDisplayName, doctorImage, getDoctorId } from '../consult/doctors';
-import { formatRupee } from '../home/catalog';
+import { formatConsultationAmount } from '../home/catalog';
 import { showSuccessToast } from '../config/key';
 import { requireAuth } from '../services/guestAuth';
 import { downloadPrescriptionFile, getAppointmentDetail } from '../services/consultService';
@@ -70,6 +70,7 @@ import {
   normalizePrescriptionPayload,
   saveBrowserFile,
 } from '../utils/prescriptionDetailUtils';
+import { getConsultationPaymentSource } from '../utils/doctorSlipUtils';
 import '../design/pages/doctor-slip.css';
 import { useCart } from '../hooks/useCart';
 import { nameInitial } from '../utils/initials';
@@ -179,6 +180,7 @@ export default function PrescriptionDetail() {
   const doctorId = getDoctorId(doctor);
   const hasContent = consultationHasPrescription(payload);
   const paymentAmount = getPaymentAmount(payload);
+  const paymentSource = getConsultationPaymentSource(payload?.payment ? payload : appointment || payload);
   const diagnosisText = getDiagnosisText(prescription);
   const prescriptionCode = formatPrescriptionId(
     prescription?.prescription_code || prescription?.id || normalized.prescriptionId,
@@ -584,9 +586,10 @@ export default function PrescriptionDetail() {
                       {expiry.expired ? `Expired ${expiry.label}` : `Valid until ${expiry.label}`}
                     </span>
                   ) : null}
-                  {paymentAmount != null ? (
+                  {paymentAmount != null || paymentSource.line ? (
                     <span>
-                      {formatRupee(paymentAmount)}
+                      {paymentAmount != null ? formatConsultationAmount(paymentAmount) : ''}
+                      {paymentSource.line ? `${paymentAmount != null ? ' · ' : ''}${paymentSource.line}` : ''}
                       {paymentStatus ? ` · ${paymentStatus.replace(/_/g, ' ')}` : ''}
                     </span>
                   ) : null}

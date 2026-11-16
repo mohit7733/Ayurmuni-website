@@ -172,7 +172,7 @@
 /* List + card */
 .appointments-page.ap-premium .appoint-list { gap: 12px; grid-template-columns: 1fr; }
 @media (min-width: 900px) {
-  .appointments-page.ap-premium .appoint-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .appointments-page.ap-premium .appoint-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 }
 .appointments-page.ap-premium .appoint-list > .ap-card:only-child { grid-column: 1 / -1; }
 .appointments-page.ap-premium .ap-card {
@@ -254,8 +254,12 @@
   gap: 0;
 }
 .appointments-page.ap-premium > .am-page-header {
-  gap: 8px;
-  margin: 0 0 12px;
+  gap: 4px;
+  margin: 0 0 8px;
+}
+.app-shell .appointments-page.ap-premium > .am-page-header {
+  gap: 4px !important;
+  margin-bottom: 8px !important;
 }
 .appointments-page.ap-premium > .am-page-header .am-back {
   min-height: 32px; margin-left: 0; padding: 0 12px; font-size: 13px;
@@ -295,8 +299,91 @@
   .appointments-page.ap-premium .ap-card { padding: 12px 12px 12px 16px; }
 }
 
-/* Appointments: segmented "When" tabs + one compact filter toolbar. */
-.appointments-page .ap-when-tabs { margin: 0; }
+/* Filters sit in a side column, same idea as the product catalogue. */
+.appointments-page .ap-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+.appointments-page .ap-layout__main { min-width: 0; }
+.appointments-page .ap-side {
+  padding: 10px;
+  border: 1px solid rgba(216, 204, 180, 0.85);
+  border-radius: 16px;
+  background:
+    radial-gradient(120% 80% at 0% 0%, rgba(231, 197, 106, 0.16), transparent 46%),
+    linear-gradient(180deg, #fffdf8 0%, #f7f3ea 100%);
+}
+.appointments-page .ap-side__group + .ap-side__group { margin-top: 10px; }
+.appointments-page .ap-side__label {
+  margin: 0 4px 4px;
+  color: #a07f3c;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.appointments-page .ap-side__list { display: grid; gap: 2px; }
+.appointments-page .ap-side__opt {
+  width: 100%;
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: #1d2b27;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.appointments-page .ap-side__opt:hover {
+  background: rgba(255, 255, 255, 0.75);
+  border-color: rgba(216, 204, 180, 0.9);
+}
+.appointments-page .ap-side__opt.is-on {
+  border-color: rgba(11, 107, 79, 0.35);
+  background: #fff;
+  color: var(--am-primary, #0b6b4f);
+  box-shadow: inset 3px 0 0 var(--am-primary, #0b6b4f);
+}
+@media (min-width: 900px) {
+  .appointments-page .ap-layout {
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 16px;
+  }
+  .appointments-page .ap-side {
+    position: sticky;
+    top: calc(var(--am-header-h, 64px) + 12px);
+  }
+}
+@media (max-width: 899px) {
+  .appointments-page .ap-side {
+    display: grid;
+    gap: 8px;
+    padding: 8px 10px;
+  }
+  .appointments-page .ap-side__group + .ap-side__group { margin-top: 0; }
+  .appointments-page .ap-side__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .appointments-page .ap-side__opt {
+    width: auto;
+    min-height: 32px;
+    padding: 4px 10px;
+  }
+  .appointments-page .ap-side__opt.is-on { box-shadow: none; }
+}
+.appointments-page .ap-filters__meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: var(--am-text-sm, 13px);
+  color: var(--am-text-muted, #6b6b6b);
+}
 .appointments-page .ap-toolbar {
   display: flex;
   align-items: center;

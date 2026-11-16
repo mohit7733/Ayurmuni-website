@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ChevronRight, FileText } from 'lucide-react';
-import { formatRupee, mapCatalogProductItem, resolveImageUrl } from '../../home/catalog';
+import { formatConsultationAmount, formatRupee, mapCatalogProductItem, resolveImageUrl } from '../../home/catalog';
 import { getProducts } from '../../services/productService';
 import {
   formatSlipDate,
@@ -9,7 +9,7 @@ import {
   getConsultationKey,
   getConsultationTitle,
   getPatientMeta,
-  getSlipFee,
+  consultationChargeLabel,
   hasPrescribedData,
 } from '../../utils/doctorSlipUtils';
 import {
@@ -245,7 +245,11 @@ export function VisitCard({ item, doctor, onOpen, onPrescription }) {
   const canView = hasPrescribedData(item);
   const patientMeta = getPatientMeta(item?.patient);
   const timeRange = formatSlipTimeRange(item?.start_time, item?.end_time);
-  const fee = getSlipFee(item);
+  const charge = consultationChargeLabel(item);
+  const feeText =
+    charge.amount != null && charge.amount > 0
+      ? [formatConsultationAmount(charge.amount), charge.note].filter(Boolean).join(' · ')
+      : charge.note || (charge.amount === 0 ? formatConsultationAmount(0) : '');
   const rawTitle = getConsultationTitle(item);
   const title =
     rawTitle && rawTitle !== 'Consultation visit' && String(rawTitle).trim().length >= 4
@@ -297,7 +301,7 @@ export function VisitCard({ item, doctor, onOpen, onPrescription }) {
         <p>
           {item?.patient?.patient_name || 'Patient'}
           {patientMeta ? ` · ${patientMeta}` : ''}
-          {fee != null ? ` · ${formatRupee(fee)}` : ''}
+          {feeText ? ` · ${feeText}` : ''}
           {medCount > 0 ? ` · ${medCount} Rx` : ''}
         </p>
       </div>

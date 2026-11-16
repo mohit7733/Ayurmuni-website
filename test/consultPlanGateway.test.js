@@ -151,6 +151,13 @@ describe('consultPayment helpers', () => {
     expect(cp.isBookingAlreadyPaid({ status: 'pending' })).toBe(false);
   });
 
+  it('keeps consultation plus GST when the fee quote payable is 0', () => {
+    expect(cp.normalConsultPayable(0, 1.17)).toBe(1.17);
+    expect(cp.normalConsultPayable(null, 1)).toBe(1);
+    expect(cp.normalConsultPayable(0, 0)).toBe(0);
+    expect(cp.normalConsultPayable(499, 520)).toBe(499);
+  });
+
   it('detects duplicate gateway orders', () => {
     expect(cp.isDuplicateGatewayOrder({ data: { errors: { error_code: 'duplicate_request' } } })).toBe(true);
     expect(cp.isDuplicateGatewayOrder({ errors: { error_message: 'Duplicate merchant reference' } })).toBe(true);

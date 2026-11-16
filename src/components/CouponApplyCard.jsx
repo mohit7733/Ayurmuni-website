@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { formatRupee } from '../home/catalog';
+import { formatConsultationAmount, formatRupee } from '../home/catalog';
 import { showSuccessToast } from '../config/key';
 import {
   calcCouponDiscount,
@@ -105,8 +105,10 @@ export default function CouponApplyCard({
           <div>
             <strong>{applied.code}</strong>
             <p>
-              You save {formatRupee(discount, { decimals: 2 })}
-              {Number(payable) > 0 ? ` · Payable ${formatRupee(payable, { decimals: 2 })}` : ''}
+              You save {checkoutScope === 'consultation' ? formatConsultationAmount(discount) : formatRupee(discount, { decimals: 2 })}
+              {Number(payable) > 0
+                ? ` · Payable ${checkoutScope === 'consultation' ? formatConsultationAmount(payable) : formatRupee(payable, { decimals: 2 })}`
+                : ''}
             </p>
           </div>
           <button type="button" className="text-back" onClick={onRemove}>

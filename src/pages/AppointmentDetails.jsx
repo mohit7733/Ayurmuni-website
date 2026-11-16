@@ -64,7 +64,9 @@ import {
   getDoctorId,
   isSlotBookable,
 } from '../consult/doctors';
-import { formatRupee } from '../home/catalog';
+import { formatConsultationAmount } from '../home/catalog';
+import { consultationChargeLabel } from '../utils/doctorSlipUtils';
+import { nameInitials } from '../utils/initials';
 import { showSuccessToast } from '../config/key';
 import { Utils } from '../common/utils';
 import { requireAuth } from '../services/guestAuth';
@@ -100,15 +102,6 @@ const CANCEL_NOTES = [
   'Approved refunds are usually started within 72 hours and may take 5–7 business days to reflect.',
   'You can rebook another slot anytime from Appointments.',
 ];
-
-const initialsOf = (name) =>
-  String(name || '')
-    .replace(/^dr\.?\s*/i, '')
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join('');
 
 const formatLabel = (value) => {
   if (!value) return '';
@@ -280,14 +273,13 @@ export default function AppointmentDetails() {
     [monthOffset],
   );
 
-  const paymentAmount =
-    detail?.payment?.consultation_fee ??
-    detail?.payment?.amount ??
-    appointment?.payment?.consultation_fee ??
-    appointment?.payment?.amount ??
-    null;
   const paymentStatusValue =
     detail?.payment?.status || appointment?.payment_status || appointment?.payment?.status || null;
+  const charge = consultationChargeLabel(detail || appointment);
+  const feeValue =
+    charge.amount != null && charge.amount > 0
+      ? [formatConsultationAmount(charge.amount), charge.note].filter(Boolean).join(' · ')
+      : charge.note || (charge.amount === 0 ? formatConsultationAmount(0) : '');
 
   const runAction = async (payload) => {
     if (!actionId) return;
@@ -581,7 +573,7 @@ export default function AppointmentDetails() {
             <DetailHero
               variant="band"
               titleId="appointment-title"
-              avatar={doctorPhoto ? <img src={doctorPhoto} alt="" /> : initialsOf(doctorName)}
+              avatar={doctorPhoto ? <img src={doctorPhoto} alt="" /> : nameInitials(doctorName, 2, 'D')}
               eyebrow={appointmentCode ? `Appointment · #${formatAppointmentId(appointmentCode)}` : 'Appointment'}
               title={doctorName}
               lede={specialization}
@@ -603,10 +595,10 @@ export default function AppointmentDetails() {
               aside={
                 <>
                   <StatusPill status={status}>{formatLabel(status) || 'Booked'}</StatusPill>
-                  {paymentAmount != null ? (
+                  {feeValue ? (
                     <div className="dx-figure">
                       <small>Consultation fee</small>
-                      <strong>{formatRupee(paymentAmount)}</strong>
+                      <strong>{feeValue}</strong>
                     </div>
                   ) : null}
                 </>
@@ -712,7 +704,7 @@ export default function AppointmentDetails() {
                     { label: 'Consultation type', value: consultType },
                     { label: 'Status', value: formatLabel(appointment?.appointment_status) },
                     { label: 'Call status', value: formatLabel(appointment?.call_status) },
-                    { label: 'Consultation fee', value: paymentAmount != null ? formatRupee(paymentAmount) : '' },
+                    { label: 'Consultation fee', value: feeValue },
                     { label: 'Payment', value: formatLabel(paymentStatusValue) },
                     { label: 'Follow-up', value: followUpLabel(detail, appointment) },
                     { label: 'Cancellation reason', value: cancellationReasonLabel(appointment?.cancellation_reason), wide: true },

@@ -839,6 +839,28 @@
   opacity: 0;
 }
 
+.bk-camera-file {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.bk-camera__video {
+  display: block;
+  width: 100%;
+  max-height: min(52vh, 420px);
+  margin-top: var(--am-space-3);
+  border-radius: var(--am-radius-md);
+  background: #10211b;
+  object-fit: contain;
+}
+
 .bk-slots-page .bk-aside__cta .am-btn {
   width: 100%;
   justify-content: center;

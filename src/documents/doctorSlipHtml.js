@@ -1,4 +1,4 @@
-import { formatRupee } from '../home/catalog';
+import { formatConsultationAmount } from '../home/catalog';
 import { createPlainTextPdfBytes } from '../utils/plainPdf';
 import {
   buildDoctorSlipDownloadText,
@@ -8,7 +8,7 @@ import {
   getConsultationTitle,
   getDoctorLocationLine,
   getPatientMeta,
-  getSlipFee,
+  consultationChargeLabel,
   isClosedNegativeStatus,
 } from '../utils/doctorSlipUtils';
 import { saveBrowserFile } from '../utils/prescriptionDetailUtils';
@@ -51,7 +51,8 @@ h1 { margin: 0 0 4px; font-size: 18pt; color: #0d614e; }
 .meds { width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 9pt; }
 .meds th, .meds td { border: 1px solid #dceae3; padding: 7px 8px; text-align: left; vertical-align: top; }
 .meds th { background: #e8f4ef; color: #0d614e; }
-.fee { display: flex; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: 10px; background: #fffdf8; border: 1px solid #ebe4d6; font-family: Arial, sans-serif; }
+.fee { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; background: #fffdf8; border: 1px solid #ebe4d6; font-family: Arial, sans-serif; }
+.fee small { display: block; margin-top: 2px; color: #4b5a55; font-size: 8pt; }
 .sign { margin-top: 24px; text-align: right; font-family: Arial, sans-serif; }
 .sign strong { display: block; color: #0d614e; }
 .sign span { color: #4b5a55; font-size: 9pt; }
@@ -85,7 +86,11 @@ export const buildDoctorSlipHtml = ({ doctor, consultation, visitCount = 1 }) =>
     history_of_past_illness:
       prescription.history_of_past_illness || notes.history_of_past_illness || '',
   };
-  const fee = getSlipFee(consultation);
+  const charge = consultationChargeLabel(consultation);
+  const feeText =
+    charge.amount != null && charge.amount > 0
+      ? [formatConsultationAmount(charge.amount), charge.note].filter(Boolean).join(' · ')
+      : charge.note || (charge.amount === 0 ? formatConsultationAmount(0) : '');
   const timeRange = formatSlipTimeRange(consultation?.start_time, consultation?.end_time);
   const patientMeta = getPatientMeta(consultation?.patient);
   const location = getDoctorLocationLine(doctor);
@@ -163,9 +168,9 @@ ${
 }
 ${medicineRows(medicines)}
 ${
-  fee != null
+  feeText
     ? `<section class="section"><div class="fee"><span>Consultation fee</span><strong>${escapeHtml(
-        formatRupee(fee),
+        feeText,
       )}</strong></div></section>`
     : ''
 }

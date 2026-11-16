@@ -19,12 +19,18 @@ import {
 } from '../components/detail/Detail';
 import { formatDoctorDisplayName } from '../consult/appointmentUtils';
 import { doctorDisplayName, doctorImage, formatDoctorSpecialization } from '../consult/doctors';
-import { formatRupee } from '../home/catalog';
+import { formatConsultationAmount } from '../home/catalog';
 import { showSuccessToast } from '../config/key';
 import { requireAuth } from '../services/guestAuth';
-import { getMedicalReceipt } from '../services/consultService';
+import { getAppointmentDetail, getMedicalReceipt } from '../services/consultService';
 import { formatDisplayIdHash, formatReceiptId } from '../utils/formatDisplayId';
-import { parseConsultationReceiptBreakdown } from '../utils/consultationReceiptUtils';
+import {
+  buildConsultationReceiptBillRows,
+  extractConsultationPayment,
+  mergeReceiptPayment,
+  parseConsultationReceiptBreakdown,
+  receiptBreakdownIsIncomplete,
+} from '../utils/consultationReceiptUtils';
 import { saveBrowserFile } from '../utils/prescriptionDetailUtils';
 import { getEmailShareUrl } from '../utils/shareUtils';
 import { buildReceiptDocument } from '../documents/documentData';
@@ -54,8 +60,6 @@ const buildReceiptText = (receipt, breakdown) => {
   const statusLabel = breakdown.paymentStatus
     ? breakdown.paymentStatus.charAt(0).toUpperCase() + breakdown.paymentStatus.slice(1)
     : '';
-  const legacyAdmin = Number(receipt?.administrative_charges ?? 0);
-  const legacyDigital = Number(receipt?.digital_report_access ?? 0);
   return [
     COMPANY,
     'DIGITAL CONSULTATION RECEIPT',
@@ -72,12 +76,10 @@ const buildReceiptText = (receipt, breakdown) => {
     `Doctor: ${doctorName}`,
     specialization ? `Specialization: ${specialization}` : '',
     '----------------------------------------',
-    `Consultation Fee: ${formatRupee(breakdown.consultationFee)}`,
-    breakdown.platformFee > 0 ? `Platform Fee: ${formatRupee(breakdown.platformFee)}` : '',
-    breakdown.gstAmount > 0 ? `GST: ${formatRupee(breakdown.gstAmount)}` : '',
-    legacyAdmin > 0 ? `Administrative Charges: ${formatRupee(legacyAdmin)}` : '',
-    legacyDigital > 0 ? `Digital Report Access: ${formatRupee(legacyDigital)}` : '',
-    `Total Paid: ${formatRupee(breakdown.totalPaid)}`,
+    ...buildConsultationReceiptBillRows(breakdown).map((row) =>
+      `${row.label}: ${row.effect === 'subtract' ? '− ' : ''}${formatConsultationAmount(row.amount)}`,
+    ),
+    `Total Paid: ${formatConsultationAmount(breakdown.totalPaid)}`,
     '----------------------------------------',
     'THIS IS A COMPUTER GENERATED RECEIPT. NO SIGNATURE IS REQUIRED.',
   ]
@@ -104,7 +106,17 @@ export default function MedicalReceipt() {
         showSuccessToast(response?.message || 'Receipt not found', 'error');
         setReceipt(null);
       } else {
-        setReceipt(response?.data ?? null);
+        let data = response?.data ?? null;
+        if (data && receiptBreakdownIsIncomplete(parseConsultationReceiptBreakdown(data))) {
+          try {
+            const extra = await getAppointmentDetail(consultationId);
+            const payment = extractConsultationPayment(extra);
+            if (payment) data = mergeReceiptPayment(data, payment);
+          } catch {
+            /* keep the receipt payload we already have */
+          }
+        }
+        setReceipt(data);
       }
     } catch {
       showSuccessToast('Unable to load receipt', 'error');
@@ -137,8 +149,7 @@ export default function MedicalReceipt() {
     !breakdown?.paymentStatus || /^(success|captured|paid)$/i.test(breakdown.paymentStatus)
       ? 'Paid'
       : breakdown.paymentStatus.charAt(0).toUpperCase() + breakdown.paymentStatus.slice(1);
-  const legacyAdmin = Number(receipt?.administrative_charges ?? 0);
-  const legacyDigital = Number(receipt?.digital_report_access ?? 0);
+  const billRows = breakdown ? buildConsultationReceiptBillRows(breakdown) : [];
   const receiptText = receipt && breakdown ? buildReceiptText(receipt, breakdown) : '';
 
   const downloadReceipt = async () => {
@@ -236,7 +247,7 @@ export default function MedicalReceipt() {
               <div className="dx-doc__title">
                 <p className="dx-eyebrow">Medical receipt</p>
                 <h1 id="receipt-title" className="dx-title">
-                  {formatRupee(breakdown.totalPaid)}
+                  {formatConsultationAmount(breakdown.totalPaid)}
                 </h1>
                 <span className="dx-doc__sub">
                   {receiptNumber(receipt, breakdown)}
@@ -272,14 +283,12 @@ export default function MedicalReceipt() {
               <div className="dx-doc__section">
                 <p className="dx-doc__label">Bill summary</p>
                 <SummaryRows
-                  rows={[
-                    { label: 'Consultation fee', value: formatRupee(breakdown.consultationFee) },
-                    { label: 'Platform fee', value: breakdown.platformFee > 0 ? formatRupee(breakdown.platformFee) : '' },
-                    { label: 'GST', value: breakdown.gstAmount > 0 ? formatRupee(breakdown.gstAmount) : '' },
-                    { label: 'Administrative charges', value: legacyAdmin > 0 ? formatRupee(legacyAdmin) : '' },
-                    { label: 'Digital report access', value: legacyDigital > 0 ? formatRupee(legacyDigital) : '' },
-                  ]}
-                  total={{ label: 'Total paid', value: formatRupee(breakdown.totalPaid) }}
+                  rows={billRows.map((row) => ({
+                    label: row.label,
+                    value: row.effect === 'subtract' ? `− ${formatConsultationAmount(row.amount)}` : formatConsultationAmount(row.amount),
+                    tone: row.effect === 'subtract' ? 'success' : undefined,
+                  }))}
+                  total={{ label: 'Total paid', value: formatConsultationAmount(breakdown.totalPaid) }}
                 />
               </div>
 

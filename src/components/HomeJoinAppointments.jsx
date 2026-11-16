@@ -13,6 +13,7 @@ import {
   sortAppointmentsByDateTime,
 } from '../consult/appointmentUtils';
 import { requireAuth } from '../services/guestAuth';
+import { nameInitials } from '../utils/initials';
 import './home-upcoming.css';
 
 const statusLabel = (status) => {
@@ -20,15 +21,6 @@ const statusLabel = (status) => {
   return raw ? raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase() : '';
 };
 
-const initialsOf = (name) =>
-  String(name || '')
-    .replace(/^(dr|prof)\.?\s*/gi, '')
-    .replace(/\(.*?\)/g, '')
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part.charAt(0).toUpperCase())
-    .join('') || 'Dr';
 
 /** "in 3 hrs" / "in 25 min" / "Tomorrow" / "in 4 days"; '' when the start can't be parsed. */
 const relativeStart = (item) => {
@@ -154,7 +146,7 @@ export default function HomeJoinAppointments({ appointments, loading }) {
       aria-labelledby="hm-appt-title"
     >
       <div className="am-diet-active__media hm-appt__media" aria-hidden>
-        {next.image ? <img src={next.image} alt="" loading="lazy" /> : <span>{initialsOf(name)}</span>}
+        {next.image ? <img src={next.image} alt="" loading="lazy" /> : <span>{nameInitials(name, 2, 'D')}</span>}
       </div>
       <div className="am-diet-active__body">
         <p className="am-diet-active__eyebrow">

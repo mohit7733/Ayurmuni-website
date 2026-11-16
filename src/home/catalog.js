@@ -158,6 +158,9 @@ export const formatRupee = (value, options) => {
   return `₹${Math.round(n).toLocaleString('en-IN')}`;
 };
 
+/** Consultation amounts. Two decimal places, unlike product prices from formatRupee. */
+export const formatConsultationAmount = (value) => formatRupee(value, { decimals: 2 });
+
 export const doctorDisplayName = (item) =>
   String(
     item?.doctor_name ||
@@ -172,7 +175,7 @@ export const doctorFeeLabel = (item) => {
     item?.configurations?.consultation?.global_fee ?? item?.global_fee ?? item?.fee ?? item?.consult_fee,
   );
   if (!Number.isFinite(fee) || fee < 0) return '';
-  return formatRupee(fee);
+  return formatConsultationAmount(fee);
 };
 
 const readMediaField = (value) => {

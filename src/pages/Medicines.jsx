@@ -36,6 +36,7 @@ import { CatalogPageSkeleton } from '../components/skeletons';
 import { filterItemsByQuery } from '../home/concernCatalog';
 import { getProductStockQty } from '../product/stock';
 import { getCatalogPrice, getCatalogRating, toProductApiSort } from '../utils/productSearchUtils';
+import { orderListedProducts } from '../products/listingOrder';
 import { HOME_COPY as H } from '../content/home';
 import { STORE_COPY as T } from '../content/store';
 import '../design/pages/store.css';
@@ -126,26 +127,8 @@ export default function Medicines() {
       return true;
     });
 
-    filtered.sort((a, b) => {
-      const priceA = getCatalogPrice(a);
-      const priceB = getCatalogPrice(b);
-      const ratingA = getCatalogRating(a);
-      const ratingB = getCatalogRating(b);
-      switch (sortBy) {
-        case 'price_low':
-          return priceA - priceB;
-        case 'price_high':
-          return priceB - priceA;
-        case 'rating':
-          return ratingB - ratingA;
-        case 'name':
-          return (a.name || '').localeCompare(b.name || '');
-        default:
-          return 0;
-      }
-    });
+    return orderListedProducts(filtered, { sortBy });
 
-    return filtered;
   }, [products, query, priceRange, minRating, inStockOnly, sortBy, brandIds, brandNames]);
 
   const hasActiveFilters =
