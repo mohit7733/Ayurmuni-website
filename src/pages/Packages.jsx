@@ -3,7 +3,7 @@ import { ArrowLeft, ArrowRight, Award, Calendar, Check, HeartPulse, Leaf, Shield
 import { Link, useNavigate } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { Button, EmptyState, ErrorState, SkeletonGrid } from "../components/ui";
-import { formatPlanMoney, isCarePlan, planCta, planDiscount, planDuration } from "../packages/planTheme";
+import { formatPlanMoney, getPlanTheme, isCarePlan, planCta, planDiscount, planDuration, railThemeTones, themeStyle } from "../packages/planTheme";
 import PlanTransferModal from "../components/PlanTransferModal";
 import PackagePaymentModal from "../components/PackagePaymentModal";
 import usePackagePurchase from "../hooks/usePackagePurchase";
@@ -21,7 +21,7 @@ const iconFor = (name) => {
   return Sparkles;
 };
 
-function PlanCard({ item, busy, onAction, highlight = false }) {
+function PlanCard({ item, busy, onAction, highlight = false, tone = 0 }) {
   const [imageFailed, setImageFailed] = useState(false);
   const care = isCarePlan(item);
   const discount = planDiscount(item);
@@ -36,6 +36,7 @@ function PlanCard({ item, busy, onAction, highlight = false }) {
   return (
     <article
       className={`pp-card${highlight ? " is-highlight" : ""}${owned ? " is-owned" : ""}`}
+      style={themeStyle(getPlanTheme(item, tone))}
       aria-label={item.name}
     >
       <div className="pp-card__banner" aria-hidden>
@@ -264,15 +265,19 @@ export default function Packages() {
                     <span className="pp-group__count">{group.plans.length} {group.plans.length === 1 ? "plan" : "plans"}</span>
                   </header>
                   <div className="pp-grid">
-                    {group.plans.map((item) => (
-                      <PlanCard
-                        key={item.id}
-                        item={item}
-                        busy={buyingId === item.id}
-                        onAction={onAction}
-                        highlight={item.id === highlightId && planDiscount(item) > 0}
-                      />
-                    ))}
+                    {(() => {
+                      const tones = railThemeTones(group.plans);
+                      return group.plans.map((item, index) => (
+                        <PlanCard
+                          key={item.id}
+                          item={item}
+                          tone={tones[index]}
+                          busy={buyingId === item.id}
+                          onAction={onAction}
+                          highlight={item.id === highlightId && planDiscount(item) > 0}
+                        />
+                      ));
+                    })()}
                   </div>
                 </section>
               );

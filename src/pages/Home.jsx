@@ -75,12 +75,20 @@ import { loadConsultPackages } from '../services/packageService';
 import '../design/pages/home.css';
 import '../design/pages/dummy-offers.css';
 import '../design/pages/plan-cards.css';
-import { isCarePlan, planDiscount } from '../packages/planTheme';
+import { isCarePlan, planDiscount, railThemeTones } from '../packages/planTheme';
 import '../design/pages/orange-lab.css';
 import { getDietPlanCoverUrl, getDietPlanRatingLabel } from '../diet/utils';
 
 let prakritiModalShownThisSession = false;
 let diseaseModalShownThisSession = false;
+
+const homePackageCards = (packages) => {
+  const featured = [...packages]
+    .sort((a, b) => Number(isCarePlan(b)) - Number(isCarePlan(a)) || planDiscount(b) - planDiscount(a))
+    .slice(0, 8);
+  const tones = railThemeTones(featured);
+  return featured.map((item, index) => ({ item, tone: tones[index] }));
+};
 
 const SERVICE_ICONS = {
   consult: Stethoscope,
@@ -1010,18 +1018,16 @@ export default function Home() {
                   Save more with guided Ayurvedic care plans
                 </p>
                 <Rail label={T.packagesTitle} className="hm-package-rail" auto interval={3200}>
-                  {[...consultPackages]
-                    .sort((a, b) => Number(isCarePlan(b)) - Number(isCarePlan(a)) || planDiscount(b) - planDiscount(a))
-                    .slice(0, 8)
-                    .map((item) => (
-                      <RailItem key={item.id}>
-                        <DummyOfferCard
-                          item={item}
-                          kind="package"
-                          onClick={() => navigate(`/packages/${encodeURIComponent(item.id)}`)}
-                        />
-                      </RailItem>
-                    ))}
+                  {homePackageCards(consultPackages).map(({ item, tone }) => (
+                    <RailItem key={item.id}>
+                      <DummyOfferCard
+                        item={item}
+                        kind="package"
+                        tone={tone}
+                        onClick={() => navigate(`/packages/${encodeURIComponent(item.id)}`)}
+                      />
+                    </RailItem>
+                  ))}
                 </Rail>
               </div>
             </Reveal>

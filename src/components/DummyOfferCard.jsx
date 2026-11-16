@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Check, Leaf } from 'lucide-react';
 import { formatRupee } from '../home/catalog';
-import { formatPlanMoney, planCta, planDiscount, planDuration } from '../packages/planTheme';
+import { formatPlanMoney, getPlanTheme, planCta, planDiscount, planDuration, themeStyle } from '../packages/planTheme';
 import '../design/pages/packages-premium.css';
 
 const textList = (value) =>
@@ -29,6 +29,7 @@ const readOfferPlan = (item = {}) => {
     price,
     mrp,
     validityDays: amount(item.validityDays || item.validity_days),
+    sessions: amount(item.sessions),
     purchaseType: String(item.purchaseType || item.purchase_type || '').trim(),
     canBePurchased: item.canBePurchased ?? item.can_be_purchased,
     buttonAction: String(item.buttonAction || item.button_action || '').trim(),
@@ -45,7 +46,7 @@ const CTA = {
   therapy: 'Book',
 };
 
-export default function DummyOfferCard({ item, kind = 'lab', onClick, cta }) {
+export default function DummyOfferCard({ item, kind = 'lab', onClick, cta, tone = 0 }) {
   const [imageFailed, setImageFailed] = useState(false);
   const image = String(item.image || item.image_url || '').trim();
   const showImage = Boolean(image) && !imageFailed;
@@ -80,9 +81,16 @@ export default function DummyOfferCard({ item, kind = 'lab', onClick, cta }) {
     const more = Math.max(0, plan.includes.length - lines.length);
     const saving = plan.mrp > plan.price ? plan.mrp - plan.price : 0;
     const banner = Boolean(plan.image) && !imageFailed;
+    const theme = getPlanTheme(plan, tone);
 
     return (
-      <button type="button" className="pp-rail" onClick={onClick} aria-label={plan.name}>
+      <button
+        type="button"
+        className="pp-rail"
+        style={themeStyle(theme)}
+        onClick={onClick}
+        aria-label={plan.name}
+      >
         <span className="pp-rail__banner" aria-hidden>
           {banner ? (
             <img

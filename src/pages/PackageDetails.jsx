@@ -3,7 +3,7 @@ import { ArrowLeft, ArrowRight, Calendar, Check, CreditCard, Leaf, ShieldCheck, 
 import { useNavigate, useParams } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { Button, EmptyState, ErrorState, SectionHold } from "../components/ui";
-import { formatPlanMoney, isCarePlan, planBilling, planCta, planDiscount, planDuration } from "../packages/planTheme";
+import { formatPlanMoney, getPlanTheme, isCarePlan, planBilling, planCta, planDiscount, planDuration, themeStyle } from "../packages/planTheme";
 import PlanTransferModal from "../components/PlanTransferModal";
 import PackagePaymentModal from "../components/PackagePaymentModal";
 import usePackagePurchase from "../hooks/usePackagePurchase";
@@ -119,7 +119,7 @@ export default function PackageDetails() {
         ) : null}
 
         {!loading && !error && item ? (
-          <article className="pp-detail">
+          <article className="pp-detail" style={themeStyle(getPlanTheme(item))}>
             <div className="pp-detail__hero">
               <div className="pp-detail__hero-top">
                 {isCarePlan(item) ? (

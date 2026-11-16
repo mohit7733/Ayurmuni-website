@@ -3080,13 +3080,13 @@ button.hm-pose {
 .hm-page .hm-package-rail > .am-rail__item {
   flex: 0 0 clamp(230px, calc((100% - 48px) / 5), 268px);
   width: clamp(230px, calc((100% - 48px) / 5), 268px);
-  height: 380px;
+  height: 400px;
 }
 @media (max-width: 900px) {
   .hm-page .hm-package-rail > .am-rail__item {
     flex-basis: 250px;
     width: 250px;
-    height: 340px;
+    height: 390px;
   }
 }
 
