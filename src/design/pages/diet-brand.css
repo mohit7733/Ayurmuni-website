@@ -1181,3 +1181,200 @@
   border-bottom: 1px solid var(--am-line); font-family: var(--am-font-display); font-size: var(--am-text-sm); color: var(--am-text);
 }
 .dt-alldays { gap: var(--am-space-5, 20px); }
+
+/* Plan detail: today's work first, plan controls second */
+.dt-plan.dx-page { gap: 18px; }
+
+.dt-plan .dt-plan__hero {
+  border-color: rgba(201, 165, 90, 0.4);
+  background:
+    radial-gradient(90% 120% at 0% 0%, rgba(16, 83, 67, 0.07), transparent 52%),
+    linear-gradient(180deg, #fffdf8 0%, #f6f1e6 100%);
+}
+@media (min-width: 900px) {
+  .dt-plan .dx-hero.has-media {
+    grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+    align-items: stretch;
+  }
+  .dt-plan .dx-hero.has-media .dx-hero__media {
+    min-height: 0;
+    margin: 16px 0 16px 16px;
+    aspect-ratio: 4 / 5;
+    border-radius: 22px;
+    box-shadow: 0 16px 30px -22px rgba(16, 83, 67, 0.55);
+  }
+}
+.dt-plan .dx-hero__media {
+  background:
+    radial-gradient(circle at 50% 18%, #fff 0%, #f4e7d2 72%);
+}
+.dt-plan .dx-hero.has-media .dx-hero__media > img {
+  object-fit: contain;
+  padding: 16px;
+}
+.dt-plan .dx-hero__body { gap: 18px; }
+.dt-plan .dx-title { letter-spacing: -0.03em; }
+.dt-plan .dx-price {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 30px;
+  margin: 0;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: #105343;
+  color: #fbf6ea;
+  font-size: 13px;
+  letter-spacing: 0.01em;
+}
+.dt-plan__today {
+  margin: 0;
+  color: #105343;
+  font-size: 14px;
+  font-weight: 650;
+}
+.dt-plan__actions { display: grid; gap: 12px; }
+.dt-plan .dx-actions--row > .am-btn { flex: 0 1 auto; }
+.dt-plan__manage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(216, 204, 180, 0.85);
+}
+.dt-plan__manage .am-btn {
+  min-height: 36px;
+  border: 1px solid rgba(16, 83, 67, 0.16);
+  border-radius: 999px;
+  background: #fff;
+  color: #105343;
+}
+.dt-plan__manage .am-btn:hover:not(:disabled) {
+  border-color: #105343;
+  background: #f3f8f5;
+}
+
+.dt-plan .dt-vitality {
+  background:
+    radial-gradient(80% 80% at 100% 0%, rgba(201, 165, 90, 0.16), transparent 46%),
+    #fffdf8;
+}
+.dt-plan .dt-vitality .dt-progress {
+  display: grid;
+  grid-template-columns: 128px minmax(0, 1fr);
+  grid-template-areas:
+    "ring stats"
+    "macros macros"
+    "water water";
+  gap: 16px 20px;
+  align-items: center;
+}
+.dt-plan .dt-progress__ring {
+  grid-area: ring;
+  width: 120px;
+  height: 120px;
+  justify-self: center;
+}
+.dt-plan .dt-progress__ring circle { stroke-width: 5; }
+.dt-plan .dt-progress__ring strong { font-size: 22px; }
+.dt-plan .dt-progress__stats {
+  grid-area: stats;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+.dt-plan .dt-progress__stats div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 12px 10px;
+  border: 1px solid rgba(216, 204, 180, 0.8);
+  border-left-width: 1px;
+  border-radius: 16px;
+  background: #fff;
+}
+.dt-plan .dt-progress__stats strong { font-size: 22px; }
+.dt-plan .dt-progress__stats small {
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.dt-plan .dt-progress__macros { grid-area: macros; gap: 10px; }
+.dt-plan .dt-macro i { height: 8px; }
+.dt-plan .dt-progress__water { grid-area: water; }
+.dt-plan .diet-water {
+  margin: 0;
+  border: 1px solid rgba(16, 83, 67, 0.12);
+  background: #f3faf6;
+}
+
+.dt-plan__days-label,
+.dt-plan__hint {
+  margin: 0;
+  color: #5d6b66;
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+.dt-plan .dt-days { margin-top: 2px; }
+.dt-plan .dt-day { min-height: 72px; background: #fff; color: #1d2b27; }
+.dt-plan .dt-day.is-on {
+  border-color: #105343;
+  background: #105343;
+  color: #fbf6ea;
+}
+.dt-plan .dt-day.is-on small { color: rgba(251, 246, 234, 0.82); }
+.dt-plan .dt-meals { gap: 12px; }
+.dt-plan .dt-meal {
+  grid-template-columns: 88px minmax(0, 1fr) auto;
+  padding: 10px 14px 10px 10px;
+  border-radius: 18px;
+  background: #fff;
+}
+.dt-plan .dt-meal__img { width: 88px; height: 88px; border-radius: 14px; }
+.dt-plan .dt-meal__body strong { font-size: 16px; }
+.dt-plan .dt-meal__state {
+  height: 34px;
+  padding: 0 12px;
+  background: #105343;
+  color: #fbf6ea;
+}
+.dt-plan .dt-meal.is-done .dt-meal__state,
+.dt-plan .dt-meal__state.is-done {
+  background: #e7f3ee;
+  color: #105343;
+}
+
+.dt-plan .dx-aside .dx-info {
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.dt-plan .dx-aside .dx-info > div {
+  padding: 10px 12px;
+  border: 1px solid rgba(216, 204, 180, 0.7);
+  border-radius: 14px;
+  background: #fff;
+}
+.dt-plan .dx-card--accent .am-btn { width: 100%; }
+
+@media (max-width: 899px) {
+  .dt-plan .dx-hero__media {
+    margin: 12px 12px 0;
+    border-radius: 18px;
+    max-height: 240px;
+  }
+  .dt-plan .dt-vitality .dt-progress {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "ring"
+      "stats"
+      "macros"
+      "water";
+  }
+  .dt-plan .dt-progress__stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 639px) {
+  .dt-plan .dt-meal { grid-template-columns: 72px minmax(0, 1fr); }
+  .dt-plan .dt-meal__img { width: 72px; height: 72px; }
+  .dt-plan .dt-meal__state { grid-column: 1 / -1; justify-content: center; }
+}

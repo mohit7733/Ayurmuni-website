@@ -13,6 +13,7 @@ export const DIET_PLAN_QUERY_KEYS = [
   'health_disease_id',
   'prakriti',
   'is_paid',
+  'is_purchased',
   'patient_assignment_status',
   'duration',
   'duration_min',
@@ -50,6 +51,14 @@ export const getDietPlans = async (params = {}) => {
   });
 };
 
+/** The signed-in patient's own runs, without the catalog `type=all` filter. */
+export const getMyDietPlans = async (params = {}) => {
+  const qs = toQuery(params);
+  return apiClient(qs ? `patients/diet-plans/?${qs}` : 'patients/diet-plans/', {
+    method: 'GET',
+  });
+};
+
 export const hasMoreDietPlanPages = (response, resultsLength, pageSize = DIET_PLAN_PAGE_SIZE, pageLoaded) => {
   const data = response?.data ?? response;
   if (Array.isArray(data)) return resultsLength >= pageSize;
@@ -77,6 +86,24 @@ export const hasMoreDietPlanPages = (response, resultsLength, pageSize = DIET_PL
   }
   return resultsLength >= pageSize;
 };
+
+/** POST diet/purchase/ — creates the gateway order. Does not start the plan. */
+export const purchaseDietPlan = ({ diet_plan_id, patient_id, payment_gateway } = {}) =>
+  apiClient('diet/purchase/', {
+    method: 'POST',
+    body: JSON.stringify({
+      diet_plan_id,
+      ...(patient_id ? { patient_id: patient_id } : {}),
+      ...(payment_gateway ? { payment_gateway } : {}),
+    }),
+  });
+
+/** POST diet/verify-payment/ — confirms the gateway charge before the plan can start. */
+export const verifyDietPayment = (payload) =>
+  apiClient('diet/verify-payment/', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
 
 export const startDietPlan = async (diet_plan_id, options) => {
   const id = String(diet_plan_id).trim();

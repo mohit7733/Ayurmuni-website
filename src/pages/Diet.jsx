@@ -432,6 +432,12 @@ export default function Diet() {
               action={!wantsAll ? <ViewAll label={H.dietTitle} onClick={() => navigate('/diet?view=all')} /> : null}
             />
 
+            {activeDiet ? (
+              <div className="dt-active">
+                <ActiveDietCard plan={activeDiet} cta="Open active plan" />
+              </div>
+            ) : null}
+
             <div className="st-catalog">
               <nav className="st-cat-col dt-filter-col" aria-label="Filter diet plans">
                 <p className="st-cat-col__eyebrow">Filter</p>
@@ -483,14 +489,14 @@ export default function Diet() {
                         ))}
                       </select>
                     ) : null}
-                    <Button
+                    {/* <Button
                       variant="secondary"
                       size="sm"
                       onClick={() => navigate('/diet/weekly')}
                       leadingIcon={<Calendar size={16} aria-hidden />}
                     >
                       Weekly planner
-                    </Button>
+                    </Button> */}
                   </div>
                 </div>
 
@@ -586,8 +592,6 @@ export default function Diet() {
               </div>
             </div>
           </section>
-
-          {activeDiet ? <ActiveDietCard plan={activeDiet} /> : null}
 
           {concerns.length ? (
             <section className="hm-section hm-panel hm-concerns-panel" aria-labelledby="dt-concerns-title">

@@ -16,6 +16,7 @@ import {
 import { verifyConsultationPayment } from '../services/consultService';
 import { verifyOrderPayment } from '../services/orderService';
 import { verifyPendingPackage } from '../payment/packageCheckout';
+import { verifyPendingDietPlan } from '../payment/dietCheckout';
 import { showSuccessToast } from '../config/key';
 import { useCart } from '../hooks/useCart';
 
@@ -24,6 +25,7 @@ export default function PaymentReturn() {
   const [params] = useSearchParams();
   const [phase, setPhase] = useState('working');
   const [message, setMessage] = useState('');
+  const [recovery, setRecovery] = useState(null);
   const { clearOrderedItems } = useCart();
   const clearRef = useRef(clearOrderedItems);
   clearRef.current = clearOrderedItems;
@@ -37,6 +39,35 @@ export default function PaymentReturn() {
         if (!cancelled) {
           setPhase('failed');
           setMessage('We could not match this payment. Check My Orders, or start checkout again.');
+        }
+        return;
+      }
+      if (pending.kind === 'diet') {
+        const planHref = pending.dietPlanId ? `/diet/${pending.dietPlanId}` : '/diet';
+        try {
+          const result = await verifyPendingDietPlan(pending, Object.fromEntries(params.entries()));
+          if (cancelled) return;
+          if (!result.ok) {
+            setRecovery({ href: planHref, label: 'Back to diet plan' });
+            setPhase('failed');
+            setMessage(result.message || 'Payment was not completed. You can try again.');
+            return;
+          }
+          clearCashfreePending();
+          if (result.started) {
+            showSuccessToast(result.verify?.message || 'Payment confirmed. Your diet plan has started.', 'success');
+          } else {
+            showSuccessToast(
+              result.message || 'Payment confirmed. Tap Start on the plan — you will not be charged again.',
+              'error',
+            );
+          }
+          navigate(planHref, { replace: true });
+        } catch (error) {
+          if (cancelled) return;
+          setRecovery({ href: planHref, label: 'Back to diet plan' });
+          setPhase('failed');
+          setMessage(error?.message || 'Unable to verify payment');
         }
         return;
       }
@@ -141,14 +172,20 @@ export default function PaymentReturn() {
             title="Payment not confirmed"
             description={message}
             action={
-              <>
-                <Button variant="secondary" onClick={() => navigate('/profile/orders')}>
-                  My orders
+              recovery ? (
+                <Button variant="primary" onClick={() => navigate(recovery.href)}>
+                  {recovery.label}
                 </Button>
-                <Button variant="primary" onClick={() => navigate('/cart')}>
-                  Back to cart
-                </Button>
-              </>
+              ) : (
+                <>
+                  <Button variant="secondary" onClick={() => navigate('/profile/orders')}>
+                    My orders
+                  </Button>
+                  <Button variant="primary" onClick={() => navigate('/cart')}>
+                    Back to cart
+                  </Button>
+                </>
+              )
             }
           />
         </section>

@@ -112,12 +112,16 @@ function DoctorCard({ item, fallbackSpeciality, index }) {
           ) : null}
         </div>
 
+
         <div className="hm-doc-card__fav">
           <FavButton
             on={fav}
             label={fav ? `Remove ${name} from favourites` : `Save ${name}`}
             onClick={toggleFav}
           />
+        </div>
+        <div className="hm-doc-card__dietitian">
+          <DietitianBadge doctor={item} />
         </div>
       </div>
 
@@ -128,7 +132,6 @@ function DoctorCard({ item, fallbackSpeciality, index }) {
               {name}
             </button>
           </h3>
-          <DietitianBadge doctor={item} />
           {credential ? <p className="hm-doc-card__cred">{credential}</p> : null}
         </div>
 

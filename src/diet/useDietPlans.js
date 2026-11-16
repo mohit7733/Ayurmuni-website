@@ -5,6 +5,7 @@ import {
   DIET_PLAN_PAGE_SIZE,
   getDietPlanProgress,
   getDietPlans,
+  getMyDietPlans,
   hasMoreDietPlanPages,
   startDietPlan,
   updateDietPlanProgress,
@@ -516,22 +517,42 @@ export default function useDietPlans(options = {}) {
   }, []);
 
   const resolveActiveAssignment = useCallback(async () => {
-    const fromList = plansRef.current.find((p) => getDietListStatus(p) === 'active') || null;
-    if (fromList?.patient_diet_plan_id) return fromList;
-    const res = await getDietPlans({ page: 1, page_size: 100 });
-    if (res?.success === false) return null;
-    const active = normalizeDietPlanList(res).find((p) => getDietListStatus(p) === 'active') || null;
+    const usable = (plan) => (plan?.patient_diet_plan_id ? plan : null);
+    const fromList =
+      plansRef.current.find(
+        (plan) => getDietListStatus(plan) === 'active' && plan.patient_diet_plan_id,
+      ) || plansRef.current.find((plan) => getDietListStatus(plan) === 'active') || null;
+    if (usable(fromList)) return fromList;
+    const res = await getMyDietPlans({ page: 1, page_size: 100, patient_assignment_status: 'active' });
+    let active = null;
+    if (res?.success !== false) {
+      const rows = normalizeDietPlanList(res);
+      active =
+        rows.find((plan) => getDietListStatus(plan) === 'active' && plan.patient_diet_plan_id) ||
+        rows.find((plan) => getDietListStatus(plan) === 'active') ||
+        null;
+    }
+    if (!active?.patient_diet_plan_id) {
+      const all = await getMyDietPlans({ page: 1, page_size: 100 });
+      if (all?.success !== false) {
+        const rows = normalizeDietPlanList(all);
+        active =
+          rows.find((plan) => getDietListStatus(plan) === 'active' && plan.patient_diet_plan_id) ||
+          rows.find((plan) => getDietListStatus(plan) === 'active') ||
+          active;
+      }
+    }
     if (active) {
       setPlans((prev) => {
         const id = String(active.id);
         if (!id) return prev;
-        if (prev.some((p) => String(p.id) === id)) {
-          return prev.map((p) => (String(p.id) === id ? { ...p, ...active } : p));
+        if (prev.some((plan) => String(plan.id) === id)) {
+          return prev.map((plan) => (String(plan.id) === id ? { ...plan, ...active } : plan));
         }
         return [active, ...prev];
       });
     }
-    return active;
+    return usable(active) || active;
   }, []);
 
   const startPlan = useCallback(

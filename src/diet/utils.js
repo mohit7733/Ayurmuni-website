@@ -778,20 +778,35 @@ export const mapDietPlanSummary = (item) => {
     .map((d) => d?.name)
     .filter(Boolean)
     .join(', ');
+  const catalogId = String(item?.diet_plan_id || '').trim();
+  const rowId = String(item?.id ?? '').trim();
+  const explicitAssignment = [
+    item?.patient_diet_plan_id,
+    item?.assignment_id,
+    item?.patient_assignment_id,
+  ]
+    .map((value) => (value == null ? '' : String(value).trim()))
+    .find(Boolean);
+  // Assignment rows use id for the run and diet_plan_id for the catalog plan.
+  const assignmentId =
+    explicitAssignment || (catalogId && rowId && catalogId !== rowId ? rowId : '');
+  const assignmentStatus =
+    item?.patient_assignment_status ??
+    item?.assignment_status ??
+    item?.patient_diet_status ??
+    (assignmentId ? item?.status : null) ??
+    null;
 
   return {
     ...item,
-    id: String(item?.id ?? ''),
+    id: catalogId && assignmentId === rowId ? catalogId : rowId,
+    diet_plan_id: catalogId || undefined,
     name: String(item?.name ?? item?.title ?? 'Diet Plan'),
     title: String(item?.name ?? item?.title ?? 'Diet Plan'),
     short_description: diseaseNames || item?.season || item?.prakriti || '',
     health_diseases: diseases,
-    patient_diet_plan_id: item?.patient_diet_plan_id ?? null,
-    patient_assignment_status:
-      item?.patient_assignment_status ??
-      item?.assignment_status ??
-      item?.patient_diet_status ??
-      null,
+    patient_diet_plan_id: assignmentId || null,
+    patient_assignment_status: assignmentStatus,
     started_at: item?.started_at ?? null,
     repeat_count:
       item?.repeat_count ??

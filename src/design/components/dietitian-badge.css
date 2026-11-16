@@ -6,8 +6,17 @@
   margin-top: 2px;
   white-space: nowrap;
 }
+
 /* Inline inside the slot-picker hero name line. */
 .bkp-dietitian {
   margin: 0 0 0 6px;
   vertical-align: middle;
+}
+
+.hm-doc-card__dietitian {
+  padding: 0 10px;
+  position: absolute;
+  left: 0;
+  bottom: 10px;
+  z-index: 99;
 }
