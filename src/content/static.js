@@ -81,18 +81,6 @@ export const STATIC_COPY = {
     },
   ],
 
-  aboutTitle: 'About Ayurmuni',
-  aboutSubtitle: 'Ayurveda care, made personal',
-  aboutLead:
-    'Ayurmuni brings personalised Ayurveda to everyday life — consultations with MD Ayurvedic doctors, authentic medicines and products, diet and yoga guidance, and doorstep delivery.',
-  aboutPoints: [
-    { title: 'Expert care', text: 'Connect with qualified Ayurvedic doctors matched to your needs.' },
-    { title: 'Personalised wellness', text: 'Plans shaped by your Prakriti, lifestyle, and goals.' },
-    { title: 'Trusted products', text: 'Curated medicines and wellness products from authentic sources.' },
-  ],
-  aboutCtaHome: 'Go to home',
-  aboutCtaConsult: 'Consult a doctor',
-
   contactTitle: 'Contact us',
   contactSubtitle: 'We’re here to help',
   contactLead: 'Reach Ayurmuni support for order, appointment, or account questions.',

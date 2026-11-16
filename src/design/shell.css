@@ -955,7 +955,6 @@
   color: var(--am-text-on-dark);
   position: relative;
   overflow: hidden;
-  padding-bottom: 150px !important;
 }
 
 .site-footer-trust {
@@ -1468,7 +1467,7 @@
 /* Phones (stacked): tight gap from wordmark to the © row. */
 .site-footer:not(.is-mark-pinned) .site-footer-mark,
 .app-shell:not(.auth-shell):not(.is-logged-out) .site-footer:not(.is-mark-pinned) .site-footer-mark { margin-bottom: -6px; }
-.site-footer.is-mark-pinned .site-footer-bar { padding-top: 8px; position: absolute; bottom: 10px;width: 100%; }
+.site-footer.is-mark-pinned .site-footer-bar { padding-top: 8px; }
 /* ---------- © row flush to the bottom (Rohit) ---------- */
 .site-footer { padding-bottom: 0; margin-bottom: 0; min-height: 0; }
 .site-footer .site-footer-bar { margin-bottom: 0; padding-bottom: calc(6px + env(safe-area-inset-bottom)); }
