@@ -143,13 +143,13 @@
 /* —— History —— */
 .or-toolbar {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: var(--am-space-4);
 }
 
 .or-filters {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: inherit;
   gap: var(--am-space-2);
 }
 
@@ -458,9 +458,9 @@
 }
 
 @media (min-width: 1024px) {
-  .or-page {
+  /* .or-page {
     padding-top: var(--am-space-8);
-  }
+  } */
 
   .or-confirm {
     max-width: 560px;

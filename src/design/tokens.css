@@ -201,6 +201,8 @@
   --am-container-max: 1420px;
   --am-container-narrow: 760px;
   --am-gutter: 16px;
+  /* Distance from the viewport edge to Home’s content edge. */
+  --am-frame: max(var(--am-gutter), calc((100% - var(--am-container-max)) / 2 + var(--am-gutter)));
   --am-header-h: 56px;
   --am-tabbar-h: 56px;
   --am-tap-min: 36px;

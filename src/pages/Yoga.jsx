@@ -175,13 +175,13 @@ export default function Yoga() {
               />
             ) : (
               <>
-                {filtering ? (
+                {/* {filtering ? (
                   <div className="svc-more yg-clear">
                     <Button variant="ghost" size="sm" onClick={clearAll}>
                       {Y.clearFilters}
                     </Button>
                   </div>
-                ) : null}
+                ) : null} */}
                 <ul className="svc-meal-grid dlp-grid">
                   {filtered.map((item) => (
                     <li key={item.id}>

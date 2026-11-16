@@ -202,30 +202,32 @@ export default function PackageDetails() {
                 </ul>
               </section>
 
-              {item.includes?.length ? (
-                <section className="pp-detail__panel">
-                  <h3>What&apos;s included ({item.includes.length})</h3>
-                  <ul className="pp-detail__benefits">
-                    {item.includes.map((line, index) => (
-                      <li key={`${line}-${index}`}>
-                        <span className="pp-detail__check"><Check size={12} strokeWidth={3} aria-hidden /></span>
-                        <span>{line}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              ) : null}
+              <div className="pp-detail__includes">
+                {item.includes?.length ? (
+                  <section className="pp-detail__panel">
+                    <h3>What&apos;s included ({item.includes.length})</h3>
+                    <ul className="pp-detail__benefits">
+                      {item.includes.map((line, index) => (
+                        <li key={`${line}-${index}`}>
+                          <span className="pp-detail__check"><Check size={12} strokeWidth={3} aria-hidden /></span>
+                          <span>{line}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                ) : null}
 
-              {item.notIncluded?.length ? (
-                <section className="pp-detail__panel">
-                  <h3>Not included</h3>
-                  <ul className="pp-detail__exclude">
-                    {item.notIncluded.map((line, index) => (
-                      <li key={`${line}-${index}`}>{line}</li>
-                    ))}
-                  </ul>
-                </section>
-              ) : null}
+                {item.notIncluded?.length ? (
+                  <section className="pp-detail__panel">
+                    <h3>Not included</h3>
+                    <ul className="pp-detail__exclude">
+                      {item.notIncluded.map((line, index) => (
+                        <li key={`${line}-${index}`}>{line}</li>
+                      ))}
+                    </ul>
+                  </section>
+                ) : null}
+              </div>
 
               {item.disclaimer?.length ? (
                 <section className="pp-detail__panel">

@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Check, Leaf, Pill, SlidersHorizontal, X } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import ProductCard from '../components/ProductCard';
+import CartAddButton from '../components/CartAddButton';
 import { DietPlanCard, SectionHead, ViewAll } from '../components/ServiceHome';
 import {
   formatRupee,
@@ -14,7 +15,7 @@ import { getServiceCategoryId } from '../home/serviceCategories';
 import useDashboardCategories from '../hooks/useDashboardCategories';
 import useCategoryProducts from '../hooks/useCategoryProducts';
 import useProductCategories from '../hooks/useProductCategories';
-import { getHealthCategories } from '../services/productService';
+import { getHealthCategories, getProductByVariant } from '../services/productService';
 import { getBrands, listBrands, mapBrandItem } from '../services/medicineService';
 import { getOrders, normalizeOrdersList } from '../services/orderService';
 import { mapOrdersToRecentProducts } from '../profile/map';
@@ -22,6 +23,7 @@ import {
   Button,
   ConcernCarousel,
   EmptyState,
+  MediaCard,
   Modal,
   PageBar,
   Rail,
@@ -34,7 +36,7 @@ import {
 } from '../components/ui';
 import { CatalogPageSkeleton } from '../components/skeletons';
 import { filterItemsByQuery } from '../home/concernCatalog';
-import { getProductStockQty } from '../product/stock';
+import { getProductStockQty, hasStockInfo } from '../product/stock';
 import { getCatalogPrice, getCatalogRating, toProductApiSort } from '../utils/productSearchUtils';
 import { orderListedProducts } from '../products/listingOrder';
 import { HOME_COPY as H } from '../content/home';
@@ -194,6 +196,50 @@ export default function Medicines() {
       alive = false;
     };
   }, []);
+
+  // Buy again: the order API carries no stock, so look each variant up with
+  // the same product API the detail page uses. Unknown stock => no button.
+  const [recentStock, setRecentStock] = useState({});
+  useEffect(() => {
+    const ids = [...new Set(recent.map((item) => item.variantId).filter(Boolean))];
+    if (!ids.length) return undefined;
+    let alive = true;
+    (async () => {
+      const entries = await Promise.all(
+        ids.map(async (id) => {
+          try {
+            const res = await getProductByVariant(id);
+            const raw = res?.data ?? res;
+            const product = Array.isArray(raw)
+              ? raw[0]
+              : Array.isArray(raw?.results)
+                ? raw.results[0]
+                : raw;
+            if (!product || product.success === false) return [id, null];
+            const variants = Array.isArray(product.variants) ? product.variants : [];
+            const variant =
+              variants.find(
+                (item) => String(item?.id) === id || String(item?.variant_id) === id,
+              ) || product;
+            return [
+              id,
+              {
+                ...variant,
+                prescription_required:
+                  variant.prescription_required ?? product.prescription_required,
+              },
+            ];
+          } catch {
+            return [id, null];
+          }
+        }),
+      );
+      if (alive) setRecentStock(Object.fromEntries(entries));
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [recent]);
 
   useEffect(() => {
     const node = moreRef.current;
@@ -468,11 +514,11 @@ export default function Medicines() {
                           ))}
                         </ul>
                       )}
-                      {hasMore ? (
+                      {/* {hasMore ? (
                         <div ref={moreRef} className="svc-more" aria-live="polite">
                           {loadingMore ? 'Loading…' : ''}
                         </div>
-                      ) : null}
+                      ) : null} */}
                     </div>
                   </div>
                 </section>
@@ -480,7 +526,7 @@ export default function Medicines() {
 
               {ordersLoading || recent.length > 0 ? (
                 <div className="hm-doctor-row">
-                  <Reveal as="section" className="hm-section" aria-labelledby="med-recent">
+                  <Reveal as="section" className="hm-section st-page--products" aria-labelledby="med-recent">
                     <SectionHead
                       id="med-recent"
                       title="Recent orders"
@@ -488,21 +534,42 @@ export default function Medicines() {
                       action={<ViewAll label="Recent orders" onClick={() => navigate('/profile/orders')} />}
                     />
                     {ordersLoading && recent.length === 0 ? (
-                      <RailSkeleton count={4} />
+                      <RailSkeleton count={4} size="product" />
                     ) : (
-                      <Rail label="Recent orders" className="med-recent-rail">
+                      <Rail label="Recent orders" className="st-recent-rail">
                         {recent.map((item) => (
-                          <RailItem key={`${item.id}-${item.variantId}`}>
-                            <DietPlanCard
-                              item={{
-                                title: item.name,
-                                thumbnail_url: item.image,
-                                season: item.lastOrdered ? `Ordered ${item.lastOrdered}` : 'Recent order',
-                                prakriti: formatRupee(item.price, { decimals: 0 }),
-                              }}
-                              fallbackIcon={Pill}
-                              onClick={() => item.variantId && navigate(`/medicines/${item.variantId}`)}
-                            />
+                          <RailItem key={`${item.id}-${item.variantId}`} size="product">
+                            <div className="st-recent">
+                              <MediaCard
+                                image={item.image}
+                                title={item.name}
+                                subtitle={
+                                  item.lastOrdered
+                                    ? `Ordered ${item.lastOrdered}`
+                                    : 'Recent order'
+                                }
+                                onClick={() =>
+                                  item.variantId &&
+                                  navigate(`/medicines/${item.variantId}`)
+                                }
+                              >
+                                {item.price ? (
+                                  <span className="st-recent__price">
+                                    {formatRupee(item.price)}
+                                  </span>
+                                ) : null}
+                                {hasStockInfo(recentStock[item.variantId]) ? (
+                                  <CartAddButton
+                                    className="am-cart-btn--sm"
+                                    item={{
+                                      ...recentStock[item.variantId],
+                                      variant_id: item.variantId,
+                                      name: item.name,
+                                    }}
+                                  />
+                                ) : null}
+                              </MediaCard>
+                            </div>
                           </RailItem>
                         ))}
                       </Rail>

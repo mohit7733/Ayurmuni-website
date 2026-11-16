@@ -65,7 +65,7 @@ export const getDietPlansBrowse = async (options) => {
   const query = new URLSearchParams();
   query.set('page_size', String(options?.page_size ?? 12));
   appendParam(query, 'health_disease_id', options?.health_disease_id);
-  return apiClient(`patients/diet-plans/?${query.toString()}`, { method: 'GET' });
+  return apiClient(`patients/diet-plans/?type=all&${query.toString()}`, { method: 'GET' });
 };
 
 export const getBanners = async () =>

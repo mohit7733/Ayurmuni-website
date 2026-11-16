@@ -18,7 +18,7 @@ const comingSoon = () => {
 export default function Panchakarma() {
   return (
     <AppShell tab="home">
-      <section className="pk-page">
+      <section className="pk-page pk-offers">
         <PageHeader
           title={T.panchakarmaTitle}
           subtitle={T.panchakarmaPageSubtitle}

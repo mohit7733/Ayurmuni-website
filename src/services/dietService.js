@@ -45,7 +45,7 @@ const toQuery = (params = {}) => {
 
 export const getDietPlans = async (params = {}) => {
   const qs = toQuery(params);
-  return apiClient(qs ? `patients/diet-plans/?${qs}` : 'patients/diet-plans/', {
+  return apiClient(qs ? `patients/diet-plans/?type=all&${qs}` : 'patients/diet-plans/?type=all', {
     method: 'GET',
   });
 };

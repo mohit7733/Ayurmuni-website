@@ -2206,6 +2206,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
+  height: 100%;
   overflow: hidden;
   border: 1px solid var(--am-line);
   border-radius: var(--am-radius-lg);
@@ -2253,11 +2254,13 @@
 }
 .am-media-card__body {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: var(--am-space-1);
   padding: var(--am-space-3) var(--am-space-4) var(--am-space-4);
 }
 .am-media-card__body h3 {
+  min-height: 2lh;
   margin: 0;
   font-family: var(--am-font-body);
   font-size: var(--am-text-sm);
@@ -2275,6 +2278,7 @@
 }
 .am-media-card__body p {
   display: -webkit-box;
+  min-height: 2lh;
   margin: 0;
   overflow: hidden;
   color: var(--am-text-muted);
@@ -2282,6 +2286,18 @@
   line-height: var(--am-leading-normal);
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+}
+.am-media-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+  width: 100%;
+}
+.am-media-card__foot > .am-cart-btn {
+  flex: 0 0 auto;
+  margin-left: auto;
 }
 
 /* ---------- Tiles ---------- */
@@ -2416,6 +2432,34 @@
 
 .am-concerns__track > li {
   flex: 0 0 clamp(108px, calc((100% - 5 * var(--am-space-2)) / 6), 148px);
+}
+
+/* Phones: swipe the row. Labels stay whole instead of riding a moving marquee. */
+@media (max-width: 639px) {
+  .am-concerns__viewport.is-swipe {
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin-inline: 0;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 2px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    mask-image: none;
+  }
+
+  .am-concerns__viewport.is-swipe::-webkit-scrollbar {
+    display: none;
+  }
+
+  .am-concerns__viewport.is-swipe > .am-concerns__track {
+    width: max-content;
+    transform: none !important;
+    animation: none !important;
+  }
+
+  .am-concerns__viewport.is-swipe > .am-concerns__track > li {
+    scroll-snap-align: start;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

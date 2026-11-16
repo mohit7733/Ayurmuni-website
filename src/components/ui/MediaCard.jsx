@@ -1,7 +1,7 @@
 import { Leaf } from 'lucide-react';
 import { cx } from './cx';
 
-export default function MediaCard({ image, title, subtitle, fallbackIcon: FallbackIcon = Leaf, onClick, className }) {
+export default function MediaCard({ image, title, subtitle, fallbackIcon: FallbackIcon = Leaf, onClick, className, children }) {
   return (
     <article className={cx('am-media-card', className)}>
       <div className="am-media-card__img">
@@ -19,6 +19,7 @@ export default function MediaCard({ image, title, subtitle, fallbackIcon: Fallba
         </h3>
         {subtitle ? <p>{subtitle}</p> : null}
       </div>
+      {children ? <div className="am-media-card__foot">{children}</div> : null}
     </article>
   );
 }

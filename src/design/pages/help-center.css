@@ -1,10 +1,12 @@
 .sx-help-page {
   display: flex;
-  width: min(720px, calc(100% - var(--am-gutter) - var(--am-gutter)));
+  width: 100%;
+  max-width: var(--am-container-max);
   flex-direction: column;
   gap: var(--am-space-4);
   margin-inline: auto;
-  padding-block: var(--am-space-3) var(--am-space-10);
+  padding: var(--am-space-3) var(--am-gutter) var(--am-space-10);
+  box-sizing: border-box;
 }
 
 .sx-help-page > .am-page-header {

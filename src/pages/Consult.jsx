@@ -423,11 +423,11 @@ export default function Consult() {
                         ))}
                       </Rail>
                     )}
-                    {hasMore ? (
+                    {/* {hasMore ? (
                       <div ref={moreRef} className="svc-more" aria-live="polite">
                         {loadingMore ? T.loadingMore : ''}
                       </div>
-                    ) : null}
+                    ) : null} */}
                   </section>
                 </div>
               ) : null}

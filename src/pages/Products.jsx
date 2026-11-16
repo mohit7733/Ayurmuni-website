@@ -232,16 +232,16 @@ export default function Products() {
 
   const placeBar = showSkeleton ? 'top' : 'all';
   const searchBar = (
-      <PageBar className="am-page-bar--slot" ref={heroRef} id="st-products-title" title={T.productsTitle}>
-        <SearchField
-          value={search}
-          onChange={setSearch}
-          onSubmit={goSearch}
-          placeholder={T.productsSearch}
-          label={T.productsSearch}
-          suggestions={searchSuggestions(listProducts)}
-        />
-      </PageBar>
+    <PageBar className="am-page-bar--slot" ref={heroRef} id="st-products-title" title={T.productsTitle}>
+      <SearchField
+        value={search}
+        onChange={setSearch}
+        onSubmit={goSearch}
+        placeholder={T.productsSearch}
+        label={T.productsSearch}
+        suggestions={searchSuggestions(listProducts)}
+      />
+    </PageBar>
   );
 
   return (
@@ -318,92 +318,92 @@ export default function Products() {
                   ) : null}
                 </nav>
                 <div className="st-catalog__main">
-              {/* Filter & Sort Controls */}
-              <div className="st-controls">
-                <div className="st-controls__info">
-                  <span>
-                    {filteredAndSortedProducts.length}{" "}
-                    {filteredAndSortedProducts.length === 1
-                      ? "product"
-                      : "products"}
-                  </span>
-                  {hasActiveFilters && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={clearFilters}
-                      leadingIcon={<X size={14} />}
-                    >
-                      Clear filters
-                    </Button>
-                  )}
-                </div>
-                {placeBar === 'all' ? searchBar : null}
-                <div className="st-controls__actions">
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="st-sort-select"
-                    aria-label="Sort products"
-                  >
-                    <option value="relevance">Sort: Relevance</option>
-                    <option value="price_low">Price: Low to High</option>
-                    <option value="price_high">Price: High to Low</option>
-                    <option value="rating">Highest Rated</option>
-                    <option value="name">Name: A-Z</option>
-                  </select>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => setShowFilters(true)}
-                    leadingIcon={<SlidersHorizontal size={16} />}
-                  >
-                    Filters
-                  </Button>
-                </div>
-              </div>
-
-              {filteredAndSortedProducts.length === 0 ? (
-                <EmptyState
-                  title={
-                    hasActiveFilters
-                      ? "No products match filters"
-                      : T.noProducts
-                  }
-                  description={
-                    hasActiveFilters
-                      ? "Try adjusting your filters"
-                      : T.noProductsText
-                  }
-                  action={
-                    hasActiveFilters && (
-                      <Button variant="secondary" onClick={clearFilters}>
-                        Clear filters
+                  {/* Filter & Sort Controls */}
+                  <div className="st-controls">
+                    <div className="st-controls__info">
+                      <span>
+                        {filteredAndSortedProducts.length}{" "}
+                        {filteredAndSortedProducts.length === 1
+                          ? "product"
+                          : "products"}
+                      </span>
+                      {hasActiveFilters && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={clearFilters}
+                          leadingIcon={<X size={14} />}
+                        >
+                          Clear filters
+                        </Button>
+                      )}
+                    </div>
+                    {placeBar === 'all' ? searchBar : null}
+                    <div className="st-controls__actions">
+                      <select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value)}
+                        className="st-sort-select"
+                        aria-label="Sort products"
+                      >
+                        <option value="relevance">Sort: Relevance</option>
+                        <option value="price_low">Price: Low to High</option>
+                        <option value="price_high">Price: High to Low</option>
+                        <option value="rating">Highest Rated</option>
+                        <option value="name">Name: A-Z</option>
+                      </select>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setShowFilters(true)}
+                        leadingIcon={<SlidersHorizontal size={16} />}
+                      >
+                        Filters
                       </Button>
-                    )
-                  }
-                />
-              ) : (
-                <ul className="am-product-grid">
-                  {filteredAndSortedProducts.map((item) => (
-                    <li key={item.variant_id || item.id}>
-                      <ProductCard item={item} cartButton />
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {listHasMore ? (
-                <div className="st-more">
-                  <Button
-                    variant="secondary"
-                    loading={listLoadingMore}
-                    onClick={listLoadMore}
-                  >
-                    {listLoadingMore ? T.loadingMore : T.loadMore}
-                  </Button>
-                </div>
-              ) : null}
-              {refreshing ? <p className="am-sr-only">{T.refreshing}</p> : null}
+                    </div>
+                  </div>
+
+                  {filteredAndSortedProducts.length === 0 ? (
+                    <EmptyState
+                      title={
+                        hasActiveFilters
+                          ? "No products match filters"
+                          : T.noProducts
+                      }
+                      description={
+                        hasActiveFilters
+                          ? "Try adjusting your filters"
+                          : T.noProductsText
+                      }
+                      action={
+                        hasActiveFilters && (
+                          <Button variant="secondary" onClick={clearFilters}>
+                            Clear filters
+                          </Button>
+                        )
+                      }
+                    />
+                  ) : (
+                    <ul className="am-product-grid">
+                      {filteredAndSortedProducts.map((item) => (
+                        <li key={item.variant_id || item.id}>
+                          <ProductCard item={item} cartButton />
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {listHasMore ? (
+                    <div className="st-more">
+                      <Button
+                        variant="secondary"
+                        loading={listLoadingMore}
+                        onClick={listLoadMore}
+                      >
+                        {listLoadingMore ? T.loadingMore : T.loadMore}
+                      </Button>
+                    </div>
+                  ) : null}
+                  {refreshing ? <p className="am-sr-only">{T.refreshing}</p> : null}
                 </div>
               </div>
             </section>
@@ -451,8 +451,7 @@ export default function Products() {
                               item.variantId &&
                               navigate(`/products/${item.variantId}`)
                             }
-                          />
-                          <div className="st-recent__foot">
+                          >
                             {item.price ? (
                               <span className="st-recent__price">
                                 {formatRupee(item.price)}
@@ -468,7 +467,8 @@ export default function Products() {
                                 }}
                               />
                             ) : null}
-                          </div>
+                          </MediaCard>
+
                         </div>
                       </RailItem>
                     ))}

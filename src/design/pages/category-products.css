@@ -1,7 +1,7 @@
 /* Brand / category listing (/products/category) — premium store system. */
 .st-page.cp-page {
   gap: 12px;
-  max-width: 1440px;
+  max-width: var(--am-container-max);
   padding-top: 14px;
   padding-bottom: 28px;
   font-family: var(--am-font-sans, 'Satoshi', 'Gilroy', system-ui, sans-serif);
@@ -109,6 +109,7 @@
 
 .cp-hero--compact {
   padding: 12px 16px;
+  margin-bottom: 16px;
 }
 
 .cp-aside-group + .cp-aside-group {

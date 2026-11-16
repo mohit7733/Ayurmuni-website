@@ -7,8 +7,11 @@
 }
 
 .ab-wrap {
-  width: min(1180px, calc(100% - var(--am-gutter) - var(--am-gutter)));
+  width: 100%;
+  max-width: var(--am-container-max);
   margin-inline: auto;
+  padding-inline: var(--am-gutter);
+  box-sizing: border-box;
 }
 
 .ab-page h1,
@@ -85,7 +88,7 @@
 }
 
 .ab-services .ab-wrap {
-  width: min(1220px, calc(100% - var(--am-gutter) - var(--am-gutter)));
+  width: 100%;
 }
 
 .ab-services h2 {

@@ -191,7 +191,7 @@
 
 .app-shell .am-page-header {
   gap: var(--am-space-3) !important;
-  margin-bottom: var(--am-space-5) !important;
+  /* margin-bottom: var(--am-space-5) !important; */
 }
 
 .app-shell .detail-cta {

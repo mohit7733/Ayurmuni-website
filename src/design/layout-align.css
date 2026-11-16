@@ -1,20 +1,50 @@
-/* Page content aligns with the navbar: the header bar is full width with --am-gutter
-   padding, so every route container uses the same full width + --am-gutter.
-   Selectors start at .app-shell so they win over lazily loaded page CSS without !important.
-   Only the outer container is touched; inner layouts are unchanged. */
+/* Page content aligns with Home and the navbar.
+   Home’s content box is max-width: --am-container-max, centered, with
+   padding-inline: --am-gutter (16 / 24 / 32 / 40 by breakpoint).
+   Selectors start at .app-shell so they win over lazily loaded page CSS.
+   Only the outer container is touched; inner layouts are unchanged.
+   Full-bleed shells (home hero, about bands, splash, auth, video) are omitted. */
 
-/* Wrappers that capped width (detail 1200px, notifications 980px, product 1320px at 1440+) or subtracted the gutter
-   twice (width: min(container, 100% - 2 * gutter) plus gutter padding). */
-.app-shell .app-shell-body > .catalog-page,
-.app-shell .app-shell-body > .detail-page,
-.app-shell .app-shell-body > .dx-page,
-.app-shell .app-shell-body > .nt-page,
-.app-shell .app-shell-body > .pd-page {
+.app-shell:not(.auth-shell) .app-shell-body > :is(
+  .catalog-page,
+  .detail-page,
+  .dx-page,
+  .nt-page,
+  .pd-page,
+  .pf-page,
+  .cs-page,
+  .st-page,
+  .sx-page,
+  .pp-page,
+  .or-page,
+  .co-page,
+  .bk-page,
+  .cp-page,
+  .rw-page,
+  .pk-offers
+) {
   width: 100%;
-  max-width: none;
-  margin-inline: 0;
+  max-width: var(--am-container-max);
+  margin-inline: auto;
   padding-inline: var(--am-gutter);
   box-sizing: border-box;
+}
+
+/* Full-width bars stay edge to edge; their contents line up with the Home column. */
+.app-shell .pd-sticky,
+.app-shell .dp-sticky,
+.app-shell .ct-sticky,
+.app-shell .cp-bar,
+.app-shell .sx-sticky-footer {
+  padding-inline: var(--am-frame);
+}
+
+.app-shell .bk-slots-sticky,
+.app-shell .bk-pay-sticky,
+.app-shell .bk-confirm-sticky,
+.app-shell .bk-calendar-sticky {
+  left: var(--am-frame);
+  right: var(--am-frame);
 }
 
 /* Product detail: the gallery was centred inside its column, leaving a gap at the left edge. */

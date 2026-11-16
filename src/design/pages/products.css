@@ -493,7 +493,7 @@
 .st-page--products .st-hero .am-search { flex: 1 1 auto; min-width: 0; }
 .st-page--products .am-tile-grid { gap: 4px 8px; }
 .st-page--products .am-tile { padding: 4px 6px; gap: 6px; }
-.st-page--products .st-controls { margin: 0 0 16px; padding: 0; min-height: 0; }
+.st-page--products .st-controls { margin: 0 0 16px; min-height: 0; }
 
 /* Medicines card: the panel already pads the title, so don't stack another
    gap under it. Sticky "top" is measured against this overflow-hidden card,
@@ -518,6 +518,19 @@
 }
 .st-page--products .st-hero__row { display: flex; flex-wrap: nowrap; }
 .st-page--products .st-hero__row > .am-btn { flex: none; }
+@media (max-width: 520px) {
+  .st-page--products .st-hero__row,
+  .st-page--products .st-hero--modern .st-hero__row {
+    flex-wrap: wrap;
+  }
+
+  .st-page--products .st-hero .am-search,
+  .st-page--products .st-hero__search {
+    flex: 1 1 100%;
+    min-width: 0;
+    width: 100%;
+  }
+}
 @media (min-width: 1024px) {
   /* categories span the panel edge to edge, like homepage quick links */
   .st-page--products .am-tile-grid { grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); }
@@ -863,9 +876,11 @@
 
 /* Buy again: same card size as homepage product rails */
 .st-page--products .st-recent-rail {
+  align-items: stretch;
   gap: 8px;
 }
 .st-page--products .st-recent-rail .am-rail__item--product {
+  display: flex;
   flex: 0 0 min(46%, 200px);
 }
 @media (min-width: 1024px) {
@@ -873,9 +888,15 @@
     flex-basis: 210px;
   }
 }
+.st-page--products .st-recent {
+  flex: 1;
+  height: 100%;
+}
 .st-page--products .st-recent .am-media-card {
+  flex: 1;
   border-radius: 14px;
   box-shadow: var(--am-shadow-xs);
+  height: 100%;
 }
 .st-page--products .st-recent .am-media-card:hover {
   transform: none;
@@ -891,6 +912,7 @@
   padding: 8px 8px 0;
 }
 .st-page--products .st-recent .am-media-card__body h3 {
+  min-height: calc(1.3em * 2);
   font-size: 12px;
   line-height: 1.3;
 }
@@ -901,16 +923,16 @@
   -webkit-box-orient: vertical;
 }
 .st-page--products .st-recent .am-media-card__body p {
+  min-height: 1.4em;
   font-size: 11px;
   -webkit-line-clamp: 1;
 }
-.st-page--products .st-recent__foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: 4px;
-  padding: 0 8px 8px;
+.st-page--products .st-recent .am-media-card__foot {
+  margin-top: auto;
+  padding: 4px 8px 8px;
+}
+.st-page--products .st-recent .am-media-card__foot .am-cart-btn--sm {
+  min-width: 104px;
 }
 /* homepage card action spacing for the opt-in cart pill */
 .st-page--products .am-product-card__action,
@@ -918,8 +940,7 @@
 
 /* ── Wide screens: cap content like a storefront (1440px + gutters) ── */
 .st-page--products {
-  max-width: calc(1440px + 2 * var(--am-gutter, 32px));
-  /* margin-inline: auto; */
+  max-width: var(--am-container-max);
 }
 /* Hero decorative fallback (no product images from the API) */
 .st-page--products .st-hero__ornament {

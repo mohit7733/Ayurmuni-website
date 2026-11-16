@@ -12,15 +12,24 @@ export default function ConcernCarousel({ label = 'Health concerns', className, 
   const [step, setStep] = useState(0);
   const [perView, setPerView] = useState(1);
   const [reduced, setReduced] = useState(false);
+  const [narrow, setNarrow] = useState(false);
   const [jumping, setJumping] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(0);
 
   useEffect(() => {
-    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const sync = () => setReduced(media.matches);
+    const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const phone = window.matchMedia('(max-width: 639px)');
+    const sync = () => {
+      setReduced(motion.matches);
+      setNarrow(phone.matches);
+    };
     sync();
-    media.addEventListener('change', sync);
-    return () => media.removeEventListener('change', sync);
+    motion.addEventListener('change', sync);
+    phone.addEventListener('change', sync);
+    return () => {
+      motion.removeEventListener('change', sync);
+      phone.removeEventListener('change', sync);
+    };
   }, []);
 
   const measure = useCallback(() => {
@@ -49,11 +58,12 @@ export default function ConcernCarousel({ label = 'Health concerns', className, 
   }, [measure]);
 
   // Marquee: continuous loop at every width, even when every item already fits.
+  // Phones use a native swipe rail instead, so labels stay whole and tappable.
   const loopWidth = count * step;
-  const marqueeOn = marquee && !reduced && count > 0 && step > 0;
+  const marqueeOn = marquee && !reduced && !narrow && count > 0 && step > 0;
   const copies = marqueeOn ? Math.max(2, Math.ceil(viewportWidth / loopWidth) + 1) : 1;
 
-  const canSlide = !marquee && count > perView && step > 0;
+  const canSlide = !marquee && !narrow && count > perView && step > 0;
   const held = reduced || !canSlide;
 
   useEffect(() => {
@@ -101,7 +111,7 @@ export default function ConcernCarousel({ label = 'Health concerns', className, 
       aria-roledescription="carousel"
       aria-label={label}
     >
-      <div className="am-concerns__viewport" ref={viewportRef}>
+      <div className={cx('am-concerns__viewport', narrow && 'is-swipe')} ref={viewportRef}>
         <ul
           ref={trackRef}
           className={cx('am-concerns__track', jumping && 'is-instant')}

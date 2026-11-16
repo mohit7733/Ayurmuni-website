@@ -27,56 +27,15 @@ export default function SiteFooter() {
     navigateToLogin('Please login to continue');
   };
 
-  // Pin the background mark so the emblem's top lines up with the CARE column's
-  // CARE heading (top of the link columns). Falls back to the stacked layout when that row is absent.
+  // The emblem and wordmark stay in normal flow under the links. Pinning them
+  // over the columns covered headings and the download row as the grid reflowed.
   useLayoutEffect(() => {
     const footer = footerRef.current;
     if (!footer) return undefined;
     const inner = footer.querySelector('.site-footer-inner');
-    const mark = footer.querySelector('.site-footer-mark');
-    const place = () => {
-      footer.classList.remove('is-mark-pinned');
-      inner.style.paddingBottom = '';
-      if (!window.matchMedia('(min-width: 768px)').matches) {
-        // Phones: same background layer, its base resting on the bottom of the link columns.
-        footer.classList.add('is-mark-pinned');
-        const fTop = footer.getBoundingClientRect().top;
-        const contentBottom = Math.max(
-          ...[...inner.children].map((n) => n.getBoundingClientRect().bottom - fTop),
-        );
-        footer.style.setProperty('--mark-top', `${Math.max(350, Math.round(contentBottom - mark.offsetHeight))}px`);
-        return;
-      }
-      const care = [...footer.querySelectorAll('.site-footer-col')].find(
-        (n) => n.getAttribute('aria-label') === 'Care',
-      );
-      const head = care?.querySelector('h2');
-      if (!head) return;
-      footer.classList.add('is-mark-pinned');
-      const fTop = footer.getBoundingClientRect().top;
-      const top = head.getBoundingClientRect().top - fTop;
-      footer.style.setProperty('--mark-top', `${Math.max(350, Math.round(top))}px`);
-      const markBottom = top + mark.offsetHeight;
-      // Lowest real content in the grid (ignores the inner's own padding).
-      const contentBottom = Math.max(
-        ...[...inner.children].map((n) => n.getBoundingClientRect().bottom - fTop),
-      );
-      const innerTop = inner.getBoundingClientRect().top - fTop;
-      const padTop = parseFloat(getComputedStyle(inner).paddingTop) || 0;
-      const target = Math.max(markBottom, contentBottom) + 2;
-      // Bottom padding so the © row starts just below whichever ends lower.
-      const contentHeight = contentBottom - innerTop - padTop;
-      inner.style.paddingBottom = `${Math.max(0, Math.ceil(target - innerTop - padTop - contentHeight))}px`;
-    };
-    place();
-    const ro = new ResizeObserver(place);
-    ro.observe(footer.querySelector('.site-footer-trust'));
-    window.addEventListener('resize', place);
-    document.fonts?.ready.then(place);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener('resize', place);
-    };
+    footer.classList.remove('is-mark-pinned');
+    if (inner) inner.style.paddingBottom = '';
+    footer.style.removeProperty('--mark-top');
   }, [loggedIn]);
 
   return (
@@ -138,7 +97,7 @@ export default function SiteFooter() {
         ))}
         <div className="site-footer-app-store">
           <h2>Download the Ayurmuni app</h2>
-          <a href="https://play.google.com/store/apps/details?id=com.ayurmuniecosystem" target="_blank" rel="noopener noreferrer"><img src="public/images/playstore.avif" alt="App Store" className='' style={{ width: '150px' }} /></a>
+          <a href="https://play.google.com/store/apps/details?id=com.ayurmuniecosystem" target="_blank" rel="noopener noreferrer"><img src="/images/playstore.avif" alt="Get it on Google Play" /></a>
 
         </div>
       </div>

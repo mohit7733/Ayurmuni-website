@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
   BadgeCheck,
+  CalendarDays,
+  Flame,
   Flower2,
   Leaf,
   LockKeyhole,
@@ -16,13 +18,14 @@ import {
   Stethoscope,
   Users,
   Heart,
+  Star,
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import DiseaseSelectionModal from '../components/DiseaseSelectionModal';
 // TEMP hidden per Rohit — Health Lab section commented out below
 // import LabHomeBanner from '../components/LabHomeBanner';
 import { Utils } from '../common/utils';
-import { getBannerImageUri, resolveImageUrl } from '../home/catalog';
+import { formatRupee, getBannerImageUri, resolveImageUrl } from '../home/catalog';
 import useBrands from '../hooks/useBrands';
 import {
   mapAppScreenToPath,
@@ -74,6 +77,7 @@ import '../design/pages/dummy-offers.css';
 import '../design/pages/plan-cards.css';
 import { isCarePlan, planDiscount } from '../packages/planTheme';
 import '../design/pages/orange-lab.css';
+import { getDietPlanCoverUrl, getDietPlanRatingLabel } from '../diet/utils';
 
 let prakritiModalShownThisSession = false;
 let diseaseModalShownThisSession = false;
@@ -298,18 +302,45 @@ function YogaPoseRailSkeleton({ label, count = 4 }) {
   );
 }
 
+function dietDurationLabel(plan) {
+  const raw = String(plan?.duration || '').trim();
+  if (raw) return raw;
+  const days = Number(plan?.duration_days ?? plan?.total_days ?? plan?.days ?? plan?.plan_duration);
+  return Number.isFinite(days) && days > 0 ? `${days} days` : '';
+}
+
+function dietCaloriesLabel(plan) {
+  const raw = String(
+    plan?.calories ?? plan?.calorie ?? plan?.daily_calories ?? plan?.total_calories ?? plan?.calorie_target ?? '',
+  ).trim();
+  if (!raw) return '';
+  return /^\d+$/.test(raw) ? `${raw} kcal` : raw;
+}
+
 function DietPlanCard({ item, onClick }) {
-  const season = shortLabel(item.season) || shortLabel(item.short_description);
+  const cover = getDietPlanCoverUrl(item);
+  const season = shortLabel(item.season);
   const prakriti = shortLabel(item.prakriti);
+  const duration = dietDurationLabel(item);
+  const calories = dietCaloriesLabel(item);
+  const free = item.is_paid === false || Number(item.price) === 0;
+  const rating = getDietPlanRatingLabel(item);
+  const price = free ? 'Free' : item.price ? formatRupee(item.price) : '';
+  const facts = [
+    prakriti ? { key: 'p', icon: Leaf, text: prakriti } : null,
+    duration ? { key: 'd', icon: CalendarDays, text: duration } : null,
+    calories ? { key: 'k', icon: Flame, text: calories } : null,
+  ].filter(Boolean);
 
   return (
-    <article className="hm-meal">
+    <article className="hm-meal hm-diet-card">
       <div className="hm-meal__media">
-        {item.thumbnail_url ? (
-          <img src={item.thumbnail_url} alt="" loading="lazy" decoding="async" />
+        {cover ? (
+          <img src={cover} alt="" loading="lazy" decoding="async" />
         ) : (
           <Salad size={28} aria-hidden />
         )}
+        {free ? <span className="hm-diet-card__badge">Free</span> : null}
       </div>
       <div className="hm-meal__copy">
         {season ? <p className="hm-meal__season">{season}</p> : null}
@@ -318,7 +349,27 @@ function DietPlanCard({ item, onClick }) {
             {item.title}
           </button>
         </h3>
-        {/* {prakriti ? <p>{prakriti}</p> : null} */}
+        {facts.length ? (
+          <ul className="hm-diet-card__facts" aria-label="Plan details">
+            {facts.map(({ key, icon: Icon, text }) => (
+              <li key={key}>
+                <Icon size={12} aria-hidden />
+                <span>{text}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        {price || rating ? (
+          <p className="hm-diet-card__price">
+            {price ? <strong className={free ? 'is-free' : undefined}>{price}</strong> : <span />}
+            {rating ? (
+              <span className="hm-diet-card__rate">
+                <Star size={12} aria-hidden />
+                {rating}
+              </span>
+            ) : null}
+          </p>
+        ) : null}
       </div>
     </article>
   );

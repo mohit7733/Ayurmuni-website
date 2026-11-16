@@ -131,7 +131,7 @@
   .am-page-header__title,
   .am-section-header__title,
   h1, h2, h3 {
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
   }
 
   /* Sticky bars clear the floating tab chrome */
@@ -203,8 +203,15 @@
 }
 
 @media (max-width: 399px) {
-  .site-footer-trust { grid-template-columns: minmax(0, 1fr); gap: var(--am-space-3); }
+  .site-footer-trust { gap: var(--am-space-3); }
   .site-footer-inner { column-gap: var(--am-space-3); }
+}
+
+@media (min-width: 768px) {
+  .site-footer .site-footer-bar .site-footer-legal {
+    width: 100%;
+    justify-content: space-between;
+  }
 }
 
 /* Footer wordmark: left edge on the content gutter (same as logo / trust icons),
@@ -214,7 +221,7 @@
 .site-footer .site-footer-mark span {
   box-sizing: border-box;
   width: 100%;
-  max-width: var(--am-container);
+  max-width: 100%;
   margin-inline: auto;
   padding-inline: var(--am-gutter);
   text-align: left;
@@ -284,6 +291,16 @@
   mask-image: linear-gradient(180deg, #000 45%, transparent 75%);
 }
 
+/* Desktop keeps the emblem and AYURMUNI name, with room under them so the
+   cart and Ayurchat (fixed 56px up, about 52px tall) sit above the copyright. */
+/* @media (min-width: 901px) {
+  .site-footer:not(.is-mark-pinned) .site-footer-mark,
+  .app-shell:not(.auth-shell):not(.is-logged-out) .site-footer:not(.is-mark-pinned) .site-footer-mark {
+    display: block;
+    margin-bottom: 96px;
+  }
+} */
+
 /* Active diet plan banner (Home + Diet): no "Next meal" line; progress row starts at the
    plan name's left edge and ends at the View plan button's right edge. Appointment card untouched. */
 .hm-page .hm-pair .am-diet-active:not(.hm-appt) { grid-template-areas: 'media body cta' '. prog prog'; }
@@ -298,4 +315,91 @@
 }
 @media (max-width: 639px) {
   .dt-page .am-diet-active .am-diet-active__progress { grid-column: 1 / -1; }
+}
+
+/* =====================================================================
+   Small screens: section headers, labels, and shells.
+   Page CSS loaded later can still refine a single screen.
+   ===================================================================== */
+@media (max-width: 767px) {
+  .am-tile__label {
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+
+  .am-rail,
+  .am-modal__panel,
+  .site-popover,
+  .site-user-menu {
+    max-width: 100%;
+  }
+
+  /* 16px keeps iOS from zooming the page when a field is focused. */
+  .auth-shell .au-phone input,
+  .auth-shell .au-otp input,
+  .app-shell :is(.form-field input, .form-field select, .form-field textarea, .am-input, .am-textarea):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="hidden"]) {
+    font-size: 16px !important;
+  }
+}
+
+@media (max-width: 639px) {
+  .am-section-header:not(.am-section-header--center) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 2px 8px;
+    min-width: 0;
+  }
+
+  .am-section-header:not(.am-section-header--center) .am-section-header__copy {
+    display: contents;
+  }
+
+  .am-section-header:not(.am-section-header--center) > .am-eyebrow,
+  .am-section-header:not(.am-section-header--center) .am-eyebrow {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .am-section-header:not(.am-section-header--center) .am-section-header__title {
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+    white-space: normal;
+  }
+
+  .am-section-header:not(.am-section-header--center):has(.am-eyebrow) .am-section-header__title {
+    grid-row: 2;
+  }
+
+  .am-section-header:not(.am-section-header--center) .am-section-header__desc {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    max-width: none;
+    white-space: normal;
+  }
+
+  .am-section-header:not(.am-section-header--center):has(.am-eyebrow) .am-section-header__desc {
+    grid-row: 3;
+  }
+
+  .am-section-header:not(.am-section-header--center) .am-section-header__action {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .am-section-header:not(.am-section-header--center):has(.am-eyebrow) .am-section-header__action {
+    grid-row: 2;
+  }
+
+  .hm-doctor-head__row {
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .hm-doctor-head__title {
+    min-width: 0;
+    overflow-wrap: break-word;
+  }
 }
