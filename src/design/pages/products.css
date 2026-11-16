@@ -919,7 +919,7 @@
 /* ── Wide screens: cap content like a storefront (1440px + gutters) ── */
 .st-page--products {
   max-width: calc(1440px + 2 * var(--am-gutter, 32px));
-  margin-inline: auto;
+  /* margin-inline: auto; */
 }
 /* Hero decorative fallback (no product images from the API) */
 .st-page--products .st-hero__ornament {

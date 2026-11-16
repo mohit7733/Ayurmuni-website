@@ -135,37 +135,52 @@ export const PROFILE_COPY = {
   ],
 };
 
-export const PROFILE_ACCOUNT = [
-  { title: 'My Orders', to: '/profile/orders' },
-  { title: 'My Consultations', to: '/profile/appointments' },
-  { title: 'My Plans', to: '/profile/plans' },
-  { title: 'Ayurchat', to: '/profile/chats' },
-  { title: 'Consultation History', to: '/consult/history' },
-  { title: 'Medical Records', to: '/profile/records' },
-  { title: 'Patient Details', to: '/profile/patients' },
-  { title: 'Saved Address', to: '/profile/addresses' },
-  { title: 'Favourite Doctor', to: '/profile/favourite-doctors' },
-  { title: 'Wishlist', to: '/profile/wishlist' },
-  { title: 'My Rewards', to: '/profile/rewards' },
-  { title: 'Cart', to: '/cart' },
-  { title: 'Analysis', to: '/prakriti-profile' },
-  { title: 'Medical History', to: '/medical-history' },
+const PROFILE_CARE = [
+  { title: 'My Consultations', to: '/profile/appointments', icon: 'calendar' },
+  { title: 'Consultation History', to: '/consult/history', icon: 'history' },
+  { title: 'My Plans', to: '/profile/plans', icon: 'plans' },
+  { title: 'Ayurchat', to: '/profile/chats', icon: 'chat' },
+  { title: 'Favourite Doctor', to: '/profile/favourite-doctors', icon: 'heart' },
 ];
 
+const PROFILE_HEALTH = [
+  { title: 'Medical Records', to: '/profile/records', icon: 'records' },
+  { title: 'Medical History', to: '/medical-history', icon: 'file' },
+  { title: 'Analysis', to: '/prakriti-profile', icon: 'activity' },
+  { title: 'Patient Details', to: '/profile/patients', icon: 'users' },
+];
+
+const PROFILE_SHOP = [
+  { title: 'My Orders', to: '/profile/orders', icon: 'package' },
+  { title: 'Wishlist', to: '/profile/wishlist', icon: 'bookmark' },
+  { title: 'Cart', to: '/cart', icon: 'cart' },
+  { title: 'My Rewards', to: '/profile/rewards', icon: 'gift' },
+  { title: 'Saved Address', to: '/profile/addresses', icon: 'pin' },
+];
+
+export const PROFILE_ACCOUNT = [...PROFILE_CARE, ...PROFILE_HEALTH, ...PROFILE_SHOP];
+
 export const PROFILE_PREFERENCE = [
-  { title: 'Payments', to: '/profile/payments' },
-  { title: 'Settings', to: '/profile/settings' },
-  { title: 'Privacy Center', to: '/profile/privacy' },
-  { title: 'Need help?', to: '/profile/faq' },
-  { title: 'Feedback & Information', to: '/profile/feedback' },
+  { title: 'Payments', to: '/profile/payments', icon: 'card' },
+  { title: 'Settings', to: '/profile/settings', icon: 'settings' },
+  { title: 'Privacy Center', to: '/profile/privacy', icon: 'shield' },
+  { title: 'Need help?', to: '/profile/faq', icon: 'help' },
+  { title: 'Feedback & Information', to: '/profile/feedback', icon: 'feedback' },
+];
+
+export const PROFILE_BOARDS = [
+  { title: 'Care', hint: 'Consults, plans and chats', items: PROFILE_CARE },
+  { title: 'Health', hint: 'Records, history and prakriti', items: PROFILE_HEALTH },
+  { title: 'Orders', hint: 'Purchases, wishlist and rewards', items: PROFILE_SHOP },
+  { title: 'Preferences', hint: 'Payments, privacy and help', items: PROFILE_PREFERENCE },
 ];
 
 export const PROFILE_EXPLORE = [
-  { title: 'Doctors', subtitle: 'Browse experts', to: '/consult/doctors' },
-  { title: 'Medicines', subtitle: 'Ayurvedic care', to: '/medicines' },
-  { title: 'Products', subtitle: 'Wellness picks', to: '/products' },
-  { title: 'Yoga', subtitle: 'Sessions', to: '/yoga' },
-  { title: 'Mentor', subtitle: 'Consult a guide', to: '/mentor' },
-  { title: 'Diet Plan', subtitle: 'Personalized', to: '/diet' },
-  { title: 'Prakriti', subtitle: 'Know your type', to: '/prakriti-profile' },
+  { title: 'Doctors', subtitle: 'Browse experts', to: '/consult/doctors', icon: 'stethoscope' },
+  { title: 'Medicines', subtitle: 'Ayurvedic care', to: '/medicines', icon: 'pill' },
+  { title: 'Products', subtitle: 'Wellness picks', to: '/products', icon: 'bag' },
+  { title: 'Yoga', subtitle: 'Sessions', to: '/yoga', icon: 'yoga' },
+  { title: 'Mentor', subtitle: 'Consult a guide', to: '/mentor', icon: 'mentor' },
+  { title: 'Diet Plan', subtitle: 'Personalized', to: '/diet', icon: 'diet' },
+  { title: 'Prakriti', subtitle: 'Know your type', to: '/prakriti-profile', icon: 'leaf' },
 ];

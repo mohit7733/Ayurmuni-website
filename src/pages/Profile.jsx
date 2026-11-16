@@ -1,7 +1,40 @@
 import { useEffect, useRef, useState } from 'react';
 import { logoutOneSignalUser } from '../services/pushNotificationService';
 import { useNavigate } from 'react-router-dom';
-import { Camera, ChevronRight, Eye, LogOut, Trash2 } from 'lucide-react';
+import {
+  Activity,
+  Bookmark,
+  CalendarCheck,
+  Camera,
+  ChevronRight,
+  CircleHelp,
+  ClipboardList,
+  CreditCard,
+  Eye,
+  FileHeart,
+  FileText,
+  Flower2,
+  Gift,
+  Heart,
+  History,
+  Leaf,
+  LogOut,
+  MapPin,
+  MessageCircle,
+  MessageSquare,
+  Package,
+  Pencil,
+  Pill,
+  Settings,
+  Shield,
+  ShoppingBag,
+  ShoppingCart,
+  Stethoscope,
+  Trash2,
+  UserRound,
+  Users,
+  Utensils,
+} from 'lucide-react';
 import AppShell from '../components/AppShell';
 import PageHeader from '../components/PageHeader';
 import { Utils } from '../common/utils';
@@ -18,13 +51,42 @@ import useProfileDashboardStats from '../hooks/useProfileDashboardStats';
 import { LOGGED_OUT_STATS, buildPhotoOptions, buildProfilePayload } from '../profile/dashboardStats';
 import { useLocation as useDeliveryLocation } from '../context/LocationContext';
 import { Button, Modal, SectionHold } from '../components/ui';
-import {
-  PROFILE_ACCOUNT,
-  PROFILE_COPY as T,
-  PROFILE_EXPLORE,
-  PROFILE_PREFERENCE,
-} from '../content/profile';
+import { PROFILE_BOARDS, PROFILE_COPY as T, PROFILE_EXPLORE } from '../content/profile';
 import '../design/pages/profile.css';
+
+const PROFILE_ICONS = {
+  activity: Activity,
+  bag: ShoppingBag,
+  bookmark: Bookmark,
+  calendar: CalendarCheck,
+  card: CreditCard,
+  cart: ShoppingCart,
+  chat: MessageCircle,
+  diet: Utensils,
+  feedback: MessageSquare,
+  file: FileText,
+  gift: Gift,
+  heart: Heart,
+  help: CircleHelp,
+  history: History,
+  leaf: Leaf,
+  mentor: UserRound,
+  package: Package,
+  pill: Pill,
+  pin: MapPin,
+  plans: ClipboardList,
+  records: FileHeart,
+  settings: Settings,
+  shield: Shield,
+  stethoscope: Stethoscope,
+  users: Users,
+  yoga: Flower2,
+};
+
+function ProfileIcon({ name, size = 18 }) {
+  const Icon = PROFILE_ICONS[name] || Leaf;
+  return <Icon size={size} strokeWidth={1.75} aria-hidden />;
+}
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -245,126 +307,124 @@ export default function Profile() {
 
   return (
     <AppShell tab="profile">
-      <section className="pf-page pf-hub">
-        <PageHeader
-          title={T.title}
-          subtitle={T.subtitle}
-          hideBack
-          actions={
-            <Button variant="secondary" size="sm" onClick={() => navigate('/profile/edit')}>
-              {T.edit}
-            </Button>
-          }
-        />
-
-        <div className="pf-hero">
-          <button
-            type="button"
-            className="pf-hero__avatar pf-hero__avatar--btn"
-            aria-label={photo ? 'Profile photo options' : 'Add profile photo'}
-            aria-busy={photoBusy}
-            disabled={photoBusy}
-            onClick={() => (photo ? setPhotoSheet(true) : fileRef.current?.click())}
-          >
-            {photo ? <img src={photo} alt="" /> : <span>{name.charAt(0)}</span>}
-            <i className="pf-hero__camera" aria-hidden>
-              <Camera size={12} />
-            </i>
-          </button>
-          <input ref={fileRef} type="file" accept="image/*" hidden onChange={onPickPhoto} />
-          <div className="pf-hero__copy">
-            <h2>{name}</h2>
-            <p className="pf-hero__meta">
-              {phone ? `+91 ${phone}` : ''}
-              {user?.email ? `${phone ? ' · ' : ''}${user.email}` : ''}
-            </p>
-            <Button
-              className="pf-hero__link"
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/prakriti-profile')}
-            >
-              {T.viewPrakriti}
-            </Button>
-          </div>
-        </div>
-
-        <div className="pf-stats" role="group" aria-label="Your activity">
-          {(dashboardStats || LOGGED_OUT_STATS).map((stat) => (
-            <button key={stat.key} type="button" className="pf-stat" onClick={() => navigate(stat.to)}>
-              <strong>{stat.value}</strong>
-              <small>{stat.label}</small>
-            </button>
-          ))}
-        </div>
-
-        <div className="pf-explore" aria-label={T.exploreLabel}>
-          {PROFILE_EXPLORE.map((item) => (
+      <section className="pf-page pf-hub" aria-label={T.title}>
+        <article className="pf-identity">
+          <div className="pf-identity__person">
             <button
-              key={item.title}
               type="button"
-              className="pf-explore__card"
-              onClick={() => navigate(item.to)}
+              className="pf-hero__avatar pf-hero__avatar--btn"
+              aria-label={photo ? 'Profile photo options' : 'Add profile photo'}
+              aria-busy={photoBusy}
+              disabled={photoBusy}
+              onClick={() => (photo ? setPhotoSheet(true) : fileRef.current?.click())}
             >
-              <strong>{item.title}</strong>
-              <small>{item.subtitle}</small>
+              {photo ? <img src={photo} alt="" /> : <span>{name.charAt(0)}</span>}
+              <i className="pf-hero__camera" aria-hidden>
+                <Camera size={12} />
+              </i>
             </button>
-          ))}
-        </div>
-
-        {/* Refer & Earn (ReferralCard) removed per Rohit. */}
-
-        <div className="pf-menus">
-          <div className="pf-menu">
-            <h3>{T.accountSection}</h3>
-            <div className="pf-menu__list">
-              {PROFILE_ACCOUNT.map((item) => (
-                <button key={item.title} type="button" className="pf-menu__row" onClick={() => go(item)}>
-                  <span>{item.title}</span>
-                  <em aria-hidden>
-                    <ChevronRight size={18} />
-                  </em>
+            <input ref={fileRef} type="file" accept="image/*" hidden onChange={onPickPhoto} />
+            <div className="pf-identity__copy">
+              <p className="pf-identity__eyebrow">Ayurmuni member</p>
+              <h1>{name}</h1>
+              <p className="pf-identity__meta">
+                {phone ? <span>+91 {phone}</span> : null}
+                {user?.email ? <span>{user.email}</span> : null}
+              </p>
+              <div className="pf-identity__actions">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  leadingIcon={<Pencil size={15} aria-hidden />}
+                  onClick={() => navigate('/profile/edit')}
+                >
+                  {T.edit} profile
+                </Button>
+                <button
+                  type="button"
+                  className="pf-identity__link"
+                  onClick={() => navigate('/prakriti-profile')}
+                >
+                  <Leaf size={15} aria-hidden />
+                  {T.viewPrakriti}
                 </button>
-              ))}
-              <button
-                type="button"
-                className="pf-menu__row is-danger"
-                onClick={() => setDeleteOpen(true)}
-              >
-                <span>{T.deleteAccount}</span>
-                <em aria-hidden>
-                  <ChevronRight size={18} />
-                </em>
+              </div>
+            </div>
+          </div>
+
+          <div className="pf-identity__stats" role="group" aria-label="Your activity">
+            {(dashboardStats || LOGGED_OUT_STATS).map((stat) => (
+              <button key={stat.key} type="button" className="pf-stat" onClick={() => navigate(stat.to)}>
+                <strong>{stat.value}</strong>
+                <small>{stat.label}</small>
               </button>
-            </div>
+            ))}
           </div>
+        </article>
 
-          <div className="pf-menu">
-            <h3>{T.preferenceSection}</h3>
-            <div className="pf-menu__list">
-              {PROFILE_PREFERENCE.map((item) => (
-                <button key={item.title} type="button" className="pf-menu__row" onClick={() => go(item)}>
-                  <span>{item.title}</span>
-                  <em aria-hidden>
-                    <ChevronRight size={18} />
-                  </em>
-                </button>
-              ))}
-            </div>
+        <section className="pf-block" aria-label={T.exploreLabel}>
+          <header className="pf-block__head">
+            <h2>Continue your care</h2>
+            <p>Doctors, medicines, yoga and the plan built around your prakriti.</p>
+          </header>
+          <div className="pf-explore">
+            {PROFILE_EXPLORE.map((item) => (
+              <button
+                key={item.title}
+                type="button"
+                className="pf-explore__card"
+                onClick={() => navigate(item.to)}
+              >
+                <span className="pf-explore__icon">
+                  <ProfileIcon name={item.icon} size={20} />
+                </span>
+                <strong>{item.title}</strong>
+                <small>{item.subtitle}</small>
+              </button>
+            ))}
           </div>
+        </section>
+
+        <div className="pf-boards">
+          {PROFILE_BOARDS.map((board) => (
+            <section key={board.title} className="pf-board" aria-label={board.title}>
+              <header className="pf-board__head">
+                <h2>{board.title}</h2>
+                <p>{board.hint}</p>
+              </header>
+              <div className="pf-menu__list">
+                {board.items.map((item) => (
+                  <button key={item.title} type="button" className="pf-menu__row" onClick={() => go(item)}>
+                    <span className="pf-menu__icon">
+                      <ProfileIcon name={item.icon} />
+                    </span>
+                    <span>{item.title}</span>
+                    <em aria-hidden>
+                      <ChevronRight size={16} />
+                    </em>
+                  </button>
+                ))}
+              </div>
+            </section>
+          ))}
         </div>
 
         <div className="pf-foot">
-          <Button
-            variant="secondary"
-            leadingIcon={<LogOut size={18} aria-hidden />}
-            onClick={() => setLogoutOpen(true)}
-          >
-            {T.logout}
-          </Button>
+          <div className="pf-foot__actions">
+            <Button
+              variant="secondary"
+              leadingIcon={<LogOut size={18} aria-hidden />}
+              onClick={() => setLogoutOpen(true)}
+            >
+              {T.logout}
+            </Button>
+            {/* <button type="button" className="pf-foot__delete" onClick={() => setDeleteOpen(true)}>
+              <Trash2 size={15} aria-hidden />
+              {T.deleteAccount}
+            </button> */}
+          </div>
           <p className="pf-version">{T.version}</p>
         </div>
-
       </section>
 
       <Modal

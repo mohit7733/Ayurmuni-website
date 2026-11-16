@@ -31,8 +31,59 @@ import {
 import { CONSULT_COPY as T } from '../content/consult';
 import { HOME_COPY as H } from '../content/home';
 // import { DUMMY_LAB_TESTS } from '../data/homeDummySections'; // Health Lab disabled per Rohit
+import '../design/pages/consult.css';
 import '../design/pages/dummy-offers.css';
 import '../design/pages/orange-lab.css';
+
+const PromiseIcon = ({ children }) => (
+  <svg viewBox="0 0 48 48" fill="none" aria-hidden="true" focusable="false">
+    {children}
+  </svg>
+);
+
+const PROMISE_ICONS = {
+  talk: (
+    <PromiseIcon>
+      <circle cx="24" cy="20" r="11.25" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M24 20.2V12" className="cs-promises__accent" strokeWidth="1.85" strokeLinecap="round" />
+      <path d="M24 20.2 30.6 15.4" className="cs-promises__accent" strokeWidth="1.85" strokeLinecap="round" />
+      <path d="M16.4 31.2 13.6 37.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M12.4 37.4h5.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M31.6 31.2 34.4 37.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M30.2 37.4h5.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </PromiseIcon>
+  ),
+  follow: (
+    <PromiseIcon>
+      <path
+        d="M8.5 11.5h16a4.5 4.5 0 0 1 4.5 4.5v7.5a4.5 4.5 0 0 1-4.5 4.5h-3.2L16 32.2V28H8.5A4.5 4.5 0 0 1 4 23.5V16a4.5 4.5 0 0 1 4.5-4.5Z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+      <path
+        className="cs-promises__accent"
+        d="M20 19.5h18.2a4.5 4.5 0 0 1 4.5 4.5v8.2a4.5 4.5 0 0 1-4.5 4.5H33l-4.6 4.1v-4.1h-8.4a4.5 4.5 0 0 1-4.5-4.5v-8.2a4.5 4.5 0 0 1 4.5-4.5Z"
+      />
+      <path d="M25.2 26.2h12.2M25.2 30.1h8.4M25.2 34h10.4" stroke="#fff" strokeWidth="1.45" strokeLinecap="round" />
+    </PromiseIcon>
+  ),
+  rx: (
+    <PromiseIcon>
+      <path
+        d="M14 8h13.2L37 17.6V38a3.5 3.5 0 0 1-3.5 3.5h-19.5A3.5 3.5 0 0 1 10.5 38V11.5A3.5 3.5 0 0 1 14 8Z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+      <path d="M27 8.4V17.4H36.2" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      <text className="cs-promises__accent" x="15.2" y="30" fontSize="12" fontWeight="700" fontFamily="Satoshi, system-ui, sans-serif">
+        Rx
+      </text>
+      <path d="M15.5 35.2h14.2M15.5 39h9.2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </PromiseIcon>
+  ),
+};
 
 const matchesSearch = (q, ...values) => {
   const needle = String(q || '').trim().toLowerCase();
@@ -245,7 +296,18 @@ export default function Consult() {
               </Reveal>
               ) : null}
 
-            {filteredHistory.length > 0 ? (
+              <section className="hm-section hm-panel cs-promises" aria-label={T.promisesLabel}>
+                <ul className="cs-promises__list">
+                  {T.promises.map((item) => (
+                    <li key={item.id} className="cs-promises__item">
+                      <span className="cs-promises__icon">{PROMISE_ICONS[item.id]}</span>
+                      <span className="cs-promises__label">{item.label}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+
+            {/* {filteredHistory.length > 0 ? (
               <div className="hm-product-row">
                 <section className="hm-section hm-panel svc-rail-section" aria-labelledby="cs-recent-title">
                   <SectionHead
@@ -268,7 +330,7 @@ export default function Consult() {
                   </Rail>
                 </section>
               </div>
-            ) : null}
+            ) : null} */}
 
               {showSuggestedDoctors ? (
                 <Reveal
