@@ -160,7 +160,7 @@ export default function DoctorProfile() {
   const about = String(doctor?.bio || doctor?.about || doctor?.description || '')
     .replace(/\r\n/g, '\n')
     .trim();
-  const shouldTruncate = about.length > 160;
+  const shouldTruncate = about.length > 560;
   const aboutText = shouldTruncate && !showFullAbout ? `${about.slice(0, 150)}` : about;
   const languages = useMemo(() => resolveLanguages(doctor), [doctor]);
   const specializations = useMemo(() => resolveDoctorSpecializations(doctor), [doctor]);
@@ -333,9 +333,9 @@ export default function DoctorProfile() {
             >
               {T.book}
             </Button>
-            <Button variant="secondary" size="sm" onClick={openSlip} disabled={!id}>
+            {/* <Button variant="secondary" size="sm" onClick={openSlip} disabled={!id}>
               {T.doctorSlip}
-            </Button>
+            </Button> */}
           </div>
         </DetailHero>
 
@@ -365,9 +365,9 @@ export default function DoctorProfile() {
                   <Button onClick={book} disabled={!id} leadingIcon={<CalendarClock size={16} aria-hidden />}>
                     {T.book}
                   </Button>
-                  <Button variant="secondary" onClick={openSlip} disabled={!id}>
+                  {/* <Button variant="secondary" onClick={openSlip} disabled={!id}>
                     {T.doctorSlip}
-                  </Button>
+                  </Button> */}
                 </ActionStack>
               </DetailCard>
 

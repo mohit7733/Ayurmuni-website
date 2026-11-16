@@ -168,8 +168,6 @@ export const doctorDisplayName = (item) =>
   ).trim() || 'Doctor';
 
 export const doctorFeeLabel = (item) => {
-  console.log(item);
-  
   const fee = Number(
     item?.configurations?.consultation?.global_fee ?? item?.global_fee ?? item?.fee ?? item?.consult_fee,
   );

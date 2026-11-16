@@ -907,7 +907,7 @@
   flex-shrink: 0;
   padding: 8px 12px;
   border-radius: 999px;
-  background: var(--doc-ink);
+  background: var(--pp-green);
   color: #f7f1e4;
   font-size: 12px;
   font-weight: var(--am-weight-semibold);
@@ -2884,7 +2884,7 @@ button.hm-pose {
 .hm-page .hm-package-rail > .am-rail__item {
   flex: 0 0 clamp(230px, calc((100% - 48px) / 5), 268px);
   width: clamp(230px, calc((100% - 48px) / 5), 268px);
-  height: 340px;
+  height: 380px;
 }
 @media (max-width: 900px) {
   .hm-page .hm-package-rail > .am-rail__item {

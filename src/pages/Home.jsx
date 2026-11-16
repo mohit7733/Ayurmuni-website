@@ -922,11 +922,11 @@ export default function Home() {
                   <section className="hm-section" aria-busy="true">
                     <DoctorRailHeader
                       eyebrow={T.doctorsEyebrow}
-                      title={T.doctorsTitle}
+                      title={"Our Doctors" || T.doctorsTitle}
                       description={T.doctorsText}
                       onViewAll={() => navigate('/consult/doctors')}
                     />
-                    <SectionHold label={T.doctorsTitle} minHeight={120} variant="list" count={3} />
+                    <SectionHold label={"Our Doctors" || T.doctorsTitle} minHeight={120} variant="list" count={3} />
                   </section>
                 ) : null}
 
@@ -935,11 +935,11 @@ export default function Home() {
                     <DoctorRailHeader
                       id="hm-doctors-title"
                       eyebrow={T.doctorsEyebrow}
-                      title={T.doctorsTitle}
+                      title={"Our Doctors" || T.doctorsTitle}
                       description={T.doctorsText}
                       onViewAll={() => navigate('/consult/doctors')}
                     />
-                    <DoctorTable items={suggestedDoctors} label={T.doctorsTitle} />
+                    <DoctorTable items={suggestedDoctors} label={"Our Doctors" || T.doctorsTitle} />
                   </Reveal>
                 ) : null}
               </div>
