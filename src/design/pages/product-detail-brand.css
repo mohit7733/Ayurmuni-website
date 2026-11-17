@@ -235,10 +235,10 @@
   align-items: baseline;
   gap: 10px;
   margin: 0;
-  padding: 0 0 16px;
+  padding: 0 0 8px;
   border: 0;
   border-bottom: 1px solid transparent;
-  border-image: linear-gradient(90deg, rgba(201, 165, 90, 0.55), rgba(201, 165, 90, 0.08)) 1;
+  /* border-image: linear-gradient(90deg, rgba(201, 165, 90, 0.55), rgba(201, 165, 90, 0.08)) 1; */
   border-radius: 0;
   background: none;
   box-shadow: none;

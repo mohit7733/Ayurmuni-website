@@ -7,7 +7,7 @@ const mapList = (response) =>
     .map(mapProductCategory)
     .filter((item) => item.id);
 
-export default function useProductCategories(parentId, serviceCategoryId) {
+export default function useProductCategories(parentId, serviceCategoryId, enabled = true, fallback = true) {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const requestIdRef = useRef(0);
@@ -24,7 +24,7 @@ export default function useProductCategories(parentId, serviceCategoryId) {
 
         let list = mapList(response);
 
-        if (!list.length && !parent && serviceCategoryId) {
+        if (!list.length && !parent && serviceCategoryId && fallback) {
           const fallbackRes = await getProductCategories(undefined, undefined);
           if (reqId !== requestIdRef.current) return;
           list = mapList(fallbackRes);
@@ -47,12 +47,18 @@ export default function useProductCategories(parentId, serviceCategoryId) {
         if (reqId === requestIdRef.current) setLoading(false);
       }
     },
-    [parentId, serviceCategoryId],
+    [parentId, serviceCategoryId, fallback],
   );
 
   useEffect(() => {
+    if (!enabled) {
+      requestIdRef.current += 1;
+      setCategories([]);
+      setLoading(false);
+      return;
+    }
     loadCategories();
-  }, [loadCategories]);
+  }, [loadCategories, enabled]);
 
   return { categories, loading, refresh: () => loadCategories({ refresh: true }) };
 }

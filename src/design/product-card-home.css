@@ -18,7 +18,7 @@
 }
 
 :is(.hm-products, .st-page--products, .pd-page--brand, .svc-catalog, .am-product-grid, .catalog-grid, .cn-panel) .am-product-card__media {
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 4 / 4;
   margin: 0;
   border-radius: 15px 15px 0 0;
   background: #f6f4ee;
