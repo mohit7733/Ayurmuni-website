@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { getDietPlanProgress, getDietPlans } from '../services/dietService';
+import { getDietPlanProgress, getDietPlans, getMyDietPlans } from '../services/dietService';
 import { isAuthenticated } from '../services/guestAuth';
 import {
   extractDietPlanDetail,
@@ -32,14 +32,18 @@ export default function useActiveDietHome(enabled = true) {
     }
     setLoading(true);
     try {
-      const listRes = await getDietPlans({ page: 1 });
-      if (listRes?.success === false) {
-        setPreview(null);
-        return;
+      const listRes = await getMyDietPlans({
+        page: 1,
+        page_size: 100,
+        patient_assignment_status: 'active',
+      });
+      let rows = listRes?.success === false ? [] : normalizeDietPlanList(listRes);
+      let active = rows.find((plan) => getDietListStatus(plan) === 'active' && plan.id);
+      if (!active) {
+        const fallback = await getMyDietPlans({ page: 1, page_size: 100 });
+        rows = fallback?.success === false ? [] : normalizeDietPlanList(fallback);
+        active = rows.find((plan) => getDietListStatus(plan) === 'active' && plan.id);
       }
-      const active = normalizeDietPlanList(listRes).find(
-        (plan) => getDietListStatus(plan) === 'active',
-      );
       if (!active?.id) {
         setPreview(null);
         return;

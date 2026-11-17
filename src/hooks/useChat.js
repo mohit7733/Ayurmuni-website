@@ -57,6 +57,8 @@ export function useChat(
     .join('|');
   const relatedKeyRef = useRef('');
   const relatedFlightRef = useRef(null);
+  const skipConnectLoadRef = useRef(true);
+  const lastFocusLoadRef = useRef(0);
 
   const isChatEnabledFlag = isChatSendEnabled(
     state.chatAccess,
@@ -117,6 +119,7 @@ export function useChat(
   const loadMessages = useCallback(
     async (markRead) => {
       if (!mountedRef.current || !appointmentId) return;
+      lastFocusLoadRef.current = Date.now();
       await loadRelatedMessages();
       if (!mountedRef.current) return;
       const isFirstLoad = !hasLoadedOnceRef.current;
@@ -183,6 +186,7 @@ export function useChat(
 
   useEffect(() => {
     mountedRef.current = true;
+    skipConnectLoadRef.current = true;
     loadMessages();
     return () => {
       mountedRef.current = false;
@@ -444,10 +448,14 @@ export function useChat(
       appointmentId,
       token,
       () => {
-        if (mountedRef.current) {
-          setState((prev) => ({ ...prev, isConnected: true, error: null }));
-          loadMessagesRef.current?.();
+        if (!mountedRef.current) return;
+        setState((prev) => ({ ...prev, isConnected: true, error: null }));
+        // The hook already loads messages on mount; only refresh on a later reconnect.
+        if (skipConnectLoadRef.current) {
+          skipConnectLoadRef.current = false;
+          return;
         }
+        loadMessagesRef.current?.();
       },
       () => {
         if (mountedRef.current) setState((prev) => ({ ...prev, isConnected: true }));
@@ -466,7 +474,11 @@ export function useChat(
       const comingForeground = visible && !pageVisibleRef.current;
       pageVisibleRef.current = visible;
       if (comingForeground) {
-        loadMessagesRef.current?.();
+        const now = Date.now();
+        if (now - lastFocusLoadRef.current > POLL_INTERVAL_MS) {
+          lastFocusLoadRef.current = now;
+          loadMessagesRef.current?.();
+        }
         ensureSocket();
       }
     };

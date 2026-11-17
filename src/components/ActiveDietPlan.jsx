@@ -34,7 +34,7 @@ function DayProgress({ plan }) {
 }
 
 /** Homepage card for the user's active diet plan (renders nothing without one). */
-export function ActiveDietCard({ plan }) {
+export function ActiveDietCard({ plan, cta = 'View plan' }) {
   if (!plan) return null;
   const href = `/diet/${encodeURIComponent(plan.planId)}`;
   return (

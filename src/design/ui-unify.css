@@ -180,18 +180,18 @@
 }
 
 .app-shell .catalog-head {
-  gap: var(--am-space-3) !important;
-  margin-bottom: var(--am-space-4) !important;
+  gap: 8px !important;
+  margin-bottom: 14px !important;
 }
 
 .app-shell .am-section-header {
   gap: var(--am-space-4) !important;
-  margin-bottom: var(--am-space-4) !important;
+  margin-bottom: 0 !important;
 }
 
 .app-shell .am-page-header {
-  gap: var(--am-space-3) !important;
-  /* margin-bottom: var(--am-space-5) !important; */
+  gap: 8px !important;
+  margin-bottom: 14px;
 }
 
 .app-shell .detail-cta {

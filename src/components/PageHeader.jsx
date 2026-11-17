@@ -31,16 +31,15 @@ export default function PageHeader({
 
   return (
     <header className={cx('am-page-header', className)}>
-      {hideBack ? null : (
-        <button type="button" className="am-back" onClick={goBack}>
-          <ArrowLeft size={18} aria-hidden />
-          {backLabel}
-        </button>
-      )}
       <div className="am-page-header__row">
+        {hideBack ? null : (
+          <button type="button" className="am-back" onClick={goBack} aria-label={backLabel}>
+            <ArrowLeft size={18} aria-hidden />
+          </button>
+        )}
         <div className="am-page-header__copy">
           {eyebrow ? <p className="am-eyebrow">{eyebrow}</p> : null}
-          <h1 className="am-page-header__title">{title}</h1>
+          {title ? <h1 className="am-page-header__title">{title}</h1> : null}
           {subtitle ? <p className="am-page-header__subtitle">{subtitle}</p> : null}
         </div>
         {actions ? <div className="am-page-header__actions">{actions}</div> : null}

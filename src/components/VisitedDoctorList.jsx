@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, BadgeCheck, Briefcase, CalendarCheck, Sparkles, Star } from 'lucide-react';
+import { ArrowRight, BadgeCheck, Briefcase, CalendarCheck, Repeat, Sparkles, Star } from 'lucide-react';
 import { formatAppointmentDateFull, formatDoctorDisplayName } from '../consult/appointmentUtils';
 import {
   doctorDisplayName,
@@ -109,12 +109,24 @@ function VisitedDoctorCard({ item, fallbackSpeciality }) {
         </span>
       </button>
       <div className="vd-card__foot">
-        {lastVisit ? (
-          <span className="vd-card__visit" title={`Last visit ${lastVisit}`}>
-            <CalendarCheck size={13} aria-hidden />
-            <span className="vd-card__visit-label">Last visit · </span>
-            {lastVisit}
-            {visits > 1 ? <em> · {visits} visits</em> : null}
+        {lastVisit || visits > 0 ? (
+          <span className="vd-card__visit" title={lastVisit ? `Last visit ${lastVisit}` : undefined}>
+            {lastVisit ? (
+              <>
+                <CalendarCheck size={13} aria-hidden />
+                <span className="vd-card__visit-text">
+                  <span className="vd-card__visit-label">Last visit · </span>
+                  {lastVisit}
+                </span>
+              </>
+            ) : null}
+            {visits > 0 ? (
+              <span className="vd-chip vd-chip--visits">
+                <Repeat size={12} aria-hidden />
+                <b>{visits}</b>
+                {visits === 1 ? ' visit' : ' visits'}
+              </span>
+            ) : null}
           </span>
         ) : (
           <span />

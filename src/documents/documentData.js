@@ -209,8 +209,9 @@ export const buildReceiptDocument = (receipt) => {
   const { consultationFee, platformFee, gstAmount, discount, convenienceFee } = breakdown;
   const adminFee = breakdown.administrativeCharges || 0;
   const digitalFee = breakdown.digitalReportAccess || 0;
-  const grandTotal =
-    breakdown.totalPaid > 0
+  const grandTotal = breakdown.packageFunded
+    ? 0
+    : breakdown.totalPaid > 0
       ? breakdown.totalPaid
       : consultationFee - discount + platformFee + convenienceFee + gstAmount + adminFee + digitalFee;
 
@@ -250,6 +251,8 @@ export const buildReceiptDocument = (receipt) => {
       { label: 'Consultation No', value: formatConsultationId(receipt?.consultation_id) },
       { label: 'Doctor', value: doctorName || '-' },
       { label: 'Payment Method', value: breakdown.paymentMethod || '-' },
+      ...(breakdown.packageName ? [{ label: 'Package', value: breakdown.packageName }] : []),
+      ...(breakdown.packageId ? [{ label: 'Package ID', value: breakdown.packageId }] : []),
       ...(paymentSourceLine ? [{ label: 'Payment source', value: paymentSourceLine }] : []),
       ...(status ? [{ label: 'Payment Status', value: status }] : []),
       ...(breakdown.bank ? [{ label: 'Bank', value: breakdown.bank }] : []),

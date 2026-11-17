@@ -4,7 +4,9 @@ import {
   ArrowLeftRight,
   CalendarDays,
   Check,
+  ChevronRight,
   CircleCheck,
+  Download,
   Flame,
   Leaf,
   Lock,
@@ -35,6 +37,14 @@ import dietCoverImg from '/images/login/14.webp';
 import { formatRupee } from '../home/catalog';
 import { showSuccessToast } from '../config/key';
 import useDietPlans from '../diet/useDietPlans';
+import useDietStartPayment from '../diet/useDietStartPayment';
+import DietPaymentModal from '../components/DietPaymentModal';
+import { buildDietInvoiceDocument } from '../documents/dietInvoice';
+import { printDocumentHtml, renderDocumentHtml } from '../documents/documentHtml';
+import { isDietPaymentSettled } from '../payment/dietCheckout';
+import { getDietFeeQuote } from '../services/dietService';
+import { getPatientList, listPatients } from '../services/patientService';
+import { user_profile } from '../services/profileService';
 import WaterGoalStart from '../diet/WaterGoalStart';
 import WaterLog from '../diet/WaterLog';
 import {
@@ -75,7 +85,9 @@ export default function DietPlan() {
   const [waterModal, setWaterModal] = useState(false);
   const [confirm, setConfirm] = useState(null);
   const [conflict, setConflict] = useState(null);
+  const [switching, setSwitching] = useState(false);
   const [congrats, setCongrats] = useState(false);
+  const [invoiceLoading, setInvoiceLoading] = useState(false);
 
   const {
     planDetail,
@@ -110,6 +122,7 @@ export default function DietPlan() {
     pauseActiveAndStart,
     updatingStatus,
     patientDietPlanId,
+    resolveActiveAssignment,
   } = useDietPlans({ initialPlanId: planId || routeItem?.id || null });
 
   const plan = planDetail || selectedSummary || routeItem;
@@ -190,6 +203,7 @@ export default function DietPlan() {
         mode: 'repeat',
         activeName: prep.activePlan.name || 'another plan',
         activeId: prep.activePlan.patient_diet_plan_id,
+        activePlanId: String(prep.activePlan.diet_plan_id || prep.activePlan.id || '').trim(),
         catalogId: planId,
         completedId: prep.completedAssignmentId,
       });
@@ -210,7 +224,11 @@ export default function DietPlan() {
         <button
           type="button"
           className={`dt-meal${done ? ' is-done' : ''}`}
-          onClick={() => navigate(`/diet/${planId}/meals/${meal.id}`, { state: { meal, planId } })}
+          onClick={() =>
+            navigate(`/diet/${planId}/meals/${meal.id}`, {
+              state: { meal, planId, planActive: isStarted },
+            })
+          }
         >
           <span className="dt-meal__img">
             <img src={meal.image || dietCoverImg} alt="" loading="lazy" />
@@ -226,36 +244,60 @@ export default function DietPlan() {
           <span className={`dt-meal__state${done ? ' is-done' : ''}`}>
             {done ? <Check size={14} aria-hidden strokeWidth={2.6} /> : null}
             {isStarted ? (done ? 'Done' : 'Open') : 'View'}
+            {done ? null : <ChevronRight size={14} aria-hidden />}
           </span>
         </button>
       </li>
     );
   };
 
-  const runStart = async (options) => {
-    const result = await startPlan(planId, options);
-    if (result?.conflict) {
-      if (!result.activePlan?.patient_diet_plan_id) {
-        // App DietScreen: no resolvable active id -> guidance toast instead of switch modal.
-        const label = status === 'paused' ? 'Resume' : 'Start';
-        showSuccessToast(
-          `${result.activePlan?.name || 'another diet plan'} is already active. Open that plan, tap Pause, then ${label} this one.`,
-          'error',
-        );
-        return;
+  const payment = useDietStartPayment({
+    plan,
+    planId,
+    status,
+    startPlan,
+    onConflict: setConflict,
+  });
+
+  const purchased =
+    plan?.is_purchased === true ||
+    plan?.is_purchased === 1 ||
+    String(plan?.is_purchased || '').toLowerCase() === 'true' ||
+    isDietPaymentSettled(planId);
+
+  const downloadInvoice = async () => {
+    if (!planId || invoiceLoading) return;
+    setInvoiceLoading(true);
+    try {
+      const [quoteRes, profileRes, patientRes] = await Promise.all([
+        getDietFeeQuote(planId),
+        user_profile().catch(() => null),
+        getPatientList().catch(() => null),
+      ]);
+      if (quoteRes?.success === false) {
+        throw new Error(quoteRes?.message || 'Could not load the invoice.');
       }
-      setConflict({
-        activeName: result.activePlan?.name || 'another plan',
-        activeId: result.activePlan?.patient_diet_plan_id,
-        catalogId: planId,
-        waterGoal: options?.daily_water_intake_goal,
-      });
+      const html = renderDocumentHtml(
+        buildDietInvoiceDocument({
+          quote: quoteRes?.data ?? quoteRes,
+          plan,
+          profile: profileRes?.data ?? profileRes,
+          patients: listPatients(patientRes),
+        }),
+        `Diet invoice ${plan?.title || plan?.name || 'Diet plan'}`,
+      );
+      const opened = await printDocumentHtml(html);
+      if (!opened) showSuccessToast('Allow pop-ups to save the invoice.', 'error');
+    } catch (error) {
+      showSuccessToast(error?.message || 'Could not download the invoice.', 'error');
+    } finally {
+      setInvoiceLoading(false);
     }
   };
 
   const onStart = () => {
     if (status === 'paused') {
-      runStart();
+      payment.begin();
       return;
     }
     if (status === 'completed') {
@@ -272,7 +314,7 @@ export default function DietPlan() {
 
   return (
     <AppShell tab="home">
-      <DetailPage>
+      <DetailPage className="dt-plan">
         <DetailTop backTo="/diet" backLabel="Diet plans" />
 
         {loadingDetail && !plan ? (
@@ -280,6 +322,7 @@ export default function DietPlan() {
         ) : (
           <>
             <DetailHero
+              className="dt-plan__hero"
               titleId="dt-plan-title"
               media={
                 <>
@@ -320,29 +363,64 @@ export default function DietPlan() {
               }
             >
               {price ? <p className="dx-price">{price}</p> : null}
-              <div className="dx-actions dx-actions--row">
-                {isStarted ? null : (
-                  <Button loading={starting} disabled={updatingStatus} onClick={onStart}>
-                    {status === 'paused'
-                      ? 'Resume plan'
-                      : status === 'completed'
-                        ? `Repeat plan (#${nextRepeatNumber})`
-                        : status === 'stopped'
-                          ? 'Start again'
-                          : 'Start plan'}
+              {isStarted && nutrition.mealsTotal ? (
+                <p className="dt-plan__today">
+                  {isViewingToday ? 'Today' : dayLabel || 'This day'}
+                  {` · ${nutrition.mealsDone} of ${nutrition.mealsTotal} meals logged`}
+                </p>
+              ) : null}
+              <div className="dt-plan__actions">
+                <div className="dx-actions dx-actions--row">
+                  {isStarted ? null : (
+                    <Button loading={starting} disabled={updatingStatus || payment.busy} onClick={onStart}>
+                      {status === 'paused'
+                        ? 'Resume plan'
+                        : status === 'completed'
+                          ? `Repeat plan (#${nextRepeatNumber})`
+                          : status === 'stopped'
+                            ? 'Start again'
+                            : payment.requiresPayment
+                              ? 'Pay & start'
+                              : 'Start plan'}
+                    </Button>
+                  )}
+                  <Button
+                    variant={isStarted ? 'primary' : 'secondary'}
+                    leadingIcon={<CalendarDays size={16} aria-hidden />}
+                    onClick={() => navigate(`/diet/${planId}/weekly`, { state: { item: plan, planId } })}
+                  >
+                    Weekly planner
                   </Button>
-                )}
-                <Button
-                  variant="secondary"
-                  leadingIcon={<CalendarDays size={16} aria-hidden />}
-                  onClick={() => navigate(`/diet/${planId}/weekly`, { state: { item: plan, planId } })}
-                >
-                  Weekly planner
-                </Button>
-                {isStarted ? (
-                  <>
+                  {purchased ? (
                     <Button
-                      variant="ghost"
+                      variant="secondary"
+                      leadingIcon={<Download size={16} aria-hidden />}
+                      loading={invoiceLoading}
+                      onClick={downloadInvoice}
+                    >
+                      Download invoice
+                    </Button>
+                  ) : null}
+                  {isStarted && isPlanFullyComplete ? (
+                    <Button
+                      leadingIcon={<CircleCheck size={16} aria-hidden />}
+                      loading={updatingStatus}
+                      onClick={onCompletePlan}
+                    >
+                      Mark plan complete
+                    </Button>
+                  ) : null}
+                  {canRateDiet ? (
+                    <Button variant="secondary" leadingIcon={<Star size={15} aria-hidden />} onClick={openDietReview}>
+                      Rate this diet plan
+                    </Button>
+                  ) : null}
+                </div>
+                {isStarted ? (
+                  <div className="dt-plan__manage" role="group" aria-label="Manage this plan">
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       leadingIcon={<Pause size={16} aria-hidden />}
                       disabled={updatingStatus}
                       onClick={() =>
@@ -357,7 +435,8 @@ export default function DietPlan() {
                       Pause
                     </Button>
                     <Button
-                      variant="ghost"
+                      variant="secondary"
+                      size="sm"
                       leadingIcon={<Square size={14} aria-hidden />}
                       disabled={updatingStatus}
                       onClick={() =>
@@ -372,7 +451,8 @@ export default function DietPlan() {
                       Stop
                     </Button>
                     <Button
-                      variant="ghost"
+                      variant="secondary"
+                      size="sm"
                       leadingIcon={<RotateCcw size={15} aria-hidden />}
                       disabled={updatingStatus}
                       onClick={() =>
@@ -388,7 +468,8 @@ export default function DietPlan() {
                       Reset
                     </Button>
                     <Button
-                      variant="ghost"
+                      variant="secondary"
+                      size="sm"
                       leadingIcon={<ArrowLeftRight size={15} aria-hidden />}
                       disabled={updatingStatus}
                       onClick={() =>
@@ -403,21 +484,7 @@ export default function DietPlan() {
                     >
                       Switch plan
                     </Button>
-                    {isPlanFullyComplete ? (
-                      <Button
-                        leadingIcon={<CircleCheck size={16} aria-hidden />}
-                        loading={updatingStatus}
-                        onClick={onCompletePlan}
-                      >
-                        Mark plan complete
-                      </Button>
-                    ) : null}
-                  </>
-                ) : null}
-                {canRateDiet ? (
-                  <Button variant="ghost" leadingIcon={<Star size={15} aria-hidden />} onClick={openDietReview}>
-                    Rate this diet plan
-                  </Button>
+                  </div>
                 ) : null}
               </div>
               {status === 'stopped' ? (
@@ -523,9 +590,10 @@ export default function DietPlan() {
               {isStarted && !showAllDays ? (
                 <DetailCard
                   id="dt-progress"
-                  title="Daily Vitality"
+                  className="dt-vitality"
+                  title={isViewingToday ? 'Today’s progress' : `${dayLabel || 'Day'} progress`}
                   icon={Flame}
-                  meta={isViewingToday ? undefined : dayLabel}
+                  meta={isViewingToday ? dayLabel || 'Today' : undefined}
                 >
                   <div className="dt-progress">
                     <div
@@ -586,6 +654,7 @@ export default function DietPlan() {
               ) : null}
 
               <DetailCard
+                className="dt-meals-card"
                 id="dt-meals-title"
                 title={
                   isStarted
@@ -603,6 +672,9 @@ export default function DietPlan() {
                     : `${previewMeals.length} ${previewMeals.length === 1 ? 'meal' : 'meals'}`
                 }
               >
+                {isStarted && planDays.length ? (
+                  <p className="dt-plan__days-label">Choose a day. Locked days open as you go.</p>
+                ) : null}
                 {isStarted && planDays.length ? (
                   <div className="dt-days" role="group" aria-label="Select plan day">
                     <button
@@ -663,7 +735,12 @@ export default function DietPlan() {
                       ))}
                   </div>
                 ) : previewMeals.length ? (
-                  <ul className="dt-meals">{previewMeals.map(renderMeal)}</ul>
+                  <>
+                    {isStarted ? (
+                      <p className="dt-plan__hint">Open a meal to see what to eat and mark it done.</p>
+                    ) : null}
+                    <ul className="dt-meals">{previewMeals.map(renderMeal)}</ul>
+                  </>
                 ) : (
                   <DetailEmpty
                     icon={Leaf}
@@ -700,10 +777,12 @@ export default function DietPlan() {
           }}
           onConfirm={(goalMl) => {
             setWaterModal(false);
-            runStart({ daily_water_intake_goal: goalMl });
+            payment.begin({ daily_water_intake_goal: goalMl });
           }}
         />
       ) : null}
+
+      <DietPaymentModal {...payment.sheet} />
 
       <Modal
         open={Boolean(confirm)}
@@ -738,33 +817,66 @@ export default function DietPlan() {
 
       <Modal
         open={Boolean(conflict)}
-        onClose={() => setConflict(null)}
-        title="Another plan is active"
+        onClose={() => {
+          if (switching) return;
+          setConflict(null);
+        }}
+        title="Switch diet plan"
         description={
           conflict
-            ? `${conflict.activeName} is currently active. Pause it to ${conflict.mode === 'repeat' ? 'repeat' : 'start'} this plan.`
+            ? `${conflict.activeName} is already active. Pause it here, and this plan will start.`
             : ''
         }
         footer={
           <>
-            <Button variant="secondary" onClick={() => setConflict(null)}>
+            <Button variant="secondary" onClick={() => setConflict(null)} disabled={switching}>
               Keep current
             </Button>
             <Button
-              loading={updatingStatus}
+              variant="secondary"
+              disabled={switching}
               onClick={async () => {
-                const target = conflict;
-                setConflict(null);
-                if (target.mode === 'repeat') {
-                  await pauseActiveAndRepeat(target.activeId, target.completedId);
-                  return;
+                let routeId = String(conflict?.activePlanId || '').trim();
+                const assignmentId = String(conflict?.activeId || '').trim();
+                if (!routeId || routeId === assignmentId) {
+                  const active = await resolveActiveAssignment();
+                  routeId = String(active?.diet_plan_id || active?.id || '').trim();
                 }
-                await pauseActiveAndStart(target.activeId, target.catalogId, {
-                  daily_water_intake_goal: target.waterGoal,
-                });
+                setConflict(null);
+                navigate(routeId ? `/diet/${routeId}` : '/diet');
               }}
             >
-              {conflict?.mode === 'repeat' ? 'Pause & repeat' : 'Pause & start'}
+              Open active plan
+            </Button>
+            <Button
+              loading={updatingStatus || switching}
+              onClick={async () => {
+                const target = conflict;
+                setSwitching(true);
+                try {
+                  let activeId = String(target?.activeId || '').trim();
+                  if (!activeId) {
+                    const active = await resolveActiveAssignment();
+                    activeId = String(active?.patient_diet_plan_id || '').trim();
+                  }
+                  if (!activeId) {
+                    showSuccessToast('Could not find the active plan to pause. Please try again.', 'error');
+                    return;
+                  }
+                  setConflict(null);
+                  if (target.mode === 'repeat') {
+                    await pauseActiveAndRepeat(activeId, target.completedId);
+                    return;
+                  }
+                  await pauseActiveAndStart(activeId, target.catalogId, {
+                    daily_water_intake_goal: target.waterGoal,
+                  });
+                } finally {
+                  setSwitching(false);
+                }
+              }}
+            >
+              {conflict?.mode === 'repeat' ? 'Pause & repeat' : 'Pause & switch'}
             </Button>
           </>
         }

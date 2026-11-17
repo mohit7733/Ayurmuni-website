@@ -1,0 +1,202 @@
+/* Diet checkout sheet — same cart language as the cart summary (line + bill). */
+
+.dpi {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: var(--am-text, #17302a);
+}
+
+.dpi-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid rgba(216, 204, 180, 0.9);
+  border-radius: 16px;
+  background: #fffdf8;
+}
+
+.dpi-card h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-family: var(--am-font-display, Georgia, serif);
+  font-size: 1rem;
+  font-weight: 600;
+  color: #17302a;
+}
+
+.dpi-card h3 span {
+  margin-left: auto;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #6b7a74;
+}
+
+.dpi-card h3 svg {
+  color: #105343;
+}
+
+.dpi-line {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.dpi-line__thumb {
+  width: 72px;
+  height: 72px;
+  overflow: hidden;
+  border: 1px solid rgba(216, 204, 180, 0.9);
+  border-radius: 12px;
+  background: #f6f1e6;
+}
+
+.dpi-line__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dpi-line__body {
+  min-width: 0;
+}
+
+.dpi-line__body strong {
+  display: block;
+  font-size: 14.5px;
+  line-height: 1.3;
+}
+
+.dpi-line__body p {
+  margin: 3px 0 0;
+  color: #6b7a74;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.dpi-line__qty {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(16, 83, 67, 0.08);
+  color: #105343;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.dpi-line__price {
+  font-size: 15px;
+  font-weight: 800;
+  color: #105343;
+  font-variant-numeric: tabular-nums;
+}
+
+.dpi-bill {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px solid rgba(201, 165, 90, 0.35);
+}
+
+.dpi-bill > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  color: #4b5a55;
+}
+
+.dpi-bill dt,
+.dpi-bill dd {
+  margin: 0;
+}
+
+.dpi-bill dd {
+  font-weight: 600;
+  color: #17302a;
+  font-variant-numeric: tabular-nums;
+}
+
+.dpi-bill .is-save dd {
+  color: #15803d;
+}
+
+.dpi-bill__total {
+  margin-top: 2px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(216, 204, 180, 0.9);
+}
+
+.dpi-bill__total dt {
+  font-weight: 700;
+  color: #17302a;
+}
+
+.dpi-bill__total dd {
+  font-size: 17px;
+  font-weight: 800;
+  color: #105343;
+}
+
+.dpi-method {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid #105343;
+  border-radius: 12px;
+  background: rgba(16, 83, 67, 0.06);
+}
+
+.dpi-method svg {
+  flex: none;
+  color: #105343;
+}
+
+.dpi-method strong,
+.dpi-method small {
+  display: block;
+}
+
+.dpi-method small {
+  color: #6b7a74;
+  font-size: 12px;
+}
+
+.dpi-wait,
+.dpi-error {
+  margin: 0;
+  font-size: 13px;
+}
+
+.dpi-wait {
+  color: #6b7a74;
+}
+
+.dpi-error {
+  color: var(--am-danger, #b42318);
+}
+
+@media (max-width: 420px) {
+  .dpi-line {
+    grid-template-columns: 56px minmax(0, 1fr);
+  }
+
+  .dpi-line__thumb {
+    width: 56px;
+    height: 56px;
+  }
+
+  .dpi-line__price {
+    grid-column: 2;
+  }
+}

@@ -210,10 +210,19 @@ export const mapMyPackagePurchase = (entry) => {
   const remaining = Number(
     entry.remaining_sessions ?? entry.sessions_remaining ?? entry.remaining ?? benefit?.quantity_remaining,
   );
+  const total = Number(
+    entry.quantity_total ??
+      entry.total_sessions ??
+      entry.sessions ??
+      benefit?.quantity_total ??
+      benefit?.total_sessions ??
+      benefit?.sessions,
+  );
   return {
     planId: String(planId),
     active: purchaseIsActive(entry),
     remaining: Number.isFinite(remaining) ? remaining : null,
+    total: Number.isFinite(total) && total > 0 ? total : null,
     expiresAt: entry.expires_at || entry.valid_till || entry.valid_until || entry.expiry_date || entry.end_date || '',
   };
 };
@@ -282,6 +291,7 @@ export const getMyPackages = (params = {}) =>
   apiClient(
     `packages/my/${queryString({
       page: params.page ?? 1,
+      page_size: params.page_size,
       status: params.status,
       search: params.search,
       id: params.id,
@@ -371,6 +381,7 @@ export async function loadPackagesWithStatus() {
       ...plan,
       purchased: Boolean(plan.purchased || owned || local.has(plan.id)),
       remaining: owned?.remaining ?? null,
+      total: owned?.total ?? (plan.sessions > 0 ? plan.sessions : null),
       expiresAt: owned?.expiresAt || '',
     };
   });

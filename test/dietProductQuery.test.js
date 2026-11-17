@@ -21,6 +21,7 @@ describe('diet-plans query allow-list', () => {
         min_rating: 4,
         sort: 'rating',
         is_paid: 'false',
+        is_purchased: 'true',
       }),
     );
     expect(Object.fromEntries(qs)).toEqual({
@@ -35,6 +36,7 @@ describe('diet-plans query allow-list', () => {
       min_rating: '4',
       sort: 'ratings',
       is_paid: 'false',
+      is_purchased: 'true',
     });
   });
 

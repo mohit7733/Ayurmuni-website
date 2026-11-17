@@ -57,6 +57,13 @@ const endOfWeek = (date) => {
   return next;
 };
 
+const clampRange = (today, from, to) => {
+  const todayStr = ymd(today);
+  const start = from < todayStr ? todayStr : from;
+  if (!to || to < start) return { from: '', to: '' };
+  return { from: start, to };
+};
+
 const getPresetDates = (type) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -66,7 +73,7 @@ const getPresetDates = (type) => {
     next.setDate(today.getDate() + 1);
     return { from: ymd(next), to: ymd(next) };
   }
-  if (type === 'this_week') return { from: ymd(startOfWeek(today)), to: ymd(endOfWeek(today)) };
+  if (type === 'this_week') return clampRange(today, ymd(startOfWeek(today)), ymd(endOfWeek(today)));
   if (type === 'next_week') {
     const start = startOfWeek(today);
     start.setDate(start.getDate() + 7);
@@ -77,7 +84,7 @@ const getPresetDates = (type) => {
   if (type === 'this_month') {
     const start = new Date(today.getFullYear(), today.getMonth(), 1);
     const end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-    return { from: ymd(start), to: ymd(end) };
+    return clampRange(today, ymd(start), ymd(end));
   }
   if (type === 'next_month') {
     const start = new Date(today.getFullYear(), today.getMonth() + 1, 1);
@@ -172,27 +179,63 @@ export default function Doctors() {
   }, []);
 
   const dates = useMemo(() => getPresetDates(availability), [availability]);
+  // Chips are health concerns. The doctor list matches health_disease_id, not that concern id.
+  const concernId = specialization || categoryId;
+  const useUrlDisease = Boolean(diseaseId) && !specialization;
+  const [concernDiseases, setConcernDiseases] = useState('');
+  const [concernKey, setConcernKey] = useState('');
+
+  useEffect(() => {
+    if (useUrlDisease || !concernId) {
+      setConcernDiseases('');
+      setConcernKey(useUrlDisease ? 'disease' : '');
+      return undefined;
+    }
+    let alive = true;
+    setConcernKey('');
+    (async () => {
+      const res = await getHealthCategories({ id: concernId });
+      if (!alive) return;
+      const ids = normalizeApiList(res).map((item) => item.id).filter(Boolean);
+      setConcernDiseases(ids.join(','));
+      setConcernKey(concernId);
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [concernId, useUrlDisease]);
+
+  const concernPending = Boolean(concernId) && !useUrlDisease && concernKey !== concernId;
+  const concernMiss = Boolean(concernId) && !useUrlDisease && concernKey === concernId && !concernDiseases;
 
   const filters = useMemo(
     () => ({
       search: submitted || undefined,
       experience: experience || undefined,
-      // App sends only one of disease / category / specialization (in that priority).
-      health_disease_id: diseaseId || undefined,
-      health_category_id: !diseaseId ? categoryId || undefined : undefined,
-      specialization: !diseaseId && !categoryId ? specialization || undefined : undefined,
+      health_disease_id: useUrlDisease ? diseaseId : concernDiseases || undefined,
       from_date: dates.from || undefined,
       to_date: dates.to || undefined,
       page: 1,
       page_size: 20,
     }),
-    [submitted, experience, specialization, categoryId, diseaseId, dates.from, dates.to],
+    [submitted, experience, useUrlDisease, diseaseId, concernDiseases, dates.from, dates.to],
   );
 
   // Only the newest filter/search request may write the list (typing, filter chips, refresh).
   const doctorsRequestRef = useRef(0);
   const loadDoctors = async (isRefresh = false) => {
     const requestId = ++doctorsRequestRef.current;
+    if (concernPending) {
+      setLoading(true);
+      return;
+    }
+    if (concernMiss) {
+      setFailed(false);
+      setDoctors([]);
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
     if (isRefresh) {
       setRefreshing(true);
       invalidateApiCache('customers/doctors/');
@@ -215,7 +258,7 @@ export default function Doctors() {
       alive = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters]);
+  }, [filters, concernPending, concernMiss]);
 
   const activeFilters = [
     specialization && {

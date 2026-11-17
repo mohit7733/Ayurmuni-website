@@ -137,10 +137,10 @@ export default function DoctorListCard({ item, fallbackSpeciality = 'Ayurveda' }
         ) : (
           <span />
         )}
-        <span className="dl-card__cta">
+        <button type="button" className="dl-card__cta" onClick={openProfile}>
           View profile
           <ArrowRight size={14} aria-hidden />
-        </span>
+        </button>
       </div>
     </article>
   );

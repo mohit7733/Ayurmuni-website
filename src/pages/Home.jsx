@@ -75,12 +75,20 @@ import { loadConsultPackages } from '../services/packageService';
 import '../design/pages/home.css';
 import '../design/pages/dummy-offers.css';
 import '../design/pages/plan-cards.css';
-import { isCarePlan, planDiscount } from '../packages/planTheme';
+import { isCarePlan, planDiscount, railThemeTones } from '../packages/planTheme';
 import '../design/pages/orange-lab.css';
 import { getDietPlanCoverUrl, getDietPlanRatingLabel } from '../diet/utils';
 
 let prakritiModalShownThisSession = false;
 let diseaseModalShownThisSession = false;
+
+const homePackageCards = (packages) => {
+  const featured = [...packages]
+    .sort((a, b) => Number(isCarePlan(b)) - Number(isCarePlan(a)) || planDiscount(b) - planDiscount(a))
+    .slice(0, 8);
+  const tones = railThemeTones(featured);
+  return featured.map((item, index) => ({ item, tone: tones[index] }));
+};
 
 const SERVICE_ICONS = {
   consult: Stethoscope,
@@ -843,10 +851,10 @@ export default function Home() {
               <Reveal as="section" className="hm-section hm-panel hm-concerns-panel" aria-labelledby="hm-concerns-title">
                 <SectionHeader
                   id="hm-concerns-title"
-                  className="hm-concerns-head"
+                  className="hm-concerns-head hm-doctor-head"
                   title={T.concernsTitle}
                   description={T.concernsText}
-                  action={healthConcerns.length > 1 ? <ViewAll label={T.concernsTitle} onClick={() => navigate('/consult')} /> : null}
+                  action={healthConcerns.length > 1 ? <ViewAll plain label={T.concernsTitle} onClick={() => navigate('/consult')} /> : null}
                 />
                 <ConcernCarousel label={T.concernsTitle} marquee>
                   {healthConcerns.map((item) => (
@@ -900,14 +908,15 @@ export default function Home() {
 
           <LazyBlock blockRef={brandsRef} done={brandsSeen && !brandsLoading} minHeight={120} skeleton={<SectionHold label={T.brandsTitle} minHeight={120} variant="chips" />}>
             {brands.length > 0 ? (
-              <Reveal as="section" className="hm-section hm-panel hm-brands-panel" aria-labelledby="hm-brands-title">
+              <Reveal as="section" className="hm-section hm-panel hm-brands-panel " aria-labelledby="hm-brands-title">
                 <SectionHeader
-                  className="hm-head-inline"
+                  className="hm-concerns-head hm-doctor-head"
                   id="hm-brands-title"
                   title={T.brandsTitle}
                   description={T.brandsText}
                   action={
                     <ViewAll
+                      plain={true}
                       label={T.brandsTitle}
                       onClick={() =>
                         navigate('/products/category?mode=product&name=Brands')
@@ -958,7 +967,7 @@ export default function Home() {
                       id="hm-visited-title"
                       title={T.visitedTitle}
                       description={T.visitedText}
-                      reserveEyebrow={splitDoctorRow}
+                      // reserveEyebrow={splitDoctorRow}
                       onViewAll={() => navigate('/consult')}
                     />
                     <VisitedDoctorList
@@ -1010,18 +1019,16 @@ export default function Home() {
                   Save more with guided Ayurvedic care plans
                 </p>
                 <Rail label={T.packagesTitle} className="hm-package-rail" auto interval={3200}>
-                  {[...consultPackages]
-                    .sort((a, b) => Number(isCarePlan(b)) - Number(isCarePlan(a)) || planDiscount(b) - planDiscount(a))
-                    .slice(0, 8)
-                    .map((item) => (
-                      <RailItem key={item.id}>
-                        <DummyOfferCard
-                          item={item}
-                          kind="package"
-                          onClick={() => navigate(`/packages/${encodeURIComponent(item.id)}`)}
-                        />
-                      </RailItem>
-                    ))}
+                  {homePackageCards(consultPackages).map(({ item, tone }) => (
+                    <RailItem key={item.id}>
+                      <DummyOfferCard
+                        item={item}
+                        kind="package"
+                        tone={tone}
+                        onClick={() => navigate(`/packages/${encodeURIComponent(item.id)}`)}
+                      />
+                    </RailItem>
+                  ))}
                 </Rail>
               </div>
             </Reveal>

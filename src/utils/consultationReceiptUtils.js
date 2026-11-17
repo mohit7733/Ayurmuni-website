@@ -102,6 +102,7 @@ export const mergeReceiptPayment = (receipt, payment) => {
   if (!receipt || !payment) return receipt;
   return {
     ...receipt,
+    package: asObject(receipt.package) || asObject(payment.package),
     payment: asObject(receipt.payment) || payment,
     summary: asObject(receipt.summary) || asObject(payment.summary),
   };
@@ -109,6 +110,100 @@ export const mergeReceiptPayment = (receipt, payment) => {
 
 const percentLabel = (label, percent) =>
   percent > 0 && !/\(\s*\d/.test(label) ? `${label} (${String(percent).replace(/\.0+$/, '')}%)` : label;
+
+const METHOD_LABELS = {
+  upi: 'UPI',
+  nb: 'Net banking',
+  netbanking: 'Net banking',
+  net_banking: 'Net banking',
+  card: 'Card',
+  credit_card: 'Card',
+  debit_card: 'Card',
+  wallet: 'Wallet',
+  emi: 'EMI',
+  cod: 'Cash on delivery',
+  cash: 'Cash',
+  cashfree: 'Cashfree',
+  razorpay: 'Razorpay',
+  icici: 'ICICI',
+  payphi: 'PayPhi',
+  package: 'Package',
+  package_entitlement: 'Package',
+};
+
+const labelPaymentMethod = (value) => {
+  const raw = String(value || '').trim();
+  if (!raw || raw === '—' || raw === '-') return '';
+  const key = raw.toLowerCase().replace(/[\s-]+/g, '_');
+  return METHOD_LABELS[key] || raw.charAt(0).toUpperCase() + raw.slice(1);
+};
+
+const methodFromNode = (node) => {
+  const object = asObject(node);
+  if (!object) return '';
+  for (const key of ['method', 'payment_group', 'payment_type', 'payment_method']) {
+    const value = object[key];
+    if (typeof value === 'string' && value.trim()) return labelPaymentMethod(value);
+  }
+  const nested = asObject(object.payment_method);
+  if (nested) {
+    const key = Object.keys(nested).find((name) => nested[name]);
+    const labeled = labelPaymentMethod(key);
+    if (labeled) return labeled;
+  }
+  return '';
+};
+
+/** A package credit settles the visit, so the customer pays nothing at checkout. */
+const isPackageFunded = (receipt, info, payment) => {
+  if (receipt?.funded_by_package === true || payment?.funded_by_package === true) return true;
+  const source = String(info?.source || payment?.source || receipt?.source || '').toLowerCase();
+  if (source === 'package_entitlement') return true;
+  const method = String(
+    receipt?.payment_method || payment?.payment_method || payment?.payment_type || '',
+  )
+    .trim()
+    .toLowerCase();
+  return method === 'package' || method === 'package_entitlement';
+};
+
+/** Purchase id and plan name when this visit was covered by a package. */
+const readReceiptPackage = (receipt, info, payment) => {
+  const pkg = asObject(receipt?.package) || asObject(info?.package) || asObject(payment?.package) || {};
+  const sources = [pkg, info, payment];
+  const purchaseId = firstText(sources, ['package_purchase_id', 'purchase_id']);
+  const catalogId = firstText([pkg, info, payment], ['package_id']);
+  const name =
+    firstText([pkg], ['name', 'package_name', 'package_name_snapshot', 'plan_name']) ||
+    firstText([info, payment, receipt], ['package_name', 'package_name_snapshot', 'plan_name']);
+  return {
+    name,
+    id: purchaseId || catalogId,
+  };
+};
+
+/** Instrument (UPI, card) when the gateway stored one, otherwise the gateway or package. */
+const readPaymentMethodLabel = (receipt, entity, info, payment) => {
+  const instrument =
+    methodFromNode(entity) ||
+    methodFromNode(info?.payment) ||
+    methodFromNode(payment) ||
+    methodFromNode(receipt);
+  if (instrument) return instrument;
+
+  const source = String(info?.source || payment?.source || receipt?.source || '').toLowerCase();
+  if (source === 'package_entitlement' || receipt?.funded_by_package === true) return 'Package';
+
+  return (
+    labelPaymentMethod(
+      receipt?.payment_gateway ||
+        payment?.payment_gateway ||
+        info?.gateway ||
+        info?.payment_gateway ||
+        payment?.gateway,
+    ) || '—'
+  );
+};
 
 export const parseConsultationReceiptBreakdown = (receipt) => {
   const notes = getConsultationPaymentNotes(receipt);
@@ -175,15 +270,15 @@ export const parseConsultationReceiptBreakdown = (receipt) => {
   );
   const totalFromParts =
     consultationFee - discount + platformFee + convenienceFee + gstAmount + administrativeCharges + digitalReportAccess;
-  const totalPaid =
-    totalFromApi > 0
+  const packageFunded = isPackageFunded(receipt, info, payment);
+  const totalPaid = packageFunded
+    ? 0
+    : totalFromApi > 0
       ? totalFromApi
       : amountFromPaymentEntity(entity, totalFromParts > 0 ? totalFromParts : consultationFee);
 
-  const method = String(entity?.method || receipt?.payment_method || payment?.method || '').trim();
-  const methodLabel = method
-    ? method.charAt(0).toUpperCase() + method.slice(1)
-    : String(receipt?.payment_type || payment?.payment_type || '').trim() || '—';
+  const methodLabel = readPaymentMethodLabel(receipt, entity, info, payment);
+  const packageInfo = readReceiptPackage(receipt, info, payment);
 
   const apiLines = Array.isArray(summary?.lines)
     ? summary.lines
@@ -214,10 +309,13 @@ export const parseConsultationReceiptBreakdown = (receipt) => {
     digitalReportAccess,
     listedAmount: firstFinite(sources, ['listed_amount']) || consultationFee,
     totalPaid,
+    packageFunded,
     partsSum,
     totalsMatch: rupeesToPaise(partsSum) === rupeesToPaise(totalPaid),
     apiLines,
     paymentMethod: methodLabel,
+    packageName: packageInfo.name,
+    packageId: packageInfo.id,
     paymentStatus: String(receipt?.payment_status || payment?.status || entity?.status || '').trim(),
     paymentId: String(
       entity?.id ||
@@ -244,7 +342,7 @@ export const parseConsultationReceiptBreakdown = (receipt) => {
 
 /** True when the receipt total is unexplained by the fee lines we could read. */
 export const receiptBreakdownIsIncomplete = (breakdown) => {
-  if (!breakdown) return false;
+  if (!breakdown || breakdown.packageFunded) return false;
   const extras =
     breakdown.platformFee +
     breakdown.convenienceFee +
@@ -294,6 +392,21 @@ export const buildConsultationReceiptBillRows = (breakdown) => {
     push('gst', percentLabel('GST', breakdown.gstPercent), breakdown.gstAmount);
     push('administrative_charges', 'Administrative charges', breakdown.administrativeCharges);
     push('digital_report_access', 'Digital report access', breakdown.digitalReportAccess);
+  }
+
+  if (breakdown.packageFunded) {
+    const covered = rows.reduce(
+      (sum, row) => sum + (row.effect === 'subtract' ? -Number(row.amount) : Number(row.amount)),
+      0,
+    );
+    if (rupeesToPaise(covered) > 0) {
+      rows.push({
+        key: 'package',
+        label: 'Covered by package',
+        amount: covered,
+        effect: 'subtract',
+      });
+    }
   }
 
   const alreadyHasWallet = rows.some((row) => /wallet/i.test(row.key) || /wallet/i.test(row.label));

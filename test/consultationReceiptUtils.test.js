@@ -66,6 +66,68 @@ describe('parseConsultationReceiptBreakdown', () => {
     ]);
   });
 
+  it('shows the gateway when the receipt has no card or UPI method', () => {
+    expect(parseConsultationReceiptBreakdown({
+      consultation_fees: 499,
+      amount: 499,
+      payment_status: 'success',
+      payment_gateway: 'cashfree',
+    }).paymentMethod).toBe('Cashfree');
+
+    expect(parseConsultationReceiptBreakdown({
+      consultation_fees: 499,
+      amount: 499,
+      payment_information: {
+        payload: { payment: { entity: { method: 'upi' } } },
+      },
+    }).paymentMethod).toBe('UPI');
+
+    expect(parseConsultationReceiptBreakdown({
+      amount: 0,
+      payment_information: { source: 'package_entitlement' },
+    }).paymentMethod).toBe('Package');
+  });
+
+  it('shows ₹0 paid when a package covers the listed consultation fee', () => {
+    const parsed = parseConsultationReceiptBreakdown({
+      consultation_fees: 499,
+      amount: 0,
+      payment_method: 'package',
+      payment_status: 'success',
+      payment_information: { source: 'package_entitlement', listed_amount: '499' },
+    });
+    expect(parsed.paymentMethod).toBe('Package');
+    expect(parsed.consultationFee).toBe(499);
+    expect(parsed.totalPaid).toBe(0);
+    expect(parsed.packageFunded).toBe(true);
+    expect(parsed.packageName).toBe('');
+    expect(parsed.packageId).toBe('');
+    expect(receiptBreakdownIsIncomplete(parsed)).toBe(false);
+    expect(labels(parsed)).toEqual([
+      ['Consultation fee', 'add', 499],
+      ['Covered by package', 'subtract', 499],
+    ]);
+  });
+
+  it('reads the package name and purchase id from the receipt', () => {
+    const parsed = parseConsultationReceiptBreakdown({
+      consultation_fees: 499,
+      amount: 0,
+      payment_method: 'package',
+      package: {
+        name: 'Wellness Journey',
+        package_purchase_id: 'db13249e-74e7-4ab8-a44e-e689eaf96694',
+        package_id: '12bdbc61-57cb-4cae-809c-56956e40a180',
+      },
+      payment_information: {
+        source: 'package_entitlement',
+        package_purchase_id: 'db13249e-74e7-4ab8-a44e-e689eaf96694',
+      },
+    });
+    expect(parsed.packageName).toBe('Wellness Journey');
+    expect(parsed.packageId).toBe('db13249e-74e7-4ab8-a44e-e689eaf96694');
+  });
+
   it('hides zero lines when only the base fee was charged, and flags a missing breakdown', () => {
     const baseOnly = parseConsultationReceiptBreakdown({
       consultation_fees: 499,

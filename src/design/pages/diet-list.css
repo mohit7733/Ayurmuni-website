@@ -169,6 +169,10 @@
 .dlp-grid > li > .dlp-card { height: 100%; }
 .dlp-card__media { border-radius: 6px; }
 
+/* Active diet sits above the catalog, with the open-plan button on the card */
+.dt-shop .dt-active { margin: 0 0 16px; }
+.dt-shop .dt-active .am-diet-active { margin: 0; }
+
 /* /diet - products page layout (st-catalog sidebar + am-product-grid) */
 .dt-shop .dt-filter-col { display: flex; flex-direction: column; gap: 14px; }
 .dt-shop .dt-fgroup h3 { margin: 0 6px 6px; font-size: 0.95rem; }
@@ -199,7 +203,7 @@
 .dt-pcard .am-product-card__price { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
 .dt-pcard .dt-pcard__rate { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; color: var(--am-text); }
 .dt-pcard .dt-pcard__rate svg { color: var(--am-gold-500); fill: currentColor; }
-.dt-pcard .am-product-card__add { pointer-events: none; }
+/* .dt-pcard .am-product-card__add { pointer-events: none; } */
 /* filter accordion */
 .dt-shop .dt-fgroup h3.dt-fgroup__head { margin: 0; font-size: inherit; }
 .dt-shop .dt-fgroup__toggle {

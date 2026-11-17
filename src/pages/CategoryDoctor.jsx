@@ -437,15 +437,20 @@ export default function CategoryDoctor() {
 
   return (    <AppShell tab="consult">
       <div className="cs-page cs-concern">
-        <PageHeader title={categoryName} subtitle={C.subtitle} eyebrow={T.concernsEyebrow}>
-          <SearchField
-            value={search}
-            onChange={setSearch}
-            onSubmit={(value) => setDebounced(String(value || '').trim())}
-            placeholder={C.searchPlaceholder}
-            suggestions={searchSuggestions(diseases)}
-          />
-        </PageHeader>
+        <PageHeader
+          title={categoryName}
+          subtitle={C.subtitle}
+          eyebrow={T.concernsEyebrow}
+          actions={
+            <SearchField
+              value={search}
+              onChange={setSearch}
+              onSubmit={(value) => setDebounced(String(value || '').trim())}
+              placeholder={C.searchPlaceholder}
+              suggestions={searchSuggestions(diseases)}
+            />
+          }
+        />
 
         {categoryDesc || categorySubscription ? (
           <div className="cs-about">

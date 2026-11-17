@@ -112,12 +112,16 @@ function DoctorCard({ item, fallbackSpeciality, index }) {
           ) : null}
         </div>
 
+
         <div className="hm-doc-card__fav">
           <FavButton
             on={fav}
             label={fav ? `Remove ${name} from favourites` : `Save ${name}`}
             onClick={toggleFav}
           />
+        </div>
+        <div className="hm-doc-card__dietitian">
+          <DietitianBadge doctor={item} />
         </div>
       </div>
 
@@ -128,11 +132,10 @@ function DoctorCard({ item, fallbackSpeciality, index }) {
               {name}
             </button>
           </h3>
-          <DietitianBadge doctor={item} />
           {credential ? <p className="hm-doc-card__cred">{credential}</p> : null}
         </div>
 
-        {experience || location ? (
+        {/* {experience || location ? (
           <ul className="hm-doc-card__facts">
             {experience ? (
               <li>
@@ -140,22 +143,25 @@ function DoctorCard({ item, fallbackSpeciality, index }) {
                 <span>{experience}</span>
               </li>
             ) : null}
-            {/* {location ? (
-              <li>
-                <MapPin size={13} aria-hidden />
-                <span>{location}</span>
-              </li>
-            ) : null} */}
+            
           </ul>
-        ) : null}
+        ) : null} */}
+        <ul className="hm-doc-card__specialized-bio" aria-label="Specialized Bio">
+          {item.specialized_bio.length ?
+            item.specialized_bio.map((bio) => (
+              <li key={bio} className="hm-doc-card__specialized-bio-item">
+                <span>{bio}</span>
+              </li>
+            )) : null}
+        </ul>
 
-        {tags.length ? (
+        {/* {tags.length ? (
           <ul className="hm-doc-card__tags">
             {tags.map((tag) => (
               <li key={tag}>{tag}</li>
             ))}
           </ul>
-        ) : null}
+        ) : null} */}
 
         <div className="hm-doc-card__foot">
           {fee ? (
@@ -169,10 +175,10 @@ function DoctorCard({ item, fallbackSpeciality, index }) {
               —
             </span>
           )}
-          <span className="hm-doc-card__cta" aria-hidden>
+          <button type="button" className="hm-doc-card__cta" onClick={openProfile}>
             View profile
-            <ArrowRight size={13} />
-          </span>
+            <ArrowRight size={13} aria-hidden />
+          </button>
         </div>
       </div>
     </article>

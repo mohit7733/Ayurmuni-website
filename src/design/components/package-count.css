@@ -1,0 +1,144 @@
+/* Package / plan usage count — compact, brand green, no gold. */
+
+.pkg-count {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  margin-top: 6px;
+}
+
+.pkg-count--compact {
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.pkg-count__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.pkg-count__chip {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #4b5563;
+  font-size: 11.5px;
+  font-weight: var(--am-weight-semibold, 600);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.pkg-count__chip--usage {
+  background: var(--am-green-50, #e8f3ef);
+  color: var(--am-primary, #0d614e);
+}
+
+.pkg-count__chip--usage.is-muted,
+.pkg-count.is-muted .pkg-count__chip--usage {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.pkg-count__chip--shifted {
+  background: #f3e8ff;
+  color: #6d28d9;
+}
+
+.pkg-count__chip--shifted.is-muted {
+  background: #f5f3ff;
+  color: #8b7aa8;
+}
+
+.pkg-count__from {
+  color: #6d28d9;
+  font-size: 11.5px;
+  font-weight: var(--am-weight-semibold, 600);
+  line-height: 1.35;
+}
+
+.pkg-count__track {
+  display: flex;
+  width: 100%;
+  max-width: 20rem;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--am-primary, #0d614e) 14%, #fff);
+}
+
+.pkg-count__fill {
+  display: block;
+  height: 100%;
+  background: var(--am-primary, #0d614e);
+}
+
+.pkg-count__fill--shifted {
+  background: #6d28d9;
+}
+
+.pkg-count.is-muted .pkg-count__track {
+  background: #e5e7eb;
+}
+
+.pkg-count.is-muted .pkg-count__fill {
+  background: #9ca3af;
+}
+
+.pkg-count.is-muted .pkg-count__fill--shifted {
+  background: #6d28d9;
+}
+
+.pkg-count__valid {
+  margin: 0;
+  color: var(--am-text-muted, #5f6f69);
+  font-size: 11.5px;
+  line-height: 1.4;
+}
+
+.pkg-count__valid--orig {
+  color: var(--am-text-muted, #8b948f);
+}
+
+/* Dark package-detail hero: readable cream chips, light-green fill (not gold). */
+.pkg-count--on-dark {
+  margin-top: 2px;
+}
+
+.pkg-count--on-dark .pkg-count__chip {
+  background: rgb(255 255 255 / 16%);
+  color: #f4f7f6;
+}
+
+.pkg-count--on-dark .pkg-count__chip--usage.is-muted,
+.pkg-count--on-dark.is-muted .pkg-count__chip--usage {
+  background: rgb(255 255 255 / 10%);
+  color: rgb(255 255 255 / 70%);
+}
+
+.pkg-count--on-dark .pkg-count__track {
+  background: rgb(255 255 255 / 18%);
+}
+
+.pkg-count--on-dark .pkg-count__fill {
+  background: #6ee7b7;
+}
+
+.pkg-count--on-dark.is-muted .pkg-count__track {
+  background: rgb(255 255 255 / 12%);
+}
+
+.pkg-count--on-dark.is-muted .pkg-count__fill {
+  background: rgb(255 255 255 / 45%);
+}
+
+.pkg-count--on-dark .pkg-count__valid,
+.pkg-count--on-dark .pkg-count__valid--orig {
+  color: rgb(255 255 255 / 78%);
+}

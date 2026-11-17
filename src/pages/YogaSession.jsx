@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { AlertTriangle, CheckCircle2, Clock, Flower2, Gauge, HeartPulse, ListOrdered, NotebookPen, Play, Stethoscope, Target, UserRound } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Clock, Flower2, Gauge, HeartPulse, ListOrdered, NotebookPen, Pause, Play, Stethoscope, Target, UserRound } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import ShareButton from '../components/ShareButton';
 import { Button } from '../components/ui';
@@ -43,6 +43,8 @@ export default function YogaSession() {
   const { sessionId } = useParams();
   const location = useLocation();
   const videoRef = useRef(null);
+  const playToken = useRef(0);
+  const [playing, setPlaying] = useState(false);
   const routeItem = location.state?.item || null;
   const [session, setSession] = useState(routeItem || null);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -103,8 +105,22 @@ export default function YogaSession() {
     const video = videoRef.current;
     if (!video) return;
     if (Number.isFinite(startSeconds)) video.currentTime = Math.max(0, startSeconds);
-    video.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    video.play().catch(() => {});
+    const token = ++playToken.current;
+    video.play().then(() => {
+      if (playToken.current !== token) video.pause();
+    }).catch(() => {});
+  };
+
+  const togglePractice = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (!video.paused && !video.ended) {
+      playToken.current += 1;
+      video.pause();
+      return;
+    }
+    if (video.ended) video.currentTime = 0;
+    playFrom();
   };
 
   const onPickStep = (item, index) => {
@@ -154,6 +170,9 @@ export default function YogaSession() {
                     controls
                     playsInline
                     preload="metadata"
+                    onPlay={() => setPlaying(true)}
+                    onPause={() => setPlaying(false)}
+                    onEnded={() => setPlaying(false)}
                   />
                 ) : (
                   <img src={posterUri} alt="" />
@@ -182,10 +201,10 @@ export default function YogaSession() {
                 {videoUri ? (
                   <Button
                     variant="primary"
-                    leadingIcon={<Play size={16} aria-hidden />}
-                    onClick={() => playFrom(breakdown[activeIndex]?.startSeconds)}
+                    leadingIcon={playing ? <Pause size={16} aria-hidden /> : <Play size={16} aria-hidden />}
+                    onClick={togglePractice}
                   >
-                    {Y.start}
+                    {playing ? Y.pause : Y.start}
                   </Button>
                 ) : null}
                 <Button

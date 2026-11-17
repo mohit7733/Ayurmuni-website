@@ -1,7 +1,7 @@
 // Package purchase contract (POST packages/purchase/ -> gateway -> POST packages/verify-payment/).
 // Pure helpers only: the amount charged always comes from the server (purchase.paid_price ===
 // checkout.amount); nothing here recomputes GST or fees on the client.
-import { formatRupee } from '../home/catalog';
+import { formatExactRupee } from '../home/catalog';
 import { buildPackageVerifyPayload } from '../services/packageService';
 import { resolveCashfreeMode } from './cashfree';
 
@@ -45,12 +45,8 @@ const toNumber = (value) => {
   return Number.isFinite(n) ? n : null;
 };
 
-/** Display-only rupee text from a server decimal string ("3538.82" -> "₹3,538.82"). */
-export const formatServerMoney = (value) => {
-  const n = toNumber(value);
-  if (n == null) return '';
-  return Number.isInteger(n) ? formatRupee(n) : formatRupee(n, { decimals: 2 });
-};
+/** Display-only rupee text from a server decimal string ("0.99" -> "₹0.99", "10.00" -> "₹10"). */
+export const formatServerMoney = (value) => formatExactRupee(value);
 
 const percentText = (value) => {
   const n = toNumber(value);

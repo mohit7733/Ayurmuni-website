@@ -90,6 +90,7 @@ const ReturnRequest = loadPage(() => import("./pages/ReturnRequest"));
 const ReturnDetails = loadPage(() => import("./pages/ReturnDetails"));
 const Wishlist = loadPage(() => import("./pages/Wishlist"));
 const MyPlans = loadPage(() => import("./pages/MyPlans"));
+const MyDiets = loadPage(() => import("./pages/MyDiets"));
 const FavDoctors = loadPage(() => import("./pages/FavDoctors"));
 const HelpCenter = loadPage(() => import("./pages/HelpCenter"));
 const FaqDetail = loadPage(() => import("./pages/FaqDetail"));
@@ -439,6 +440,7 @@ export default function App() {
                       />
                       <Route path="/profile/wishlist" element={<Wishlist />} />
                       <Route path="/profile/plans" element={<MyPlans />} />
+                      <Route path="/profile/diets" element={<MyDiets />} />
                       <Route
                         path="/profile/favourite-doctors"
                         element={<FavDoctors />}

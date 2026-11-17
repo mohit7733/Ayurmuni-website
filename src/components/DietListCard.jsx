@@ -2,7 +2,7 @@ import { CalendarDays, Flame, Leaf, Star } from 'lucide-react';
 import Badge from './ui/Badge';
 
 const STATUS = {
-  active: { label: 'Active', cta: 'Continue plan', tone: 'success' },
+  active: { label: 'Active', cta: 'Open active plan', tone: 'success' },
   paused: { label: 'Paused', cta: 'Resume plan', tone: 'warning' },
   completed: { label: 'Completed', cta: 'View plan', tone: 'info' },
   stopped: { label: 'Stopped', cta: 'View plan', tone: 'neutral' },
@@ -66,7 +66,7 @@ export default function DietListCard({ title, image, status = 'none', prakriti, 
       </div>
 
       <div className="am-product-card__action">
-        <button type="button" className="am-product-card__add" onClick={onOpen} tabIndex={-1} aria-hidden>
+        <button  className="am-product-card__add" onClick={onOpen} tabIndex={-1} >
           {meta.cta}
         </button>
       </div>

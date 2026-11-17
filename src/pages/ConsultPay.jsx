@@ -37,6 +37,8 @@ import {
   isBookingAlreadyPaid,
   isConsultationPaymentSettled,
   isDuplicateGatewayOrder,
+  isSlotAlreadyPaid,
+  matchBookedConsultation,
   normalConsultPayable,
   isPaymentAlreadyExists,
   pickConsultPaymentData,
@@ -51,6 +53,7 @@ import { openRazorpayCheckout, toRazorpayPaise } from "../payment/razorpayChecko
 import {
   createConsultationPayment,
   getConsultationFeeQuote,
+  getConsultHistory,
   retryConsultationPayment,
   verifyConsultationPayment,
 } from "../services/consultService";
@@ -159,6 +162,7 @@ export default function ConsultPay() {
   const { gateways, gateway, setGateway } = usePaymentGateways();
   const [planSheetOpen, setPlanSheetOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const planPurchaseRef = useRef(null);
   const [planPayable, setPlanPayable] = useState(null);
   const [planQuoteLoading, setPlanQuoteLoading] = useState(false);
   const planPromptShownRef = useRef(false);
@@ -266,6 +270,7 @@ export default function ConsultPay() {
   }, [activePlans]);
 
   const handleSelectPlan = async (plan) => {
+    planPurchaseRef.current = plan?.id || null;
     setPlanSheetOpen(false);
     if (!slot?.id) return;
     setSelectedPlan(plan);
@@ -280,6 +285,7 @@ export default function ConsultPay() {
       const funding = readPlanFunding(response);
       if (!funding.canFund) {
         showSuccessToast(funding.reason, "error");
+        planPurchaseRef.current = null;
         setSelectedPlan(null);
         setPlanPayable(null);
         return;
@@ -287,6 +293,7 @@ export default function ConsultPay() {
       setPlanPayable(funding.payable ?? 0);
     } catch (error) {
       showSuccessToast(error?.message || "Unable to apply plan", "error");
+      planPurchaseRef.current = null;
       setSelectedPlan(null);
       setPlanPayable(null);
     } finally {
@@ -295,8 +302,14 @@ export default function ConsultPay() {
   };
 
   const clearSelectedPlan = () => {
+    planPurchaseRef.current = null;
     setSelectedPlan(null);
     setPlanPayable(null);
+  };
+
+  const responseUsesPackage = (response) => {
+    const paid = consultationCheckout(response) || response?.data || {};
+    return paid?.funded_by_package === true || Boolean(paid?.package_purchase_id);
   };
 
   const usingPlan = Boolean(selectedPlan) && planPayable != null;
@@ -313,6 +326,42 @@ export default function ConsultPay() {
   useEffect(() => {
     preloadCashfree();
   }, []);
+
+  const openBookedVisit = async () => {
+    const knownId = readPending(slot.id)?.appointment_id || "";
+    clearPending(slot.id);
+    let appointmentId = knownId;
+    if (!appointmentId) {
+      try {
+        const history = await getConsultHistory({
+          status: "confirmed",
+          page: 1,
+          page_size: 50,
+        });
+        const rows = history?.data?.results || history?.results || [];
+        appointmentId = matchBookedConsultation(rows, {
+          date: booking.date || slot.date,
+          startTime: slot.start_time,
+          doctorId: doctorId || doctor?.id || doctor?.doctor_id,
+        });
+      } catch {
+        appointmentId = "";
+      }
+    }
+    if (appointmentId) {
+      showSuccessToast(
+        "This slot is already booked. Opening your appointment.",
+        "success",
+      );
+      navigate(`/profile/appointments/${appointmentId}`, { replace: true });
+      return;
+    }
+    showSuccessToast(
+      "This time is already booked. Please choose another slot.",
+      "error",
+    );
+    navigate(`/consult/doctors/${doctorId}/slots`, { replace: true });
+  };
 
   const finish = (result, message = "Payment Successful") => {
     clearCashfreePending();
@@ -363,7 +412,8 @@ export default function ConsultPay() {
     startedRef.current = true;
     setPaying(true);
     try {
-      const planPurchaseId = usingPlan ? selectedPlan?.id : undefined;
+      const planPurchaseId =
+        planPurchaseRef.current && planPayable != null ? planPurchaseRef.current : undefined;
       const apiGateway = toApiPaymentGateway(gateway);
       const pending = planPurchaseId ? null : readPending(slot.id);
       let paymentResponse;
@@ -377,6 +427,10 @@ export default function ConsultPay() {
           ...(planPayable > 0 ? { payment_gateway: apiGateway } : {}),
         });
         if (!isApiSuccess(paymentResponse)) {
+          if (isSlotAlreadyPaid(paymentResponse)) {
+            await openBookedVisit();
+            return;
+          }
           showSuccessToast(
             paymentResponse?.message || "Unable to book with this plan",
             "error",
@@ -408,8 +462,13 @@ export default function ConsultPay() {
           const retryGateway = String(
             retryData?.payment_gateway ?? retryData?.gateway ?? "",
           ).toLowerCase();
+          if (isSlotAlreadyPaid(paymentResponse)) {
+            await openBookedVisit();
+            return;
+          }
           if (
             !isApiSuccess(paymentResponse) ||
+            responseUsesPackage(paymentResponse) ||
             (retryGateway && retryGateway !== apiGateway)
           ) {
             clearPending(slot.id);
@@ -425,6 +484,8 @@ export default function ConsultPay() {
             medical_record_ids: booking.medical_record_ids,
             coupon_code: appliedCoupon?.code,
             payment_gateway: apiGateway,
+            // Pay normally: do not let the server attach an active package.
+            skip_package_funding: true,
           });
           const existing = consultationCheckout(paymentResponse);
           const duplicateAppointmentId = isDuplicateGatewayOrder(paymentResponse)
@@ -453,16 +514,23 @@ export default function ConsultPay() {
           }
         }
       }
+      if (!planPurchaseId && responseUsesPackage(paymentResponse)) {
+        clearPending(slot.id);
+        showSuccessToast(
+          "Normal payment was not started. Please try again.",
+          "error",
+        );
+        return;
+      }
       if (!isApiSuccess(paymentResponse)) {
-        const alreadyBooked = String(paymentResponse?.message || "")
-          .toLowerCase()
-          .includes("already paid and booked");
+        if (isSlotAlreadyPaid(paymentResponse)) {
+          await openBookedVisit();
+          return;
+        }
         showSuccessToast(
           isDuplicateGatewayOrder(paymentResponse)
             ? "A payment for this slot is already in progress. Please try again in a minute or choose another payment method."
-            : alreadyBooked
-              ? "This visit is already booked with your plan. Pick another slot to pay normally."
-              : paymentResponse?.message || "Unable to start payment",
+            : paymentResponse?.message || "Unable to start payment",
           "error",
         );
         return;

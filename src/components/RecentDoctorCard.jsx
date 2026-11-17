@@ -61,10 +61,14 @@ export default function RecentDoctorCard({ item, fallbackRole = 'Ayurvedic docto
           ) : (
             <span />
           )}
-          <span className="am-recent-card__cta" aria-hidden>
+          <button
+            type="button"
+            className="am-recent-card__cta"
+            onClick={() => id && navigate(`/consult/doctors/${id}`)}
+          >
             View profile
-            <ChevronRight size={14} />
-          </span>
+            <ChevronRight size={14} aria-hidden />
+          </button>
         </div>
       </div>
     </article>

@@ -362,7 +362,9 @@
   overflow: hidden;
   width: 100%;
   aspect-ratio: 16 / 10;
-  background: linear-gradient(145deg, #0d614e 0%, #0b4136 55%, #163528 100%);
+  background:
+    radial-gradient(78% 70% at var(--plan-glow-x, 100%) var(--plan-glow-y, 0%), rgba(255, 255, 255, 0.32), transparent 52%),
+    linear-gradient(152deg, var(--plan-a, #4c1d95) 0%, var(--plan-b, #6d28d9) 48%, var(--plan-c, #7c3aed) 100%);
 }
 
 .pp-card__banner img {
@@ -384,10 +386,10 @@
   place-content: center;
   justify-items: center;
   gap: 6px;
-  color: var(--pp-gold-soft);
+  color: #fff;
   background:
-    radial-gradient(70% 80% at 80% 10%, rgba(228, 196, 122, 0.28), transparent 55%),
-    linear-gradient(145deg, #0d614e 0%, #0b4136 60%, #163528 100%);
+    radial-gradient(70% 80% at var(--plan-glow-x, 80%) var(--plan-glow-y, 10%), rgba(255, 255, 255, 0.28), transparent 55%),
+    linear-gradient(152deg, var(--plan-a, #4c1d95) 0%, var(--plan-b, #6d28d9) 48%, var(--plan-c, #7c3aed) 100%);
 }
 
 .pp-card__fall span {
@@ -435,12 +437,12 @@
   font-size: 0.58rem;
   padding: 4px 8px;
   background: rgba(255, 253, 248, 0.94);
-  color: var(--pp-green);
+  color: var(--plan-accent, var(--pp-green));
 }
 
 .pp-card__badge.is-quiet {
   background: rgba(255, 253, 248, 0.9);
-  color: var(--pp-green);
+  color: var(--plan-accent, var(--pp-green));
 }
 
 .pp-card__owned {
@@ -544,7 +546,7 @@
   font-weight: 700;
   line-height: 1;
   letter-spacing: -0.03em;
-  color: var(--pp-green);
+  color: var(--plan-accent, var(--pp-green));
 }
 
 .pp-card__price s {
@@ -609,8 +611,8 @@
   height: 15px;
   padding: 2px;
   border-radius: 999px;
-  background: var(--pp-green-soft);
-  color: var(--pp-green);
+  background: var(--plan-tint, var(--pp-green-soft));
+  color: var(--plan-accent, var(--pp-green));
   box-sizing: border-box;
 }
 
@@ -618,7 +620,7 @@
   padding-left: 22px;
   font-weight: 700;
   font-size: 0.7rem;
-  color: var(--pp-green);
+  color: var(--plan-accent, var(--pp-green));
 }
 
 .pp-card__cta {
@@ -634,7 +636,7 @@
   padding: 0 12px;
   border: 0;
   border-radius: 12px;
-  background: var(--pp-green);
+  background: linear-gradient(135deg, var(--plan-b, var(--pp-green)), var(--plan-a, var(--pp-green-deep)));
   color: #fff;
   font-weight: 700;
   font-size: 0.84rem;
@@ -662,8 +664,8 @@
 
 .pp-card__cta.is-owned {
   background: #fff;
-  color: var(--pp-green);
-  box-shadow: inset 0 0 0 1.5px var(--pp-green);
+  color: var(--plan-accent, var(--pp-green));
+  box-shadow: inset 0 0 0 1.5px var(--plan-accent, var(--pp-green));
 }
 
 .pp-card__cta.is-owned:hover {
@@ -772,7 +774,7 @@
   width: 100%;
   height: 100%;
   padding: 0;
-  border: 1px solid rgba(13, 97, 78, 0.12);
+  border: 1px solid color-mix(in srgb, var(--plan-accent, #0d614e) 28%, transparent);
   border-radius: 18px;
   background: #fff;
   color: var(--pp-ink);
@@ -785,8 +787,13 @@
 
 .pp-rail:hover {
   transform: translateY(-4px);
-  border-color: rgba(201, 165, 90, 0.55);
+  border-color: color-mix(in srgb, var(--plan-c, #c9a55a) 70%, white);
   box-shadow: 0 8px 20px rgba(19, 35, 30, 0.06), 0 22px 34px -14px rgba(11, 65, 54, 0.3);
+}
+
+.pp-rail:focus-visible {
+  outline: 2px solid var(--plan-accent, var(--pp-green));
+  outline-offset: 3px;
 }
 
 .pp-rail__banner {
@@ -795,15 +802,31 @@
   width: 100%;
   height: 142px;
   flex: none;
-  background: linear-gradient(145deg, #0d614e 0%, #0b4136 55%, #163528 100%);
+  background:
+    radial-gradient(78% 70% at var(--plan-glow-x, 100%) var(--plan-glow-y, 0%), rgba(255, 255, 255, 0.32), transparent 52%),
+    linear-gradient(152deg, var(--plan-a, #4c1d95) 0%, var(--plan-b, #6d28d9) 48%, var(--plan-c, #7c3aed) 100%);
 }
 
 .pp-rail__banner img {
   width: 100%;
   height: 100%;
-  object-fit: fill;
+  object-fit: cover;
   display: block;
   transition: transform 450ms var(--pp-ease);
+}
+
+.pp-rail__banner::after,
+.pp-card__banner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--plan-a, #4c1d95) 74%, transparent),
+    color-mix(in srgb, var(--plan-c, #7c3aed) 38%, transparent)
+  );
+  pointer-events: none;
+  opacity: 0.3;
 }
 
 .pp-rail:hover .pp-rail__banner img {
@@ -817,10 +840,10 @@
   place-content: center;
   justify-items: center;
   gap: 6px;
-  color: var(--pp-gold-soft);
+  color: #fff;
   background:
-    radial-gradient(70% 80% at 85% 0%, rgba(228, 196, 122, 0.3), transparent 55%),
-    linear-gradient(145deg, #0d614e 0%, #0b4136 60%, #163528 100%);
+    radial-gradient(70% 80% at var(--plan-glow-x, 85%) var(--plan-glow-y, 0%), rgba(255, 255, 255, 0.28), transparent 55%),
+    linear-gradient(152deg, var(--plan-a, #4c1d95) 0%, var(--plan-b, #6d28d9) 48%, var(--plan-c, #7c3aed) 100%);
 }
 
 .pp-rail__fall span {
@@ -834,7 +857,7 @@
   position: absolute;
   inset: auto 0 0;
   height: 58%;
-  background: linear-gradient(180deg, transparent, rgba(8, 36, 28, 0.72));
+  background: linear-gradient(180deg, transparent, rgba(8, 16, 32, 0.55));
   pointer-events: none;
 }
 
@@ -856,7 +879,7 @@
   padding: 3px 8px;
   border-radius: 999px;
   background: rgba(255, 253, 248, 0.94);
-  color: var(--pp-green);
+  color: var(--plan-accent, var(--pp-green));
   font-size: 0.58rem;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -885,6 +908,7 @@
   gap: 5px;
   min-height: 0;
   padding: 10px 12px 0;
+  overflow: hidden;
 }
 
 .pp-rail__name {
@@ -905,7 +929,7 @@
   margin: 0;
   font-size: 0.68rem;
   font-weight: 700;
-  color: #8a6b2e;
+  color: var(--plan-accent, #8a6b2e);
 }
 
 .pp-rail__benefits {
@@ -939,8 +963,8 @@
   height: 14px;
   padding: 2px;
   border-radius: 999px;
-  background: var(--pp-green-soft);
-  color: var(--pp-green);
+  background: var(--plan-tint, var(--pp-green-soft));
+  color: var(--plan-accent, var(--pp-green));
   box-sizing: border-box;
 }
 
@@ -948,7 +972,7 @@
   padding-left: 20px;
   font-size: 0.68rem;
   font-weight: 700;
-  color: var(--pp-green);
+  color: var(--plan-accent, var(--pp-green));
 }
 
 .pp-rail__blurb {
@@ -968,7 +992,7 @@
   gap: 2px;
   margin-top: auto;
   padding: 8px 12px 0;
-  border-top: 1px solid rgba(13, 97, 78, 0.1);
+  border-top: 1px solid color-mix(in srgb, var(--plan-accent, #0d614e) 16%, transparent);
 }
 
 .pp-rail__price {
@@ -983,7 +1007,7 @@
   font-family: var(--am-font-display);
   font-size: 1.15rem;
   font-weight: 700;
-  color: var(--pp-green);
+  color: var(--plan-accent, var(--pp-green));
   letter-spacing: -0.02em;
   line-height: 1;
 }
@@ -1007,11 +1031,11 @@
   height: 38px;
   margin: 8px 12px 12px;
   border-radius: 11px;
-  background: var(--pp-green);
+  background: linear-gradient(135deg, var(--plan-b, var(--pp-green)), var(--plan-a, var(--pp-green-deep)));
   color: #fff;
   font-size: 0.8rem;
   font-weight: 700;
-  box-shadow: 0 6px 14px -8px rgba(11, 65, 54, 0.55);
+  box-shadow: 0 6px 14px -8px color-mix(in srgb, var(--plan-a, #0b4136) 70%, transparent);
 }
 
 /* ========== Package details ========== */
@@ -1039,10 +1063,11 @@
   gap: 12px;
   padding: 18px;
   border-radius: 20px;
-  border: 1px solid rgba(201, 165, 90, 0.45);
+  border: 1px solid color-mix(in srgb, var(--plan-c, #c9a55a) 45%, #e8c27a);
   background:
-    radial-gradient(90% 60% at 100% 0%, rgba(228, 196, 122, 0.22), transparent 55%),
-    linear-gradient(165deg, #115443 0%, #0a2f27 100%);
+    radial-gradient(90% 70% at var(--plan-glow-x, 100%) var(--plan-glow-y, 0%), rgba(255, 255, 255, 0.3), transparent 52%),
+    radial-gradient(60% 50% at 0% 100%, rgba(232, 194, 122, 0.24), transparent 55%),
+    linear-gradient(155deg, var(--plan-a, #115443) 0%, var(--plan-b, #0d614e) 48%, var(--plan-c, #0a2f27) 100%);
   color: #f7f1e3;
   box-shadow: 0 14px 32px -16px rgba(10, 47, 39, 0.5);
 }
@@ -1246,8 +1271,8 @@
   align-items: flex-start;
   padding: 10px;
   border-radius: 12px;
-  background: var(--pp-green-soft);
-  color: var(--pp-green);
+  background: var(--plan-tint, var(--pp-green-soft));
+  color: var(--plan-accent, var(--pp-green));
 }
 
 .pp-detail__facts small {
@@ -1289,8 +1314,8 @@
   height: 20px;
   margin-top: 1px;
   border-radius: 999px;
-  background: var(--pp-green-soft);
-  color: var(--pp-green);
+  background: var(--plan-tint, var(--pp-green-soft));
+  color: var(--plan-accent, var(--pp-green));
   flex: none;
 }
 
@@ -1339,7 +1364,7 @@
 .pp-detail__bill .is-total strong {
   font-family: var(--am-font-display);
   font-size: 1.05rem;
-  color: var(--pp-green);
+  color: var(--plan-accent, var(--pp-green));
 }
 
 @media (prefers-reduced-motion: reduce) {

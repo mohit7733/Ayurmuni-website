@@ -59,6 +59,18 @@ const normalizeMessagesResponse = (body, sendBlocked = false) => {
 const outboundPostInFlight = new Map();
 let lastOutboundPost = null;
 let syncPostLock = false;
+const getMessagesInFlight = new Map();
+
+const messagesRequestKey = (appointmentId, markRead) =>
+  `${String(appointmentId)}|${markRead === undefined ? '' : String(markRead)}`;
+
+/** Test hook: drop in-flight / recent-send guards. */
+export const resetChatServiceDedupe = () => {
+  getMessagesInFlight.clear();
+  outboundPostInFlight.clear();
+  lastOutboundPost = null;
+  syncPostLock = false;
+};
 
 const extractSentMessage = (body) => {
   if (!body || typeof body !== 'object') return null;
@@ -78,6 +90,11 @@ const authHeader = async () => {
 
 export const chatService = {
   getMessages: async (appointmentId, markRead) => {
+    const key = messagesRequestKey(appointmentId, markRead);
+    const existing = getMessagesInFlight.get(key);
+    if (existing) return existing;
+
+    const request = (async () => {
     let url = `${API_BASE}/communication/appointments/${appointmentId}/messages/`;
     if (markRead !== undefined) {
       const value = markRead === true ? 'true' : markRead;
@@ -134,6 +151,14 @@ export const chatService = {
     error.httpStatus = response.status;
     error.code = typeof body.code === 'string' ? body.code : undefined;
     throw error;
+    })();
+
+    getMessagesInFlight.set(key, request);
+    try {
+      return await request;
+    } finally {
+      if (getMessagesInFlight.get(key) === request) getMessagesInFlight.delete(key);
+    }
   },
 
   sendMessage: async (appointmentId, payload) => {

@@ -306,7 +306,8 @@ export function useChatInbox({ enabled = true, refreshMs = REFRESH_INTERVAL_MS }
   }, [enabled, load]);
 
   useEffect(() => {
-    if (!enabled) return undefined;
+    // refreshMs 0: load once when enabled. No background poll.
+    if (!enabled || !refreshMs) return undefined;
     const timer = setInterval(() => {
       if (document.visibilityState !== 'hidden') load('silent');
     }, refreshMs);

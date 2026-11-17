@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Star } from 'lucide-react';
 import { Button, Modal } from './ui';
-import { formatConsultationAmount, formatRupee } from '../home/catalog';
+import PackageCount from './PackageCount';
+import { formatConsultationAmount } from '../home/catalog';
+import { formatPlanMoney } from '../packages/planTheme';
 import { formatPlanDate } from '../utils/planUtils';
-import { getPlanConsultState, planRemainingLabel } from '../consult/consultPayment';
+import { getConsultBenefit, getPlanConsultState, planRemainingLabel } from '../consult/consultPayment';
 import '../design/components/consult-plan.css';
 
 const UNUSABLE_LABEL = {
@@ -78,8 +80,12 @@ export default function ConsultPlanPicker({ open, plans, eligibility, selectedId
           const status = rowStatus(plan);
           const on = status.usable && plan.id === pickedId;
           const expires = formatPlanDate(plan.expires_at);
-          const payable = eligibility?.[plan.id]?.payable;
+          const quote = eligibility?.[plan.id];
+          const payable = quote?.payable;
           const price = Number(plan.paid_price || plan.original_price || 0);
+          const benefit = getConsultBenefit(plan);
+          const remaining = quote?.quantityRemaining ?? benefit?.quantity_remaining;
+          const total = benefit?.quantity_total;
           return (
             <label key={plan.id} className={`cp-row${on ? ' is-on' : ''}${status.usable ? '' : ' is-off'}`}>
               <input
@@ -95,10 +101,11 @@ export default function ConsultPlanPicker({ open, plans, eligibility, selectedId
                   <span>{plan.name}</span>
                 </strong>
                 {status.label ? <small className={status.usable ? '' : 'cp-row__off'}>{status.label}</small> : null}
+                {status.usable ? <PackageCount remaining={remaining} total={total} barOnly compact /> : null}
                 {expires ? <small>Valid till {expires}</small> : null}
               </span>
               <span className="cp-row__price">
-                {price > 0 ? <small>{formatRupee(price)}</small> : null}
+                {price > 0 ? <small>{formatPlanMoney(price)}</small> : null}
                 {status.usable && payable != null ? <strong>Pay {formatConsultationAmount(payable)}</strong> : null}
               </span>
             </label>

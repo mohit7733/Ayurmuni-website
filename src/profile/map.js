@@ -1,4 +1,4 @@
-import { formatRupee, resolveImageUrl } from '../home/catalog';
+import { formatRupee, mapCatalogProductItem, resolveImageUrl } from '../home/catalog';
 import { getAppointmentIds } from '../consult/appointmentUtils';
 import { doctorDisplayName, doctorImage, getDoctorId } from '../consult/doctors';
 
@@ -96,6 +96,46 @@ export const mapOrdersToRecentProducts = (orders = [], limit = 8) => {
   return recentItems;
 };
 
+/** Order line + catalog payload shaped like a Trending Now product card. */
+export const catalogCardFromProduct = (product, variantId, fallback = {}) => {
+  if (!product || typeof product !== 'object' || product.success === false) return null;
+  const variants = Array.isArray(product.variants) ? product.variants : [];
+  const variant =
+    variants.find(
+      (entry) =>
+        String(entry?.id) === String(variantId) ||
+        String(entry?.variant_id) === String(variantId),
+    ) || product;
+  const mapped = mapCatalogProductItem({ ...product, ...variant, variant_id: variantId }) || {};
+  return {
+    ...mapped,
+    variant_id: variantId,
+    name: variant?.variant_title || variant?.name || mapped.name || fallback.name || 'Product',
+    selling_price: variant?.selling_price ?? mapped.selling_price ?? fallback.price,
+    mrp: variant?.mrp ?? mapped.mrp,
+    image_url:
+      imageFromProductPayload(product, variantId) || mapped.image_url || fallback.image || '',
+    prescription_required: variant?.prescription_required ?? product?.prescription_required,
+  };
+};
+
+/** Catalog product payload → image for a variant, when the order line has none. */
+export const imageFromProductPayload = (product, variantId) => {
+  if (!product || typeof product !== 'object') return '';
+  const variants = Array.isArray(product.variants) ? product.variants : [];
+  const variant =
+    variants.find(
+      (entry) =>
+        String(entry?.id) === String(variantId) ||
+        String(entry?.variant_id) === String(variantId),
+    ) || null;
+  return (
+    recentItemImage({ ...(variant || {}), variant, product }) ||
+    resolveImageUrl(variant) ||
+    resolveImageUrl(product)
+  );
+};
+
 const pickFollowUpDate = (followUp, item) =>
   String(followUp?.date || followUp?.schedule || item?.follow_up_date || '').trim();
 
@@ -125,8 +165,14 @@ export const mapAppointment = (item) => {
     consultationId: ids.consultationId,
     doctorId,
     doctorName: doctorDisplayName(doctor),
-    image: doctorImage(doctor),
+    image: doctorImage(doctor) || doctorImage(item),
     specialty,
+    experience: String(doctor?.experience_display || '').trim()
+      || (doctor?.experience_years ? `${doctor.experience_years} yrs` : ''),
+    city: String(doctor?.city || '').trim(),
+    consultationType: String(
+      appointment?.consultation_type || item?.consultation_type || '',
+    ).trim(),
     therapies,
     date:
       appointment?.appointment_date ||

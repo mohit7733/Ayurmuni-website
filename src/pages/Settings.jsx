@@ -1,18 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { user_profile, update_Profile } from '../services/profileService';
+import { user_profile, update_Profile, deleteAccount } from '../services/profileService';
 import {
   logoutOneSignalUser,
   requestNotificationPermission,
   setPushOptIn,
 } from '../services/pushNotificationService';
-import { ChevronRight, LogOut } from 'lucide-react';
+import { ChevronRight, LogOut, Trash2 } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import PageHeader from '../components/PageHeader';
 import { Utils } from '../common/utils';
 import { showSuccessToast } from '../config/key';
 import { useLocation as useDeliveryLocation } from '../context/LocationContext';
-import { Button } from '../components/ui';
+import { Button, Modal } from '../components/ui';
 import { PROFILE_COPY as T } from '../content/profile';
 import '../design/pages/profile.css';
 
@@ -21,6 +21,10 @@ export default function Settings() {
   const { clearLocationSession } = useDeliveryLocation();
   const [pushEnabled, setPushEnabled] = useState(false);
   const [pushSaving, setPushSaving] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteDone, setDeleteDone] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [retentionDays, setRetentionDays] = useState(30);
 
   useEffect(() => {
     let alive = true;
@@ -70,6 +74,28 @@ export default function Settings() {
     } finally {
       setPushSaving(false);
     }
+  };
+
+  const onDelete = async () => {
+    if (deleting) return;
+    setDeleting(true);
+    const res = await deleteAccount();
+    setDeleting(false);
+    if (res?.success === false) {
+      showSuccessToast(res?.message || 'Unable to delete account', 'error');
+      return;
+    }
+    const days = Number(res?.data?.retention_days ?? res?.retention_days ?? 30);
+    setRetentionDays(Number.isFinite(days) && days > 0 ? days : 30);
+    setDeleteOpen(false);
+    setDeleteDone(true);
+  };
+
+  const finishDelete = async () => {
+    await clearLocationSession();
+    logoutOneSignalUser();
+    await Utils.clearAllData();
+    navigate('/welcome', { replace: true });
   };
 
   const signOut = async () => {
@@ -137,16 +163,58 @@ export default function Settings() {
         </div>
 
         <div className="pf-foot">
-          <Button
-            variant="secondary"
-            leadingIcon={<LogOut size={18} aria-hidden />}
-            onClick={signOut}
-          >
-            {T.signOut}
-          </Button>
+          <div className="pf-foot__actions">
+            <Button
+              variant="secondary"
+              leadingIcon={<LogOut size={18} aria-hidden />}
+              onClick={signOut}
+            >
+              {T.signOut}
+            </Button>
+            <button type="button" className="pf-foot__delete" onClick={() => setDeleteOpen(true)}>
+              <Trash2 size={15} aria-hidden />
+              {T.deleteAccount}
+            </button>
+          </div>
         </div>
 
       </section>
+
+      <Modal
+        open={deleteOpen}
+        onClose={() => !deleting && setDeleteOpen(false)}
+        title={T.deleteTitle}
+        description={T.deleteText}
+        dismissible={!deleting}
+        footer={
+          <>
+            <Button variant="secondary" disabled={deleting} onClick={() => setDeleteOpen(false)}>
+              {T.deleteCancel}
+            </Button>
+            <Button variant="danger" loading={deleting} onClick={onDelete}>
+              {deleting ? T.pleaseWait : T.deleteConfirm}
+            </Button>
+          </>
+        }
+      />
+      <Modal
+        open={deleteDone}
+        onClose={finishDelete}
+        title={T.deleteDoneTitle}
+        description={T.deleteDoneText(retentionDays)}
+        hideClose
+        dismissible={false}
+        footer={
+          <>
+            <Button variant="secondary" onClick={finishDelete}>
+              {T.deleteDoneStay}
+            </Button>
+            <Button variant="primary" onClick={finishDelete}>
+              {T.deleteDoneContinue}
+            </Button>
+          </>
+        }
+      />
     </AppShell>
   );
 }

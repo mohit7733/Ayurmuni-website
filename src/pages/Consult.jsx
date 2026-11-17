@@ -14,7 +14,7 @@ import useDashboardCategories from '../hooks/useDashboardCategories';
 import useCategoryProducts from '../hooks/useCategoryProducts';
 import { getAllApprovedDoctors, getConsultHistory, getSuggestedDoctors } from '../services/consultService';
 import { getHealthCategories } from '../services/productService';
-import { doctorDisplayName, getDoctorId, normalizeDoctorList } from '../consult/doctors';
+import { doctorDisplayName, doctorImage, getDoctorId, normalizeDoctorList } from '../consult/doctors';
 import { resolveAppointmentLookupId } from '../consult/appointmentUtils';
 import { mapAppointment } from '../profile/map';
 import { isAuthenticated } from '../services/guestAuth';
@@ -144,9 +144,28 @@ export default function Consult() {
     } catch {
       hist = [];
     }
+    const doctorsList = Array.isArray(allDoctors) ? allDoctors : [];
+    const suggestedList = normalizeDoctorList(suggestedRes, { approvedOnly: true });
+    const photoByDoctorId = new Map();
+    const indexPhoto = (doc) => {
+      const id = getDoctorId(doc);
+      const url = doctorImage(doc);
+      if (id && url && !photoByDoctorId.has(String(id))) {
+        photoByDoctorId.set(String(id), url);
+      }
+    };
+    doctorsList.forEach(indexPhoto);
+    suggestedList.forEach(indexPhoto);
+    if (photoByDoctorId.size) {
+      hist = hist.map((entry) => {
+        if (entry.image) return entry;
+        const url = photoByDoctorId.get(String(entry.doctorId || ''));
+        return url ? { ...entry, image: url } : entry;
+      });
+    }
     setConcerns(normalizeApiList(catRes).map(mapProductCategory).filter((item) => item.id));
-    setDoctors(Array.isArray(allDoctors) ? allDoctors : []);
-    setSuggestedDoctors(normalizeDoctorList(suggestedRes, { approvedOnly: true }));
+    setDoctors(doctorsList);
+    setSuggestedDoctors(suggestedList);
     setHistory(hist);
     setLoading(false);
   };
@@ -220,7 +239,7 @@ export default function Consult() {
 
   const headActions = (
     <>
-        <Button
+      <Button
         variant="accent"
         onClick={() => navigate('/consult/doctors')}
         leadingIcon={<Stethoscope size={16} aria-hidden />}
@@ -238,100 +257,11 @@ export default function Consult() {
       <div className="hm-page svc-page">
         <div className="hm-body">
 
+
           {loading && !concerns.length && !doctors.length ? (
             <SkeletonGrid variant="doctor" count={4} label={T.loadingDoctors} />
           ) : (
             <>
-              {/* Our doctors only when Suggested doctors is empty (null/0). */}
-              {showOurDoctors ? (
-              <Reveal as="section" className="hm-section hm-panel" aria-labelledby="cs-doctors-title">
-                <SectionHead
-                  id="cs-doctors-title"
-                  eyebrow={T.doctorsEyebrow}
-                  title={T.doctorsTitle}
-                  description={T.doctorsText}
-                  action={
-                    <div className="am-head-tools">
-                      {headActions}
-                      <ViewAll label={T.doctorsTitle} onClick={() => navigate('/consult/doctors')} />
-                    </div>
-                  }
-                />
-                {loading && !doctors.length ? (
-                  <SkeletonGrid
-                    variant="doctor"
-                    count={6}
-                    label={T.loadingDoctors}
-                    className="am-doctor-grid am-doctor-grid--premium"
-                  />
-                ) : filteredDoctors.length === 0 ? (
-                  <EmptyState
-                    compact
-                    icon={<SearchX size={24} />}
-                    title={debounced ? T.noMatch : T.noDoctors}
-                    description={debounced ? T.noMatchText : T.noDoctorsText}
-                    action={
-                      debounced ? (
-                        <Button
-                          variant="secondary"
-                          onClick={() => {
-                            setSearch('');
-                            setDebounced('');
-                          }}
-                        >
-                          {T.clearSearch}
-                        </Button>
-                      ) : null
-                    }
-                  />
-                ) : (
-                  <ul className="am-doctor-grid am-doctor-grid--premium" aria-label={T.doctorsTitle}>
-                    {filteredDoctors.map((item) => (
-                      <li key={getDoctorId(item) || item.full_name}>
-                        <SuggestedDoctorCard item={item} fallbackSpeciality={H.ayurvedicDoctor} />
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </Reveal>
-              ) : null}
-
-              <section className="hm-section hm-panel cs-promises" aria-label={T.promisesLabel}>
-                <ul className="cs-promises__list">
-                  {T.promises.map((item) => (
-                    <li key={item.id} className="cs-promises__item">
-                      <span className="cs-promises__icon">{PROMISE_ICONS[item.id]}</span>
-                      <span className="cs-promises__label">{item.label}</span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-
-            {/* {filteredHistory.length > 0 ? (
-              <div className="hm-product-row">
-                <section className="hm-section hm-panel svc-rail-section" aria-labelledby="cs-recent-title">
-                  <SectionHead
-                    id="cs-recent-title"
-                    title={H.visitedTitle}
-                    description="Consultations you booked recently."
-                    action={<ViewAll label={T.recentTitle} onClick={() => navigate('/consult/history')} />}
-                  />
-                  <Rail label={H.visitedTitle} className="svc-consult-rail">
-                    {filteredHistory.map((item) => (
-                      <RailItem key={item.consultationId || item.appointmentId || item.id} size="wide">
-                        <ConsultationCard
-                          item={item}
-                          onOpen={openDetails}
-                          onReceipt={(entry) => navigate(`/profile/receipts/${entry.consultationId}`)}
-                          onBook={openSlots}
-                        />
-                      </RailItem>
-                    ))}
-                  </Rail>
-                </section>
-              </div>
-            ) : null} */}
-
               {showSuggestedDoctors ? (
                 <Reveal
                   as="section"
@@ -341,11 +271,11 @@ export default function Consult() {
                 >
                   <SectionHead
                     id="cs-suggested-doctors-title"
-                    eyebrow={H.doctorsEyebrow}
-                    title={T.suggestedDoctorsTitle}
+                    eyebrow={T.topDoctorsEyebrow}
+                    title={T.topDoctorsTitle}
                     description={T.suggestedDoctorsText}
                     action={
-                      <ViewAll label={T.suggestedDoctorsTitle} onClick={() => navigate('/consult/doctors')} />
+                      <ViewAll label={T.topDoctorsTitle} onClick={() => navigate('/consult/doctors')} />
                     }
                   />
                   {loading && !suggestedDoctors.length ? (
@@ -358,7 +288,7 @@ export default function Consult() {
                   ) : (
                     <ul
                       className="am-doctor-grid am-doctor-grid--premium am-doctor-grid--portrait"
-                      aria-label={T.suggestedDoctorsTitle}
+                      aria-label={T.topDoctorsTitle}
                     >
                       {filteredSuggestedDoctors.slice(0, suggestedDoctorLimit).map((item) => (
                         <li key={getDoctorId(item) || item.full_name}>
@@ -370,14 +300,93 @@ export default function Consult() {
                 </Reveal>
               ) : null}
 
+              {showOurDoctors ? (
+                <Reveal as="section" className="hm-section hm-panel" aria-labelledby="cs-doctors-title">
+                  <SectionHead
+                    id="cs-doctors-title"
+                    eyebrow={T.topDoctorsEyebrow}
+                    title={T.topDoctorsTitle}
+                    description={T.doctorsText}
+                    action={
+                      <div className="am-head-tools">
+                        {headActions}
+                        <ViewAll label={T.topDoctorsTitle} onClick={() => navigate('/consult/doctors')} />
+                      </div>
+                    }
+                  />
+                  {filteredDoctors.length === 0 ? (
+                    <EmptyState
+                      compact
+                      icon={<SearchX size={24} />}
+                      title={debounced ? T.noMatch : T.noDoctors}
+                      description={debounced ? T.noMatchText : T.noDoctorsText}
+                      action={
+                        debounced ? (
+                          <Button
+                            variant="secondary"
+                            onClick={() => {
+                              setSearch('');
+                              setDebounced('');
+                            }}
+                          >
+                            {T.clearSearch}
+                          </Button>
+                        ) : null
+                      }
+                    />
+                  ) : (
+                    <ul className="am-doctor-grid am-doctor-grid--premium" aria-label={T.topDoctorsTitle}>
+                      {filteredDoctors.slice(0, suggestedDoctorLimit).map((item) => (
+                        <li key={getDoctorId(item) || item.full_name}>
+                          <SuggestedDoctorCard item={item} fallbackSpeciality={H.ayurvedicDoctor} />
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </Reveal>
+              ) : null}
+              <section className="hm-section hm-panel cs-promises" aria-label={T.promisesLabel}>
+                <ul className="cs-promises__list">
+                  {T.promises.map((item) => (
+                    <li key={item.id} className="cs-promises__item">
+                      <span className="cs-promises__icon">{PROMISE_ICONS[item.id]}</span>
+                      <span className="cs-promises__label">{item.label}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+              {filteredHistory.length > 0 ? (
+                <div className="hm-product-row">
+                  <section className="hm-section hm-panel svc-rail-section" aria-labelledby="cs-recent-title">
+                    <SectionHead
+                      id="cs-recent-title"
+                      title={T.recentTitle}
+                      description="Consultations you booked recently."
+                      action={<ViewAll label={T.recentTitle} onClick={() => navigate('/consult/history')} />}
+                    />
+                    <div className="svc-consult-grid">
+                      {filteredHistory.map((item) => (
+                        <ConsultationCard
+                          key={item.consultationId || item.appointmentId || item.id}
+                          item={item}
+                          onOpen={openDetails}
+                          onReceipt={(entry) => navigate(`/profile/receipts/${entry.consultationId}`)}
+                          onBook={openSlots}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                </div>
+              ) : null}
+
               {concerns.length > 0 ? (
                 <Reveal as="section" className="hm-section hm-panel hm-concerns-panel" aria-labelledby="cs-concerns-title">
                   <SectionHead
                     id="cs-concerns-title"
-                    title={H.concernsTitle}
-                    description={H.concernsText}
+                    title={T.concernsTitle}
+                    description={T.concernsText}
                   />
-                  <ConcernCarousel label={H.concernsTitle}>
+                  <ConcernCarousel label={T.concernsTitle}>
                     {concerns.map((item) => (
                       <Tile
                         cutout
@@ -387,8 +396,7 @@ export default function Consult() {
                         label={item.name}
                         onClick={() =>
                           navigate(
-                            `/consult/concern/${item.id}?name=${encodeURIComponent(item.name)}${
-                              item.description ? `&desc=${encodeURIComponent(item.description)}` : ''
+                            `/consult/concern/${item.id}?name=${encodeURIComponent(item.name)}${item.description ? `&desc=${encodeURIComponent(item.description)}` : ''
                             }`,
                             { state: { categoryName: item.name, categoryDesc: item.description } },
                           )
@@ -398,6 +406,8 @@ export default function Consult() {
                   </ConcernCarousel>
                 </Reveal>
               ) : null}
+
+
 
               {products.length > 0 || productsLoading ? (
                 <div className="hm-product-row">

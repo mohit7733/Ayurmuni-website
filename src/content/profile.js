@@ -20,7 +20,6 @@ export const PROFILE_COPY = {
   deleteDoneStay: 'Stay',
   deleteDoneContinue: 'Continue',
   pleaseWait: 'Please wait…',
-  version: 'WEB VERSION 1.0',
   accountSection: 'Account',
   preferenceSection: 'Preference',
   exploreLabel: 'Explore',
@@ -144,6 +143,7 @@ const PROFILE_CARE = [
 ];
 
 const PROFILE_HEALTH = [
+  { title: 'My Diets', to: '/profile/diets', icon: 'diet' },
   { title: 'Medical Records', to: '/profile/records', icon: 'records' },
   { title: 'Medical History', to: '/medical-history', icon: 'file' },
   { title: 'Analysis', to: '/prakriti-profile', icon: 'activity' },
@@ -170,7 +170,7 @@ export const PROFILE_PREFERENCE = [
 
 export const PROFILE_BOARDS = [
   { title: 'Care', hint: 'Consults, plans and chats', items: PROFILE_CARE },
-  { title: 'Health', hint: 'Records, history and prakriti', items: PROFILE_HEALTH },
+  { title: 'Health', hint: 'Diets, records and prakriti', items: PROFILE_HEALTH },
   { title: 'Orders', hint: 'Purchases, wishlist and rewards', items: PROFILE_SHOP },
   { title: 'Preferences', hint: 'Payments, privacy and help', items: PROFILE_PREFERENCE },
 ];
