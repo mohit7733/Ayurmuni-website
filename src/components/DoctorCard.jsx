@@ -87,10 +87,14 @@ export default function DoctorCard({ item }) {
         ) : (
           <span />
         )}
-        <span className="am-doctor-card__cta" aria-hidden>
+        <button
+          type="button"
+          className="am-doctor-card__cta"
+          onClick={() => id && navigate(`/consult/doctors/${id}`)}
+        >
           View profile
-          <ChevronRight size={16} />
-        </span>
+          <ChevronRight size={16} aria-hidden />
+        </button>
       </div>
     </article>
   );

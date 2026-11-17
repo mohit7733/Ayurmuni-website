@@ -20,6 +20,7 @@ export const YOGA_COPY = {
   guided: 'Guided video',
   selfPaced: 'At your own pace',
   start: 'Start practice',
+  pause: 'Pause',
   view: 'View session',
   emptyTitle: 'Your practice is being prepared',
   emptyText: 'Our experts are curating sessions here. Meanwhile, an Ayurvedic doctor can suggest the right practice for your body type.',

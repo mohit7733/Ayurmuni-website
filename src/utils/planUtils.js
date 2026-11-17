@@ -7,6 +7,18 @@ export const PLAN_STATUS_TABS = [
   { label: 'Expired', value: 'expired' },
 ];
 
+/** All tab. The API hides pending and cancelled unless status is set. */
+export const ALL_PLAN_STATUSES = [
+  'active',
+  'pending',
+  'expired',
+  'exhausted',
+  'shifted',
+  'cancelled',
+  'refunded',
+  'failed',
+];
+
 export const PLAN_STATUS = {
   active: { label: 'Active', tone: 'success' },
   pending: { label: 'Pending', tone: 'warning' },

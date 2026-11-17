@@ -185,15 +185,14 @@
   grid-row: 2;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
   padding-top: 7px;
   border-top: 1px dashed rgba(201, 162, 78, 0.45);
   font-size: 12px;
   color: #4d625b;
   font-weight: 600;
+  min-width: 0;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .vd-card__visit {
@@ -205,10 +204,23 @@
   flex: 0 0 auto;
 }
 
-.vd-card__visit em {
-  font-style: normal;
-  color: #8a9a94;
-  font-weight: 500;
+.vd-card__visit-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vd-chip--visits {
+  flex: 0 0 auto;
+  height: 22px;
+  padding: 0 8px;
+  background: rgba(16, 83, 67, 0.07);
+  color: #105343;
+}
+
+.vd-chip--visits b {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .vd-card__actions {
@@ -300,9 +312,6 @@
     white-space: nowrap;
   }
 
-  .vd-card__visit em {
-    display: none;
-  }
 }
 
 @media (max-width: 360px) {

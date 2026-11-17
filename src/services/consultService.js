@@ -93,8 +93,33 @@ export const toggleFavDoctor = async (doctorId) =>
 export const getRecentVisitedDoctors = async () =>
   apiClient('customers/doctors/recent/', { method: 'GET' });
 
+const HISTORY_STATUSES = new Set([
+  'pending',
+  'confirmed',
+  'cancelled',
+  'completed',
+  'reschedule',
+  'rescheduled',
+  'cancellation_requested',
+  'missed',
+]);
+
+/** History API accepts `status`, and a date filter only when both ends are set. */
+const historyQuery = (params = {}) => {
+  const next = { ...params };
+  const requested = String(next.status || next.appointment_status || '').trim().toLowerCase();
+  delete next.appointment_status;
+  if (HISTORY_STATUSES.has(requested)) next.status = requested;
+  else delete next.status;
+  if (!next.from_date || !next.to_date) {
+    delete next.from_date;
+    delete next.to_date;
+  }
+  return next;
+};
+
 export const getConsultHistory = async (params = {}) => {
-  const qs = doctorsQuery(params);
+  const qs = doctorsQuery(historyQuery(params));
   return apiClient(
     qs
       ? `customers/doctors/consultation-history/?${qs}`
@@ -113,6 +138,11 @@ export const createConsultationPayment = async (data) => {
   const clean = cleanParams(data);
   // API accepts only cashfree | razorpay (never "payphi"); package_purchase_id books with a plan.
   if (clean.payment_gateway != null) clean.payment_gateway = toApiPaymentGateway(clean.payment_gateway);
+  // Pay normally must not also carry a package, or the server books the visit with the plan.
+  if (clean.skip_package_funding === true || String(clean.skip_package_funding).toLowerCase() === 'true') {
+    clean.skip_package_funding = true;
+    delete clean.package_purchase_id;
+  }
   return apiClient('payments/customer/consultation/payment/book-slot/', {
     method: 'POST',
     body: JSON.stringify(clean),
@@ -137,6 +167,7 @@ export const getConsultationFeeQuote = async (slotId, couponCode, packagePurchas
   if (couponCode) params.set('coupon_code', String(couponCode));
   const purchaseId = String(packagePurchaseId || '').trim();
   if (purchaseId) params.set('package_purchase_id', purchaseId);
+  else params.set('skip_package_funding', 'true');
   return apiClient(`payments/customer/consultation/fee-quote/?${params.toString()}`, {
     method: 'GET',
   });

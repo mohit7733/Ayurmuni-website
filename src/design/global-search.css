@@ -1,5 +1,71 @@
 /* Global search (/search, signed-in) — ivory surfaces, #105343 green, gold accents. */
-.gs-page .gs-field { margin: 4px 0 14px; }
+.app-shell .gs-page.catalog-page {
+  padding-top: 12px;
+  padding-bottom: 28px;
+}
+
+.app-shell .gs-page > .gs-head.catalog-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "back"
+    "title"
+    "copy"
+    "field";
+  align-items: center;
+  justify-content: stretch;
+  gap: 0;
+  margin-bottom: 12px;
+}
+
+.app-shell .gs-page > .gs-head .gs-head__copy {
+  display: contents;
+}
+
+.app-shell .gs-page > .gs-head .text-back {
+  grid-area: back;
+  margin: 0 0 8px;
+  justify-self: start;
+}
+
+.app-shell .gs-page > .gs-head h1 {
+  grid-area: title;
+}
+
+.app-shell .gs-page > .gs-head p {
+  grid-area: copy;
+  margin: 2px 0 10px;
+  line-height: 1.35;
+}
+
+.app-shell .gs-page > .gs-head .gs-field {
+  grid-area: field;
+  width: 100%;
+  max-width: none;
+  margin: 0 0 4px;
+}
+
+@media (min-width: 901px) {
+  .app-shell .gs-page > .gs-head.catalog-head.store-head {
+    grid-template-columns: minmax(240px, 1fr) minmax(420px, 680px);
+    grid-template-areas:
+      "back field"
+      "title field"
+      "copy field";
+    column-gap: 28px;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .app-shell .gs-page > .gs-head p {
+    margin: 2px 0 0;
+  }
+
+  .app-shell .gs-page > .gs-head .gs-field {
+    margin: 0;
+    align-self: center;
+  }
+}
 .gs-recent { margin: 0 0 16px; }
 .gs-recent__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
 .gs-recent__head h2 { font-family: 'Satoshi', 'Gilroy', system-ui, sans-serif; font-size: 16px; font-weight: 600; letter-spacing: 0; text-transform: none; color: #0f172a; margin: 0; }

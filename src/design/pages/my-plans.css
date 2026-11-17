@@ -1,9 +1,10 @@
 /* My Plans (mp-*) - purchased care plans. Built on orders.css (or-*) layout + ui Chip/SearchField. */
 
 .mp-list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+  align-items: start;
 }
 
 .mp-card {
@@ -225,14 +226,19 @@
   text-transform: none;
 }
 .mp-benefits {
-  margin: 0;
+  margin: 8px 0 0;
   padding: 0;
   list-style: none;
+}
+.mp-benefits--shifted {
+  display: flex;
+  flex-direction: column;
 }
 .mp-benefit {
   display: flex;
   align-items: flex-start;
   gap: 10px;
+  min-width: 0;
   padding: 8px 0;
 }
 .mp-benefit + .mp-benefit {
@@ -258,7 +264,7 @@
 }
 .mp-benefit__top {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
 }
@@ -317,6 +323,12 @@
 .pp-head__plans:focus-visible {
   outline: 2px solid var(--pp-gold, #c9a55a);
   outline-offset: 2px;
+}
+
+@media (max-width: 800px) {
+  .mp-list {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 480px) {

@@ -8,6 +8,7 @@ import PlanTransferModal from "../components/PlanTransferModal";
 import PackagePaymentModal from "../components/PackagePaymentModal";
 import usePackagePurchase from "../hooks/usePackagePurchase";
 import { isAuthenticated, requireAuth } from "../services/guestAuth";
+import PackageCount from "../components/PackageCount";
 import { loadPackageById } from "../services/packageService";
 import "../design/pages/packages-premium.css";
 
@@ -145,12 +146,16 @@ export default function PackageDetails() {
                 <strong>{formatPlanMoney(payable)}</strong>
                 {item.mrp > item.price ? <s>{formatPlanMoney(item.mrp)}</s> : null}
               </div>
-              {owned && (item.remaining != null || item.expiresAt) ? (
-                <p className="pp-detail__note">
-                  {item.remaining != null ? `${item.remaining} ${item.remaining === 1 ? "session" : "sessions"} left` : ""}
-                  {item.remaining != null && item.expiresAt ? " · " : ""}
-                  {item.expiresAt && formatDate(item.expiresAt) ? `valid till ${formatDate(item.expiresAt)}` : ""}
-                </p>
+              {owned && (item.remaining != null || item.total != null || item.expiresAt) ? (
+                <PackageCount
+                  remaining={item.remaining}
+                  total={item.total}
+                  includeUnit
+                  unit="consultation"
+                  variant="on-dark"
+                  expired={Boolean(item.expiresAt && Number.isFinite(new Date(item.expiresAt).getTime()) && new Date(item.expiresAt).getTime() < Date.now())}
+                  validTill={item.expiresAt && formatDate(item.expiresAt) ? formatDate(item.expiresAt) : ""}
+                />
               ) : saving > 0 ? (
                 <p className="pp-detail__note">You save {formatPlanMoney(saving)}</p>
               ) : null}

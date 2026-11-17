@@ -209,8 +209,9 @@ export const buildReceiptDocument = (receipt) => {
   const { consultationFee, platformFee, gstAmount, discount, convenienceFee } = breakdown;
   const adminFee = breakdown.administrativeCharges || 0;
   const digitalFee = breakdown.digitalReportAccess || 0;
-  const grandTotal =
-    breakdown.totalPaid > 0
+  const grandTotal = breakdown.packageFunded
+    ? 0
+    : breakdown.totalPaid > 0
       ? breakdown.totalPaid
       : consultationFee - discount + platformFee + convenienceFee + gstAmount + adminFee + digitalFee;
 

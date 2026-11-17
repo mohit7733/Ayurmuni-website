@@ -225,25 +225,25 @@ export default function GlobalSearch() {
   return (
     <AppShell tab="products">
       <section className="catalog-page store-page search-page gs-page">
-        <header className="catalog-head store-head">
-          <div>
+        <header className="catalog-head store-head gs-head">
+          <div className="gs-head__copy">
             <button type="button" className="text-back" onClick={() => navigate(-1)}>
               ← Back
             </button>
             <h1>Search</h1>
             <p>Products, medicines, doctors, yoga and diet plans</p>
           </div>
+          <PremiumSearch
+            value={text}
+            onChange={onChange}
+            onSubmit={onSubmit}
+            placeholder="Search products, doctors, yoga…"
+            label="Search Ayurmuni"
+            suggestions={suggestions}
+            autoFocus={!text}
+            className="gs-field"
+          />
         </header>
-        <PremiumSearch
-          value={text}
-          onChange={onChange}
-          onSubmit={onSubmit}
-          placeholder="Search products, doctors, yoga…"
-          label="Search Ayurmuni"
-          suggestions={suggestions}
-          autoFocus={!text}
-          className="gs-field"
-        />
 
         {source === 'idle' ? (
           <RecentSearchList

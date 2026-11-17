@@ -25,6 +25,21 @@
   gap: 8px;
   min-height: 40px;
 }
+.dx-top .am-back {
+  width: auto;
+  min-width: 0;
+  height: 36px;
+  min-height: 36px;
+  padding: 0 12px 0 8px;
+  gap: 6px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--am-ink-800, #24312d);
+  white-space: nowrap;
+}
 .dx-top__actions {
   display: flex;
   flex-wrap: wrap;
@@ -98,6 +113,20 @@
   .dx-hero.has-media .dx-hero__media > video {
     position: absolute;
     inset: 0;
+  }
+  /* Absolute video swallows clicks on the native pause control. Keep this one in flow. */
+  .dx-hero.has-media .dx-hero__media--video {
+    display: flex;
+    z-index: 1;
+  }
+  .dx-hero.has-media .dx-hero__media--video > video {
+    position: relative;
+    inset: auto;
+    z-index: 1;
+    width: 100%;
+    height: auto;
+    min-height: 360px;
+    max-height: 520px;
   }
 }
 

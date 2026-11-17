@@ -41,11 +41,37 @@ export const consultationCheckout = (response) => {
   return looksLikeCheckout(body.data) ? body.data : null;
 };
 
+/** Slot already has a successful payment. A new checkout cannot be started. */
+export const isSlotAlreadyPaid = (response) => {
+  const message = String(response?.message || response?.data?.message || '').toLowerCase();
+  return message.includes('already paid and booked');
+};
+
 /** HTTP 409 while a hold is still open. The reusable session is on `data`. */
 export const isPaymentAlreadyExists = (response) => {
+  if (isSlotAlreadyPaid(response)) return false;
   const status = Number(response?.status ?? response?.data?.status_code);
   const message = String(response?.message || response?.data?.message || '').toLowerCase();
   return status === 409 || message.includes('payment already exists');
+};
+
+const clockPrefix = (value) => String(value || '').trim().slice(0, 5);
+
+/** Confirmed history row for the slot the pay screen just tried to book. */
+export const matchBookedConsultation = (rows, { date, startTime, doctorId } = {}) => {
+  const wantDate = String(date || '').slice(0, 10);
+  const wantTime = clockPrefix(startTime);
+  const wantDoctor = String(doctorId || '').trim();
+  const list = Array.isArray(rows) ? rows : [];
+  const timed = list.filter((row) => {
+    const rowDate = String(row?.appointment_date || row?.date || '').slice(0, 10);
+    return rowDate === wantDate && clockPrefix(row?.start_time) === wantTime;
+  });
+  const exact = wantDoctor
+    ? timed.find((row) => String(row?.doctor?.doctor_id || row?.doctor?.id || '') === wantDoctor)
+    : null;
+  const row = exact || timed[0];
+  return String(row?.consultation_id || row?.appointment_id || '').trim();
 };
 
 /**

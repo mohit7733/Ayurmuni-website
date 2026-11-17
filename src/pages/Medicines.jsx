@@ -6,7 +6,6 @@ import ProductCard from '../components/ProductCard';
 import CartAddButton from '../components/CartAddButton';
 import { DietPlanCard, SectionHead, ViewAll } from '../components/ServiceHome';
 import {
-  formatRupee,
   mapProductCategory,
   normalizeApiList,
   resolveImageUrl,
@@ -18,7 +17,7 @@ import useProductCategories from '../hooks/useProductCategories';
 import { getHealthCategories, getProductByVariant } from '../services/productService';
 import { getBrands, listBrands, mapBrandItem } from '../services/medicineService';
 import { getOrders, normalizeOrdersList } from '../services/orderService';
-import { mapOrdersToRecentProducts } from '../profile/map';
+import { catalogCardFromProduct, mapOrdersToRecentProducts } from '../profile/map';
 import {
   Button,
   ConcernCarousel,
@@ -42,7 +41,9 @@ import { orderListedProducts } from '../products/listingOrder';
 import { HOME_COPY as H } from '../content/home';
 import { STORE_COPY as T } from '../content/store';
 import '../design/pages/store.css';
+import '../design/pages/home.css';
 import '../design/pages/products.css';
+import '../design/product-card-home.css';
 
 const nameTokens = (value) =>
   String(value || '')
@@ -555,7 +556,7 @@ export default function Medicines() {
                               >
                                 {item.price ? (
                                   <span className="st-recent__price">
-                                    {formatRupee(item.price)}
+                                    ₹{ item.price}
                                   </span>
                                 ) : null}
                                 {hasStockInfo(recentStock[item.variantId]) ? (

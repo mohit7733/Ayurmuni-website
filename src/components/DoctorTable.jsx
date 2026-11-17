@@ -175,10 +175,10 @@ function DoctorCard({ item, fallbackSpeciality, index }) {
               —
             </span>
           )}
-          <span className="hm-doc-card__cta" aria-hidden>
+          <button type="button" className="hm-doc-card__cta" onClick={openProfile}>
             View profile
-            <ArrowRight size={13} />
-          </span>
+            <ArrowRight size={13} aria-hidden />
+          </button>
         </div>
       </div>
     </article>

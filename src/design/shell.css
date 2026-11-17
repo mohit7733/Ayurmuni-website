@@ -1553,6 +1553,21 @@
   font-size: 14px;
   font-weight: 600;
 }
+.site-footer-app-store h2 {
+  margin: 0 0 12px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+}
+.site-footer-app-store a {
+  display: inline-block;
+  line-height: 0;
+}
+.site-footer-app-store img {
+  display: block;
+  width: 148px;
+  height: auto;
+}
 .site-footer-bar-legal {
   display: flex;
   align-items: center;

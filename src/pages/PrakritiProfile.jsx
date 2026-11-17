@@ -4,7 +4,6 @@ import logoImg from '/images/FinalLogo.webp';
 import { PRAKRITI_IMAGES } from '../questionnaire/configs';
 import * as ProfileServices from '../services/profileService';
 import { requireAuth } from '../services/guestAuth';
-import { ElementIcon, Lotus, Mandala, Ornament } from '../components/LuxuryOrnaments';
 import './prakriti-profile.css';
 
 const getDynamicTitle = (result) => {
@@ -55,7 +54,13 @@ const resolvePrakritiImage = (result) => {
   return match?.[1];
 };
 
-const formatPrakritiData = (apiData) => {
+const DOSHA_META = {
+  vata: { color: '#2563EB', soft: '#EFF6FF', icon: 'bolt' },
+  pitta: { color: '#F59E0B', soft: '#FFFBEB', icon: 'flame' },
+  kapha: { color: '#0EA5E9', soft: '#F0F9FF', icon: 'leaf' },
+};
+
+export const formatPrakritiData = (apiData) => {
   const dominantType = apiData?.result || '';
   const doshas = [
     {
@@ -64,7 +69,7 @@ const formatPrakritiData = (apiData) => {
       name: 'VATA',
       label: 'Air & Space',
       percentage: Number(apiData?.vata) || 0,
-      color: '#2563EB',
+      ...DOSHA_META.vata,
     },
     {
       id: 2,
@@ -72,7 +77,7 @@ const formatPrakritiData = (apiData) => {
       name: 'PITTA',
       label: 'Fire & Water',
       percentage: Number(apiData?.pitta) || 0,
-      color: '#F59E0B',
+      ...DOSHA_META.pitta,
     },
     {
       id: 3,
@@ -80,7 +85,7 @@ const formatPrakritiData = (apiData) => {
       name: 'KAPHA',
       label: 'Earth & Water',
       percentage: Number(apiData?.kapha) || 0,
-      color: '#0EA5E9',
+      ...DOSHA_META.kapha,
     },
   ];
   return {
@@ -99,7 +104,7 @@ const formatPrakritiData = (apiData) => {
   };
 };
 
-const hasValidPrakritiPayload = (response) => {
+export const hasValidPrakritiPayload = (response) => {
   if (!response || response.success !== true || !response?.data?.result) {
     return false;
   }
@@ -111,14 +116,99 @@ const hasValidPrakritiPayload = (response) => {
   return hasResult || hasDoshas;
 };
 
-function Stage({ children }) {
+const ICON_PATHS = {
+  bolt: 'M13 2 4 14h7l-1 8 10-13h-7l1-7z',
+  flame: 'M12 3c2 4-3 5-2 10 3-2 6-4 6-8 3 3 5 6 5 9a9 9 0 1 1-18 0c0-4 3-7 9-11z',
+  leaf: 'M5 19c8 0 14-6 14-14-8 0-14 6-14 14zm0 0 6-6',
+  check: 'm5 12 5 5L20 7',
+  x: 'M18 6 6 18M6 6l12 12',
+  'circle-check': 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M9 12l2 2 4-4',
+  'alert-circle': 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M12 8v5 M12 16h.01',
+  edit: 'M4 20h4L19 9l-4-4L4 16v4z M13.5 6.5l4 4',
+  refresh: 'M4 12a8 8 0 0 1 14-4m2 8a8 8 0 0 1-14 4 M20 4v5h-5 M4 20v-5h5',
+  home: 'M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1z',
+  'arrow-right': 'M5 12h14M13 6l6 6-6 6',
+  'arrow-left': 'M19 12H5M11 18l-6-6 6-6',
+  'chart-pie': 'M12 3a9 9 0 1 0 9 9h-9V3z M12 3a9 9 0 0 1 9 9',
+  heart: 'M12 20s-7-4.4-7-10a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 5.6-7 10-7 10z',
+};
+
+function Icon({ name, size = 18, color = 'currentColor', strokeWidth = 1.75 }) {
+  const d = ICON_PATHS[name];
+  if (!d) return null;
+  const filled = name === 'bolt';
   return (
-    <section className="pk-page">
-      <div className="pk-backdrop" aria-hidden>
-        <Mandala className="pk-mandala" />
-        <Mandala className="pk-mandala" />
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill={filled ? color : 'none'}
+      stroke={color}
+      strokeWidth={filled ? 0 : strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d={d} />
+    </svg>
+  );
+}
+
+function DoshaMeter({ item, index }) {
+  const pct = Math.max(0, Math.min(100, item.percentage));
+  return (
+    <div className="pk-meter">
+      <span className="pk-meter__icon" style={{ background: item.soft, color: item.color }}>
+        <Icon name={item.icon} size={16} color={item.color} />
+      </span>
+      <div className="pk-meter__body">
+        <div className="pk-meter__top">
+          <div className="pk-meter__names">
+            <span className="pk-meter__name">{item.name}</span>
+            <span className="pk-meter__label">{item.label}</span>
+          </div>
+          <span className="pk-meter__pct" style={{ color: item.color }}>
+            {item.percentage}%
+          </span>
+        </div>
+        <div className="pk-meter__track">
+          <span
+            className="pk-meter__fill"
+            style={{
+              width: `${pct}%`,
+              background: item.color,
+              animationDelay: `${120 + index * 120}ms`,
+            }}
+          />
+        </div>
       </div>
-      {children}
+    </div>
+  );
+}
+
+function GuidelineCard({ title, subtitle, color, soft, icon, data, positive }) {
+  if (!Array.isArray(data) || data.length === 0) return null;
+  return (
+    <section className="pk-guide-card">
+      <div className="pk-guide-card__top">
+        <span className="pk-guide-card__icon" style={{ background: soft, color }}>
+          <Icon name={icon} size={18} color={color} />
+        </span>
+        <div>
+          <h3 style={{ color }}>{title}</h3>
+          <p>{subtitle}</p>
+        </div>
+      </div>
+      <ul>
+        {data.map((item, index) => (
+          <li key={`${title}-${index}`}>
+            <span className="pk-bullet" style={{ background: soft, borderColor: `${color}33`, color }}>
+              <Icon name={positive ? 'check' : 'x'} size={12} color={color} />
+            </span>
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }
@@ -162,52 +252,111 @@ export default function PrakritiProfile() {
   }, [getPrakritiInfo]);
 
   const handleGoHome = () => navigate('/home', { replace: true });
-  // App: both entry points require a complete profile first.
+
+  const handleHeaderBack = () => {
+    if (fromAssessment) {
+      handleGoHome();
+      return;
+    }
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    handleGoHome();
+  };
+
   const handleEditAssessment = async () => {
     if (!(await requireAuth('Complete your profile to start prakriti assessment'))) return;
     navigate('/patient-faq', { state: { allowBack: true } });
   };
+
   const handleStartAssessment = async () => {
     if (!(await requireAuth('Complete your profile to start prakriti assessment'))) return;
     navigate('/patient-faq');
   };
 
-  const topKey = useMemo(() => {
-    if (!analysisData?.doshas?.length) return '';
-    return [...analysisData.doshas].sort((a, b) => b.percentage - a.percentage)[0]?.key || '';
+  const handleVikritiAssessment = () => {
+    navigate('/assessment', { state: { form: 'medical' } });
+  };
+
+  const dominantHighlight = useMemo(() => {
+    if (!analysisData?.doshas?.length) return '#0D614E';
+    const top = [...analysisData.doshas].sort((a, b) => b.percentage - a.percentage)[0];
+    return top?.color || '#0D614E';
   }, [analysisData]);
+
+  const renderHeader = (showEdit) => (
+    <header className="pk-top">
+      {fromAssessment ? (
+        <span className="pk-icon-btn pk-icon-btn--ghost" />
+      ) : (
+        <button type="button" className="pk-icon-btn" onClick={handleHeaderBack} aria-label="Go back">
+          <Icon name="arrow-left" size={18} color="#0D614E" />
+        </button>
+      )}
+      <h1>Prakriti Analysis</h1>
+      {showEdit ? (
+        <button type="button" className="pk-icon-btn" onClick={handleEditAssessment} aria-label="Edit">
+          <Icon name="edit" size={18} color="#0D614E" />
+        </button>
+      ) : (
+        <span className="pk-icon-btn pk-icon-btn--ghost" />
+      )}
+    </header>
+  );
 
   if (loading) {
     return (
-      <Stage>
-        <div className="pk-loader" role="status">
-          <span className="pk-loader__seal">
-            <Lotus />
-          </span>
-          Loading your Prakriti…
+      <section className="pk-page">
+        {renderHeader(false)}
+        <div className="pk-skel" role="status" aria-label="Loading your Prakriti">
+          <div className="pk-skel__hero" />
+          <div className="pk-skel__card" />
+          <div className="pk-skel__card" />
         </div>
-      </Stage>
+      </section>
     );
   }
 
   if (!hasPrakriti) {
     return (
-      <Stage>
-        <div className="pk-empty pk-card">
-          <img src={logoImg} alt="Ayurmuni" />
-          <span className="pk-eyebrow">
-            PRAKRITI <Ornament />
-          </span>
-          <h1>Know your Prakriti</h1>
-          <p>
-            A short Ayurvedic assessment reveals your body constitution and unlocks
-            personalized diet & lifestyle guidance.
-          </p>
-          <button className="pk-cta" type="button" onClick={handleStartAssessment}>
-            Start assessment →
+      <section className="pk-page">
+        {renderHeader(false)}
+        <div className="pk-empty">
+          <div className="pk-empty__hero">
+            <span className="pk-empty__logo">
+              <img src={logoImg} alt="" />
+            </span>
+            <p className="pk-empty__eyebrow">Discover your nature</p>
+            <h2>Know your Prakriti</h2>
+            <p className="pk-empty__copy">
+              A short Ayurvedic assessment reveals your body constitution and unlocks
+              personalized diet & lifestyle guidance.
+            </p>
+          </div>
+          <div className="pk-features">
+            {[
+              { icon: 'chart-pie', title: 'Dosha balance', copy: 'See your Vata, Pitta & Kapha mix' },
+              { icon: 'leaf', title: 'Diet guidance', copy: 'Foods that support your constitution' },
+              { icon: 'heart', title: 'Daily rituals', copy: "Simple do’s and don’ts for balance" },
+            ].map((item) => (
+              <div className="pk-feature" key={item.title}>
+                <span className="pk-feature__icon">
+                  <Icon name={item.icon} size={18} color="#0D614E" />
+                </span>
+                <div>
+                  <strong>{item.title}</strong>
+                  <p>{item.copy}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <button type="button" className="pk-cta" onClick={handleStartAssessment}>
+            Start assessment
+            <Icon name="arrow-right" size={18} color="#FFFFFF" />
           </button>
         </div>
-      </Stage>
+      </section>
     );
   }
 
@@ -215,115 +364,100 @@ export default function PrakritiProfile() {
   const dontList = analysisData.lifestyleGuidelines.dontList || [];
 
   return (
-    <Stage>
-      <header className="pk-top">
-        {fromAssessment ? (
-          <span className="pk-top__spacer" />
-        ) : (
-          <button type="button" className="pk-icon-btn" onClick={() => navigate(-1)} aria-label="Go back">
-            ←
-          </button>
-        )}
-        <h1>Prakriti Analysis</h1>
-        <button type="button" className="pk-chip-btn" onClick={handleEditAssessment}>
-          Edit
-        </button>
-      </header>
+    <section className="pk-page pk-page--result">
+      {renderHeader(true)}
 
-      <div className="pk-grid">
-        <div className="pk-hero pk-card">
-          <div className="pk-seal" aria-hidden>
-            <span className="pk-seal__rays" />
-            <span className="pk-seal__medal">
-              {analysisData.imageUrl ? <img src={analysisData.imageUrl} alt="" /> : <Lotus />}
-            </span>
-          </div>
+      <div className="pk-hero">
+        <div className="pk-hero__badge">
+          <Icon name="circle-check" size={14} color="#6EE7B7" />
+          <span>{fromAssessment ? 'Assessment complete' : 'Prakriti analysis'}</span>
+        </div>
+        <div className="pk-hero__main">
           <div className="pk-hero__copy">
-            <span className="pk-eyebrow">
-              {fromAssessment ? 'ASSESSMENT COMPLETE' : 'YOUR DOMINANT TYPE'} <Ornament />
-            </span>
+            <p className="pk-hero__kicker">Your dominant type</p>
             <h2>{analysisData.dominantLabel}</h2>
-            <p>
-              <strong>{analysisData.coreEssence.title}</strong> · personalized for your balance
+            <p className="pk-hero__sub">
+              {analysisData.coreEssence.title} · personalized for your balance
             </p>
           </div>
+          {analysisData.imageUrl ? (
+            <div className="pk-hero__photo">
+              <img src={analysisData.imageUrl} alt="" />
+            </div>
+          ) : (
+            <div className="pk-hero__photo pk-hero__photo--fallback" style={{ borderColor: dominantHighlight }}>
+              <Icon name="leaf" size={28} color="#FFFFFF" />
+            </div>
+          )}
         </div>
+      </div>
 
-        <div className="pk-doshas pk-card">
-          <span className="pk-eyebrow">
-            DOSHA COMPOSITION <Ornament />
-          </span>
-          <div className="pk-gauges">
-            {analysisData.doshas.map((item) => {
-              const pct = Math.max(0, Math.min(100, item.percentage));
-              return (
-                <div className={`pk-gauge ${item.key === topKey ? 'top' : ''}`} key={item.id}>
-                  <div className="pk-gauge__ring" style={{ '--pct': pct }}>
-                    <span className={`pk-ico ${item.key}`}>
-                      <ElementIcon type={item.key} />
-                    </span>
-                  </div>
-                  <b>{item.percentage}%</b>
-                  <strong>{item.name}</strong>
-                  <small>{item.label}</small>
-                </div>
-              );
-            })}
+      <div className="pk-stack">
+        <section className="pk-doshas">
+          <div className="pk-doshas__head">
+            <h3>Dosha composition</h3>
+            <span>Your unique mix</span>
           </div>
-        </div>
+          {analysisData.doshas.map((item, index) => (
+            <DoshaMeter key={item.id} item={item} index={index} />
+          ))}
+        </section>
 
-        <div className="pk-essence pk-card">
-          <span className="pk-eyebrow">
-            CORE ESSENCE <Ornament />
-          </span>
+        <section className="pk-essence">
+          <p className="pk-essence__kicker">Core essence</p>
           <h3>{analysisData.coreEssence.title}</h3>
           <p>
             {analysisData.coreEssence.description ||
               'Your constitution guides how you digest, think, and restore. Follow the rituals below to stay in balance.'}
           </p>
+        </section>
+
+        <div className="pk-guide-head">
+          <div>
+            <h3>Lifestyle guidelines</h3>
+            <p>Built around your {analysisData.dominantLabel} nature</p>
+          </div>
+          <span className="pk-pill">For you</span>
         </div>
 
-        {doList.length ? (
-          <div className="pk-list pk-card good">
-            <span className="pk-eyebrow">
-              DAILY RITUALS <Ornament />
-            </span>
-            <ul>
-              {doList.map((line) => (
-                <li key={line}>{line}</li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
-        {dontList.length ? (
-          <div className="pk-list pk-card ease">
-            <span className="pk-eyebrow">
-              THINGS TO EASE <Ornament />
-            </span>
-            <ul>
-              {dontList.map((line) => (
-                <li key={line}>{line}</li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
+        <div className="pk-guides">
+          <GuidelineCard
+            title="Daily rituals"
+            subtitle="Support balance every day"
+            color="#0D614E"
+            soft="#ECF8F3"
+            icon="circle-check"
+            positive
+            data={doList}
+          />
+          <GuidelineCard
+            title="Things to ease"
+            subtitle="Reduce friction for your dosha"
+            color="#EA580C"
+            soft="#FFF7ED"
+            icon="alert-circle"
+            data={dontList}
+          />
+        </div>
+
+        <div className="pk-secondary">
+          <button type="button" className="pk-ghost" onClick={handleEditAssessment}>
+            <Icon name="refresh" size={16} color="#0D614E" />
+            Retake assessment
+          </button>
+          <button type="button" className="pk-ghost" onClick={handleGoHome}>
+            <Icon name="home" size={16} color="#0D614E" />
+            Go to Home
+          </button>
+        </div>
       </div>
 
-      <div className="pk-actions">
-        <button type="button" className="pk-ghost" onClick={handleEditAssessment}>
-          Retake assessment
-        </button>
-        <button
-          type="button"
-          className="pk-ghost"
-          onClick={() => navigate('/assessment', { state: { form: 'medical' } })}
-        >
+      <div className="pk-sticky">
+        <button type="button" className="pk-cta" onClick={handleVikritiAssessment}>
           Vikriti assessment
-        </button>
-        <button className="pk-cta" type="button" onClick={handleGoHome}>
-          {fromAssessment ? 'Continue to Home' : 'Go to Home'}
+          <Icon name="arrow-right" size={18} color="#FFFFFF" />
         </button>
       </div>
-    </Stage>
+    </section>
   );
 }
