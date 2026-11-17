@@ -87,6 +87,12 @@ export const hasMoreDietPlanPages = (response, resultsLength, pageSize = DIET_PL
   return resultsLength >= pageSize;
 };
 
+/** GET diet/fee-quote/ — server price breakup (plan, fees, GST, total). */
+export const getDietFeeQuote = (dietPlanId) =>
+  apiClient(`diet/fee-quote/?diet_plan_id=${encodeURIComponent(String(dietPlanId || '').trim())}`, {
+    method: 'GET',
+  });
+
 /** POST diet/purchase/ — creates the gateway order. Does not start the plan. */
 export const purchaseDietPlan = ({ diet_plan_id, patient_id, payment_gateway } = {}) =>
   apiClient('diet/purchase/', {

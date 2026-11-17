@@ -6,6 +6,7 @@ import {
   Check,
   ChevronRight,
   CircleCheck,
+  Download,
   Flame,
   Leaf,
   Lock,
@@ -38,6 +39,12 @@ import { showSuccessToast } from '../config/key';
 import useDietPlans from '../diet/useDietPlans';
 import useDietStartPayment from '../diet/useDietStartPayment';
 import DietPaymentModal from '../components/DietPaymentModal';
+import { buildDietInvoiceDocument } from '../documents/dietInvoice';
+import { printDocumentHtml, renderDocumentHtml } from '../documents/documentHtml';
+import { isDietPaymentSettled } from '../payment/dietCheckout';
+import { getDietFeeQuote } from '../services/dietService';
+import { getPatientList, listPatients } from '../services/patientService';
+import { user_profile } from '../services/profileService';
 import WaterGoalStart from '../diet/WaterGoalStart';
 import WaterLog from '../diet/WaterLog';
 import {
@@ -80,6 +87,7 @@ export default function DietPlan() {
   const [conflict, setConflict] = useState(null);
   const [switching, setSwitching] = useState(false);
   const [congrats, setCongrats] = useState(false);
+  const [invoiceLoading, setInvoiceLoading] = useState(false);
 
   const {
     planDetail,
@@ -251,6 +259,42 @@ export default function DietPlan() {
     onConflict: setConflict,
   });
 
+  const purchased =
+    plan?.is_purchased === true ||
+    plan?.is_purchased === 1 ||
+    String(plan?.is_purchased || '').toLowerCase() === 'true' ||
+    isDietPaymentSettled(planId);
+
+  const downloadInvoice = async () => {
+    if (!planId || invoiceLoading) return;
+    setInvoiceLoading(true);
+    try {
+      const [quoteRes, profileRes, patientRes] = await Promise.all([
+        getDietFeeQuote(planId),
+        user_profile().catch(() => null),
+        getPatientList().catch(() => null),
+      ]);
+      if (quoteRes?.success === false) {
+        throw new Error(quoteRes?.message || 'Could not load the invoice.');
+      }
+      const html = renderDocumentHtml(
+        buildDietInvoiceDocument({
+          quote: quoteRes?.data ?? quoteRes,
+          plan,
+          profile: profileRes?.data ?? profileRes,
+          patients: listPatients(patientRes),
+        }),
+        `Diet invoice ${plan?.title || plan?.name || 'Diet plan'}`,
+      );
+      const opened = await printDocumentHtml(html);
+      if (!opened) showSuccessToast('Allow pop-ups to save the invoice.', 'error');
+    } catch (error) {
+      showSuccessToast(error?.message || 'Could not download the invoice.', 'error');
+    } finally {
+      setInvoiceLoading(false);
+    }
+  };
+
   const onStart = () => {
     if (status === 'paused') {
       payment.begin();
@@ -347,6 +391,16 @@ export default function DietPlan() {
                   >
                     Weekly planner
                   </Button>
+                  {purchased ? (
+                    <Button
+                      variant="secondary"
+                      leadingIcon={<Download size={16} aria-hidden />}
+                      loading={invoiceLoading}
+                      onClick={downloadInvoice}
+                    >
+                      Download invoice
+                    </Button>
+                  ) : null}
                   {isStarted && isPlanFullyComplete ? (
                     <Button
                       leadingIcon={<CircleCheck size={16} aria-hidden />}

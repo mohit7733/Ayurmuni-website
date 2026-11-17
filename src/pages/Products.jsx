@@ -446,7 +446,7 @@ export default function Products() {
                           >
                             {item.price ? (
                               <span className="st-recent__price">
-                                ₹{ item.price}
+                                ₹{ item.price} 
                               </span>
                             ) : null}
                             {hasStockInfo(recentStock[item.variantId]) ? (
