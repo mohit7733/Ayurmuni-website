@@ -581,8 +581,6 @@
 
 .diet-detail .diet-days button:hover:not(:disabled) {
   border-color: var(--am-primary-tint);
-  background: var(--am-primary-soft);
-  color: var(--am-primary-strong);
 }
 
 .diet-detail .diet-days button.on {
