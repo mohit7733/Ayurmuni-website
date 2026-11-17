@@ -612,7 +612,7 @@ export default function Medicines() {
                       <ViewAll
                         label="Trusted brands"
                         onClick={() =>
-                          navigate('/products/category?mode=product&name=Brands')
+                          navigate('/products/category?mode=both&name=Brands')
                         }
                       />
                     }
@@ -627,7 +627,7 @@ export default function Medicines() {
                         label={item.name}
                         onClick={() =>
                           navigate(
-                            `/products/category?mode=product&brand=${item.id}&name=${encodeURIComponent(
+                            `/products/category?mode=both&brand=${item.id}&name=${encodeURIComponent(
                               item.name,
                             )}`,
                           )
