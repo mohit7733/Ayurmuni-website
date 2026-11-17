@@ -31,6 +31,7 @@ describe('formatPrakritiData', () => {
     expect(data.lifestyleGuidelines.doList).toEqual(['Eat warm meals']);
     expect(data.lifestyleGuidelines.dontList).toEqual(['Skip meals']);
     expect(data.imageUrl).toBe('https://img.test/vata.png');
+    expect(data.doshas.map((d) => d.color)).toEqual(['#0d614e', '#1c7c4f', '#3d6b5c']);
   });
 
   it('formats a mixed constitution and title', () => {

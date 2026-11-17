@@ -21,6 +21,15 @@
 .pd-page--brand .pd-topbar .am-back {
   border-radius: 999px;
 }
+.pd-page--brand .pd-topbar .am-back {
+  width: auto;
+  min-width: 0;
+  height: 40px;
+  min-height: 40px;
+  padding: 0 14px 0 10px;
+  gap: 6px;
+  white-space: nowrap;
+}
 .pd-page--brand .pd-topbar .am-btn {
   border: 1px solid var(--pd-hair);
   background: #fffdf8;
@@ -226,10 +235,10 @@
   align-items: baseline;
   gap: 10px;
   margin: 0;
-  padding: 0 0 16px;
+  padding: 0 0 8px;
   border: 0;
   border-bottom: 1px solid transparent;
-  border-image: linear-gradient(90deg, rgba(201, 165, 90, 0.55), rgba(201, 165, 90, 0.08)) 1;
+  /* border-image: linear-gradient(90deg, rgba(201, 165, 90, 0.55), rgba(201, 165, 90, 0.08)) 1; */
   border-radius: 0;
   background: none;
   box-shadow: none;

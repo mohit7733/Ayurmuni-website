@@ -219,6 +219,17 @@ export default function QuestLayout({ flow, onExit }) {
 
   const choices = currentStep.choices ?? [];
   const stepKey = getStepKey(currentStep);
+  const showPrimary = Boolean(
+    basicInfoStep ||
+      currentStep.answer_type === 'text' ||
+      currentStep.answer_type === 'multi_choice' ||
+      isLastStep,
+  );
+  const primaryLabel = submitting
+    ? 'Please wait…'
+    : basicInfoStep || !isLastStep
+      ? 'Continue'
+      : 'Complete Quest';
 
   return (
     <section className={`quest ${isMedical ? 'medical' : 'prakriti'}`}>
@@ -355,44 +366,24 @@ export default function QuestLayout({ flow, onExit }) {
         <h2 id="quest-question" aria-live="polite">
           {basicInfoStep ? 'Share your basic information' : currentStep.question}
         </h2>
-        {currentStep.answer_type === 'multi_choice' ? (
-          <p className="multi-hint">Select all that apply</p>
-        ) : currentStep.answer_type !== 'text' && !basicInfoStep ? (
+        {currentStep.answer_type !== 'multi_choice' &&
+        currentStep.answer_type !== 'text' &&
+        !basicInfoStep ? (
           <p className="multi-hint">Choose the answer that feels most like you</p>
         ) : null}
 
         {basicInfoStep && rawQuestions && handleBasicInfoChange ? (
-          <>
-            <BasicInfoForm
-              questions={rawQuestions}
-              selectedAnswers={answers}
-              onChange={handleBasicInfoChange}
-            />
-            <button
-              className="cta"
-              type="button"
-              disabled={isDisabled || submitting || celebrating}
-              onClick={onFinish}
-            >
-              {submitting ? 'Please wait…' : 'Continue'}
-            </button>
-          </>
+          <BasicInfoForm
+            questions={rawQuestions}
+            selectedAnswers={answers}
+            onChange={handleBasicInfoChange}
+          />
         ) : currentStep.answer_type === 'text' && handleTextChange ? (
-          <>
-            <textarea
-              placeholder="Write your answer..."
-              value={answers[stepKey] ?? ''}
-              onChange={(e) => handleTextChange(e.target.value)}
-            />
-            <button
-              className="cta"
-              type="button"
-              disabled={isDisabled || submitting || celebrating}
-              onClick={onFinish}
-            >
-              {submitting ? 'Please wait…' : isLastStep ? 'Complete Quest' : 'Continue'}
-            </button>
-          </>
+          <textarea
+            placeholder="Write your answer..."
+            value={answers[stepKey] ?? ''}
+            onChange={(e) => handleTextChange(e.target.value)}
+          />
         ) : (
           <>
             <div className="quest-options" role="group" aria-labelledby="quest-question">
@@ -425,33 +416,37 @@ export default function QuestLayout({ flow, onExit }) {
                 );
               })}
             </div>
-            {(currentStep.answer_type === 'multi_choice' || isLastStep) && (
-              <button
-                className="cta"
-                type="button"
-                disabled={isDisabled || submitting || celebrating}
-                onClick={onFinish}
-              >
-                {submitting ? 'Please wait…' : isLastStep ? 'Complete Quest' : 'Continue'}
-              </button>
-            )}
           </>
         )}
       </div>
 
       <footer className="quest-foot">
-        <button type="button" onClick={onHeaderBack}>
-          {step === 0 ? 'Back' : 'Previous'}
-        </button>
-        <div>
-          {showSkip ? (
-            <button type="button" onClick={handleSkip}>
-              Skip
-            </button>
-          ) : null}
-          <button type="button" className="exit" onClick={onExit}>
-            Exit Quest
+        <div className="quest-foot__row">
+          <button type="button" className="quest-foot__back" onClick={onHeaderBack}>
+            {step === 0 ? 'Back' : 'Previous'}
           </button>
+          {showPrimary ? (
+            <button
+              className="cta"
+              type="button"
+              disabled={isDisabled || submitting || celebrating}
+              onClick={onFinish}
+            >
+              {primaryLabel}
+            </button>
+          ) : (
+            <span className="quest-foot__center" />
+          )}
+          <div>
+            {showSkip ? (
+              <button type="button" onClick={handleSkip}>
+                Skip
+              </button>
+            ) : null}
+            <button type="button" className="exit" onClick={onExit}>
+              Exit Quest
+            </button>
+          </div>
         </div>
       </footer>
     </section>

@@ -75,6 +75,25 @@ export default function Addresses() {
   };
 
   const preview = currentAddress?.formatted_address || deliveryLocation?.formatted_address;
+  const placeLine = currentAddress || deliveryLocation
+    ? [
+        currentAddress?.city || deliveryLocation?.city,
+        currentAddress?.state || deliveryLocation?.state,
+        currentAddress?.zipcode || deliveryLocation?.zipcode,
+      ]
+        .filter(Boolean)
+        .join(', ')
+    : T.enableLocation;
+  const locationCard = (
+    <button type="button" className="pf-loc-card" onClick={pinLocation}>
+      <strong className="pf-loc-card__title">
+        <MapPin size={14} aria-hidden />
+        {T.currentLocation}
+      </strong>
+      <p>{preview || T.currentLocationHint}</p>
+      <small>{placeLine}</small>
+    </button>
+  );
 
   return (
     <AppShell tab="profile">
@@ -95,42 +114,15 @@ export default function Addresses() {
           }
         />
 
-        <button type="button" className="pf-loc-card" onClick={pinLocation}>
-          <strong className="pf-loc-card__title">
-            <MapPin size={14} aria-hidden />
-            {T.currentLocation}
-          </strong>
-          <p>{preview || T.currentLocationHint}</p>
-          <small>
-            {currentAddress || deliveryLocation
-              ? [
-                  currentAddress?.city || deliveryLocation?.city,
-                  currentAddress?.state || deliveryLocation?.state,
-                  currentAddress?.zipcode || deliveryLocation?.zipcode,
-                ]
-                  .filter(Boolean)
-                  .join(', ')
-              : T.enableLocation}
-          </small>
-        </button>
-
         {loading ? (
-          <SectionHold label={T.loadingAddresses} minHeight={220} />
-        ) : items.length === 0 ? (
-          <EmptyState
-            title={T.emptyAddressesTitle}
-            description={T.emptyAddressesText}
-            action={
-              <Button
-                variant="primary"
-                onClick={() => navigate('/profile/addresses/new', { state: { returnTo } })}
-              >
-                {T.addAddress}
-              </Button>
-            }
-          />
+          <>
+            {locationCard}
+            <SectionHold label={T.loadingAddresses} minHeight={220} />
+          </>
         ) : (
+          <>
           <div className="pf-addr-list">
+            {locationCard}
             {items.map((item) => (
               <article key={item.id} className="pf-addr-card">
                 <div className="pf-addr-card__head">
@@ -164,6 +156,21 @@ export default function Addresses() {
               </article>
             ))}
           </div>
+          {items.length === 0 ? (
+            <EmptyState
+              title={T.emptyAddressesTitle}
+              description={T.emptyAddressesText}
+              action={
+                <Button
+                  variant="primary"
+                  onClick={() => navigate('/profile/addresses/new', { state: { returnTo } })}
+                >
+                  {T.addAddress}
+                </Button>
+              }
+            />
+          ) : null}
+          </>
         )}
 
       </section>

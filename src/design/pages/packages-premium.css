@@ -772,7 +772,8 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 100%;
+  height: auto;
+  align-self: start;
   padding: 0;
   border: 1px solid color-mix(in srgb, var(--plan-accent, #0d614e) 28%, transparent);
   border-radius: 18px;
@@ -903,7 +904,7 @@
 
 .pp-rail__body {
   display: flex;
-  flex: 1;
+  flex: 0 0 auto;
   flex-direction: column;
   gap: 5px;
   min-height: 0;
@@ -990,7 +991,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  margin-top: auto;
+  margin-top: 8px;
   padding: 8px 12px 0;
   border-top: 1px solid color-mix(in srgb, var(--plan-accent, #0d614e) 16%, transparent);
 }
@@ -1218,23 +1219,23 @@
 .pp-detail__body {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   min-width: 0;
 }
 
 .pp-detail__includes {
   display: flex;
-  flex-direction: row;
-  gap: 12px;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
 }
 
 .pp-detail__includes .pp-detail__panel {
-  width: 50%;
+  width: 100%;
 }
 
 .pp-detail__panel {
-  padding: 14px 16px;
+  padding: 12px 14px;
   border-radius: 16px;
   border: 1px solid var(--pp-line);
   background: var(--pp-ivory);
@@ -1292,7 +1293,7 @@
 .pp-detail__exclude {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -1337,7 +1338,7 @@
 .pp-detail__bill {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .pp-detail__bill div {

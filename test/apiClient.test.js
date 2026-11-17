@@ -5,6 +5,7 @@ vi.mock('../src/common/utils', () => ({
   Utils: {
     getData: async (k) => (store.has(k) ? store.get(k) : null),
     storeData: async (k, v) => void store.set(k, v),
+    clearAllData: async () => store.clear(),
   },
 }));
 vi.mock('../src/config/key', () => ({ BaseUrl: { base_url: 'https://api.test/' } }));
@@ -86,6 +87,30 @@ describe('apiClient GET dedupe + cache', () => {
     expect((await apiClient('y/')).success).toBe(false);
     expect((await apiClient('y/')).success).toBe(true);
     expect(fn).toHaveBeenCalledTimes(5);
+  });
+
+  it('authentication_failed logs out once and sends the user to login', async () => {
+    const assign = vi.fn();
+    const mem = new Map();
+    vi.stubGlobal('window', { location: { pathname: '/home', assign } });
+    vi.stubGlobal('sessionStorage', {
+      setItem: (k, v) => mem.set(k, v),
+      getItem: (k) => (mem.has(k) ? mem.get(k) : null),
+      removeItem: (k) => mem.delete(k),
+    });
+    const fn = vi.fn(async () =>
+      json({ success: false, error: { code: 'authentication_failed' }, message: 'nope' }, 401),
+    );
+    vi.stubGlobal('fetch', fn);
+    const [first, second] = await Promise.all([apiClient('cart/'), apiClient('order/')]);
+    expect(first.logout).toBe(true);
+    expect(second.logout).toBe(true);
+    expect(first.message).toBe('Your session has expired. Please log in again.');
+    expect(store.has('_TOKEN')).toBe(false);
+    expect(assign).toHaveBeenCalledTimes(1);
+    expect(assign).toHaveBeenCalledWith('/login');
+    expect(mem.get('ayurmuni_login_notice')).toBe('Your session has expired. Please log in again.');
+    expect(fn).toHaveBeenCalledTimes(2);
   });
 
   it('cache:false bypasses the shared layer; a caller signal now shares it (T148)', async () => {

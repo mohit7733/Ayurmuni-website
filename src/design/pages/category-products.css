@@ -349,6 +349,15 @@
   background: rgba(255, 253, 248, 0.7);
 }
 
+.cp-page .cp-cat-group {
+  margin: 10px 4px 2px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6d7a74;
+}
+
 .cp-page .am-skeleton { border-radius: 14px; }
 .cp-page .st-more { margin: 4px 0 0; }
 

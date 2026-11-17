@@ -13,6 +13,7 @@ import login13Img from '/images/login/13.webp';
 import logoImg from '/greenlogo.png';
 import { Utils } from '../common/utils';
 import { showSuccessToast } from '../config/key';
+import { LOGIN_NOTICE_KEY } from '../services/apiClient';
 import MarqueeCollage from '../components/MarqueeCollage';
 import * as AuthService from '../services/authService';
 import { parseDeletedAccountInfo } from '../services/profileService';
@@ -65,6 +66,17 @@ export default function Login() {
       setHeadlineIndex((prev) => (prev + 1) % T.headlines.length);
     }, 3200);
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    try {
+      const notice = sessionStorage.getItem(LOGIN_NOTICE_KEY);
+      if (!notice) return;
+      sessionStorage.removeItem(LOGIN_NOTICE_KEY);
+      showSuccessToast(notice, 'error');
+    } catch {
+      // sessionStorage can be blocked
+    }
   }, []);
 
   const onChangePhone = (text) => {

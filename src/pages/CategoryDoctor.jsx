@@ -23,7 +23,6 @@ import {
   CONCERN_RAIL_SIZE,
   concernCatalogPath,
   concernDoctorsPath,
-  filterItemsByQuery,
   resolveConcernServices,
 } from '../home/concernCatalog';
 import useCategoryProducts from '../hooks/useCategoryProducts';
@@ -211,16 +210,34 @@ export default function CategoryDoctor() {
 
   // Suggested = linked to this concern: health_category_id (+ health_disease_id) AND service_category_id.
   const suggestedProductFilter = useMemo(
-    () => buildConcernFilter({ concernId, diseaseId: selectedDiseaseId, serviceId: productsServiceId }),
-    [concernId, selectedDiseaseId, productsServiceId],
+    () => ({
+      ...buildConcernFilter({ concernId, diseaseId: selectedDiseaseId, serviceId: productsServiceId }),
+      ...(debounced ? { search: debounced } : {}),
+    }),
+    [concernId, selectedDiseaseId, productsServiceId, debounced],
   );
   const suggestedMedicineFilter = useMemo(
-    () => buildConcernFilter({ concernId, diseaseId: selectedDiseaseId, serviceId: medicineServiceId }),
-    [concernId, selectedDiseaseId, medicineServiceId],
+    () => ({
+      ...buildConcernFilter({ concernId, diseaseId: selectedDiseaseId, serviceId: medicineServiceId }),
+      ...(debounced ? { search: debounced } : {}),
+    }),
+    [concernId, selectedDiseaseId, medicineServiceId, debounced],
   );
   // General = every item of that service category, whatever the concern.
-  const ourProductFilter = useMemo(() => buildServiceFilter(productsServiceId), [productsServiceId]);
-  const ourMedicineFilter = useMemo(() => buildServiceFilter(medicineServiceId), [medicineServiceId]);
+  const ourProductFilter = useMemo(
+    () => ({
+      ...buildServiceFilter(productsServiceId),
+      ...(debounced ? { search: debounced } : {}),
+    }),
+    [productsServiceId, debounced],
+  );
+  const ourMedicineFilter = useMemo(
+    () => ({
+      ...buildServiceFilter(medicineServiceId),
+      ...(debounced ? { search: debounced } : {}),
+    }),
+    [medicineServiceId, debounced],
+  );
 
   const railOptions = (enabled) => ({ enabled, pageSize: CONCERN_RAIL_SIZE });
   const suggestedProductsOn = Boolean(concernId && productsServiceId);
@@ -246,14 +263,8 @@ export default function CategoryDoctor() {
   const ourProductsLoading = stillLoading(Boolean(productsServiceId), ourProductsQuery);
   const ourMedicinesLoading = stillLoading(Boolean(medicineServiceId), ourMedicinesQuery);
 
-  const suggestedProducts = useMemo(
-    () => (suggestedProductsOn ? filterItemsByQuery(suggestedProductsQuery.products, debounced) : NO_ITEMS),
-    [suggestedProductsOn, suggestedProductsQuery.products, debounced],
-  );
-  const suggestedMedicines = useMemo(
-    () => (suggestedMedicinesOn ? filterItemsByQuery(suggestedMedicinesQuery.products, debounced) : NO_ITEMS),
-    [suggestedMedicinesOn, suggestedMedicinesQuery.products, debounced],
-  );
+  const suggestedProducts = suggestedProductsOn ? suggestedProductsQuery.products : NO_ITEMS;
+  const suggestedMedicines = suggestedMedicinesOn ? suggestedMedicinesQuery.products : NO_ITEMS;
   const ourProducts = productsServiceId ? ourProductsQuery.products : NO_ITEMS;
   const ourMedicines = medicineServiceId ? ourMedicinesQuery.products : NO_ITEMS;
 
