@@ -4,6 +4,7 @@
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
   gap: 16px;
   align-items: stretch;
+  margin-bottom: 12px;
 }
 .hm-pair:empty { display: none; }
 .hm-pair > * {
@@ -216,8 +217,23 @@
 .hm-page .hm-pair .am-diet-active__media { width: 44px; height: 44px; border-radius: 12px; }
 .hm-page .hm-pair .am-diet-active__media svg { width: 22px; height: 22px; }
 .hm-page .hm-pair .hm-appt__media span { font-size: 15px; }
-.hm-page .hm-pair .am-diet-active__eyebrow { margin: 0; font-size: 10px; line-height: 1.2; }
-.hm-page .hm-pair .am-diet-active__title { font-size: 15px; line-height: 1.15; }
+.hm-page .hm-pair .am-diet-active__eyebrow {
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hm-page .hm-pair .am-diet-active__title {
+  font-size: 15px;
+  line-height: 1.25;
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
 .hm-page .hm-pair .am-diet-active__sub { margin: 1px 0 0; font-size: 12px; line-height: 1.25; }
 .hm-page .hm-pair .am-diet-active__cta {
   position: relative; min-height: 36px; padding: 0 14px; font-size: 12.5px; justify-content: center; box-shadow: none;
@@ -229,15 +245,48 @@
   .hm-page .hm-pair .hm-appt__link { position: relative; }
 }
 
-/* appointment: header row + one meta/actions row */
+/* appointment: same skeleton as the diet card — identity + action, then one footer */
 .hm-page .hm-pair .am-diet-active.hm-appt {
   grid-template-columns: auto minmax(0, 1fr) auto;
-  grid-template-areas: 'media body status' 'strip strip actions';
-  gap: 6px 12px; padding: 12px 14px;
+  grid-template-areas: 'media body cta' 'foot foot foot';
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 8px 12px;
+  padding: 12px 14px;
+  align-items: center;
 }
-.hm-page .hm-pair .hm-appt__status { justify-self: end; height: 22px; padding: 0 9px; font-size: 11px; }
+.hm-page .hm-pair .hm-appt__actions {
+  grid-area: cta;
+  align-self: start;
+  justify-content: flex-end;
+  padding: 0;
+  border: 0;
+}
+.hm-page .hm-pair .hm-appt__foot {
+  grid-area: foot;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding-top: 8px;
+  border-top: 1px solid rgba(201, 165, 90, 0.35);
+}
+.hm-page .hm-pair .hm-appt__aside {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  margin-left: auto;
+}
+.hm-page .hm-pair .hm-appt__status { height: 22px; padding: 0 9px; font-size: 11px; }
 .hm-page .hm-pair .hm-appt__strip {
-  flex-wrap: nowrap; align-items: center; gap: 0; min-width: 0; padding: 6px 0 0; overflow: hidden;
+  flex: 1 1 auto;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
 }
 /* meta reads as one line: Today · 6:01 PM – 6:31 PM · in 4 hrs (dt kept for screen readers) */
 .hm-page .hm-pair .hm-appt__strip > div { display: flex; min-width: 0; padding: 0; border-left: 0; white-space: nowrap; }
@@ -248,8 +297,14 @@
 }
 .hm-page .hm-pair .hm-appt__strip dd { font-size: 12.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; }
 .hm-page .hm-pair .hm-appt__strip > div:last-child dd { color: #a17f3a; }
-.hm-page .hm-pair .hm-appt__actions { gap: 10px; justify-content: flex-end; padding-top: 6px; border-top: 1px solid rgba(201, 165, 90, 0.35); }
-.hm-page .hm-pair .hm-appt__link { padding: 4px 0; font-size: 12.5px; white-space: nowrap; }
+.hm-page .hm-pair .hm-appt__link {
+  padding: 0;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-decoration: none;
+  color: #105343;
+}
 .hm-page .hm-pair .hm-appt.is-loading { min-height: 112px; }
 .hm-page .hm-pair .hm-appt__skel--media { width: 44px; height: 44px; border-radius: 12px; }
 .hm-page .hm-pair .hm-appt__skel--strip { height: 28px; }
@@ -257,15 +312,26 @@
 /* diet: CTA in header row, progress on one line, next meal on one line */
 .hm-page .hm-pair .am-diet-active:not(.hm-appt) {
   grid-template-columns: auto minmax(0, 1fr) auto;
-  grid-template-areas: 'media body cta' 'prog prog prog' 'next next next';
-  gap: 6px 12px;
+  grid-template-areas: 'media body cta' 'prog prog prog';
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 12px;
 }
 .hm-page .hm-pair .am-diet-active:not(.hm-appt) .am-diet-active__media { grid-area: media; }
 .hm-page .hm-pair .am-diet-active:not(.hm-appt) .am-diet-active__body { grid-area: body; }
-.hm-page .hm-pair .am-diet-active:not(.hm-appt) .am-diet-active__cta { grid-area: cta; }
+.hm-page .hm-pair .am-diet-active:not(.hm-appt) .am-diet-active__cta { grid-area: cta; align-self: start; }
+.hm-page .hm-pair .am-diet-active__media { align-self: start; }
 .hm-page .hm-pair .am-diet-active:not(.hm-appt) .am-diet-active__progress {
-  grid-area: prog; display: flex; align-items: center; gap: 10px; min-width: 0;
-  padding-top: 6px; border-top: 1px solid rgba(201, 165, 90, 0.35);
+  grid-area: prog;
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 22px;
+  margin: 0;
+  padding-top: 8px;
+  border-top: 1px solid rgba(201, 165, 90, 0.35);
 }
 .hm-page .hm-pair .am-diet-active__progress-row { display: contents; font-size: 12px; }
 .hm-page .hm-pair .am-diet-active__progress-row > span { white-space: nowrap; font-size: 12px; color: #4b5a55; }
@@ -279,8 +345,8 @@
 .hm-page .hm-pair .am-diet-active__next-meal::before { content: '— '; color: #c9a55a; }
 
 @media (max-width: 639px) {
-  .hm-page .hm-pair .am-diet-active.hm-appt { grid-template-areas: 'media body status' 'strip strip strip' 'actions actions actions'; }
-  .hm-page .hm-pair .hm-appt__status { justify-self: end; }
+  .hm-page .hm-pair .am-diet-active.hm-appt { grid-template-areas: 'media body cta' 'foot foot foot'; }
+  .hm-page .hm-pair .hm-appt__foot { flex-wrap: wrap; }
   .hm-page .hm-pair .hm-appt__cta { flex: 0 0 auto; }
   .hm-page .hm-pair .am-diet-active:not(.hm-appt) { grid-template-columns: auto minmax(0, 1fr) auto; }
 }

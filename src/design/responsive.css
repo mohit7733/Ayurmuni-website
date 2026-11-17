@@ -303,7 +303,7 @@
 
 /* Active diet plan banner (Home + Diet): no "Next meal" line; progress row starts at the
    plan name's left edge and ends at the View plan button's right edge. Appointment card untouched. */
-.hm-page .hm-pair .am-diet-active:not(.hm-appt) { grid-template-areas: 'media body cta' '. prog prog'; }
+.hm-page .hm-pair .am-diet-active:not(.hm-appt) { grid-template-areas: 'media body cta' 'prog prog prog'; }
 @media (max-width: 360px) {
   .hm-page .hm-pair .am-diet-active:not(.hm-appt) { grid-template-areas: 'media body body' 'prog prog prog' 'cta cta cta'; }
 }

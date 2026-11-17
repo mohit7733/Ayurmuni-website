@@ -186,7 +186,7 @@
 
 .app-shell .am-section-header {
   gap: var(--am-space-4) !important;
-  margin-bottom: var(--am-space-4) !important;
+  margin-bottom: 0 !important;
 }
 
 .app-shell .am-page-header {
