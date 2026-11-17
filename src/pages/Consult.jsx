@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SearchX, Stethoscope } from 'lucide-react';
 import AppShell from '../components/AppShell';
@@ -120,8 +120,6 @@ export default function Consult() {
     [],
     { pageSize: 8 },
   );
-  const moreRef = useRef(null);
-
   useEffect(() => {
     const timer = setTimeout(() => setDebounced(search.trim()), 400);
     return () => clearTimeout(timer);
@@ -223,19 +221,6 @@ export default function Consult() {
     if (lookupId) navigate(`/profile/appointments/${lookupId}`);
     else if (item.doctorId) openSlots(item);
   };
-
-  useEffect(() => {
-    const node = moreRef.current;
-    if (!node || !hasMore) return undefined;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) loadMore();
-      },
-      { rootMargin: '240px' },
-    );
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [hasMore, loadMore, products.length]);
 
   const headActions = (
     <>
@@ -433,11 +418,13 @@ export default function Consult() {
                         ))}
                       </Rail>
                     )}
-                    {/* {hasMore ? (
-                      <div ref={moreRef} className="svc-more" aria-live="polite">
-                        {loadingMore ? T.loadingMore : ''}
+                    {hasMore && products.length > 0 ? (
+                      <div className="st-more">
+                        <Button variant="secondary" loading={loadingMore} onClick={loadMore}>
+                          {loadingMore ? T.loadingMore : T.loadMore}
+                        </Button>
                       </div>
-                    ) : null} */}
+                    ) : null}
                   </section>
                 </div>
               ) : null}

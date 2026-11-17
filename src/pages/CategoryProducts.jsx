@@ -61,7 +61,8 @@ export default function CategoryProducts() {
   const detailBase = isMedicine ? '/medicines' : '/products';
   const mode = params.get('mode') === 'health' ? 'health' : 'product';
   // Brand browse is always mixed — ignore service so products + medicines both load.
-  const serviceCategoryId = isBrandMix ? null : params.get('service') || null;
+  // The medicines route always uses the live Medicine service, even if the link carries a stale id.
+  const urlService = params.get('service') || null;
   const initialCategory = params.get('category') || 'all';
   const title =
     params.get('name') ||
@@ -78,6 +79,20 @@ export default function CategoryProducts() {
     () => getServiceCategoryId(dashboardCategories, 'products'),
     [dashboardCategories],
   );
+  const serviceCategoryId = isBrandMix
+    ? null
+    : isMedicine
+      ? medicineCategoryId || null
+      : urlService;
+
+  useEffect(() => {
+    if (!isMedicine || !medicineCategoryId) return;
+    if (params.get('service') === String(medicineCategoryId)) return;
+    const next = new URLSearchParams(params);
+    next.set('service', String(medicineCategoryId));
+    setSearchParams(next, { replace: true });
+  }, [isMedicine, medicineCategoryId, params, setSearchParams]);
+
   const brandReady = isBrandMix && !dashboardLoading;
   const canSplitBrand =
     brandReady && Boolean(productsCategoryId) && Boolean(medicineCategoryId);
@@ -214,21 +229,19 @@ export default function CategoryProducts() {
     if (brandId) {
       return { brand_name_id: brandId };
     }
+    // `service` is the catalog (medicines vs products). Keep it on "All", not only after a category is picked.
+    const serviceScope = serviceCategoryId ? { service_category_id: serviceCategoryId } : {};
     if (mode === 'health') {
       return {
         ...(activeCategoryId ? { health_category_id: activeCategoryId } : {}),
         ...(selectedSubcategoryId ? { health_disease_id: selectedSubcategoryId } : {}),
-        ...(serviceCategoryId && (activeCategoryId || selectedSubcategoryId)
-          ? { service_category_id: serviceCategoryId }
-          : {}),
+        ...serviceScope,
       };
     }
     return {
       ...(activeCategoryId ? { id: activeCategoryId } : {}),
       ...(selectedSubcategoryId ? { product_subcategory_id: selectedSubcategoryId } : {}),
-      ...(serviceCategoryId && (activeCategoryId || selectedSubcategoryId)
-        ? { service_category_id: serviceCategoryId }
-        : {}),
+      ...serviceScope,
     };
   }, [brandId, mode, activeCategoryId, selectedSubcategoryId, serviceCategoryId]);
 
@@ -303,7 +316,7 @@ export default function CategoryProducts() {
     isBrandMix && mode === 'product' && Boolean(activeCategoryId);
 
   const regularCatalog = useCategoryProducts(requestFilter, [], {
-    enabled: !isBrandMix,
+    enabled: !isBrandMix && (!isMedicine || Boolean(medicineCategoryId)),
   });
   const brandProductCatalog = useCategoryProducts(brandProductFilter, [], {
     enabled: canSplitBrand,
@@ -404,7 +417,13 @@ export default function CategoryProducts() {
       : 'relevance';
     // Brand page: keep only items the API tags with this brand (by id, or by the brand name in
     // the URL). Never fall back to an unfiltered list when the backend ignores brand_name_id.
-    const scoped = brandId
+    const inService = (product) => {
+      if (!isMedicine || !serviceCategoryId) return true;
+      const sid = itemServiceId(product);
+      if (sid) return sid === String(serviceCategoryId);
+      return product?.catalog_kind !== 'product';
+    };
+    const brandMatched = brandId
       ? products.filter((product) => {
           const ids = [
             product?.brand_name_id,
@@ -423,6 +442,7 @@ export default function CategoryProducts() {
           return Boolean(brandTitleKey) && name === brandTitleKey;
         })
       : products;
+    const scoped = brandMatched.filter(inService);
     let filtered = applyProductFilters({
       products: filterItemsByQuery(scoped, query),
       sortBy: catalogSort,
@@ -468,6 +488,8 @@ export default function CategoryProducts() {
     brandId,
     brandTitleKey,
     isBrandMix,
+    isMedicine,
+    serviceCategoryId,
     catalogKind,
     medicineCategoryId,
     productsCategoryId,
