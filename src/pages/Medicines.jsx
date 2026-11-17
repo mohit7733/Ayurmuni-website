@@ -36,7 +36,6 @@ import {
   Tile,
 } from '../components/ui';
 import { CatalogPageSkeleton } from '../components/skeletons';
-import { filterItemsByQuery } from '../home/concernCatalog';
 import { getProductStockQty, hasStockInfo } from '../product/stock';
 import { getCatalogPrice, getCatalogRating, toProductApiSort } from '../utils/productSearchUtils';
 import { orderListedProducts } from '../products/listingOrder';
@@ -74,17 +73,24 @@ export default function Medicines() {
   const [priceRange, setPriceRange] = useState([0, 10000]);
   const [minRating, setMinRating] = useState(0);
   const [brandIds, setBrandIds] = useState([]);
+  const [search, setSearch] = useState('');
+  const [query, setQuery] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => setQuery(search.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
   const productFilter = useMemo(() => {
     const next = {};
     if (medicineCategoryId) next.service_category_id = medicineCategoryId;
     if (categoryId) next.id = categoryId;
+    if (query) next.search = query;
     if (priceRange[0] > 0) next.min_price = priceRange[0];
     if (priceRange[1] < 10000) next.max_price = priceRange[1];
     if (minRating > 0) next.min_rating = minRating;
     const sort = toProductApiSort(sortBy);
     if (sort) next.sort = sort;
     return next;
-  }, [medicineCategoryId, categoryId, priceRange, minRating, sortBy]);
+  }, [medicineCategoryId, categoryId, query, priceRange, minRating, sortBy]);
   const { products, loading, loadingMore, hasMore, loadMore } = useCategoryProducts(
     productFilter,
     [],
@@ -95,18 +101,11 @@ export default function Medicines() {
   const [brands, setBrands] = useState([]);
   const [recent, setRecent] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [query, setQuery] = useState('');
-  // Page search filters this page in place (debounced while typing; Search/Enter applies now).
-  useEffect(() => {
-    const timer = setTimeout(() => setQuery(search.trim()), 300);
-    return () => clearTimeout(timer);
-  }, [search]);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [brandNames, setBrandNames] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
   const filteredProducts = useMemo(() => {
-    let filtered = filterItemsByQuery(products, query).filter((product) => {
+    let filtered = products.filter((product) => {
       const price = getCatalogPrice(product);
       if (Number.isFinite(price) && (price < priceRange[0] || price > priceRange[1])) return false;
 
@@ -132,7 +131,7 @@ export default function Medicines() {
 
     return orderListedProducts(filtered, { sortBy });
 
-  }, [products, query, priceRange, minRating, inStockOnly, sortBy, brandIds, brandNames]);
+  }, [products, priceRange, minRating, inStockOnly, sortBy, brandIds, brandNames]);
 
   const hasActiveFilters =
     priceRange[0] !== 0 ||
