@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, SlidersHorizontal, X } from "lucide-react";
+import FilterPriceControls from "../components/FilterPriceControls";
+import FilterRatingChoices from "../components/FilterRatingChoices";
 import AppShell from "../components/AppShell";
 import ProductCard from "../components/ProductCard";
 import { getProductByVariant } from "../services/productService";
@@ -478,7 +480,9 @@ export default function Products() {
         open={showFilters}
         onClose={() => setShowFilters(false)}
         title="Filter Products"
-        size="md"
+        description="Fine-tune your selection to find the right products."
+        size="lg"
+        className="st-filter-modal"
         footer={
           <>
             <Button
@@ -496,154 +500,51 @@ export default function Products() {
           </>
         }
       >
-        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-          {/* Price Range */}
-          <div>
-            <h3
-              style={{
-                marginBottom: "12px",
-                fontSize: "14px",
-                fontWeight: "600",
-              }}
-            >
-              Price Range
-            </h3>
-            <div
-              style={{
-                display: "flex",
-                gap: "12px",
-                alignItems: "center",
-                marginBottom: "8px",
-              }}
-            >
-              <input
-                type="number"
-                value={priceRange[0]}
-                onChange={(e) =>
-                  setPriceRange([Number(e.target.value), priceRange[1]])
-                }
-                min="0"
-                placeholder="Min"
-                style={{
-                  flex: 1,
-                  padding: "8px 12px",
-                  border: "1px solid var(--am-border-color)",
-                  borderRadius: "var(--am-radius-md)",
-                  fontSize: "14px",
-                }}
-              />
-              <span>to</span>
-              <input
-                type="number"
-                value={priceRange[1]}
-                onChange={(e) =>
-                  setPriceRange([priceRange[0], Number(e.target.value)])
-                }
-                min="0"
-                placeholder="Max"
-                style={{
-                  flex: 1,
-                  padding: "8px 12px",
-                  border: "1px solid var(--am-border-color)",
-                  borderRadius: "var(--am-radius-md)",
-                  fontSize: "14px",
-                }}
-              />
-            </div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                fontSize: "12px",
-                color: "var(--am-text-muted)",
-              }}
-            >
-              <span>₹{priceRange[0]}</span>
-              <span>₹{priceRange[1]}</span>
-            </div>
-          </div>
+        <div className="st-filter-content">
+          <FilterPriceControls
+            min={priceRange[0]}
+            max={priceRange[1]}
+            onChange={setPriceRange}
+            headingId="st-filter-price-title"
+            className="st-filter-section--wide"
+          />
 
-          {/* Rating Filter */}
-          <div>
-            <h3
-              style={{
-                marginBottom: "12px",
-                fontSize: "14px",
-                fontWeight: "600",
-              }}
-            >
-              Minimum Rating
-            </h3>
-            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-              {[0, 3, 3.5, 4, 4.5].map((rating) => (
-                <button
-                  key={rating}
-                  type="button"
-                  onClick={() => setMinRating(rating)}
-                  style={{
-                    padding: "8px 16px",
-                    border: `1px solid ${minRating === rating ? "var(--am-accent)" : "var(--am-border-color)"}`,
-                    background:
-                      minRating === rating
-                        ? "var(--am-accent-bg)"
-                        : "transparent",
-                    borderRadius: "var(--am-radius-md)",
-                    fontSize: "14px",
-                    cursor: "pointer",
-                    transition: "all 0.2s",
-                  }}
-                >
-                  {rating === 0 ? "All" : `${rating}★ & up`}
-                </button>
-              ))}
+          <section className="st-filter-section st-filter-section--wide" aria-labelledby="st-filter-rating-title">
+            <div className="st-filter-section__heading">
+              <h3 id="st-filter-rating-title">Customer rating</h3>
+              <span>Minimum rating</span>
             </div>
-          </div>
+            <FilterRatingChoices value={minRating} onChange={setMinRating} />
+          </section>
 
-          {/* In Stock Filter */}
-          <div>
-            <label
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                cursor: "pointer",
-              }}
-            >
+          <section className="st-filter-stock">
+            <label className="st-filter-stock__label">
               <input
                 type="checkbox"
                 checked={inStockOnly}
                 onChange={(e) => setInStockOnly(e.target.checked)}
-                style={{ width: "18px", height: "18px", cursor: "pointer" }}
               />
-              <span style={{ fontSize: "14px", fontWeight: "500" }}>
-                Show in-stock products only
+              <span>
+                <strong>In-stock products only</strong>
+                <small>Hide items that are currently unavailable</small>
               </span>
             </label>
-          </div>
+          </section>
 
-          {/* Active Filters Summary */}
-          {hasActiveFilters && (
-            <div
-              style={{
-                padding: "12px",
-                background: "var(--am-bg-subtle)",
-                borderRadius: "var(--am-radius-md)",
-                fontSize: "12px",
-                color: "var(--am-text-muted)",
-              }}
-            >
-              <strong style={{ display: "block", marginBottom: "4px" }}>
-                Active Filters:
-              </strong>
-              {priceRange[0] !== 0 || priceRange[1] !== 10000 ? (
-                <div>
-                  Price: ₹{priceRange[0]} - ₹{priceRange[1]}
-                </div>
-              ) : null}
-              {minRating > 0 && <div>Rating: {minRating}★ and above</div>}
-              {inStockOnly && <div>In stock only</div>}
+          {hasActiveFilters ? (
+            <div className="st-filter-summary" aria-live="polite">
+              <strong>Active filters</strong>
+              <div className="st-filter-summary__items">
+                {priceRange[0] !== 0 || priceRange[1] !== 10000 ? (
+                  <span>
+                    Price: ₹{priceRange[0]} – ₹{priceRange[1]}
+                  </span>
+                ) : null}
+                {minRating > 0 ? <span>Rating: {minRating}★ and up</span> : null}
+                {inStockOnly ? <span>In stock only</span> : null}
+              </div>
             </div>
-          )}
+          ) : null}
         </div>
       </Modal>
     </AppShell>

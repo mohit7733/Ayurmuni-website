@@ -48,21 +48,36 @@ export const normalizeApiList = (response) => {
   return [];
 };
 
+const mediaUri = (value) => {
+  if (typeof value === 'string') return value.trim();
+  if (!value || typeof value !== 'object') return '';
+  return String(
+    value.media_url || value.url || value.uri || value.image_url || value.file_url || value.path || '',
+  ).trim();
+};
+
 export const resolveImageUrl = (item) => {
+  if (typeof item === 'string') return absolutizeMediaUrl(item);
   if (!item || typeof item !== 'object') return '';
   const candidates = [
-    item?.cover_image?.media_url,
+    item?.cover_image,
     item?.image_url,
     item?.thumbnail_url,
     item?.profile_image,
+    item?.doctor_image,
+    item?.profile_picture,
+    item?.avatar,
+    item?.photo,
+    item?.doctor_profile_image,
     item?.image,
     item?.icon_url,
     item?.media_url,
     item?.banner_image,
   ];
   for (const value of candidates) {
-    if (typeof value === 'string' && value.trim() && !/example\.com|placeholder/i.test(value)) {
-      return value.trim();
+    const uri = mediaUri(value);
+    if (uri && !/example\.com|placeholder/i.test(uri)) {
+      return absolutizeMediaUrl(uri);
     }
   }
   return '';

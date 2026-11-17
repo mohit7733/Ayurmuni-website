@@ -1466,6 +1466,14 @@
 /* Phones (stacked): tight gap from wordmark to the © row. */
 .site-footer:not(.is-mark-pinned) .site-footer-mark,
 .app-shell:not(.auth-shell):not(.is-logged-out) .site-footer:not(.is-mark-pinned) .site-footer-mark { margin-bottom: -6px; }
+/* Wide screens: the download block is only on the left, so lift the emblem and word
+   into the empty green beside it. */
+@media (min-width: 1100px) {
+  .site-footer:not(.is-mark-pinned) .site-footer-mark,
+  .app-shell:not(.auth-shell):not(.is-logged-out) .site-footer:not(.is-mark-pinned) .site-footer-mark {
+    margin-top: -96px;
+  }
+}
 .site-footer.is-mark-pinned .site-footer-bar { padding-top: 8px; }
 /* ---------- © row flush to the bottom (Rohit) ---------- */
 .site-footer { padding-bottom: 0; margin-bottom: 0; min-height: 0; }

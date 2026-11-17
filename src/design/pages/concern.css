@@ -138,7 +138,7 @@
   padding: 12px max(16px, var(--am-gutter)) var(--am-space-8);
   box-sizing: border-box;
 }
-.cs-concern > .am-page-header { gap: 8px; margin: 0; padding: 0; }
+.cs-concern > .am-page-header { gap: 8px; margin: 0; }
 .cs-concern > .am-page-header .am-page-header__row {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) minmax(240px, 420px);

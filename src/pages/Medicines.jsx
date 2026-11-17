@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Check, Leaf, Pill, SlidersHorizontal, X } from 'lucide-react';
+import FilterPriceControls from '../components/FilterPriceControls';
+import FilterRatingChoices from '../components/FilterRatingChoices';
 import AppShell from '../components/AppShell';
 import ProductCard from '../components/ProductCard';
 import CartAddButton from '../components/CartAddButton';
@@ -679,54 +681,19 @@ export default function Medicines() {
         }
       >
         <div className="st-filter-content">
-          <section className="st-filter-section" aria-labelledby="med-filter-price-title">
-            <div className="st-filter-section__heading">
-              <h3 id="med-filter-price-title">Price range</h3>
-              <span>₹{priceRange[0]} – ₹{priceRange[1]}</span>
-            </div>
-            <div className="st-filter-price">
-              <label className="st-filter-field">
-                <span>Minimum price</span>
-                <input
-                  type="number"
-                  value={priceRange[0]}
-                  onChange={(event) => setPriceRange([Number(event.target.value), priceRange[1]])}
-                  min="0"
-                />
-              </label>
-              <span className="st-filter-price__separator" aria-hidden="true">
-                to
-              </span>
-              <label className="st-filter-field">
-                <span>Maximum price</span>
-                <input
-                  type="number"
-                  value={priceRange[1]}
-                  onChange={(event) => setPriceRange([priceRange[0], Number(event.target.value)])}
-                  min="0"
-                />
-              </label>
-            </div>
-          </section>
+          <FilterPriceControls
+            min={priceRange[0]}
+            max={priceRange[1]}
+            onChange={setPriceRange}
+            headingId="med-filter-price-title"
+          />
 
           <section className="st-filter-section" aria-labelledby="med-filter-rating-title">
             <div className="st-filter-section__heading">
               <h3 id="med-filter-rating-title">Customer rating</h3>
               <span>Minimum rating</span>
             </div>
-            <div className="st-filter-ratings" role="group" aria-label="Minimum rating">
-              {[0, 3, 3.5, 4, 4.5].map((rating) => (
-                <button
-                  key={rating}
-                  type="button"
-                  onClick={() => setMinRating(rating)}
-                  className={`st-filter-rating${minRating === rating ? ' is-selected' : ''}`}
-                  aria-pressed={minRating === rating}
-                >
-                  {rating === 0 ? 'Any rating' : `${rating}★ & up`}
-                </button>
-              ))}
-            </div>
+            <FilterRatingChoices value={minRating} onChange={setMinRating} />
           </section>
 
           <section className="st-filter-section st-filter-section--brands" aria-labelledby="med-filter-brand-title">

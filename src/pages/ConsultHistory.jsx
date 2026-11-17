@@ -14,6 +14,8 @@ import { mapAppointment } from '../profile/map';
 import { requireAuth } from '../services/guestAuth';
 import { getConsultHistory } from '../services/consultService';
 import { invalidateApiCache } from '../services/apiClient';
+import { nameInitials } from '../utils/initials';
+import '../design/pages/consult-history.css';
 
 const TABS = [
   { key: 'all', label: 'All' },
@@ -145,52 +147,54 @@ export default function ConsultHistory() {
   return (
     <AppShell tab="consult">
       <section className="catalog-page history-page">
-        <header className="catalog-head">
-          <div>
-            <button type="button" className="text-back" onClick={() => navigate(-1)}>
-              ← Back
-            </button>
+        <div className="hx-bar">
+          <button type="button" className="text-back" onClick={() => navigate(-1)}>
+            ← Back
+          </button>
+          <div className="hx-bar__title">
             <h1>Consultation History</h1>
             <p>Track your medical journey</p>
           </div>
-          <div className="catalog-head-actions">
-            <button type="button" disabled={loading} onClick={() => {
-                invalidateApiCache('customers/doctors/consultation-history/');
-                setReload((n) => n + 1);
-              }}>
-              Refresh
+          <form
+            className="hx-bar__search"
+            onSubmit={(e) => {
+              e.preventDefault();
+              setDebounced(search.trim().toLowerCase());
+            }}
+          >
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search doctors..."
+              aria-label="Search doctors"
+            />
+            <button type="submit" className="cta">
+              Search
             </button>
+          </form>
+          <div className="hx-bar__chips">
+            {TABS.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                className={`chip ${tab === item.key ? 'on' : ''}`}
+                onClick={() => setTab(item.key)}
+              >
+                {item.label}
+              </button>
+            ))}
           </div>
-        </header>
-
-        <form
-          className="search-form"
-          onSubmit={(e) => {
-            e.preventDefault();
-            setDebounced(search.trim().toLowerCase());
-          }}
-        >
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search doctors..."
-          />
-          <button type="submit" className="cta">
-            Search
+          <button
+            type="button"
+            className="hx-bar__refresh"
+            disabled={loading}
+            onClick={() => {
+              invalidateApiCache('customers/doctors/consultation-history/');
+              setReload((n) => n + 1);
+            }}
+          >
+            Refresh
           </button>
-        </form>
-
-        <div className="home-rail subcat-rail">
-          {TABS.map((item) => (
-            <button
-              key={item.key}
-              type="button"
-              className={`chip ${tab === item.key ? 'on' : ''}`}
-              onClick={() => setTab(item.key)}
-            >
-              {item.label}
-            </button>
-          ))}
         </div>
 
         {loading && history.length === 0 ? (
@@ -224,6 +228,7 @@ export default function ConsultHistory() {
               </div>
             ) : null}
 
+            <div className="hx-list">
             {paged.map((item) => {
               const status = String(item.status || '').toLowerCase();
               const statusStyle = STATUS_STYLE[status] || { background: '#f3f4f6', color: '#000' };
@@ -233,30 +238,39 @@ export default function ConsultHistory() {
               const weekday = weekdayFrom(item.date);
               const dateLabel = formatAppointmentDateFull(item.date);
               const timeLabel = formatSlotTime(item.time);
+              const doctorName = formatDoctorDisplayName(item.doctorName);
+              const when = [weekday, dateLabel].filter(Boolean).join(', ');
               return (
-                <article key={item.consultationId || item.appointmentId || item.id} className="history-card">
-                  <button type="button" className="history-card-main" onClick={() => openDetails(item)}>
-                    {item.image ? <img src={item.image} alt="" /> : <span className="thumb-fallback">+</span>}
-                    <div>
-                      <div className="history-name-row">
-                        <strong>{formatDoctorDisplayName(item.doctorName)}</strong>
+                <article key={item.consultationId || item.appointmentId || item.id} className="hx-card">
+                  <button type="button" className="hx-card__main" onClick={() => openDetails(item)}>
+                    {item.image ? (
+                      <img src={item.image} alt="" />
+                    ) : (
+                      <span className="hx-card__initials" aria-hidden="true">
+                        {nameInitials(doctorName, 2, 'Dr')}
+                      </span>
+                    )}
+                    <span className="hx-card__who">
+                      <span className="hx-card__name">
+                        <strong>{doctorName}</strong>
                         {status ? (
                           <em style={{ background: statusStyle.background, color: statusStyle.color }}>
                             {formatStatusLabel(status)}
                           </em>
                         ) : null}
-                      </div>
+                      </span>
                       <DietitianBadge doctor={item} />
-                      <small className="history-specialty">{item.specialty || 'General Physician'}</small>
-                      <div className="history-meta">
-                        {weekday ? <span>{weekday}</span> : null}
-                        {dateLabel ? <span>{dateLabel}</span> : null}
-                        {timeLabel ? <span>{timeLabel}</span> : null}
-                      </div>
-                    </div>
+                      <small>{item.specialty || 'General Physician'}</small>
+                    </span>
+                    {when || timeLabel ? (
+                      <span className="hx-card__when">
+                        {when ? <span>{when}</span> : null}
+                        {timeLabel ? <strong>{timeLabel}</strong> : null}
+                      </span>
+                    ) : null}
                   </button>
                   {showReceipt || showReschedule || showBookAgain ? (
-                    <div className="history-actions">
+                    <div className="hx-card__actions">
                       {showReceipt ? (
                         <button
                           type="button"
@@ -280,6 +294,7 @@ export default function ConsultHistory() {
                 </article>
               );
             })}
+            </div>
           </>
         )}
       </section>

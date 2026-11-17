@@ -102,6 +102,7 @@ export const mergeReceiptPayment = (receipt, payment) => {
   if (!receipt || !payment) return receipt;
   return {
     ...receipt,
+    package: asObject(receipt.package) || asObject(payment.package),
     payment: asObject(receipt.payment) || payment,
     summary: asObject(receipt.summary) || asObject(payment.summary),
   };
@@ -164,6 +165,21 @@ const isPackageFunded = (receipt, info, payment) => {
     .trim()
     .toLowerCase();
   return method === 'package' || method === 'package_entitlement';
+};
+
+/** Purchase id and plan name when this visit was covered by a package. */
+const readReceiptPackage = (receipt, info, payment) => {
+  const pkg = asObject(receipt?.package) || asObject(info?.package) || asObject(payment?.package) || {};
+  const sources = [pkg, info, payment];
+  const purchaseId = firstText(sources, ['package_purchase_id', 'purchase_id']);
+  const catalogId = firstText([pkg, info, payment], ['package_id']);
+  const name =
+    firstText([pkg], ['name', 'package_name', 'package_name_snapshot', 'plan_name']) ||
+    firstText([info, payment, receipt], ['package_name', 'package_name_snapshot', 'plan_name']);
+  return {
+    name,
+    id: purchaseId || catalogId,
+  };
 };
 
 /** Instrument (UPI, card) when the gateway stored one, otherwise the gateway or package. */
@@ -262,6 +278,7 @@ export const parseConsultationReceiptBreakdown = (receipt) => {
       : amountFromPaymentEntity(entity, totalFromParts > 0 ? totalFromParts : consultationFee);
 
   const methodLabel = readPaymentMethodLabel(receipt, entity, info, payment);
+  const packageInfo = readReceiptPackage(receipt, info, payment);
 
   const apiLines = Array.isArray(summary?.lines)
     ? summary.lines
@@ -297,6 +314,8 @@ export const parseConsultationReceiptBreakdown = (receipt) => {
     totalsMatch: rupeesToPaise(partsSum) === rupeesToPaise(totalPaid),
     apiLines,
     paymentMethod: methodLabel,
+    packageName: packageInfo.name,
+    packageId: packageInfo.id,
     paymentStatus: String(receipt?.payment_status || payment?.status || entity?.status || '').trim(),
     paymentId: String(
       entity?.id ||

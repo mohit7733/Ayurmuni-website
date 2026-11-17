@@ -46,7 +46,7 @@ import {
   persistProfileAndSyncAccess,
   resolveAccessLikeProfile,
 } from '../services/guestAuth';
-import { deleteAccount, update_Profile, UploadProfilePhoto } from '../services/profileService';
+import { update_Profile, UploadProfilePhoto } from '../services/profileService';
 import useProfileDashboardStats from '../hooks/useProfileDashboardStats';
 import { LOGGED_OUT_STATS, buildPhotoOptions, buildProfilePayload } from '../profile/dashboardStats';
 import { useLocation as useDeliveryLocation } from '../context/LocationContext';
@@ -94,10 +94,6 @@ export default function Profile() {
   const [level, setLevel] = useState(null);
   const [user, setUser] = useState(null);
   const [logoutOpen, setLogoutOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleteDone, setDeleteDone] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [retentionDays, setRetentionDays] = useState(30);
   const [photoSheet, setPhotoSheet] = useState(false);
   const [photoViewer, setPhotoViewer] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
@@ -136,28 +132,6 @@ export default function Profile() {
     logoutOneSignalUser();
     await Utils.clearAllData();
     showSuccessToast('Signed out successfully', 'success');
-    navigate('/welcome', { replace: true });
-  };
-
-  const onDelete = async () => {
-    if (deleting) return;
-    setDeleting(true);
-    const res = await deleteAccount();
-    setDeleting(false);
-    if (res?.success === false) {
-      showSuccessToast(res?.message || 'Unable to delete account', 'error');
-      return;
-    }
-    const days = Number(res?.data?.retention_days ?? res?.retention_days ?? 30);
-    setRetentionDays(Number.isFinite(days) && days > 0 ? days : 30);
-    setDeleteOpen(false);
-    setDeleteDone(true);
-  };
-
-  const finishDelete = async () => {
-    await clearLocationSession();
-    logoutOneSignalUser();
-    await Utils.clearAllData();
     navigate('/welcome', { replace: true });
   };
 
@@ -418,12 +392,7 @@ export default function Profile() {
             >
               {T.logout}
             </Button>
-            {/* <button type="button" className="pf-foot__delete" onClick={() => setDeleteOpen(true)}>
-              <Trash2 size={15} aria-hidden />
-              {T.deleteAccount}
-            </button> */}
           </div>
-          <p className="pf-version">{T.version}</p>
         </div>
       </section>
 
@@ -476,41 +445,6 @@ export default function Profile() {
             </Button>
             <Button variant="danger" loading={photoBusy} onClick={confirmRemovePhoto}>
               Remove
-            </Button>
-          </>
-        }
-      />
-      <Modal
-        open={deleteOpen}
-        onClose={() => !deleting && setDeleteOpen(false)}
-        title={T.deleteTitle}
-        description={T.deleteText}
-        dismissible={!deleting}
-        footer={
-          <>
-            <Button variant="secondary" disabled={deleting} onClick={() => setDeleteOpen(false)}>
-              {T.deleteCancel}
-            </Button>
-            <Button variant="danger" loading={deleting} onClick={onDelete}>
-              {deleting ? T.pleaseWait : T.deleteConfirm}
-            </Button>
-          </>
-        }
-      />
-      <Modal
-        open={deleteDone}
-        onClose={finishDelete}
-        title={T.deleteDoneTitle}
-        description={T.deleteDoneText(retentionDays)}
-        hideClose
-        dismissible={false}
-        footer={
-          <>
-            <Button variant="secondary" onClick={finishDelete}>
-              {T.deleteDoneStay}
-            </Button>
-            <Button variant="primary" onClick={finishDelete}>
-              {T.deleteDoneContinue}
             </Button>
           </>
         }

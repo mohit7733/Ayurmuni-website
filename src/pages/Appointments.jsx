@@ -10,6 +10,8 @@ import AppShell from "../components/AppShell";
 import AdvanceLoad from "../components/ui/AdvanceLoad";
 import DietitianBadge from "../components/DietitianBadge";
 import PageHeader from "../components/PageHeader";
+import { consultationDoctorPhoto } from "../components/consult/ConsultationCard";
+import { nameInitials } from "../utils/initials";
 import {
   buildVideoCallNavParams,
   canOfferCancel,
@@ -150,6 +152,39 @@ const isPastVisit = (item) => {
   if (LIVE_CALL.includes(call)) return false;
   if (isBeforeToday(visitDate(item))) return true;
   return isAppointmentInPast(item);
+};
+
+function VisitPhoto({ src, name }) {
+  const [failed, setFailed] = useState(false);
+  const show = Boolean(src) && !failed;
+  return (
+    <span className="ap-card__photo" aria-hidden>
+      {show ? (
+        <img src={src} alt="" onError={() => setFailed(true)} />
+      ) : (
+        <span className="ap-card__initials">{nameInitials(name, 2, "Dr")}</span>
+      )}
+    </span>
+  );
+}
+
+const visitRole = (item) => {
+  const specialty = String(item.specialty || "")
+    .split(/[,;|]/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .slice(0, 2)
+    .join(" · ");
+  return specialty || "Ayurveda consultation";
+};
+
+const visitFacts = (item) => {
+  const type = String(item.consultationType || "")
+    .replace(/_/g, " ")
+    .trim();
+  return [item.experience, item.city, type]
+    .map((part) => String(part || "").trim())
+    .filter(Boolean);
 };
 
 const itemHasPrescription = (item) => {
@@ -563,9 +598,10 @@ export default function Appointments() {
               const showViewDetails = hasRx && PAST_STATUS.includes(status);
               const showJoinCall = isAppointmentJoinable(item);
               const refund = getRefundProgress(status, item.raw, item);
-              const therapy =
-                item.therapies || item.specialty || "Ayurvedic consultation";
               const followUp = item.followUpDate;
+              const doctorName = formatDoctorDisplayName(item.doctorName);
+              const photo = item.image || consultationDoctorPhoto(item);
+              const facts = visitFacts(item);
               return (
                 <article
                   key={item.consultationId || item.appointmentId || item.id}
@@ -574,19 +610,13 @@ export default function Appointments() {
                 >
                   <button
                     type="button"
-                    className="history-card-main"
+                    className="ap-card__main"
                     onClick={() => openDetails(item)}
                   >
-                    {item.image ? (
-                      <img src={item.image} alt="" />
-                    ) : (
-                      <span className="thumb-fallback">+</span>
-                    )}
-                    <div>
-                      <div className="history-name-row">
-                        <strong>
-                          {formatDoctorDisplayName(item.doctorName)}
-                        </strong>
+                    <VisitPhoto src={photo} name={doctorName} />
+                    <div className="ap-card__who">
+                      <div className="ap-card__name">
+                        <strong>{doctorName}</strong>
                         {status ? (
                           <em
                             style={{
@@ -600,18 +630,15 @@ export default function Appointments() {
                           </em>
                         ) : null}
                       </div>
-                      <DietitianBadge doctor={item} />
-                      <div className="ap-specialties">
-                        {String(therapy)
-                          .split(/[,;|]/)
-                          .map((s) => s.trim())
-                          .filter(Boolean)
-                          .map((s) => (
-                            <span key={s}>{s}</span>
-                          ))}
+                      <div className="ap-card__role">
+                        <DietitianBadge doctor={item} />
+                        <span>{visitRole(item)}</span>
                       </div>
+                      {facts.length ? (
+                        <p className="ap-card__facts">{facts.join(" · ")}</p>
+                      ) : null}
                       {item.patientName ? (
-                        <small className="ap-patient">Patient · {item.patientName}</small>
+                        <p className="ap-card__patient">Patient · {item.patientName}</p>
                       ) : null}
                     </div>
                   </button>

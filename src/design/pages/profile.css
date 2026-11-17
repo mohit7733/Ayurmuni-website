@@ -210,13 +210,6 @@
   padding-top: var(--am-space-2);
 }
 
-.pf-version {
-  margin: 0;
-  color: var(--am-text-subtle);
-  font-size: var(--am-text-xs);
-  letter-spacing: 0.06em;
-}
-
 /* Guest / gate */
 .pf-gate {
   align-items: flex-start;
@@ -1132,6 +1125,7 @@
   padding-top: 8px;
 }
 
+.pf-foot__actions,
 .pf-hub .pf-foot__actions {
   display: flex;
   flex-wrap: wrap;
