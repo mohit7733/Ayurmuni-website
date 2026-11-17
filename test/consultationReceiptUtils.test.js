@@ -100,11 +100,32 @@ describe('parseConsultationReceiptBreakdown', () => {
     expect(parsed.consultationFee).toBe(499);
     expect(parsed.totalPaid).toBe(0);
     expect(parsed.packageFunded).toBe(true);
+    expect(parsed.packageName).toBe('');
+    expect(parsed.packageId).toBe('');
     expect(receiptBreakdownIsIncomplete(parsed)).toBe(false);
     expect(labels(parsed)).toEqual([
       ['Consultation fee', 'add', 499],
       ['Covered by package', 'subtract', 499],
     ]);
+  });
+
+  it('reads the package name and purchase id from the receipt', () => {
+    const parsed = parseConsultationReceiptBreakdown({
+      consultation_fees: 499,
+      amount: 0,
+      payment_method: 'package',
+      package: {
+        name: 'Wellness Journey',
+        package_purchase_id: 'db13249e-74e7-4ab8-a44e-e689eaf96694',
+        package_id: '12bdbc61-57cb-4cae-809c-56956e40a180',
+      },
+      payment_information: {
+        source: 'package_entitlement',
+        package_purchase_id: 'db13249e-74e7-4ab8-a44e-e689eaf96694',
+      },
+    });
+    expect(parsed.packageName).toBe('Wellness Journey');
+    expect(parsed.packageId).toBe('db13249e-74e7-4ab8-a44e-e689eaf96694');
   });
 
   it('hides zero lines when only the base fee was charged, and flags a missing breakdown', () => {

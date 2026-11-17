@@ -117,11 +117,22 @@ export const toRazorpayPaise = (apiAmount, fallbackRupees) => {
   return Math.round(n);
 };
 
-export const doctorImage = (item) =>
-  resolveImageUrl({
+export const doctorImage = (item) => {
+  if (!item || typeof item !== 'object') return '';
+  const url = resolveImageUrl({
     ...item,
-    profile_image: item?.profile_image || item?.doctor_image || item?.profile_picture,
+    profile_image:
+      item.profile_image ||
+      item.doctor_image ||
+      item.profile_picture ||
+      item.avatar ||
+      item.photo ||
+      item.doctor_profile_image,
   });
+  if (url) return url;
+  const nested = item.doctor && item.doctor !== item ? item.doctor : null;
+  return nested ? doctorImage(nested) : '';
+};
 
 /** Patient-facing availability only: never show admin approval strings (port of app getDoctorAvailabilityLabel). */
 const APPROVAL_STATUS_RE = /not\s*approved|unapproved|pending\s*approval|rejected|inactive|disabled/i;

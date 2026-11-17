@@ -23,6 +23,7 @@ import { formatConsultationAmount } from '../home/catalog';
 import { showSuccessToast } from '../config/key';
 import { requireAuth } from '../services/guestAuth';
 import { getAppointmentDetail, getMedicalReceipt } from '../services/consultService';
+import { getMyPackages } from '../services/packageService';
 import { formatDisplayIdHash, formatReceiptId } from '../utils/formatDisplayId';
 import {
   buildConsultationReceiptBillRows,
@@ -68,6 +69,8 @@ const buildReceiptText = (receipt, breakdown) => {
     `Date: ${formatReceiptDate(receipt?.date)}`,
     `Patient: ${receipt?.patient_name || '-'}`,
     `Payment Method: ${breakdown.paymentMethod}`,
+    breakdown.packageName ? `Package: ${breakdown.packageName}` : '',
+    breakdown.packageId ? `Package ID: ${breakdown.packageId}` : '',
     statusLabel ? `Payment Status: ${statusLabel}` : '',
     breakdown.bank ? `Bank: ${breakdown.bank}` : '',
     breakdown.paymentId ? `Payment ID: ${breakdown.paymentId}` : '',
@@ -107,13 +110,44 @@ export default function MedicalReceipt() {
         setReceipt(null);
       } else {
         let data = response?.data ?? null;
-        if (data && receiptBreakdownIsIncomplete(parseConsultationReceiptBreakdown(data))) {
-          try {
-            const extra = await getAppointmentDetail(consultationId);
-            const payment = extractConsultationPayment(extra);
-            if (payment) data = mergeReceiptPayment(data, payment);
-          } catch {
-            /* keep the receipt payload we already have */
+        if (data) {
+          const first = parseConsultationReceiptBreakdown(data);
+          const needsFees = receiptBreakdownIsIncomplete(first);
+          const needsName = Boolean(first.packageId) && !first.packageName;
+          if (needsFees || needsName) {
+            try {
+              const extra = await getAppointmentDetail(consultationId);
+              const payment = extractConsultationPayment(extra);
+              if (payment) data = mergeReceiptPayment(data, payment);
+            } catch {
+              /* keep the receipt payload we already have */
+            }
+          }
+          const named = parseConsultationReceiptBreakdown(data);
+          if (named.packageId && !named.packageName) {
+            try {
+              const planRes = await getMyPackages({ id: named.packageId });
+              const plan =
+                planRes?.success !== false &&
+                planRes?.data &&
+                typeof planRes.data === 'object' &&
+                !Array.isArray(planRes.data)
+                  ? planRes.data
+                  : null;
+              const name = String(plan?.name || plan?.package_name_snapshot || '').trim();
+              if (name) {
+                data = {
+                  ...data,
+                  package: {
+                    ...(data.package && typeof data.package === 'object' ? data.package : {}),
+                    name,
+                    package_purchase_id: named.packageId,
+                  },
+                };
+              }
+            } catch {
+              /* id still shows without the plan name */
+            }
           }
         }
         setReceipt(data);
@@ -259,6 +293,8 @@ export default function MedicalReceipt() {
                 items={[
                   { label: 'Patient', value: receipt?.patient_name || '—' },
                   { label: 'Payment method', value: breakdown.paymentMethod },
+                  { label: 'Package', value: breakdown.packageName },
+                  { label: 'Package ID', value: breakdown.packageId },
                   { label: 'Bank', value: breakdown.bank },
                   { label: 'Payment ID', value: breakdown.paymentId },
                   { label: 'Order ID', value: breakdown.orderId },

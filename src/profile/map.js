@@ -165,8 +165,14 @@ export const mapAppointment = (item) => {
     consultationId: ids.consultationId,
     doctorId,
     doctorName: doctorDisplayName(doctor),
-    image: doctorImage(doctor),
+    image: doctorImage(doctor) || doctorImage(item),
     specialty,
+    experience: String(doctor?.experience_display || '').trim()
+      || (doctor?.experience_years ? `${doctor.experience_years} yrs` : ''),
+    city: String(doctor?.city || '').trim(),
+    consultationType: String(
+      appointment?.consultation_type || item?.consultation_type || '',
+    ).trim(),
     therapies,
     date:
       appointment?.appointment_date ||

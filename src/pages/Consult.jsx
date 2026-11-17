@@ -14,7 +14,7 @@ import useDashboardCategories from '../hooks/useDashboardCategories';
 import useCategoryProducts from '../hooks/useCategoryProducts';
 import { getAllApprovedDoctors, getConsultHistory, getSuggestedDoctors } from '../services/consultService';
 import { getHealthCategories } from '../services/productService';
-import { doctorDisplayName, getDoctorId, normalizeDoctorList } from '../consult/doctors';
+import { doctorDisplayName, doctorImage, getDoctorId, normalizeDoctorList } from '../consult/doctors';
 import { resolveAppointmentLookupId } from '../consult/appointmentUtils';
 import { mapAppointment } from '../profile/map';
 import { isAuthenticated } from '../services/guestAuth';
@@ -144,9 +144,28 @@ export default function Consult() {
     } catch {
       hist = [];
     }
+    const doctorsList = Array.isArray(allDoctors) ? allDoctors : [];
+    const suggestedList = normalizeDoctorList(suggestedRes, { approvedOnly: true });
+    const photoByDoctorId = new Map();
+    const indexPhoto = (doc) => {
+      const id = getDoctorId(doc);
+      const url = doctorImage(doc);
+      if (id && url && !photoByDoctorId.has(String(id))) {
+        photoByDoctorId.set(String(id), url);
+      }
+    };
+    doctorsList.forEach(indexPhoto);
+    suggestedList.forEach(indexPhoto);
+    if (photoByDoctorId.size) {
+      hist = hist.map((entry) => {
+        if (entry.image) return entry;
+        const url = photoByDoctorId.get(String(entry.doctorId || ''));
+        return url ? { ...entry, image: url } : entry;
+      });
+    }
     setConcerns(normalizeApiList(catRes).map(mapProductCategory).filter((item) => item.id));
-    setDoctors(Array.isArray(allDoctors) ? allDoctors : []);
-    setSuggestedDoctors(normalizeDoctorList(suggestedRes, { approvedOnly: true }));
+    setDoctors(doctorsList);
+    setSuggestedDoctors(suggestedList);
     setHistory(hist);
     setLoading(false);
   };
@@ -261,18 +280,17 @@ export default function Consult() {
                       description="Consultations you booked recently."
                       action={<ViewAll label={T.recentTitle} onClick={() => navigate('/consult/history')} />}
                     />
-                    <Rail label={T.recentTitle} className="svc-consult-rail">
+                    <div className="svc-consult-grid">
                       {filteredHistory.map((item) => (
-                        <RailItem key={item.consultationId || item.appointmentId || item.id} size="wide">
-                          <ConsultationCard
-                            item={item}
-                            onOpen={openDetails}
-                            onReceipt={(entry) => navigate(`/profile/receipts/${entry.consultationId}`)}
-                            onBook={openSlots}
-                          />
-                        </RailItem>
+                        <ConsultationCard
+                          key={item.consultationId || item.appointmentId || item.id}
+                          item={item}
+                          onOpen={openDetails}
+                          onReceipt={(entry) => navigate(`/profile/receipts/${entry.consultationId}`)}
+                          onBook={openSlots}
+                        />
                       ))}
-                    </Rail>
+                    </div>
                   </section>
                 </div>
               ) : null}

@@ -251,6 +251,8 @@ export const buildReceiptDocument = (receipt) => {
       { label: 'Consultation No', value: formatConsultationId(receipt?.consultation_id) },
       { label: 'Doctor', value: doctorName || '-' },
       { label: 'Payment Method', value: breakdown.paymentMethod || '-' },
+      ...(breakdown.packageName ? [{ label: 'Package', value: breakdown.packageName }] : []),
+      ...(breakdown.packageId ? [{ label: 'Package ID', value: breakdown.packageId }] : []),
       ...(paymentSourceLine ? [{ label: 'Payment source', value: paymentSourceLine }] : []),
       ...(status ? [{ label: 'Payment Status', value: status }] : []),
       ...(breakdown.bank ? [{ label: 'Bank', value: breakdown.bank }] : []),

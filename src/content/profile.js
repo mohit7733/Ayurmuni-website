@@ -20,7 +20,6 @@ export const PROFILE_COPY = {
   deleteDoneStay: 'Stay',
   deleteDoneContinue: 'Continue',
   pleaseWait: 'Please wait…',
-  version: 'WEB VERSION 1.0',
   accountSection: 'Account',
   preferenceSection: 'Preference',
   exploreLabel: 'Explore',

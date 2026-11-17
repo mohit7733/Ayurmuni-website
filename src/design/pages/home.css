@@ -1290,11 +1290,12 @@
 }
 
 .hm-well--move {
+  border: 1px solid color-mix(in srgb, var(--am-gold-300) 55%, var(--am-line));
   background:
-    radial-gradient(70% 80% at 100% 0%, rgba(228, 196, 122, 0.2), transparent 58%),
-    #115443;
-  color: #f7f4ee;
-  box-shadow: 0 16px 36px rgba(10, 47, 39, 0.16);
+    radial-gradient(80% 70% at 0% 0%, color-mix(in srgb, var(--am-gold-100) 75%, transparent), transparent 52%),
+    linear-gradient(180deg, var(--am-sand-50), var(--am-sand-100));
+  color: var(--am-text);
+  box-shadow: 0 14px 32px color-mix(in srgb, var(--am-ink-900) 6%, transparent);
 }
 
 .hm-well--nourish {
@@ -1342,7 +1343,7 @@
 }
 
 .hm-well--move .hm-well__text {
-  color: rgba(247, 244, 238, 0.74);
+  color: var(--am-ink-500);
 }
 
 .hm-well--nourish .hm-well__text {
