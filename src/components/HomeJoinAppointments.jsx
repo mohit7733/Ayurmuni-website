@@ -156,25 +156,6 @@ export default function HomeJoinAppointments({ appointments, loading }) {
         <h2 id="hm-appt-title" className="am-diet-active__title">{name}</h2>
         <p className="am-diet-active__sub">{sub}</p>
       </div>
-      {next.status ? <span className="hm-appt__status">{statusLabel(next.status)}</span> : null}
-
-      <dl className="hm-appt__strip">
-        <div>
-          <dt>Date</dt>
-          <dd>{formatAppointmentDayShort(next.date) || '—'}</dd>
-        </div>
-        <div>
-          <dt>Time</dt>
-          <dd>{timeRange || '—'}</dd>
-        </div>
-        {when ? (
-          <div>
-            <dt>Starts</dt>
-            <dd>{when}</dd>
-          </div>
-        ) : null}
-      </dl>
-
       <div className="hm-appt__actions">
         {joinable ? (
           <button type="button" className="am-diet-active__cta hm-appt__cta" onClick={joinCall}>
@@ -186,9 +167,31 @@ export default function HomeJoinAppointments({ appointments, loading }) {
             View appointment <ArrowRight size={16} aria-hidden />
           </button>
         )}
-        <button type="button" className="hm-appt__link" onClick={openAppointments}>
-          {more > 0 ? `+${more} more` : 'View all'}
-        </button>
+      </div>
+
+      <div className="hm-appt__foot">
+        <dl className="hm-appt__strip">
+          <div>
+            <dt>Date</dt>
+            <dd>{formatAppointmentDayShort(next.date) || '—'}</dd>
+          </div>
+          <div>
+            <dt>Time</dt>
+            <dd>{timeRange || '—'}</dd>
+          </div>
+          {when ? (
+            <div>
+              <dt>Starts</dt>
+              <dd>{when}</dd>
+            </div>
+          ) : null}
+        </dl>
+        <div className="hm-appt__aside">
+          {next.status ? <span className="hm-appt__status">{statusLabel(next.status)}</span> : null}
+          <button type="button" className="hm-appt__link" onClick={openAppointments}>
+            {more > 0 ? `+${more} more` : 'View all'}
+          </button>
+        </div>
       </div>
     </section>
   );

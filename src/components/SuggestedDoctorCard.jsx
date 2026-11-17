@@ -97,6 +97,9 @@ export default function SuggestedDoctorCard({ item, fallbackSpeciality = 'Ayurve
             onClick={toggleFav}
           />
         </div>
+        <div className="hm-doc-card__dietitian">
+          <DietitianBadge doctor={item} />
+        </div>
       </div>
 
       <div className="am-flip-doc__body">
@@ -105,11 +108,16 @@ export default function SuggestedDoctorCard({ item, fallbackSpeciality = 'Ayurve
             {name}
           </button>
         </h3>
-        <DietitianBadge doctor={item} />
         {credential ? <p className="am-flip-doc__spec">{credential}</p> : null}
         {experience || location ? (
-          <ul className="am-flip-doc__facts">
-            {experience ? (
+          <ul className="hm-doc-card__specialized-bio" aria-label="Specialized Bio">
+            {item.specialized_bio.length ?
+            item.specialized_bio.map((bio) => (
+              <li key={bio} className="hm-doc-card__specialized-bio-item">
+                <span>{bio}</span>
+              </li>
+            )) : null}
+            {/* {experience ? (
               <li>
                 <Briefcase size={13} aria-hidden />
                 {experience}
@@ -120,7 +128,7 @@ export default function SuggestedDoctorCard({ item, fallbackSpeciality = 'Ayurve
                 <MapPin size={13} aria-hidden />
                 {location}
               </li>
-            ) : null}
+            ) : null} */}
           </ul>
         ) : null}
         <div className="am-flip-doc__cta">

@@ -851,10 +851,10 @@ export default function Home() {
               <Reveal as="section" className="hm-section hm-panel hm-concerns-panel" aria-labelledby="hm-concerns-title">
                 <SectionHeader
                   id="hm-concerns-title"
-                  className="hm-concerns-head"
+                  className="hm-concerns-head hm-doctor-head"
                   title={T.concernsTitle}
                   description={T.concernsText}
-                  action={healthConcerns.length > 1 ? <ViewAll label={T.concernsTitle} onClick={() => navigate('/consult')} /> : null}
+                  action={healthConcerns.length > 1 ? <ViewAll plain label={T.concernsTitle} onClick={() => navigate('/consult')} /> : null}
                 />
                 <ConcernCarousel label={T.concernsTitle} marquee>
                   {healthConcerns.map((item) => (
@@ -908,17 +908,18 @@ export default function Home() {
 
           <LazyBlock blockRef={brandsRef} done={brandsSeen && !brandsLoading} minHeight={120} skeleton={<SectionHold label={T.brandsTitle} minHeight={120} variant="chips" />}>
             {brands.length > 0 ? (
-              <Reveal as="section" className="hm-section hm-panel hm-brands-panel" aria-labelledby="hm-brands-title">
+              <Reveal as="section" className="hm-section hm-panel hm-brands-panel " aria-labelledby="hm-brands-title">
                 <SectionHeader
-                  className="hm-head-inline"
+                  className="hm-concerns-head hm-doctor-head"
                   id="hm-brands-title"
                   title={T.brandsTitle}
                   description={T.brandsText}
                   action={
                     <ViewAll
+                      plain={true}
                       label={T.brandsTitle}
                       onClick={() =>
-                        navigate('/products/category?mode=product&name=Brands')
+                        navigate('/products/category?mode=both&name=Brands')
                       }
                     />
                   }
@@ -933,7 +934,7 @@ export default function Home() {
                       label={item.name}
                       onClick={() =>
                         navigate(
-                          `/products/category?mode=product&brand=${item.id}&name=${encodeURIComponent(
+                          `/products/category?mode=both&brand=${item.id}&name=${encodeURIComponent(
                             item.name,
                           )}`,
                         )
@@ -966,7 +967,7 @@ export default function Home() {
                       id="hm-visited-title"
                       title={T.visitedTitle}
                       description={T.visitedText}
-                      reserveEyebrow={splitDoctorRow}
+                      // reserveEyebrow={splitDoctorRow}
                       onViewAll={() => navigate('/consult')}
                     />
                     <VisitedDoctorList
@@ -1004,9 +1005,6 @@ export default function Home() {
               </div>
             ) : null}
           </LazyBlock>
-          {
-            console.log(suggestedDoctors,"suggestedDoctors")
-          }
 
           {consultPackages.length ? (
             <Reveal as="section" className="hm-section hm-panel" aria-labelledby="hm-packages-title">

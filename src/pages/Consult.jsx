@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SearchX, Stethoscope } from 'lucide-react';
 import AppShell from '../components/AppShell';
@@ -120,8 +120,6 @@ export default function Consult() {
     [],
     { pageSize: 8 },
   );
-  const moreRef = useRef(null);
-
   useEffect(() => {
     const timer = setTimeout(() => setDebounced(search.trim()), 400);
     return () => clearTimeout(timer);
@@ -224,22 +222,9 @@ export default function Consult() {
     else if (item.doctorId) openSlots(item);
   };
 
-  useEffect(() => {
-    const node = moreRef.current;
-    if (!node || !hasMore) return undefined;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) loadMore();
-      },
-      { rootMargin: '240px' },
-    );
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [hasMore, loadMore, products.length]);
-
   const headActions = (
     <>
-        <Button
+      <Button
         variant="accent"
         onClick={() => navigate('/consult/doctors')}
         leadingIcon={<Stethoscope size={16} aria-hidden />}
@@ -256,74 +241,12 @@ export default function Consult() {
     <AppShell tab="consult">
       <div className="hm-page svc-page">
         <div className="hm-body">
-          <section className="hm-section hm-panel cs-promises" aria-label={T.promisesLabel}>
-            <ul className="cs-promises__list">
-              {T.promises.map((item) => (
-                <li key={item.id} className="cs-promises__item">
-                  <span className="cs-promises__icon">{PROMISE_ICONS[item.id]}</span>
-                  <span className="cs-promises__label">{item.label}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
+
 
           {loading && !concerns.length && !doctors.length ? (
             <SkeletonGrid variant="doctor" count={4} label={T.loadingDoctors} />
           ) : (
             <>
-              {filteredHistory.length > 0 ? (
-                <div className="hm-product-row">
-                  <section className="hm-section hm-panel svc-rail-section" aria-labelledby="cs-recent-title">
-                    <SectionHead
-                      id="cs-recent-title"
-                      title={T.recentTitle}
-                      description="Consultations you booked recently."
-                      action={<ViewAll label={T.recentTitle} onClick={() => navigate('/consult/history')} />}
-                    />
-                    <div className="svc-consult-grid">
-                      {filteredHistory.map((item) => (
-                        <ConsultationCard
-                          key={item.consultationId || item.appointmentId || item.id}
-                          item={item}
-                          onOpen={openDetails}
-                          onReceipt={(entry) => navigate(`/profile/receipts/${entry.consultationId}`)}
-                          onBook={openSlots}
-                        />
-                      ))}
-                    </div>
-                  </section>
-                </div>
-              ) : null}
-
-              {concerns.length > 0 ? (
-                <Reveal as="section" className="hm-section hm-panel hm-concerns-panel" aria-labelledby="cs-concerns-title">
-                  <SectionHead
-                    id="cs-concerns-title"
-                    title={T.concernsTitle}
-                    description={T.concernsText}
-                  />
-                  <ConcernCarousel label={T.concernsTitle}>
-                    {concerns.map((item) => (
-                      <Tile
-                        cutout
-                        key={item.id}
-                        image={item.image_url}
-                        icon={Stethoscope}
-                        label={item.name}
-                        onClick={() =>
-                          navigate(
-                            `/consult/concern/${item.id}?name=${encodeURIComponent(item.name)}${
-                              item.description ? `&desc=${encodeURIComponent(item.description)}` : ''
-                            }`,
-                            { state: { categoryName: item.name, categoryDesc: item.description } },
-                          )
-                        }
-                      />
-                    ))}
-                  </ConcernCarousel>
-                </Reveal>
-              ) : null}
-
               {showSuggestedDoctors ? (
                 <Reveal
                   as="section"
@@ -407,6 +330,69 @@ export default function Consult() {
                   )}
                 </Reveal>
               ) : null}
+              <section className="hm-section hm-panel cs-promises" aria-label={T.promisesLabel}>
+                <ul className="cs-promises__list">
+                  {T.promises.map((item) => (
+                    <li key={item.id} className="cs-promises__item">
+                      <span className="cs-promises__icon">{PROMISE_ICONS[item.id]}</span>
+                      <span className="cs-promises__label">{item.label}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+              {filteredHistory.length > 0 ? (
+                <div className="hm-product-row">
+                  <section className="hm-section hm-panel svc-rail-section" aria-labelledby="cs-recent-title">
+                    <SectionHead
+                      id="cs-recent-title"
+                      title={T.recentTitle}
+                      description="Consultations you booked recently."
+                      action={<ViewAll label={T.recentTitle} onClick={() => navigate('/consult/history')} />}
+                    />
+                    <div className="svc-consult-grid">
+                      {filteredHistory.map((item) => (
+                        <ConsultationCard
+                          key={item.consultationId || item.appointmentId || item.id}
+                          item={item}
+                          onOpen={openDetails}
+                          onReceipt={(entry) => navigate(`/profile/receipts/${entry.consultationId}`)}
+                          onBook={openSlots}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                </div>
+              ) : null}
+
+              {concerns.length > 0 ? (
+                <Reveal as="section" className="hm-section hm-panel hm-concerns-panel" aria-labelledby="cs-concerns-title">
+                  <SectionHead
+                    id="cs-concerns-title"
+                    title={T.concernsTitle}
+                    description={T.concernsText}
+                  />
+                  <ConcernCarousel label={T.concernsTitle}>
+                    {concerns.map((item) => (
+                      <Tile
+                        cutout
+                        key={item.id}
+                        image={item.image_url}
+                        icon={Stethoscope}
+                        label={item.name}
+                        onClick={() =>
+                          navigate(
+                            `/consult/concern/${item.id}?name=${encodeURIComponent(item.name)}${item.description ? `&desc=${encodeURIComponent(item.description)}` : ''
+                            }`,
+                            { state: { categoryName: item.name, categoryDesc: item.description } },
+                          )
+                        }
+                      />
+                    ))}
+                  </ConcernCarousel>
+                </Reveal>
+              ) : null}
+
+
 
               {products.length > 0 || productsLoading ? (
                 <div className="hm-product-row">
@@ -432,11 +418,13 @@ export default function Consult() {
                         ))}
                       </Rail>
                     )}
-                    {/* {hasMore ? (
-                      <div ref={moreRef} className="svc-more" aria-live="polite">
-                        {loadingMore ? T.loadingMore : ''}
+                    {hasMore && products.length > 0 ? (
+                      <div className="st-more">
+                        <Button variant="secondary" loading={loadingMore} onClick={loadMore}>
+                          {loadingMore ? T.loadingMore : T.loadMore}
+                        </Button>
                       </div>
-                    ) : null} */}
+                    ) : null}
                   </section>
                 </div>
               ) : null}

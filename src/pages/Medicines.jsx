@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Check, Leaf, Pill, SlidersHorizontal, X } from 'lucide-react';
 import FilterPriceControls from '../components/FilterPriceControls';
@@ -105,8 +105,6 @@ export default function Medicines() {
   const [inStockOnly, setInStockOnly] = useState(false);
   const [brandNames, setBrandNames] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
-  const moreRef = useRef(null);
-
   const filteredProducts = useMemo(() => {
     let filtered = filterItemsByQuery(products, query).filter((product) => {
       const price = getCatalogPrice(product);
@@ -243,19 +241,6 @@ export default function Medicines() {
       alive = false;
     };
   }, [recent]);
-
-  useEffect(() => {
-    const node = moreRef.current;
-    if (!node || !hasMore) return undefined;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) loadMore();
-      },
-      { rootMargin: '240px' },
-    );
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [hasMore, loadMore, products.length]);
 
   const [catalogReady, setCatalogReady] = useState(false);
   useEffect(() => {
@@ -517,11 +502,13 @@ export default function Medicines() {
                           ))}
                         </ul>
                       )}
-                      {/* {hasMore ? (
-                        <div ref={moreRef} className="svc-more" aria-live="polite">
-                          {loadingMore ? 'Loading…' : ''}
+                      {hasMore && products.length > 0 ? (
+                        <div className="st-more">
+                          <Button variant="secondary" loading={loadingMore} onClick={loadMore}>
+                            {loadingMore ? T.loadingMore : T.loadMore}
+                          </Button>
                         </div>
-                      ) : null} */}
+                      ) : null}
                     </div>
                   </div>
                 </section>
@@ -625,7 +612,7 @@ export default function Medicines() {
                       <ViewAll
                         label="Trusted brands"
                         onClick={() =>
-                          navigate('/products/category?mode=product&name=Brands')
+                          navigate('/products/category?mode=both&name=Brands')
                         }
                       />
                     }
@@ -640,7 +627,7 @@ export default function Medicines() {
                         label={item.name}
                         onClick={() =>
                           navigate(
-                            `/products/category?mode=product&brand=${item.id}&name=${encodeURIComponent(
+                            `/products/category?mode=both&brand=${item.id}&name=${encodeURIComponent(
                               item.name,
                             )}`,
                           )
