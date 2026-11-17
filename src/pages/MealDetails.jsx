@@ -1,10 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   CheckCircle2,
   ChefHat,
   ChevronRight,
-  Circle,
   Flame,
   Leaf,
   PlayCircle,
@@ -15,12 +14,12 @@ import {
 import AppShell from '../components/AppShell';
 import { Button } from '../components/ui';
 import {
-  ActionStack,
   DetailCard,
   DetailEmpty,
   DetailHero,
   DetailLayout,
   DetailPage,
+  DetailSkeleton,
   DetailTop,
   MetaChip,
   StatGrid,
@@ -28,24 +27,117 @@ import {
 } from '../components/detail/Detail';
 import dietCoverImg from '/images/login/14.webp';
 import { requireAuth } from '../services/guestAuth';
-import { updateDietPlanProgress } from '../services/dietService';
-import { nowIso } from '../diet/utils';
+import { getDietPlanProgress, getDietPlans, getMyDietPlans, updateDietPlanProgress } from '../services/dietService';
+import {
+  extractDietPlanDetail,
+  getDietListStatus,
+  mapPlanJsonMeals,
+  normalizeDietPlanList,
+  normalizeProgressList,
+  nowIso,
+} from '../diet/utils';
 import { showSuccessToast } from '../config/key';
+import '../design/pages/diet-brand.css';
 
-const grams = (value) => (value == null || value === '' ? '' : `${value}g`);
+const grams = (value) => `${value}g`;
+const amount = (value) => {
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+};
+
+const splitMealId = (mealId) => {
+  const match = String(mealId || '').match(/^(day_\d+)-(.+)$/i);
+  if (!match) return null;
+  return { dayKey: match[1], mealKey: match[2] };
+};
 
 export default function MealDetails() {
   const navigate = useNavigate();
-  const { planId } = useParams();
-  const item = useLocation().state?.meal;
+  const { planId, mealId } = useParams();
+  const routeState = useLocation().state || {};
+  const seeded = routeState.meal || null;
+  const [item, setItem] = useState(seeded);
+  const [loading, setLoading] = useState(!seeded);
   const [logging, setLogging] = useState(false);
-  const [logged, setLogged] = useState(item?.status === 'done');
+  const [logged, setLogged] = useState(seeded?.status === 'done');
+  const [canLog, setCanLog] = useState(routeState.planActive === true);
   const planPath = `/diet/${planId}`;
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const res = await getMyDietPlans({
+          page: 1,
+          page_size: 50,
+          patient_assignment_status: 'active',
+        });
+        const active = res?.success === false ? [] : normalizeDietPlanList(res);
+        const match = active.some((plan) => {
+          const id = String(plan.diet_plan_id || plan.id || '');
+          return id === String(planId) && getDietListStatus(plan) === 'active';
+        });
+        if (alive) setCanLog(match);
+      } catch {
+        if (alive) setCanLog(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [planId]);
+
+  useEffect(() => {
+    if (seeded) return undefined;
+    const parts = splitMealId(mealId);
+    if (!planId || !parts) {
+      setLoading(false);
+      return undefined;
+    }
+    let alive = true;
+    (async () => {
+      try {
+        const detail = extractDietPlanDetail(await getDietPlans({ id: planId }));
+        let progress = [];
+        if (detail?.patient_diet_plan_id) {
+          try {
+            progress = normalizeProgressList(await getDietPlanProgress(detail.patient_diet_plan_id));
+          } catch {
+            progress = [];
+          }
+        }
+        const meal = mapPlanJsonMeals(detail, parts.dayKey, progress).find(
+          (entry) => entry.id === mealId || entry.mealKey === parts.mealKey,
+        );
+        if (!alive) return;
+        setItem(meal || null);
+        setLogged(meal?.status === 'done');
+      } catch {
+        if (alive) setItem(null);
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [mealId, planId, seeded]);
+
+  if (loading) {
+    return (
+      <AppShell tab="home">
+        <DetailPage className="meal-page">
+          <DetailTop backTo={planPath} backLabel="Diet plan" />
+          <DetailSkeleton label="Loading meal" />
+        </DetailPage>
+      </AppShell>
+    );
+  }
 
   if (!item) {
     return (
       <AppShell tab="home">
-        <DetailPage>
+        <DetailPage className="meal-page">
           <DetailTop backTo={planPath} backLabel="Diet plan" />
           <DetailEmpty
             icon={Salad}
@@ -64,6 +156,13 @@ export default function MealDetails() {
       : (item.dietItems || []).map((entry) => ({ name: entry, quantity: '', notes: '' }));
   const steps = item.preparationSteps || [];
   const videos = item.preparationVideos || [];
+  const kcal = amount(item.kcal);
+  const nutrition = [
+    kcal ? { label: 'Calories', value: String(kcal) } : null,
+    amount(item.carbs) ? { label: 'Carbs', value: grams(amount(item.carbs)) } : null,
+    amount(item.protein) ? { label: 'Protein', value: grams(amount(item.protein)) } : null,
+    amount(item.fat) ? { label: 'Fat', value: grams(amount(item.fat)) } : null,
+  ].filter(Boolean);
 
   const onLogMeal = async () => {
     if (!item.dayKey || !item.mealKey) {
@@ -93,37 +192,23 @@ export default function MealDetails() {
     }
   };
 
-  const logButton = (
-    <Button
-      variant={logged ? 'secondary' : 'primary'}
-      loading={logging}
-      aria-pressed={logged}
-      leadingIcon={logged ? <Circle size={16} aria-hidden /> : <CheckCircle2 size={16} aria-hidden />}
-      onClick={onLogMeal}
-    >
-      {logged ? 'Mark as pending' : 'Mark as done'}
-    </Button>
-  );
-
   return (
     <AppShell tab="home">
-      <DetailPage>
+      <DetailPage className="meal-page">
         <DetailTop backTo={planPath} backLabel="Diet plan" />
 
         <DetailHero
+          className="meal-page__hero"
           titleId="meal-title"
           media={<img src={item.image || dietCoverImg} alt="" />}
-          eyebrow={item.type || 'Meal'}
+          eyebrow={[item.type, item.time].filter(Boolean).join(' · ') || 'Meal'}
           title={item.title || 'Meal'}
-          lede={
-            item.description ||
-            'Prepared fresh and balanced for your prakriti. Follow the recipe below and log it once you have eaten.'
-          }
+          lede={item.description || ''}
           chips={
             <>
-              {item.kcal != null && item.kcal !== '' ? (
+              {kcal ? (
                 <MetaChip icon={Flame} tone="gold">
-                  {item.kcal} kcal
+                  {kcal} kcal
                 </MetaChip>
               ) : null}
               {ingredients.length ? (
@@ -131,46 +216,44 @@ export default function MealDetails() {
                   {ingredients.length} {ingredients.length === 1 ? 'ingredient' : 'ingredients'}
                 </MetaChip>
               ) : null}
-              {logged ? (
-                <MetaChip icon={CheckCircle2} tone="plain">
-                  Completed
-                </MetaChip>
-              ) : null}
+              {canLog && logged ? <MetaChip icon={CheckCircle2}>Logged</MetaChip> : null}
             </>
           }
         >
-          <div className="dx-actions dx-actions--row">{logButton}</div>
+          {canLog ? (
+            <div className="meal-page__log">
+              <Button
+                variant={logged ? 'secondary' : 'primary'}
+                loading={logging}
+                aria-pressed={logged}
+                leadingIcon={<CheckCircle2 size={16} aria-hidden />}
+                onClick={onLogMeal}
+              >
+                {logged ? 'Logged · undo' : 'Mark as done'}
+              </Button>
+            </div>
+          ) : null}
         </DetailHero>
 
-        <DetailLayout
-          aside={
-            <>
-              <DetailCard id="meal-nutrition" title="Nutrition" icon={Wheat} meta="Per serving">
-                <StatGrid
-                  items={[
-                    { label: 'Calories', value: item.kcal != null && item.kcal !== '' ? `${item.kcal}` : '—' },
-                    { label: 'Carbs', value: grams(item.carbs ?? 0) },
-                    { label: 'Protein', value: grams(item.protein ?? 0) },
-                    { label: 'Fat', value: grams(item.fat ?? 0) },
-                  ]}
-                />
-              </DetailCard>
-              <ActionStack>
-                {logButton}
-                <Button variant="secondary" onClick={() => navigate(planPath)}>
-                  Back to plan
-                </Button>
-              </ActionStack>
-            </>
-          }
-        >
+        <DetailLayout>
+          {nutrition.length ? (
+            <DetailCard id="meal-nutrition" title="Nutrition" icon={Wheat} meta="Per serving">
+              <StatGrid items={nutrition} />
+            </DetailCard>
+          ) : null}
+
           {ingredients.length ? (
-            <DetailCard id="meal-ingredients" title="Ingredients" icon={Utensils} meta={`${ingredients.length} items`}>
+            <DetailCard
+              id="meal-ingredients"
+              title="What to eat"
+              icon={Utensils}
+              meta={`${ingredients.length} ${ingredients.length === 1 ? 'item' : 'items'}`}
+            >
               <ul className="dx-ingredients">
                 {ingredients.map((food, index) => (
                   <li key={`${food.name || food.label}-${index}`}>
                     <span className="dx-ingredients__icon" aria-hidden>
-                      <Leaf size={14} />
+                      {index + 1}
                     </span>
                     <span className="dx-ingredients__copy">
                       <strong>{food.name || food.label}</strong>
@@ -184,7 +267,7 @@ export default function MealDetails() {
           ) : null}
 
           {steps.length ? (
-            <DetailCard id="meal-preparation" title="Preparation" icon={ChefHat} meta={`${steps.length} steps`}>
+            <DetailCard id="meal-preparation" title="How to prepare" icon={ChefHat} meta={`${steps.length} steps`}>
               <div className="dx-steps--solid">
                 <Steps items={steps.map((step, index) => ({ id: index, text: step }))} />
               </div>

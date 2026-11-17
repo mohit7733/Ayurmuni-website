@@ -216,7 +216,11 @@ export default function DietPlan() {
         <button
           type="button"
           className={`dt-meal${done ? ' is-done' : ''}`}
-          onClick={() => navigate(`/diet/${planId}/meals/${meal.id}`, { state: { meal, planId } })}
+          onClick={() =>
+            navigate(`/diet/${planId}/meals/${meal.id}`, {
+              state: { meal, planId, planActive: isStarted },
+            })
+          }
         >
           <span className="dt-meal__img">
             <img src={meal.image || dietCoverImg} alt="" loading="lazy" />

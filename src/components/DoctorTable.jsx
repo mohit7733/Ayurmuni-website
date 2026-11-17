@@ -135,7 +135,7 @@ function DoctorCard({ item, fallbackSpeciality, index }) {
           {credential ? <p className="hm-doc-card__cred">{credential}</p> : null}
         </div>
 
-        {experience || location ? (
+        {/* {experience || location ? (
           <ul className="hm-doc-card__facts">
             {experience ? (
               <li>
@@ -143,22 +143,25 @@ function DoctorCard({ item, fallbackSpeciality, index }) {
                 <span>{experience}</span>
               </li>
             ) : null}
-            {/* {location ? (
-              <li>
-                <MapPin size={13} aria-hidden />
-                <span>{location}</span>
-              </li>
-            ) : null} */}
+            
           </ul>
-        ) : null}
+        ) : null} */}
+        <ul className="hm-doc-card__specialized-bio" aria-label="Specialized Bio">
+          {item.specialized_bio.length ?
+            item.specialized_bio.map((bio) => (
+              <li key={bio} className="hm-doc-card__specialized-bio-item">
+                <span>{bio}</span>
+              </li>
+            )) : null}
+        </ul>
 
-        {tags.length ? (
+        {/* {tags.length ? (
           <ul className="hm-doc-card__tags">
             {tags.map((tag) => (
               <li key={tag}>{tag}</li>
             ))}
           </ul>
-        ) : null}
+        ) : null} */}
 
         <div className="hm-doc-card__foot">
           {fee ? (

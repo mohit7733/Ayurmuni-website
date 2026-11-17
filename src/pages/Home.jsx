@@ -1004,6 +1004,9 @@ export default function Home() {
               </div>
             ) : null}
           </LazyBlock>
+          {
+            console.log(suggestedDoctors,"suggestedDoctors")
+          }
 
           {consultPackages.length ? (
             <Reveal as="section" className="hm-section hm-panel" aria-labelledby="hm-packages-title">
