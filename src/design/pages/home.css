@@ -2865,7 +2865,7 @@
   padding-block: 10px;
 }
 .hm-page .hm-concerns-panel.am-reveal.is-shown {
-  margin-bottom: -14px;
+  /* margin-bottom: -14px; */
 }
 
 /* ===== Featured brands: square cards + circular logo discs ===== */
