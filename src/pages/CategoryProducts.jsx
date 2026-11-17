@@ -55,11 +55,20 @@ export default function CategoryProducts() {
   const location = useLocation();
   const [params, setSearchParams] = useSearchParams();
   const brandId = params.get('brand') || '';
-  const isBrandMix = Boolean(brandId);
+  // Featured brands (View all and a brand tile) open mode=both: products and medicines together.
+  const isBothMode = params.get('mode') === 'both';
+  const isBrandMix = isBothMode || Boolean(brandId);
   const isMedicine = !isBrandMix && location.pathname.startsWith('/medicines');
   const shellTab = isMedicine ? 'medicines' : 'products';
   const detailBase = isMedicine ? '/medicines' : '/products';
-  const mode = params.get('mode') === 'health' ? 'health' : 'product';
+  // On the mixed brands page, category vs concern lives in `facet` so `mode` stays `both`.
+  const mode = isBothMode
+    ? params.get('facet') === 'health'
+      ? 'health'
+      : 'product'
+    : params.get('mode') === 'health'
+      ? 'health'
+      : 'product';
   // Brand browse is always mixed — ignore service so products + medicines both load.
   // The medicines route always uses the live Medicine service, even if the link carries a stale id.
   const urlService = params.get('service') || null;
@@ -92,6 +101,16 @@ export default function CategoryProducts() {
     next.set('service', String(medicineCategoryId));
     setSearchParams(next, { replace: true });
   }, [isMedicine, medicineCategoryId, params, setSearchParams]);
+
+  // Older brand links used mode=product. Keep them on the mixed catalog.
+  useEffect(() => {
+    if (params.get('mode') === 'both' || params.get('mode') === 'health') return;
+    if (params.get('name') !== 'Brands') return;
+    if (params.get('category') || params.get('service')) return;
+    const next = new URLSearchParams(params);
+    next.set('mode', 'both');
+    setSearchParams(next, { replace: true });
+  }, [params, setSearchParams]);
 
   const brandReady = isBrandMix && !dashboardLoading;
   const canSplitBrand =
@@ -282,7 +301,7 @@ export default function CategoryProducts() {
 
   const brandProductFilter = useMemo(
     () => ({
-      brand_name_id: brandId,
+      ...(brandId ? { brand_name_id: brandId } : {}),
       ...(productsCategoryId ? { service_category_id: productsCategoryId } : {}),
       ...brandCategoryFacet,
       ...sharedExtras,
@@ -292,7 +311,7 @@ export default function CategoryProducts() {
 
   const brandMedicineFilter = useMemo(
     () => ({
-      brand_name_id: brandId,
+      ...(brandId ? { brand_name_id: brandId } : {}),
       ...(medicineCategoryId ? { service_category_id: medicineCategoryId } : {}),
       // Product categories don't map to medicines; concerns do.
       ...(mode === 'health' ? brandCategoryFacet : {}),
@@ -303,7 +322,7 @@ export default function CategoryProducts() {
 
   const brandUnscopedFilter = useMemo(
     () => ({
-      brand_name_id: brandId,
+      ...(brandId ? { brand_name_id: brandId } : {}),
       ...brandCategoryFacet,
       ...sharedExtras,
     }),
@@ -531,15 +550,18 @@ export default function CategoryProducts() {
     setCatalogKind('all');
     setSearch('');
     setQuery('');
-    if (activeCategoryId) {
+    if (activeCategoryId || params.get('facet')) {
       patchParams({
         category: null,
-        mode: brandId || isMedicine ? mode : 'product',
+        facet: null,
+        mode: isBothMode ? 'both' : brandId || isMedicine ? mode : 'product',
         name: brandId
           ? brandOptions.find((b) => String(b.id) === String(brandId))?.name ||
             params.get('name') ||
             null
-          : null,
+          : isBothMode
+            ? params.get('name') || 'Brands'
+            : null,
       });
     }
   };
@@ -562,6 +584,8 @@ export default function CategoryProducts() {
     params.get('name') ||
     '';
 
+  const mixedPageName = isBothMode ? params.get('name') || 'Brands' : null;
+
   const selectBrand = (brand) => {
     if (!brand) {
       const keepCategory = activeCategoryId || null;
@@ -571,8 +595,9 @@ export default function CategoryProducts() {
           : topCategories.find((c) => c.id === keepCategory)?.name;
       patchParams({
         brand: null,
-        name: keepName || null,
-        mode: keepCategory ? mode : params.get('mode') || 'product',
+        name: isBothMode ? mixedPageName : keepName || null,
+        mode: isBothMode ? 'both' : keepCategory ? mode : params.get('mode') || 'product',
+        facet: isBothMode && keepCategory && mode === 'health' ? 'health' : null,
       });
       return;
     }
@@ -580,7 +605,7 @@ export default function CategoryProducts() {
     patchParams({
       brand: brand.id,
       name: brand.name,
-      mode: params.get('mode') || 'product',
+      mode: isBothMode ? 'both' : params.get('mode') || 'product',
     });
     setCatalogKind('all');
   };
@@ -590,16 +615,18 @@ export default function CategoryProducts() {
     if (!id || id === 'all') {
       patchParams({
         category: null,
-        mode: 'product',
-        name: brandId ? currentBrandName || null : null,
+        facet: null,
+        mode: isBothMode ? 'both' : 'product',
+        name: brandId ? currentBrandName || null : isBothMode ? mixedPageName : null,
       });
       setSelectedCategoryId('all');
       return;
     }
     patchParams({
       category: id,
-      mode: 'product',
-      name: brandId ? currentBrandName || name || null : name || null,
+      facet: null,
+      mode: isBothMode ? 'both' : 'product',
+      name: brandId ? currentBrandName || name || null : isBothMode ? mixedPageName : name || null,
     });
     setSelectedCategoryId(id);
   };
@@ -609,16 +636,18 @@ export default function CategoryProducts() {
     if (!id || id === 'all') {
       patchParams({
         category: null,
-        mode: 'product',
-        name: brandId ? currentBrandName || null : null,
+        facet: null,
+        mode: isBothMode ? 'both' : 'product',
+        name: brandId ? currentBrandName || null : isBothMode ? mixedPageName : null,
       });
       setSelectedCategoryId('all');
       return;
     }
     patchParams({
       category: id,
-      mode: 'health',
-      name: brandId ? currentBrandName || name || null : name || null,
+      facet: isBothMode ? 'health' : null,
+      mode: isBothMode ? 'both' : 'health',
+      name: brandId ? currentBrandName || name || null : isBothMode ? mixedPageName : name || null,
     });
     setSelectedCategoryId(id);
   };
@@ -669,7 +698,7 @@ export default function CategoryProducts() {
               </button>
               <div className="cp-hero__copy">
                 <p className="cp-hero__eyebrow">
-                  {brandId ? 'Brand' : mode === 'health' ? 'Health concern' : 'Collection'}
+                  {brandId ? 'Brand' : isBothMode ? 'Brands' : mode === 'health' ? 'Health concern' : 'Collection'}
                 </p>
                 <h1 id="cp-catalog-title" className="cp-hero__title">
                   {title}
