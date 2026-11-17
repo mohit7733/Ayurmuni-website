@@ -158,6 +158,19 @@ export const formatRupee = (value, options) => {
   return `₹${Math.round(n).toLocaleString('en-IN')}`;
 };
 
+/**
+ * Plan and paid amounts. Paise stay paise: 0.99 is ₹0.99, never a second figure of ₹1.
+ * A whole rupee ("10.00") stays ₹10. Product prices keep using formatRupee.
+ */
+export const formatExactRupee = (value) => {
+  if (value == null || value === '') return '';
+  const n = Number(String(value).trim().replace(/,/g, '').replace(/^₹/, ''));
+  if (!Number.isFinite(n)) return '';
+  const cents = Math.round(Math.abs(n) * 100);
+  if (cents % 100 === 0) return formatRupee(n);
+  return formatRupee(n, { decimals: 2 });
+};
+
 /** Consultation amounts. Two decimal places, unlike product prices from formatRupee. */
 export const formatConsultationAmount = (value) => formatRupee(value, { decimals: 2 });
 

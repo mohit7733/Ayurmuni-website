@@ -132,10 +132,10 @@ export default function SuggestedDoctorCard({ item, fallbackSpeciality = 'Ayurve
           ) : (
             <span />
           )}
-          <span className="am-flip-doc__cta-link">
+          <button type="button" className="am-flip-doc__cta-link" onClick={openProfile}>
             View profile
             <ArrowRight size={14} aria-hidden />
-          </span>
+          </button>
         </div>
       </div>
     </article>

@@ -3,9 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Check, Leaf, Pill, SlidersHorizontal, X } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import ProductCard from '../components/ProductCard';
-import { DietPlanCard, SectionHead, ViewAll } from '../components/ServiceHome';
+import { SectionHead, ViewAll } from '../components/ServiceHome';
 import {
-  formatRupee,
   mapProductCategory,
   normalizeApiList,
   resolveImageUrl,
@@ -14,10 +13,10 @@ import { getServiceCategoryId } from '../home/serviceCategories';
 import useDashboardCategories from '../hooks/useDashboardCategories';
 import useCategoryProducts from '../hooks/useCategoryProducts';
 import useProductCategories from '../hooks/useProductCategories';
-import { getHealthCategories } from '../services/productService';
+import { getHealthCategories, getProductByVariant } from '../services/productService';
 import { getBrands, listBrands, mapBrandItem } from '../services/medicineService';
 import { getOrders, normalizeOrdersList } from '../services/orderService';
-import { mapOrdersToRecentProducts } from '../profile/map';
+import { catalogCardFromProduct, mapOrdersToRecentProducts } from '../profile/map';
 import {
   Button,
   ConcernCarousel,
@@ -40,7 +39,9 @@ import { orderListedProducts } from '../products/listingOrder';
 import { HOME_COPY as H } from '../content/home';
 import { STORE_COPY as T } from '../content/store';
 import '../design/pages/store.css';
+import '../design/pages/home.css';
 import '../design/pages/products.css';
+import '../design/product-card-home.css';
 
 const nameTokens = (value) =>
   String(value || '')
@@ -194,6 +195,36 @@ export default function Medicines() {
       alive = false;
     };
   }, []);
+
+  const [recentCards, setRecentCards] = useState({});
+  useEffect(() => {
+    const ids = [...new Set(recent.map((item) => item.variantId).filter(Boolean))];
+    if (!ids.length) return undefined;
+    let alive = true;
+    (async () => {
+      const entries = await Promise.all(
+        ids.map(async (id) => {
+          try {
+            const res = await getProductByVariant(id);
+            const raw = res?.data ?? res;
+            const product = Array.isArray(raw)
+              ? raw[0]
+              : Array.isArray(raw?.results)
+                ? raw.results[0]
+                : raw;
+            const line = recent.find((item) => item.variantId === id);
+            return [id, catalogCardFromProduct(product, id, line || {})];
+          } catch {
+            return [id, null];
+          }
+        }),
+      );
+      if (alive) setRecentCards(Object.fromEntries(entries));
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [recent]);
 
   useEffect(() => {
     const node = moreRef.current;
@@ -480,7 +511,7 @@ export default function Medicines() {
 
               {ordersLoading || recent.length > 0 ? (
                 <div className="hm-doctor-row">
-                  <Reveal as="section" className="hm-section" aria-labelledby="med-recent">
+                  <Reveal as="section" className="hm-section hm-products" aria-labelledby="med-recent">
                     <SectionHead
                       id="med-recent"
                       title="Recent orders"
@@ -492,16 +523,17 @@ export default function Medicines() {
                     ) : (
                       <Rail label="Recent orders" className="med-recent-rail">
                         {recent.map((item) => (
-                          <RailItem key={`${item.id}-${item.variantId}`}>
-                            <DietPlanCard
-                              item={{
-                                title: item.name,
-                                thumbnail_url: item.image,
-                                season: item.lastOrdered ? `Ordered ${item.lastOrdered}` : 'Recent order',
-                                prakriti: formatRupee(item.price, { decimals: 0 }),
-                              }}
-                              fallbackIcon={Pill}
-                              onClick={() => item.variantId && navigate(`/medicines/${item.variantId}`)}
+                          <RailItem key={`${item.id}-${item.variantId}`} size="product">
+                            <ProductCard
+                              detailBase="/medicines"
+                              item={
+                                recentCards[item.variantId] || {
+                                  variant_id: item.variantId,
+                                  name: item.name,
+                                  selling_price: item.price,
+                                  image_url: item.image,
+                                }
+                              }
                             />
                           </RailItem>
                         ))}

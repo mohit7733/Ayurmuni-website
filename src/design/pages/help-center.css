@@ -20,12 +20,8 @@
   max-width: 48ch;
 }
 
-.sx-help-page .am-back {
-  margin-bottom: var(--am-space-2);
-}
-
 .sx-help-page .am-page-header__row {
-  gap: 0;
+  gap: var(--am-space-3);
 }
 
 .sx-help-toolbar {

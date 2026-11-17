@@ -17,9 +17,10 @@ import {
 import AppShell from '../components/AppShell';
 import PageHeader from '../components/PageHeader';
 import { Button, Chip, EmptyState, ErrorState, SearchField, SectionHold } from '../components/ui';
-import { formatRupee } from '../home/catalog';
+import { formatPlanMoney } from '../packages/planTheme';
 import { requireAuth } from '../services/guestAuth';
 import { getMyPackages, isPlanExpired } from '../services/packageService';
+import PackageCount from '../components/PackageCount';
 import {
   buildPlanNameMap,
   daysLeft,
@@ -30,6 +31,7 @@ import {
   getPlanAmounts,
   humanize,
   planBenefitIcon,
+  ALL_PLAN_STATUSES,
   PLAN_STATUS_TABS,
   readPlanPage,
 } from '../utils/planUtils';
@@ -45,22 +47,65 @@ const ICONS = {
   leaf: Leaf,
 };
 
+const collectPlans = async (value, searchText, startPage) => {
+  const list = [];
+  let page = startPage;
+  let next = null;
+  let failed = null;
+  for (let guard = 0; guard < 8; guard += 1) {
+    const res = await getMyPackages({ page, page_size: 50, status: value, search: searchText });
+    if (res?.success === false) {
+      failed = res;
+      break;
+    }
+    const pageData = readPlanPage(res);
+    list.push(...pageData.list);
+    if (!pageData.next) {
+      next = null;
+      break;
+    }
+    next = pageData.next;
+    page += 1;
+  }
+  return { list, next, failed };
+};
+
 const BenefitIcon = ({ label, size = 15 }) => {
   const Icon = ICONS[planBenefitIcon(label)] || Leaf;
   return <Icon size={size} aria-hidden />;
 };
 
+const benefitKey = (label) =>
+  String(label || '')
+    .replace(/^\d+(?:\.\d+)?\s*/, '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '')
+    .replace(/s$/, '');
+
+const countOf = (value) => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+};
+
+const carriedForBenefit = (benefit, shifted) => {
+  const key = benefitKey(benefit?.label);
+  if (!key) return [];
+  return shifted.filter((item) => benefitKey(item.label) === key && countOf(item.quantity_total) > 0);
+};
+
 function ShiftedRow({ item, fromPlanName }) {
-  const total = item.quantity_total ?? 0;
-  const remaining = item.quantity_remaining ?? 0;
-  const hasQuantity = total > 0;
-  const exhausted = hasQuantity && remaining <= 0;
   const shiftedOn = formatPlanDate(item.valid_from);
   const validTill = formatPlanDate(item.valid_until);
   const originalTill = formatPlanDate(item.original_valid_until);
   const fromLabel =
     fromPlanName ||
     (item.shifted_from_purchase ? `Plan #${String(item.shifted_from_purchase).slice(0, 8).toUpperCase()}` : '');
+  const expired =
+    String(item.status || '').toLowerCase() === 'expired' ||
+    (Boolean(item.valid_until) &&
+      Number.isFinite(new Date(item.valid_until).getTime()) &&
+      new Date(item.valid_until).getTime() < Date.now());
   return (
     <li className="mp-benefit is-shifted">
       <span className="mp-benefit__icon">
@@ -72,19 +117,14 @@ function ShiftedRow({ item, fromPlanName }) {
           <span className="mp-benefit__pill">{humanize(item.status) || 'Shifted'}</span>
         </div>
         {fromLabel ? <p className="mp-benefit__meta">From {fromLabel}</p> : null}
-        {shiftedOn || hasQuantity ? (
-          <p className="mp-benefit__meta">
-            {shiftedOn ? `Shifted on ${shiftedOn}` : ''}
-            {shiftedOn && hasQuantity ? ' · ' : ''}
-            {hasQuantity ? (exhausted ? `Used ${total}/${total}` : `${remaining} of ${total} left`) : ''}
-          </p>
-        ) : null}
-        {validTill || originalTill ? (
-          <p className="mp-benefit__meta">
-            {validTill ? `Valid till ${validTill}` : 'No expiry'}
-            {originalTill && originalTill !== validTill ? ` · Originally till ${originalTill}` : ''}
-          </p>
-        ) : null}
+        <PackageCount
+          remaining={item.quantity_remaining}
+          total={item.quantity_total}
+          expired={expired}
+          shiftedOn={shiftedOn}
+          validTill={validTill}
+          originalTill={originalTill}
+        />
       </div>
     </li>
   );
@@ -133,12 +173,12 @@ function PlanCard({ plan, highlighted, planNames }) {
           <div>
             <span className="mp-label">{pending ? 'Plan amount' : 'Amount paid'}</span>
             <span className="mp-price">
-              {formatRupee(amount)}
+              {formatPlanMoney(amount)}
               {plan.currency ? <small>{plan.currency}</small> : null}
             </span>
             {saved > 0 ? (
               <p className="mp-saved">
-                Saved {formatRupee(saved)} on {formatRupee(original)}
+                Saved {formatPlanMoney(saved)} on {formatPlanMoney(original)}
               </p>
             ) : null}
           </div>
@@ -212,16 +252,46 @@ function PlanCard({ plan, highlighted, planNames }) {
           <div>
             <h3 className="mp-section">Your benefits</h3>
             <ul className="mp-benefits">
-              {benefits.map((benefit, index) => (
-                <li className="mp-benefit" key={`${plan.id}-${index}`}>
-                  <span className="mp-benefit__icon">
-                    <BenefitIcon label={benefit.label} />
-                  </span>
-                  <div className="mp-benefit__body">
-                    <p className="mp-benefit__label">{benefit.label}</p>
-                  </div>
-                </li>
-              ))}
+              {benefits.map((benefit, index) => {
+                const carried = carriedForBenefit(benefit, shifted);
+                const carriedTotal = carried.reduce((sum, item) => sum + countOf(item.quantity_total), 0);
+                const carriedRemaining = carried.reduce((sum, item) => sum + countOf(item.quantity_remaining), 0);
+                const ownTotal =
+                  benefit.quantity_total != null && carriedTotal > 0
+                    ? Math.max(0, countOf(benefit.quantity_total) - carriedTotal)
+                    : benefit.quantity_total;
+                const ownRemaining =
+                  benefit.quantity_remaining != null && carriedTotal > 0
+                    ? Math.max(0, countOf(benefit.quantity_remaining) - carriedRemaining)
+                    : benefit.quantity_remaining;
+                const sources = [
+                  ...new Set(
+                    carried.map((item) =>
+                      item.shifted_from_purchase
+                        ? planNames[item.shifted_from_purchase] ||
+                          `Plan #${String(item.shifted_from_purchase).slice(0, 8).toUpperCase()}`
+                        : 'previous plan',
+                    ),
+                  ),
+                ];
+                return (
+                  <li className="mp-benefit" key={`${plan.id}-${index}`}>
+                    <span className="mp-benefit__icon">
+                      <BenefitIcon label={benefit.label} />
+                    </span>
+                    <div className="mp-benefit__body">
+                      <p className="mp-benefit__label">{benefit.label}</p>
+                      <PackageCount
+                        remaining={ownRemaining}
+                        total={ownTotal}
+                        carriedRemaining={carriedTotal > 0 ? carriedRemaining : undefined}
+                        carriedTotal={carriedTotal > 0 ? carriedTotal : undefined}
+                        carriedFrom={sources.join(', ')}
+                      />
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         ) : null}
@@ -231,7 +301,7 @@ function PlanCard({ plan, highlighted, planNames }) {
             <h3 className="mp-section">
               Shifted benefits <span>{shifted.length} shifted</span>
             </h3>
-            <ul className="mp-benefits">
+            <ul className="mp-benefits mp-benefits--shifted">
               {shifted.map((item, index) => (
                 <ShiftedRow
                   key={item.id || `${plan.id}-shifted-${index}`}
@@ -277,10 +347,22 @@ export default function MyPlans() {
       else setLoading(true);
       setError('');
       try {
-        const res = await getMyPackages({ page: nextPage, status, search });
+        const statuses = status ? [status] : ALL_PLAN_STATUSES;
+        const responses = await Promise.all(statuses.map((value) => collectPlans(value, search, nextPage)));
         if (requestId !== requestRef.current) return;
-        if (!res?.success) throw new Error(res?.message || 'Failed to load');
-        const { list, next } = readPlanPage(res);
+        const failed = responses.find((entry) => entry.failed);
+        const seen = new Set();
+        const list = [];
+        let next = null;
+        responses.forEach((entry) => {
+          entry.list.forEach((plan) => {
+            if (!plan?.id || seen.has(plan.id)) return;
+            seen.add(plan.id);
+            list.push(plan);
+          });
+          if (entry.next) next = entry.next;
+        });
+        if (!list.length && failed) throw new Error(failed.message || 'Failed to load');
         setPlans((prev) => (mode === 'more' ? [...prev, ...list] : list));
         setHasMore(Boolean(next));
         setPage(nextPage);

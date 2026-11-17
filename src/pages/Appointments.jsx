@@ -238,12 +238,34 @@ export default function Appointments() {
             return true;
           });
           more = hasNext(pastRes, pastList) || hasNext(activeRes, mapList(activeRes));
+        } else if (listScope === "upcoming" && statusFilter === "all") {
+          const followUp =
+            followUpFilter !== "all" ? { follow_up: followUpFilter } : {};
+          const results = await Promise.all(
+            ["confirmed", "pending", "reschedule", "rescheduled", "cancellation_requested"].map(
+              (status) =>
+                getConsultHistory({
+                  page: pageNo,
+                  page_size: PAGE_SIZE,
+                  status,
+                  ...followUp,
+                }).catch(() => null),
+            ),
+          );
+          if (requestId !== listRequestRef.current) return;
+          const seen = new Set();
+          mapped = results.flatMap(mapList).filter((item) => {
+            const key = String(item.consultationId || item.appointmentId || item.id);
+            if (!key || seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
+          more = results.some((res) => hasNext(res, mapList(res)));
         } else {
           const res = await getConsultHistory({
             page: pageNo,
             page_size: PAGE_SIZE,
             ...apiFilters,
-            ...(listScope === "upcoming" ? { from_date: today } : {}),
           });
           if (requestId !== listRequestRef.current) return;
           mapped = mapList(res);
@@ -390,7 +412,7 @@ export default function Appointments() {
                 onClick={() => loadPage(1, "refresh")}
                 disabled={refreshing || loading}
               >
-                <RefreshCw size={15} className={refreshing ? "ap-spin" : ""} aria-hidden />
+                <RefreshCw size={18} className={refreshing ? "ap-spin" : ""} aria-hidden />
                 {refreshing ? "Refreshing…" : "Refresh"}
               </button>
               <button
@@ -398,7 +420,7 @@ export default function Appointments() {
                 className="ap-btn ap-btn--primary"
                 onClick={() => navigate("/consult/doctors")}
               >
-                <Plus size={15} aria-hidden />
+                <Plus size={18} aria-hidden />
                 Book
               </button>
             </>

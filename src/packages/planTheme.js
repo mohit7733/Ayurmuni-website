@@ -1,14 +1,10 @@
 /** Plan colours from the app: components/packages/packageUi.ts (Ayurmuni2.0, development). */
-import { formatRupee } from '../home/catalog';
+import { formatExactRupee } from '../home/catalog';
 
 export const PLAN_GOLD = '#E8C27A';
 
-/** Server prices keep paise ("554.65" stays ₹554.65; whole rupees stay ₹10). */
-export const formatPlanMoney = (value) => {
-  const n = Number(value);
-  if (!Number.isFinite(n)) return '';
-  return Number.isInteger(n) ? formatRupee(n) : formatRupee(n, { decimals: 2 });
-};
+/** Server prices keep paise ("0.99" stays ₹0.99; whole rupees stay ₹10). */
+export const formatPlanMoney = (value) => formatExactRupee(value);
 
 const THEMES = [
   {

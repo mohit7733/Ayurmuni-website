@@ -65,9 +65,9 @@ describe('mapMyPackagePurchase', () => {
       package_id: 'pkg-9',
       status: 'active',
       expires_at: '2999-01-01T00:00:00Z',
-      benefits: [{ quantity_remaining: 3 }],
+      benefits: [{ quantity_remaining: 3, quantity_total: 5 }],
     });
-    expect(mapped).toMatchObject({ planId: 'pkg-9', active: true, remaining: 3 });
+    expect(mapped).toMatchObject({ planId: 'pkg-9', active: true, remaining: 3, total: 5 });
   });
 
   it('does not treat the purchase id as a package id and flags expired purchases inactive', () => {

@@ -138,7 +138,9 @@ export default function SiteFooter() {
         ))}
         <div className="site-footer-app-store">
           <h2>Download the Ayurmuni app</h2>
-          <a href="https://play.google.com/store/apps/details?id=com.ayurmuniecosystem" target="_blank" rel="noopener noreferrer"><img src="public/images/playstore.avif" alt="App Store" className='' style={{ width: '150px' }} /></a>
+          <a href="https://play.google.com/store/apps/details?id=com.ayurmuniecosystem" target="_blank" rel="noopener noreferrer">
+            <img src="/images/playstore.avif" alt="Get it on Google Play" />
+          </a>
 
         </div>
       </div>

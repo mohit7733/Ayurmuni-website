@@ -158,10 +158,6 @@ export default function ChatConversation({
   }, [meta.doctorId, meta.doctorName, meta.relatedAppointmentIds]);
 
   useEffect(() => {
-    loadMessages();
-  }, [loadMessages]);
-
-  useEffect(() => {
     if (!isChatEnabled) return;
     const unread = visibleMessages.filter(
       (msg) =>

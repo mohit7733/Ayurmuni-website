@@ -882,6 +882,8 @@
 }
 .st-page--products .st-recent .am-media-card__img {
   aspect-ratio: 4 / 3;
+  background: radial-gradient(80% 80% at 50% 40%, #fff, var(--am-surface-muted));
+  color: var(--am-green-300);
 }
 .st-page--products .st-recent .am-media-card__img::after {
   display: none;
@@ -904,13 +906,23 @@
   font-size: 11px;
   -webkit-line-clamp: 1;
 }
+.st-page--products .st-recent {
+  min-width: 0;
+  overflow: hidden;
+}
 .st-page--products .st-recent__foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  min-width: 0;
   margin-top: 4px;
   padding: 0 8px 8px;
+}
+.st-page--products .st-recent__foot .am-cart-btn {
+  flex: 0 0 auto;
+  width: auto;
+  max-width: 104px;
 }
 /* homepage card action spacing for the opt-in cart pill */
 .st-page--products .am-product-card__action,
@@ -988,6 +1000,19 @@
   .hm-doctor-row > .hm-section.st-page--products:hover,
   .hm-page .hm-doctor-row > .hm-section.st-page--products:hover {
     transform: none;
+  }
+}
+
+/* Recent orders: same card width as Buy again / homepage product rails. */
+.med-recent-rail {
+  gap: 8px;
+}
+.med-recent-rail .am-rail__item--product {
+  flex: 0 0 min(46%, 200px);
+}
+@media (min-width: 1024px) {
+  .med-recent-rail .am-rail__item--product {
+    flex-basis: 210px;
   }
 }
 

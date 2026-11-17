@@ -249,12 +249,17 @@
 .dl-card__fee { display: flex; flex-direction: column; font: 700 16px/1.1 'Gilroy', 'Satoshi', sans-serif; color: var(--dl-ink); }
 .dl-card__fee small { font: 700 9.5px/1.2 'Satoshi', sans-serif; letter-spacing: 0.1em; text-transform: uppercase; color: #8a9a94; }
 .dl-card__cta {
+  position: relative;
+  z-index: 2;
   display: inline-flex;
   align-items: center;
   gap: 5px;
   min-height: 36px;
   padding: 0 12px;
+  border: 0;
   border-radius: 999px;
+  font-family: inherit;
+  cursor: pointer;
   background: var(--dl-green);
   color: #fff;
   font: 700 12.5px 'Gilroy', 'Satoshi', sans-serif;

@@ -3,25 +3,20 @@ import { useNavigate } from "react-router-dom";
 import { ArrowRight, SlidersHorizontal, X } from "lucide-react";
 import AppShell from "../components/AppShell";
 import ProductCard from "../components/ProductCard";
-import CartAddButton from "../components/CartAddButton";
 import { getProductByVariant } from "../services/productService";
-import { getProductStockQty, hasStockInfo } from "../product/stock";
+import { getProductStockQty } from "../product/stock";
 import { getCatalogPrice, getCatalogRating } from "../utils/productSearchUtils";
 import { orderListedProducts } from "../products/listingOrder";
-import {
-  formatRupee,
-  resolveImageUrl,
-} from "../home/catalog";
+import { resolveImageUrl } from "../home/catalog";
 import { getServiceCategoryId } from "../home/serviceCategories";
 import useDashboardCategories from "../hooks/useDashboardCategories";
 import useCategoryProducts from "../hooks/useCategoryProducts";
 import useProductCategories from "../hooks/useProductCategories";
 import { getOrders, normalizeOrdersList } from "../services/orderService";
-import { mapOrdersToRecentProducts } from "../profile/map";
+import { catalogCardFromProduct, mapOrdersToRecentProducts } from "../profile/map";
 import {
   Button,
   EmptyState,
-  MediaCard,
   Modal,
   PageBar,
   Rail,
@@ -140,13 +135,8 @@ export default function Products() {
               : Array.isArray(raw?.results)
                 ? raw.results[0]
                 : raw;
-            if (!product || product.success === false) return [id, null];
-            const variants = Array.isArray(product.variants) ? product.variants : [];
-            const variant =
-              variants.find(
-                (v) => String(v?.id) === id || String(v?.variant_id) === id,
-              ) || product;
-            return [id, { ...variant, prescription_required: variant.prescription_required ?? product.prescription_required }];
+            const line = recentProducts.find((item) => item.variantId === id);
+            return [id, catalogCardFromProduct(product, id, line || {})];
           } catch {
             return [id, null];
           }
@@ -438,38 +428,16 @@ export default function Products() {
                         key={`${item.id}-${item.variantId}`}
                         size="product"
                       >
-                        <div className="st-recent">
-                          <MediaCard
-                            image={item.image}
-                            title={item.name}
-                            subtitle={
-                              item.lastOrdered
-                                ? `Ordered ${item.lastOrdered}`
-                                : "Recent order"
+                        <ProductCard
+                          item={
+                            recentStock[item.variantId] || {
+                              variant_id: item.variantId,
+                              name: item.name,
+                              selling_price: item.price,
+                              image_url: item.image,
                             }
-                            onClick={() =>
-                              item.variantId &&
-                              navigate(`/products/${item.variantId}`)
-                            }
-                          />
-                          <div className="st-recent__foot">
-                            {item.price ? (
-                              <span className="st-recent__price">
-                                {formatRupee(item.price)}
-                              </span>
-                            ) : null}
-                            {hasStockInfo(recentStock[item.variantId]) ? (
-                              <CartAddButton
-                                className="am-cart-btn--sm"
-                                item={{
-                                  ...recentStock[item.variantId],
-                                  variant_id: item.variantId,
-                                  name: item.name,
-                                }}
-                              />
-                            ) : null}
-                          </div>
-                        </div>
+                          }
+                        />
                       </RailItem>
                     ))}
                   </Rail>

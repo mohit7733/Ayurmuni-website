@@ -20,16 +20,13 @@ export default function useUpcomingAppointments(pageSize = 50, enabled = true) {
           return;
         }
         if (!options.silent) setLoading(true);
-        // App useUpcomingAppointmentsPreview: confirmed + upcoming + still-running completed calls, de-duplicated.
-        const now = new Date();
-        const fromDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-        const [confirmedRes, upcomingRes, completedRes] = await Promise.all(
-          ['confirmed', 'upcoming', 'completed'].map((appointment_status) =>
+        // Confirmed, still-open, and completed-but-not-ended calls. `upcoming` is not an API status.
+        const responses = await Promise.all(
+          ['confirmed', 'pending', 'reschedule', 'rescheduled', 'completed'].map((status) =>
             getConsultHistory({
               page: 1,
               page_size: pageSize,
-              appointment_status,
-              from_date: fromDate,
+              status,
             }).catch(() => null),
           ),
         );
@@ -38,7 +35,7 @@ export default function useUpcomingAppointments(pageSize = 50, enabled = true) {
           return Array.isArray(results) ? results : [];
         };
         const seen = new Set();
-        const active = [...listOf(confirmedRes), ...listOf(upcomingRes), ...listOf(completedRes)].filter((item) => {
+        const active = responses.flatMap(listOf).filter((item) => {
           const key = String(item?.appointment_id || item?.consultation_id || '');
           if (key && seen.has(key)) return false;
           if (key) seen.add(key);

@@ -28,7 +28,9 @@ describe('consultService plan + gateway plumbing', () => {
 
   it('fee-quote omits package_purchase_id when not given', async () => {
     await consult.getConsultationFeeQuote('s1');
-    expect(apiClient.mock.calls[0][0]).not.toContain('package_purchase_id');
+    const url = apiClient.mock.calls[0][0];
+    expect(url).not.toContain('package_purchase_id');
+    expect(url).toContain('skip_package_funding=true');
   });
 
   it('book-slot sends package_purchase_id and normalises payment_gateway', async () => {
@@ -36,6 +38,15 @@ describe('consultService plan + gateway plumbing', () => {
     const [url, init] = apiClient.mock.calls[0];
     expect(url).toBe('payments/customer/consultation/payment/book-slot/');
     expect(JSON.parse(init.body)).toEqual({ slot_id: 's1', package_purchase_id: 'pp1', payment_gateway: 'razorpay' });
+  });
+
+  it('book-slot keeps skip_package_funding when paying normally', async () => {
+    await consult.createConsultationPayment({
+      slot_id: 's1',
+      payment_gateway: 'cashfree',
+      skip_package_funding: true,
+    });
+    expect(JSON.parse(apiClient.mock.calls[0][1].body).skip_package_funding).toBe(true);
   });
 
   it('book-slot maps unknown gateways to cashfree', async () => {
@@ -141,6 +152,18 @@ describe('consultPayment helpers', () => {
     expect(cp.isPaymentAlreadyExists(conflict)).toBe(true);
     expect(cp.consultationCheckout(conflict)).toEqual(session);
     expect(cp.consultationCheckout({ success: true, data: session })).toEqual(session);
+    const paid = {
+      success: false,
+      status: 409,
+      message: 'This slot is already paid and booked.',
+      data: { message: 'This slot is already paid and booked.', status_code: 409, errors: null },
+    };
+    expect(cp.isSlotAlreadyPaid(paid)).toBe(true);
+    expect(cp.isPaymentAlreadyExists(paid)).toBe(false);
+    expect(cp.matchBookedConsultation(
+      [{ consultation_id: 'apt-9', appointment_date: '2026-11-17', start_time: '10:00:00', doctor: { doctor_id: 'doc-1' } }],
+      { date: '2026-11-17', startTime: '10:00', doctorId: 'doc-1' },
+    )).toBe('apt-9');
   });
 
   it('detects bookings that need no gateway', () => {
