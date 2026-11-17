@@ -139,6 +139,39 @@ export const fetchWithTimeout = async (url, init = {}, timeoutMs = DEFAULT_TIMEO
 const abortedResult = () => ({ success: false, aborted: true, status: 0, message: 'Request aborted' });
 const timeoutResult = () => ({ success: false, timeout: true, status: 0, message: 'Request timed out' });
 
+export const SESSION_EXPIRED_MESSAGE = 'Your session has expired. Please log in again.';
+export const LOGIN_NOTICE_KEY = 'ayurmuni_login_notice';
+
+const authenticationCodeOf = (payload) => {
+  if (!payload || typeof payload !== 'object') return '';
+  return String(payload?.error?.code || payload?.data?.error?.code || '');
+};
+
+const isAuthenticationFailed = (payload) => authenticationCodeOf(payload) === 'authentication_failed';
+
+let authFailureHandled = false;
+
+/** One logout for every in-flight request that comes back authentication_failed. */
+const handleAuthenticationFailed = async () => {
+  if (authFailureHandled) return;
+  authFailureHandled = true;
+  clearApiCache();
+  try {
+    await Utils.clearAllData?.();
+  } catch {
+    // session clear must not block the redirect
+  }
+  try {
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem(LOGIN_NOTICE_KEY, SESSION_EXPIRED_MESSAGE);
+    }
+  } catch {
+    // private mode
+  }
+  if (typeof window === 'undefined' || window.location?.pathname === '/login') return;
+  window.location.assign('/login');
+};
+
 // ---- Shared GET layer: one network call per identical GET burst ----
 // Identical GETs (same endpoint + query, same auth identity, same headers/options) that are in
 // flight share one request, and a successful response is reused for a short TTL.
@@ -510,6 +543,17 @@ const apiRequest = async (
     let response = await makeRequest(endpoint, requestOptions, token);
 
     if (requireAuth && response.status === 401) {
+      const unauthorized = await parseJsonBody(response);
+      if (isAuthenticationFailed(unauthorized)) {
+        await handleAuthenticationFailed();
+        return {
+          success: false,
+          logout: true,
+          status: 401,
+          message: SESSION_EXPIRED_MESSAGE,
+          data: unauthorized,
+        };
+      }
       const freshToken = await getFreshToken();
       if (!freshToken) {
         return {
@@ -523,6 +567,16 @@ const apiRequest = async (
     }
 
     const data = await parseJsonBody(response);
+    if (isAuthenticationFailed(data)) {
+      await handleAuthenticationFailed();
+      return {
+        success: false,
+        logout: true,
+        status: response.status,
+        message: SESSION_EXPIRED_MESSAGE,
+        data,
+      };
+    }
     if (!data) {
       return {
         success: false,
