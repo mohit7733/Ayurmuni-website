@@ -2500,9 +2500,11 @@
 .hm-page .hm-doctor-row,
 .hm-page .hm-product-row,
 .hm-page .hm-wellness {
-  gap: var(--am-space-6);
+  gap: 18px;
 }
-
+.hm-page .hm-wellness{
+  margin-top: 18px;
+}
 .hm-page .hm-doctor-row> :only-child,
 .hm-page .hm-product-row> :only-child,
 .hm-page .hm-wellness> :only-child {
