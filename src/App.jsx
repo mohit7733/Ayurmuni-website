@@ -131,6 +131,7 @@ import CartFloat from "./components/CartFloat";
 import AuthShell from "./components/AuthShell";
 import AppShell from "./components/AppShell";
 import NetworkGuard from "./components/NetworkGuard";
+import RedirectIfSignedIn from "./components/RedirectIfSignedIn";
 import RequireAuth from "./components/RequireAuth";
 import "./design/tokens.css";
 import "./index.css";
@@ -276,9 +277,11 @@ export default function App() {
                 <Suspense fallback={<RouteFallback />}>
                   <Routes>
                     {/* <Route path="/" element={<Splash />} /> */}
-                    <Route path="/welcome" element={<WelcomePage />} />
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/otp" element={<OtpPage />} />
+                    <Route element={<RedirectIfSignedIn />}>
+                      <Route path="/welcome" element={<WelcomePage />} />
+                      <Route path="/login" element={<LoginPage />} />
+                      <Route path="/otp" element={<OtpPage />} />
+                    </Route>
                     <Route path="/access-mode" element={<AccessModePage />} />
                     <Route path="/onboarding" element={<OnboardingPage />} />
                     <Route path="/policy-accept" element={<PolicyAcceptPage />} />

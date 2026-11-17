@@ -213,13 +213,26 @@ export default function CategoryProducts() {
       ? serviceCategoryId
       : productsCategoryId;
 
+  const categoryCatalog =
+    isBrandMix && params.get('catalog') === 'medicine' ? 'medicine' : 'product';
   const { categories: topCategories } = useProductCategories(
     null,
     productCategoryServiceId || null,
   );
+  const { categories: medicineCategories } = useProductCategories(
+    null,
+    medicineCategoryId || null,
+    isBrandMix && Boolean(medicineCategoryId),
+    false,
+  );
+  const subcategoryServiceId = isBrandMix
+    ? categoryCatalog === 'medicine'
+      ? medicineCategoryId
+      : productsCategoryId
+    : productCategoryServiceId;
   const { categories: subcategories } = useProductCategories(
     mode === 'product' ? activeCategoryId : null,
-    productCategoryServiceId || null,
+    subcategoryServiceId || null,
   );
   const visibleSubs = mode === 'product' && activeCategoryId ? subcategories : [];
 
@@ -285,39 +298,52 @@ export default function CategoryProducts() {
     [productFilter, sharedExtras],
   );
 
-  const brandCategoryFacet = useMemo(() => {
-    if (!activeCategoryId) return {};
-    if (mode === 'health') {
-      return {
-        health_category_id: activeCategoryId,
-        ...(selectedSubcategoryId ? { health_disease_id: selectedSubcategoryId } : {}),
-      };
-    }
+  const concernFacet = useMemo(() => {
+    if (mode !== 'health' || !activeCategoryId) return {};
+    return {
+      health_category_id: activeCategoryId,
+      ...(selectedSubcategoryId ? { health_disease_id: selectedSubcategoryId } : {}),
+    };
+  }, [mode, activeCategoryId, selectedSubcategoryId]);
+
+  const productCategoryFacet = useMemo(() => {
+    if (!activeCategoryId || mode === 'health') return {};
+    if (isBrandMix && categoryCatalog === 'medicine') return {};
     return {
       id: activeCategoryId,
       ...(selectedSubcategoryId ? { product_subcategory_id: selectedSubcategoryId } : {}),
     };
-  }, [activeCategoryId, selectedSubcategoryId, mode]);
+  }, [activeCategoryId, selectedSubcategoryId, mode, isBrandMix, categoryCatalog]);
+
+  const medicineCategoryFacet = useMemo(() => {
+    if (!activeCategoryId || mode === 'health') return {};
+    if (!(isBrandMix && categoryCatalog === 'medicine')) return {};
+    return {
+      id: activeCategoryId,
+      ...(selectedSubcategoryId ? { product_subcategory_id: selectedSubcategoryId } : {}),
+    };
+  }, [activeCategoryId, selectedSubcategoryId, mode, isBrandMix, categoryCatalog]);
+
+  const brandCategoryFacet = mode === 'health' ? concernFacet : productCategoryFacet;
 
   const brandProductFilter = useMemo(
     () => ({
       ...(brandId ? { brand_name_id: brandId } : {}),
       ...(productsCategoryId ? { service_category_id: productsCategoryId } : {}),
-      ...brandCategoryFacet,
+      ...(mode === 'health' ? concernFacet : productCategoryFacet),
       ...sharedExtras,
     }),
-    [brandId, productsCategoryId, brandCategoryFacet, sharedExtras],
+    [brandId, productsCategoryId, mode, concernFacet, productCategoryFacet, sharedExtras],
   );
 
   const brandMedicineFilter = useMemo(
     () => ({
       ...(brandId ? { brand_name_id: brandId } : {}),
       ...(medicineCategoryId ? { service_category_id: medicineCategoryId } : {}),
-      // Product categories don't map to medicines; concerns do.
-      ...(mode === 'health' ? brandCategoryFacet : {}),
+      ...(mode === 'health' ? concernFacet : medicineCategoryFacet),
       ...sharedExtras,
     }),
-    [brandId, medicineCategoryId, mode, brandCategoryFacet, sharedExtras],
+    [brandId, medicineCategoryId, mode, concernFacet, medicineCategoryFacet, sharedExtras],
   );
 
   const brandUnscopedFilter = useMemo(
@@ -329,10 +355,11 @@ export default function CategoryProducts() {
     [brandId, brandCategoryFacet, sharedExtras],
   );
 
-  // Product categories don't apply to medicines — hide medicine results while a
-  // product category facet is active on the brand page.
+  // A product category does not apply to medicines, and a medicine category does not apply to products.
   const productCategoryLocksMedicines =
-    isBrandMix && mode === 'product' && Boolean(activeCategoryId);
+    isBrandMix && mode === 'product' && categoryCatalog === 'product' && Boolean(activeCategoryId);
+  const medicineCategoryLocksProducts =
+    isBrandMix && mode === 'product' && categoryCatalog === 'medicine' && Boolean(activeCategoryId);
 
   const regularCatalog = useCategoryProducts(requestFilter, [], {
     enabled: !isBrandMix && (!isMedicine || Boolean(medicineCategoryId)),
@@ -355,19 +382,22 @@ export default function CategoryProducts() {
           ...item,
           catalog_kind: resolveCatalogKind(item),
         }))
-        .filter(
-          (item) =>
-            !productCategoryLocksMedicines || item.catalog_kind === 'product',
-        );
+        .filter((item) => {
+          if (productCategoryLocksMedicines && item.catalog_kind === 'medicine') return false;
+          if (medicineCategoryLocksProducts && item.catalog_kind === 'product') return false;
+          return true;
+        });
     }
     const seen = new Set();
     const merged = [];
-    brandProductCatalog.products.forEach((item) => {
-      const key = String(item.variant_id ?? item.id ?? '');
-      if (!key || seen.has(key)) return;
-      seen.add(key);
-      merged.push({ ...item, catalog_kind: 'product' });
-    });
+    if (!medicineCategoryLocksProducts) {
+      brandProductCatalog.products.forEach((item) => {
+        const key = String(item.variant_id ?? item.id ?? '');
+        if (!key || seen.has(key)) return;
+        seen.add(key);
+        merged.push({ ...item, catalog_kind: 'product' });
+      });
+    }
     if (!productCategoryLocksMedicines) {
       brandMedicineCatalog.products.forEach((item) => {
         const key = String(item.variant_id ?? item.id ?? '');
@@ -381,6 +411,7 @@ export default function CategoryProducts() {
     isBrandMix,
     canSplitBrand,
     productCategoryLocksMedicines,
+    medicineCategoryLocksProducts,
     regularCatalog.products,
     brandUnscopedCatalog.products,
     brandProductCatalog.products,
@@ -515,8 +546,13 @@ export default function CategoryProducts() {
   ]);
 
   const categoryList = [
-    { id: 'all', name: T.all, image_url: '' },
-    ...topCategories,
+    { id: 'all', name: T.all, image_url: '', catalog: 'product' },
+    ...(isBrandMix
+      ? [
+          ...topCategories.map((item) => ({ ...item, catalog: 'product' })),
+          ...medicineCategories.map((item) => ({ ...item, catalog: 'medicine' })),
+        ]
+      : topCategories.map((item) => ({ ...item, catalog: 'product' }))),
   ];
   const concernList = [
     { id: 'all', name: T.all, image_url: '' },
@@ -554,6 +590,7 @@ export default function CategoryProducts() {
       patchParams({
         category: null,
         facet: null,
+        catalog: null,
         mode: isBothMode ? 'both' : brandId || isMedicine ? mode : 'product',
         name: brandId
           ? brandOptions.find((b) => String(b.id) === String(brandId))?.name ||
@@ -610,11 +647,13 @@ export default function CategoryProducts() {
     setCatalogKind('all');
   };
 
-  const selectCategory = (id, name) => {
+  const selectCategory = (id, name, catalog = 'product') => {
     setSelectedSubcategoryId(null);
+    const medicinePick = isBothMode && catalog === 'medicine' && id && id !== 'all';
     if (!id || id === 'all') {
       patchParams({
         category: null,
+        catalog: null,
         facet: null,
         mode: isBothMode ? 'both' : 'product',
         name: brandId ? currentBrandName || null : isBothMode ? mixedPageName : null,
@@ -624,6 +663,7 @@ export default function CategoryProducts() {
     }
     patchParams({
       category: id,
+      catalog: medicinePick ? 'medicine' : null,
       facet: null,
       mode: isBothMode ? 'both' : 'product',
       name: brandId ? currentBrandName || name || null : isBothMode ? mixedPageName : name || null,
@@ -636,6 +676,7 @@ export default function CategoryProducts() {
     if (!id || id === 'all') {
       patchParams({
         category: null,
+        catalog: null,
         facet: null,
         mode: isBothMode ? 'both' : 'product',
         name: brandId ? currentBrandName || null : isBothMode ? mixedPageName : null,
@@ -645,6 +686,7 @@ export default function CategoryProducts() {
     }
     patchParams({
       category: id,
+      catalog: null,
       facet: isBothMode ? 'health' : null,
       mode: isBothMode ? 'both' : 'health',
       name: brandId ? currentBrandName || name || null : isBothMode ? mixedPageName : name || null,
@@ -652,9 +694,11 @@ export default function CategoryProducts() {
     setSelectedCategoryId(id);
   };
 
-  const isCategoryChipSelected = (id) => {
+  const isCategoryChipSelected = (id, catalog = 'product') => {
     if (id === 'all') return mode !== 'product' || !activeCategoryId;
-    return mode === 'product' && selectedCategoryId === id;
+    if (mode !== 'product' || String(selectedCategoryId) !== String(id)) return false;
+    if (!isBrandMix) return true;
+    return categoryCatalog === catalog;
   };
 
   const isConcernChipSelected = (id) => {
@@ -848,7 +892,9 @@ export default function CategoryProducts() {
                       <strong>Category</strong>
                       <em>
                         {mode === 'product' && activeCategoryId
-                          ? topCategories.find((c) => c.id === activeCategoryId)?.name || 'Selected'
+                          ? [...topCategories, ...medicineCategories].find(
+                              (c) => String(c.id) === String(activeCategoryId),
+                            )?.name || 'Selected'
                           : 'All categories'}
                       </em>
                     </span>
@@ -862,23 +908,33 @@ export default function CategoryProducts() {
                     hidden={openFilterPanel !== 'category'}
                   >
                     <ul className="st-cat-filter">
-                      {categoryList.map((item) => {
-                        const on = isCategoryChipSelected(item.id);
+                      {categoryList.map((item, index) => {
+                        const on = isCategoryChipSelected(item.id, item.catalog);
                         const { image, initial } = filterMark(item);
+                        const showProductHead =
+                          isBrandMix && item.catalog === 'product' && item.id !== 'all' &&
+                          categoryList[index - 1]?.id === 'all';
+                        const showMedicineHead =
+                          isBrandMix && item.catalog === 'medicine' &&
+                          categoryList[index - 1]?.catalog !== 'medicine';
                         return (
-                          <li key={item.id}>
+                          <li key={`${item.catalog}-${item.id}`}>
+                            {showProductHead ? <p className="cp-cat-group">Products</p> : null}
+                            {showMedicineHead ? <p className="cp-cat-group">Medicines</p> : null}
                             <button
                               type="button"
                               className={on ? 'is-on' : ''}
                               aria-pressed={on}
-                              onClick={() => selectCategory(item.id, item.name)}
+                              onClick={() => selectCategory(item.id, item.name, item.catalog)}
                             >
                               <span className="st-cat-filter__mark" aria-hidden>
                                 {item.id === 'all' ? 'All' : image ? <img src={image} alt="" /> : initial}
                               </span>
                               <span className="st-cat-filter__copy">
                                 <strong>{item.id === 'all' ? 'All categories' : item.name}</strong>
-                                {item.id === 'all' ? <em>Any category</em> : null}
+                                {item.id === 'all' ? (
+                                  <em>{isBrandMix ? 'Products and medicines' : 'Any category'}</em>
+                                ) : null}
                               </span>
                             </button>
                           </li>

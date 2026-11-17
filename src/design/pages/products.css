@@ -902,7 +902,7 @@
   transform: none;
 }
 .st-page--products .st-recent .am-media-card__img {
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 4 / 4;
   background: radial-gradient(80% 80% at 50% 40%, #fff, var(--am-surface-muted));
   color: var(--am-green-300);
 }
