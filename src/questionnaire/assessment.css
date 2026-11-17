@@ -633,9 +633,19 @@
 }
 
 @media (min-width: 901px) {
-  .auth-shell--assessment .assess {
-    height: 100%;
+  .auth-shell--assessment .assess,
+  .auth-shell--assessment section.quest.quest {
+    box-sizing: border-box;
+    width: min(
+      calc(100% - (2 * var(--am-gutter))),
+      calc(var(--am-container-max) - (2 * var(--am-gutter)))
+    );
+    max-width: calc(var(--am-container-max) - (2 * var(--am-gutter)));
+    height: calc(100% - var(--am-space-4));
     min-height: 0;
+    margin: var(--am-space-3) auto 0;
+    border-radius: 24px;
+    overflow: hidden;
   }
 
   .auth-shell--assessment .assess-options:not(.assess-options--single) {

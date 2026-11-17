@@ -1909,22 +1909,18 @@ section.quest.quest .quest-opt {
   grid-template-columns: 30px minmax(0, 1fr) 26px;
 }
 
-section.quest.quest .quest-options:has(.quest-opt.has-img) {
-  grid-template-columns: 1fr;
-}
-
 section.quest.quest .quest-opt.has-img {
-  grid-template-columns: 30px 72px minmax(0, 1fr) 26px;
-  min-height: 96px;
-  padding-top: 8px;
-  padding-bottom: 8px;
+  grid-template-columns: 26px 44px minmax(0, 1fr) 22px;
+  min-height: 52px;
+  padding-top: 6px;
+  padding-bottom: 6px;
 }
 
 section.quest.quest .quest-opt.has-img img {
-  width: 72px;
-  height: 84px;
-  padding: 6px 4px 2px;
-  border-radius: 16px;
+  width: 40px;
+  height: 40px;
+  padding: 3px;
+  border-radius: 12px;
   object-fit: contain;
   object-position: center bottom;
   background:
@@ -2271,3 +2267,187 @@ section.quest.quest .quest-hud .pill.lead {
     font-size: 11.5px;
   }
 }
+
+/* ==========================================================================
+   Sticky Continue / Complete action bar.
+   The primary button stays visible without scrolling the option list.
+   Shared by prakriti and medical questionnaires.
+   ========================================================================== */
+section.quest.quest {
+  display: flex;
+  flex-direction: column;
+}
+
+section.quest.quest .quest-stage {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-bottom: 20px;
+}
+
+section.quest.quest .quest-stage {
+  margin-bottom: 0;
+  padding-bottom: 18px;
+  border-bottom: 0;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+  box-shadow: none;
+}
+
+section.quest.quest .quest-foot {
+  position: sticky;
+  bottom: 0;
+  z-index: 8;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  width: min(100%, 960px);
+  max-width: 960px;
+  margin: 0 auto auto;
+  padding: 0 22px 16px;
+  border: 1.5px solid transparent;
+  border-top: 0;
+  border-radius: 0 0 22px 22px;
+  background:
+    linear-gradient(180deg, #fffefa 0%, #fdf8ec 100%) padding-box,
+    var(--q-foil) border-box;
+  box-shadow:
+    0 28px 48px -22px rgba(0, 0, 0, 0.5),
+    0 10px 20px -12px rgba(6, 42, 34, 0.45);
+  color: #0b3b30;
+}
+
+.app-shell:has(.tab-bar) section.quest.quest {
+  padding-bottom: calc(var(--am-tabbar-h, 0px) + env(safe-area-inset-bottom, 0px));
+}
+
+.app-shell:has(.site-footer) section.quest.quest .quest-foot {
+  position: sticky;
+}
+
+section.quest.quest .quest-foot__row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(184, 145, 58, 0.28);
+}
+
+section.quest.quest .quest-foot__row > button:first-child {
+  justify-self: start;
+}
+
+section.quest.quest .quest-foot__row > .cta,
+section.quest.quest .quest-foot__center {
+  justify-self: center;
+}
+
+section.quest.quest .quest-foot__row > div {
+  justify-self: end;
+}
+
+section.quest.quest .quest-foot__row > div {
+  display: flex;
+  align-items: center;
+  gap: var(--am-space-2, 8px);
+}
+
+section.quest.quest .quest-foot__back,
+section.quest.quest .quest-foot__row > div > button {
+  min-height: 38px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #245246 !important;
+  font-size: 13.5px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+}
+
+section.quest.quest .quest-foot__back:hover,
+section.quest.quest .quest-foot__row > div > button:not(.exit):hover {
+  background: rgba(13, 97, 78, 0.08);
+  color: #0b3b30 !important;
+}
+
+section.quest.quest .quest-foot__row > button:focus-visible,
+section.quest.quest .quest-foot__row > div > button:focus-visible,
+section.quest.quest .quest-foot .cta:focus-visible {
+  outline: 3px solid var(--am-gold-500, #e4c47a);
+  outline-offset: 3px;
+}
+
+section.quest.quest .quest-foot .exit {
+  border: 1px solid rgba(11, 59, 48, 0.14);
+  background: #fff;
+  color: #0b3b30 !important;
+}
+
+section.quest.quest .quest-foot .exit:hover {
+  border-color: rgba(180, 35, 24, 0.45);
+  background: #fff;
+  color: #9f2d22 !important;
+}
+
+section.quest.quest .quest-foot__row > .cta {
+  position: relative;
+  justify-self: center;
+  width: auto;
+  min-width: 168px;
+  min-height: 46px !important;
+  margin: 0;
+  padding: 0 32px;
+  border: 0;
+  border-radius: 999px;
+  background: #0d614e !important;
+  box-shadow: 0 8px 16px rgba(13, 97, 78, 0.22);
+  color: #fffdf8 !important;
+  font-family: var(--am-font-display, "Satoshi", sans-serif);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+}
+
+section.quest.quest .quest-foot__row > .cta:hover:not(:disabled) {
+  background: #0a4f40 !important;
+}
+
+section.quest.quest .quest-foot__row > .cta:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+section.quest.quest .quest-foot__row > .cta:disabled {
+  background: #c5d0cb !important;
+  box-shadow: none;
+  color: #f7f4ee !important;
+  cursor: not-allowed;
+}
+
+section.quest.quest .quest-milestone {
+  bottom: calc(var(--quest-foot-offset, 132px) + env(safe-area-inset-bottom, 0px));
+}
+
+@media (max-width: 680px) {
+  section.quest.quest .quest-foot {
+    gap: 8px;
+    padding: 10px 12px max(10px, env(safe-area-inset-bottom, 0px));
+  }
+
+  section.quest.quest .quest-foot .cta {
+    min-height: 46px;
+  }
+
+  section.quest.quest .quest-foot__row > button,
+  section.quest.quest .quest-foot__row > div > button {
+    min-height: 36px;
+    padding-inline: 10px;
+  }
+}
+

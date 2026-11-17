@@ -2631,10 +2631,20 @@
   .hm-page .hm-concerns-panel .am-tile:hover { transform: none; }
 }
 
+/* Health concerns sits tight against the block under it (featured brands).
+   .hm-body gap is 24px and .am-reveal.is-shown adds 16px; override both. */
+.hm-page .hm-concerns-panel {
+  padding-block: 10px;
+}
+.hm-page .hm-concerns-panel.am-reveal.is-shown {
+  margin-bottom: -14px;
+}
+
 /* ===== Featured brands: square cards + circular logo discs ===== */
 .hm-page .hm-brands-panel {
   position: relative;
   isolation: isolate;
+  padding-top: 10px;
 }
 
 .hm-page .hm-brands-panel .hm-brands-head.am-section-header {
@@ -3146,13 +3156,14 @@ button.hm-pose {
 .hm-page .hm-package-rail > .am-rail__item {
   flex: 0 0 clamp(230px, calc((100% - 48px) / 5), 268px);
   width: clamp(230px, calc((100% - 48px) / 5), 268px);
-  height: 400px;
+  height: auto;
+  align-self: start;
 }
 @media (max-width: 900px) {
   .hm-page .hm-package-rail > .am-rail__item {
     flex-basis: 250px;
     width: 250px;
-    height: 390px;
+    height: auto;
   }
 }
 

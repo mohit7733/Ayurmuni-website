@@ -340,9 +340,30 @@
 }
 
 .pf-addr-list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--am-space-3);
+  align-items: stretch;
+}
+
+.pf-addr-list > .pf-loc-card {
+  width: auto;
+  height: 100%;
+  min-width: 0;
+}
+
+.pf-addr-list > .pf-loc-card:only-child {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 768px) {
+  .pf-addr-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pf-addr-card p {
+    flex: 1 1 auto;
+  }
 }
 
 .pf-addr-card {
