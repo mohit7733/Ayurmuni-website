@@ -73,6 +73,7 @@ import { HOME_COPY as T } from '../content/home';
 // TEMP hidden per Rohit — DUMMY_LAB_TESTS, DUMMY_PANCHAKARMA unused while Lab/Panchakarma are hidden
 import { loadConsultPackages } from '../services/packageService';
 import '../design/pages/home.css';
+import '../design/pages/home-responsive.css';
 import '../design/pages/dummy-offers.css';
 import '../design/pages/plan-cards.css';
 import { isCarePlan, planDiscount, railThemeTones } from '../packages/planTheme';
