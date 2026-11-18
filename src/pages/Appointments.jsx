@@ -32,6 +32,7 @@ import { formatPaymentTimestamp, getRefundProgress } from "../utils/paymentHisto
 import { requireAuth } from "../services/guestAuth";
 import { getConsultHistory } from "../services/consultService";
 import { invalidateApiCache } from "../services/apiClient";
+import { fetchUpcomingAppointmentList } from "../hooks/useUpcomingAppointments";
 import { consultationHasPrescription } from "../utils/prescriptionDetailUtils";
 import "../design/pages/appointments.css";
 
@@ -203,12 +204,6 @@ export default function Appointments() {
 
   const listScope = upcomingOnly ? "upcoming" : tab;
 
-  const apiFilters = useMemo(() => {
-    const filters = { timeframe: listScope };
-    if (statusFilter !== "all") filters.status = statusFilter;
-    return filters;
-  }, [listScope, statusFilter]);
-
   // Tab / filter switches and refresh race: only the newest list request may write state.
   const listRequestRef = useRef(0);
   const loadPage = useCallback(
@@ -220,6 +215,16 @@ export default function Appointments() {
       else if (mode === "refresh") setRefreshing(true);
       else setLoading(true);
       try {
+        // Match HomeJoinAppointments / useUpcomingAppointments so "+3 more" opens the same set.
+        if (listScope === "upcoming") {
+          const mapped = await fetchUpcomingAppointmentList(Math.max(PAGE_SIZE, 50));
+          if (requestId !== listRequestRef.current) return;
+          setItems(mapped);
+          setPage(1);
+          setHasMore(false);
+          return;
+        }
+
         const mapList = (res) => {
           const list = res?.data?.results || res?.results || [];
           return Array.isArray(list) ? list.map(mapAppointment) : [];
@@ -230,7 +235,8 @@ export default function Appointments() {
         const res = await getConsultHistory({
           page: pageNo,
           page_size: PAGE_SIZE,
-          ...apiFilters,
+          timeframe: listScope,
+          ...(statusFilter !== "all" ? { status: statusFilter } : {}),
         });
         if (requestId !== listRequestRef.current) return;
         const mapped = mapList(res);
@@ -246,7 +252,7 @@ export default function Appointments() {
         }
       }
     },
-    [apiFilters],
+    [listScope, statusFilter],
   );
 
   useEffect(() => {

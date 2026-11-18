@@ -735,6 +735,7 @@
 
 /* ── Section headers (reviews + related) like the homepage ── */
 .pd-page--brand .am-section-header { align-items: center; gap: 12px; margin-bottom: 14px; }
+.pd-page--brand .am-section-header__action { display: flex; align-items: center; }
 .pd-page--brand .am-section-header__title {
   font-family: var(--am-font-display);
   font-size: clamp(1.15rem, 1rem + 0.5vw, 1.35rem);
@@ -910,10 +911,14 @@
 .pd-page--brand .pd-review-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   justify-content: flex-end;
   gap: 8px;
 }
-.pd-page--brand .pd-review-actions .am-btn { border-radius: var(--am-radius-pill); }
+.pd-page--brand .pd-review-actions .am-btn {
+  border-radius: var(--am-radius-pill);
+  align-self: center;
+}
 .pd-page--brand .pd-details__title {
   display: flex;
   align-items: center;

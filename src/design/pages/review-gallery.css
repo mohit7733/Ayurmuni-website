@@ -1,75 +1,85 @@
 /* Review media gallery layout.
    Scoped to .review-gallery-page so Share Experience and other catalog
-   pages are unchanged. The viewer frame wraps the selected image or
-   video; the page follows the catalog-page / logo gutter; thumbnails
-   sit in a compact strip; bottom padding clears View cart and Ayurchat. */
+   pages are unchanged. Full-width stage scales media to fill the viewport;
+   thumbnails sit in a compact strip; bottom padding clears View cart and Ayurchat. */
 
 .app-shell:not(.auth-shell) .app-shell-body > .catalog-page.review-gallery-page,
 .review-gallery-page {
+  --rg-stage-h: min(
+    72vh,
+    calc(
+      100dvh
+      - var(--am-header-h, 56px)
+      - 120px
+      - 88px
+      - 16px
+      - 56px
+      - var(--am-tabbar-h, 0px)
+      - env(safe-area-inset-bottom, 0px)
+    )
+  );
   width: 100%;
   max-width: var(--am-container-max);
   margin-inline: auto;
   padding-inline: var(--am-gutter);
   box-sizing: border-box;
-  /* Tab bar + cart (52px) + gap, matching footer float clearance. */
   padding-bottom: calc(var(--am-tabbar-h) + 72px + env(safe-area-inset-bottom, 0px));
 }
 
 @media (min-width: 768px) {
   .app-shell:not(.auth-shell) .app-shell-body > .catalog-page.review-gallery-page,
   .review-gallery-page {
-    /* Tab bar is typically hidden; cart sits 56px up and is 52px tall. */
+    --rg-stage-h: min(
+      78vh,
+      calc(100dvh - var(--am-header-h, 64px) - 120px - 100px - 80px)
+    );
     padding-bottom: calc(56px + 52px + 24px);
   }
 }
 
 .review-gallery-page .review-gallery-hero {
-  width: fit-content;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
   max-width: 100%;
+  height: var(--rg-stage-h);
+  min-height: 280px;
   margin-inline: auto;
   margin-bottom: 16px;
-  border-radius: var(--radius-lg);
+  padding: 12px;
+  border: 1px solid rgba(216, 204, 180, 0.85);
+  border-radius: 18px;
   overflow: hidden;
-  background: var(--am-text);
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 40%, #ffffff 0%, rgba(255, 255, 255, 0) 70%),
+    linear-gradient(180deg, #fbf8f2 0%, #f0ebe0 100%);
+  box-shadow: 0 10px 28px -18px rgba(16, 83, 67, 0.22);
+  box-sizing: border-box;
 }
 
 .review-gallery-page .review-gallery-hero img,
 .review-gallery-page .review-gallery-hero video {
   display: block;
-  width: auto;
-  height: auto;
+  width: 100%;
+  height: 100%;
   max-width: 100%;
-  /* Prefer ~70vh, but shrink so the frame + thumbnail strip sit above
-     the View cart pill and Ayurchat FAB. */
-  max-height: min(
-    70vh,
-    calc(
-      100dvh
-      - var(--am-header-h, 56px)
-      - 130px
-      - 88px
-      - 16px
-      - 52px
-      - var(--am-tabbar-h, 56px)
-      - env(safe-area-inset-bottom, 0px)
-    )
-  );
+  max-height: 100%;
   object-fit: contain;
   margin: 0;
+  border-radius: 10px;
 }
 
 .review-gallery-page .catalog-grid {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   gap: 10px;
   width: 100%;
   max-width: 100%;
   margin-inline: auto;
+  padding: 2px;
   grid-template-columns: none;
 }
 
@@ -81,18 +91,23 @@
   border: 2px solid transparent;
   border-radius: 14px;
   overflow: hidden;
-  background: var(--am-text);
+  background: #efe9dc;
   cursor: pointer;
   box-sizing: border-box;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
 .review-gallery-page .review-media-tile.on {
-  border-color: var(--am-gold-500, var(--am-accent, #c9972f));
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--am-gold-500, #c9972f) 35%, transparent);
+  border-color: var(--am-brand-green, #0d614e);
+  box-shadow: 0 0 0 1px var(--am-brand-green, #0d614e);
+}
+
+.review-gallery-page .review-media-tile:hover {
+  border-color: rgba(13, 97, 78, 0.45);
 }
 
 .review-gallery-page .review-media-tile:focus-visible {
-  outline: 2px solid var(--am-gold-500, var(--am-accent, #c9972f));
+  outline: 2px solid var(--am-brand-green, #0d614e);
   outline-offset: 2px;
 }
 
@@ -103,4 +118,17 @@
   object-fit: cover;
   display: block;
   pointer-events: none;
+}
+
+@media (max-width: 639px) {
+  .review-gallery-page .review-gallery-hero {
+    padding: 8px;
+    border-radius: 14px;
+    min-height: 240px;
+  }
+  .review-gallery-page .review-media-tile {
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+  }
 }

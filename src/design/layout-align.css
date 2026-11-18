@@ -143,16 +143,22 @@
   .app-shell .pd-page--brand .pd-auto-rail__control { display: none; }
 }
 
-/* Review cards: name + date, rating, 3-line text, neat square thumbs */
+/* Review cards: compact column — head, text, then thumbs (no empty stretch). */
 .app-shell .pd-page--brand .pd-review-item > .am-review {
   display: flex;
   flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
   gap: 8px;
+  height: auto;
+  min-height: 0;
   padding: 14px;
   border: 1px solid var(--am-line);
+  border-left: 1px solid var(--am-line);
   border-radius: 14px;
   background: var(--am-surface);
   box-shadow: var(--am-shadow-xs);
+  container-type: normal;
 }
 .app-shell .pd-page--brand .pd-review-item .am-review__head { margin: 0; }
 .app-shell .pd-page--brand .pd-review-item .am-review__text {
@@ -164,14 +170,18 @@
 }
 .app-shell .pd-page--brand .pd-review-item .am-review__media {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
-  margin: auto 0 0;
+  margin: 0;
   padding: 0;
+  grid-column: auto;
+  grid-row: auto;
+  align-self: flex-start;
 }
 .app-shell .pd-page--brand .pd-review-item .am-review__media button,
 .app-shell .pd-page--brand .pd-review-item .am-review__media img {
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
   border-radius: 10px;
   object-fit: cover;
 }
@@ -308,8 +318,13 @@
 @media (min-width: 1280px) {
   .app-shell .pd-page--brand .pd-discovery .pd-discovery__item { flex-basis: calc((100% - 16px) / 6); }
 }
-/* t60u: Reviews - fill width when few, balanced compact cards */
-.app-shell .pd-page--brand .pd-review-item > .am-review { min-height: 132px; justify-content: flex-start; gap: 10px; }
+/* t60u: Reviews — compact cards, thumbs under content, header actions aligned */
+.app-shell .pd-page--brand .pd-review-item > .am-review {
+  min-height: 0;
+  height: auto;
+  justify-content: flex-start;
+  gap: 10px;
+}
 .app-shell .pd-page--brand .pd-review-item > .am-review:hover { transform: none; }
 .app-shell .pd-page--brand .pd-review-item .am-review__head { align-items: center; gap: 10px; }
 .app-shell .pd-page--brand .pd-review-item .am-review__avatar {
@@ -323,9 +338,14 @@
 .app-shell .pd-page--brand .pd-review-item .am-review__text {
   display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; color: var(--am-text-soft);
 }
-.app-shell .pd-page--brand .pd-review-item .am-review__media { margin: 0; gap: 8px; overflow: visible; }
+.app-shell .pd-page--brand .pd-review-item .am-review__media {
+  margin: 0;
+  gap: 8px;
+  overflow: visible;
+  align-self: flex-start;
+}
 .app-shell .pd-page--brand .pd-review-item .am-review__media button {
-  position: relative; width: 60px; height: 60px; border-radius: 10px; overflow: hidden;
+  position: relative; width: 56px; height: 56px; border-radius: 10px; overflow: hidden;
   border: 1px solid var(--am-line); padding: 0;
 }
 .app-shell .pd-page--brand .pd-review-item .am-review__media img { width: 100%; height: 100%; border-radius: 0; object-fit: cover; }
@@ -333,12 +353,35 @@
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   background: rgba(11, 59, 48, 0.55); color: #fff; font-weight: 600; font-size: 14px;
 }
+.app-shell .pd-page--brand .pd-review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.app-shell .pd-page--brand .pd-reviews .am-section-header__action {
+  display: flex;
+  align-items: center;
+}
 @media (min-width: 640px) {
   .app-shell .pd-page--brand .pd-review-list.pd-review-list--few {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    overflow: visible; gap: 12px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    overflow: visible;
+    gap: 12px;
   }
-  .app-shell .pd-page--brand .pd-review-list--few > .pd-review-item { width: auto; flex: none; }
+  .app-shell .pd-page--brand .pd-review-list--few > .pd-review-item {
+    width: auto;
+    flex: none;
+    min-width: 0;
+  }
+}
+@media (min-width: 1024px) {
+  .app-shell .pd-page--brand .pd-review-list.pd-review-list--few:has(> :nth-child(3)) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 /* t61u: cap the action column next to the pack cards; no stray backgrounds behind buttons */
