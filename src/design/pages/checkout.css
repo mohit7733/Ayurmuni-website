@@ -349,6 +349,7 @@ button.co-card:active {
 
 .co-page > .am-page-header {
   margin-bottom: 0;
+  margin: 16px 0;
 }
 
 .co-layout {

@@ -250,7 +250,7 @@ export default function MedicalReceipt() {
                     >
                       Print
                     </Button>
-                    <Button
+                    {/* <Button
                       variant="secondary"
                       leadingIcon={<Mail size={16} aria-hidden />}
                       onClick={() => {
@@ -258,7 +258,7 @@ export default function MedicalReceipt() {
                       }}
                     >
                       Email
-                    </Button>
+                    </Button> */}
                   </ActionStack>
                 </DetailCard>
                 <p className="dx-note">
