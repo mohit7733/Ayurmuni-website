@@ -1,8 +1,8 @@
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
+import PageHeader from '../components/PageHeader';
 import AdvanceLoad from '../components/ui/AdvanceLoad';
-import { Button, Modal } from '../components/ui';
 import { formatConsultationAmount, formatRupee } from '../home/catalog';
 import useCustomerPaymentHistory from '../hooks/useCustomerPaymentHistory';
 import { mapPaymentHistoryEntry, transactionIconGlyph } from '../profile/transactions';
@@ -10,39 +10,32 @@ import { requireAuth } from '../services/guestAuth';
 import '../design/pages/payments.css';
 
 const SOURCE_TABS = [
-  { key: 'all', label: 'All' },
-  { key: 'consultation', label: 'Consultations' },
-  { key: 'order', label: 'Orders' },
+  { key: 'all', mark: 'All', label: 'All payments', hint: 'Every charge' },
+  { key: 'consultation', mark: 'Cn', label: 'Consultations', hint: 'Doctor visits' },
+  { key: 'order', mark: 'Or', label: 'Orders', hint: 'Store purchases' },
 ];
 
 const ENTRY_CHIPS = [
-  { key: 'all', label: 'All' },
-  { key: 'debit', label: 'Paid' },
-  { key: 'credit', label: 'Refunds' },
+  { key: 'all', mark: 'All', label: 'All types', hint: 'Paid and refunds' },
+  { key: 'debit', mark: 'Pd', label: 'Paid', hint: 'Money out' },
+  { key: 'credit', mark: 'Rf', label: 'Refunds', hint: 'Money back' },
 ];
 
 const DATE_PRESETS = [
-  { key: 'all', label: 'All time' },
-  { key: 'last7', label: 'Last 7 days' },
-  { key: 'last30', label: 'Last 30 days' },
-  { key: 'last90', label: 'Last 90 days' },
-  { key: 'thisMonth', label: 'This month' },
-  { key: 'lastMonth', label: 'Last month' },
-  { key: 'custom', label: 'Custom range' },
+  { key: 'all', mark: 'All', label: 'All time', hint: 'Every date' },
+  { key: 'last7', mark: '7d', label: 'Last 7 days', hint: 'This week' },
+  { key: 'last30', mark: '30', label: 'Last 30 days', hint: 'This month' },
+  { key: 'last90', mark: '90', label: 'Last 90 days', hint: 'Recent' },
+  { key: 'thisMonth', mark: 'Mo', label: 'This month', hint: 'Current' },
+  { key: 'lastMonth', mark: 'Lm', label: 'Last month', hint: 'Previous' },
+  { key: 'custom', mark: 'Rng', label: 'Custom range', hint: 'Pick dates' },
 ];
-
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 const toApiDate = (date) => {
   if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
     date.getDate(),
   ).padStart(2, '0')}`;
-};
-
-const toShortDate = (date) => {
-  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
-  return `${date.getDate()} ${MONTHS[date.getMonth()]} ${date.getFullYear()}`;
 };
 
 const parseInputDate = (value) => {
@@ -86,9 +79,6 @@ export default function Payments() {
   const [entry, setEntry] = useState('all');
   const [datePreset, setDatePreset] = useState('all');
   const [customRange, setCustomRange] = useState({ from: null, to: null });
-  const [showDateSheet, setShowDateSheet] = useState(false);
-  const [draftPreset, setDraftPreset] = useState('all');
-  const [draftRange, setDraftRange] = useState({ from: null, to: null });
 
   useEffect(() => {
     (async () => {
@@ -129,33 +119,7 @@ export default function Payments() {
     return groups;
   }, [mapped]);
 
-  const dateChipLabel = useMemo(() => {
-    if (datePreset === 'all') return 'Date';
-    if (datePreset === 'custom') {
-      if (range.from && range.to) return `${toShortDate(range.from)} – ${toShortDate(range.to)}`;
-      return range.from ? `From ${toShortDate(range.from)}` : 'Custom range';
-    }
-    return DATE_PRESETS.find((item) => item.key === datePreset)?.label || 'Date';
-  }, [datePreset, range]);
-
-  const activeFilterCount =
-    (source !== 'all' ? 1 : 0) + (entry !== 'all' ? 1 : 0) + (datePreset !== 'all' ? 1 : 0);
-
-  const openDateSheet = () => {
-    setDraftPreset(datePreset);
-    setDraftRange(customRange);
-    setShowDateSheet(true);
-  };
-
-  const applyDateSheet = () => {
-    if (draftPreset === 'custom' && !draftRange.from && !draftRange.to) {
-      setDatePreset('all');
-    } else {
-      setDatePreset(draftPreset);
-      if (draftPreset === 'custom') setCustomRange(draftRange);
-    }
-    setShowDateSheet(false);
-  };
+  const filtersOn = source !== 'all' || entry !== 'all' || datePreset !== 'all';
 
   const clearAll = () => {
     setSource('all');
@@ -170,189 +134,168 @@ export default function Payments() {
 
   const todayInput = toApiDate(new Date());
 
+  const filterButton = (item, selected, onClick) => (
+    <li key={item.key}>
+      <button
+        type="button"
+        aria-pressed={selected}
+        className={selected ? 'is-on' : ''}
+        onClick={onClick}
+      >
+        <span className="st-cat-filter__mark" aria-hidden>
+          {item.mark}
+        </span>
+        <span className="st-cat-filter__copy">
+          <strong>{item.label}</strong>
+          <em>{item.hint}</em>
+        </span>
+      </button>
+    </li>
+  );
+
   return (
     <AppShell tab="profile">
       <section className="catalog-page payments-page">
-        <header className="catalog-head">
-          <button type="button" className="text-back" onClick={() => navigate('/profile')}>
-            ← Back
-          </button>
-          <div className="payments-heading">
-            <span className="payments-eyebrow">Account activity</span>
-            <h1>Payments</h1>
-            <p>Track payments and refunds for consultations and orders.</p>
-          </div>
-          <span className="payments-mark" aria-hidden>₹</span>
-        </header>
+        <PageHeader
+          title="Payments"
+          subtitle="Consultations and orders, including refunds."
+          backTo="/profile"
+          backLabel="Profile"
+        />
 
-        <div className="home-rail subcat-rail payments-source" role="tablist" aria-label="Payment source">
-          {SOURCE_TABS.map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              className={`chip ${source === tab.key ? 'on' : ''}`}
-              onClick={() => setSource(tab.key)}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+        <div className="pay-layout">
+          <aside className="st-cat-col pay-filter" aria-label="Filter payments">
+            <p className="st-cat-col__eyebrow">Filter</p>
+            <h3 id="pay-filter-title">Payments</h3>
+            <div className="pay-side__group">
+              <p className="pay-side__label" id="pay-source-label">Source</p>
+              <ul className="st-cat-filter" role="group" aria-labelledby="pay-source-label">
+                {SOURCE_TABS.map((item) =>
+                  filterButton(item, source === item.key, () => setSource(item.key)),
+                )}
+              </ul>
+            </div>
+            <div className="pay-side__group">
+              <p className="pay-side__label" id="pay-type-label">Type</p>
+              <ul className="st-cat-filter" role="group" aria-labelledby="pay-type-label">
+                {ENTRY_CHIPS.map((item) =>
+                  filterButton(item, entry === item.key, () => setEntry(item.key)),
+                )}
+              </ul>
+            </div>
+            <div className="pay-side__group">
+              <p className="pay-side__label" id="pay-when-label">When</p>
+              <ul className="st-cat-filter" role="group" aria-labelledby="pay-when-label">
+                {DATE_PRESETS.map((item) =>
+                  filterButton(item, datePreset === item.key, () => setDatePreset(item.key)),
+                )}
+              </ul>
+              {datePreset === 'custom' ? (
+                <div className="pay-dates">
+                  <label>
+                    From
+                    <input
+                      type="date"
+                      max={todayInput}
+                      value={customRange.from ? toApiDate(customRange.from) : ''}
+                      onChange={(event) => {
+                        const nextFrom = parseInputDate(event.target.value);
+                        setCustomRange((prev) => {
+                          const next = { ...prev, from: nextFrom };
+                          if (next.from && next.to && next.from > next.to) next.to = nextFrom;
+                          return next;
+                        });
+                      }}
+                    />
+                  </label>
+                  <label>
+                    To
+                    <input
+                      type="date"
+                      max={todayInput}
+                      min={customRange.from ? toApiDate(customRange.from) : undefined}
+                      value={customRange.to ? toApiDate(customRange.to) : ''}
+                      onChange={(event) => {
+                        const nextTo = parseInputDate(event.target.value);
+                        setCustomRange((prev) => {
+                          const next = { ...prev, to: nextTo };
+                          if (next.from && next.to && next.from > next.to) next.from = nextTo;
+                          return next;
+                        });
+                      }}
+                    />
+                  </label>
+                </div>
+              ) : null}
+            </div>
+          </aside>
 
-        <div
-          className="home-rail subcat-rail payments-filters"
-          role="group"
-          aria-label="Payment filters"
-        >
-          <button
-            type="button"
-            className={`chip ${datePreset !== 'all' ? 'on' : ''}`}
-            onClick={openDateSheet}
-          >
-            {dateChipLabel}
-          </button>
-          {ENTRY_CHIPS.map((chip) => (
-            <button
-              key={chip.key}
-              type="button"
-              className={`chip ${entry === chip.key ? 'on' : ''}`}
-              onClick={() => setEntry(chip.key)}
-            >
-              {chip.label}
-            </button>
-          ))}
-          {activeFilterCount > 0 ? (
-            <button type="button" className="chip" onClick={clearAll}>
-              Clear
-            </button>
-          ) : null}
-        </div>
-
-        {loading ? (
-          <AdvanceLoad variant="list" label="Loading transactions" />
-        ) : sections.length === 0 ? (
-          <div className="empty-copy">
-            <strong>{activeFilterCount > 0 ? 'No matching transactions' : 'No transactions yet'}</strong>
-            <p>
-              {error ||
-                (activeFilterCount > 0
-                  ? 'Try changing or clearing the filters.'
-                  : 'Your consultation and order payments will appear here.')}
-            </p>
-          </div>
-        ) : (
-          <>
-            {sections.map((section) => (
-              <Fragment key={section.title}>
-                <h3 className="pay-month">{section.title}</h3>
-                {section.data.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    className="checkout-card order-row"
-                    onClick={() => openDetail(item)}
-                  >
-                    <div className="checkout-item txn-item">
-                      <span className="thumb-fallback txn-icon">{transactionIconGlyph(item.iconName)}</span>
-                      <p>
-                        {item.name}
-                        {item.paymentMethod ? <small>{item.paymentMethod}</small> : null}
-                        <small>{item.date}</small>
-                      </p>
-                      <span className="txn-right">
-                        <strong className={item.isCredit ? 'txn-credit' : undefined}>
-                          {item.isCredit ? '+ ' : ''}
-                          {item.raw?.type === 'order' ? formatRupee(item.amount) : formatConsultationAmount(item.amount)}
-                        </strong>
-                        <em className={`txn-status ${item.status.toLowerCase()}`}>{item.status}</em>
-                      </span>
-                    </div>
-                  </button>
-                ))}
-              </Fragment>
-            ))}
-            {hasMore ? (
-              <div className="load-more-wrap">
-                <button type="button" onClick={loadMore} disabled={loadingMore}>
-                  {loadingMore ? 'Loading…' : 'Load more'}
-                </button>
-              </div>
+          <div className="pay-main">
+            {filtersOn ? (
+              <button type="button" className="pay-clear" onClick={clearAll}>
+                Clear filters
+              </button>
             ) : null}
-          </>
-        )}
-      </section>
-
-      <Modal
-        open={showDateSheet}
-        onClose={() => setShowDateSheet(false)}
-        title="Filter by date"
-        size="sm"
-        footer={
-          <>
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setDraftPreset('all');
-                setDraftRange({ from: null, to: null });
-              }}
-            >
-              Reset
-            </Button>
-            <Button variant="primary" onClick={applyDateSheet}>
-              Apply
-            </Button>
-          </>
-        }
-      >
-        <div className="pay-date-presets">
-          {DATE_PRESETS.map((preset) => (
-            <button
-              key={preset.key}
-              type="button"
-              className={`chip ${draftPreset === preset.key ? 'on' : ''}`}
-              onClick={() => setDraftPreset(preset.key)}
-            >
-              {preset.label}
-            </button>
-          ))}
-        </div>
-        {draftPreset === 'custom' ? (
-          <div className="pay-date-range">
-            <label>
-              From
-              <input
-                type="date"
-                max={todayInput}
-                value={draftRange.from ? toApiDate(draftRange.from) : ''}
-                onChange={(event) => {
-                  const nextFrom = parseInputDate(event.target.value);
-                  setDraftRange((prev) => {
-                    const next = { ...prev, from: nextFrom };
-                    if (next.from && next.to && next.from > next.to) next.to = nextFrom;
-                    return next;
-                  });
-                }}
-              />
-            </label>
-            <label>
-              To
-              <input
-                type="date"
-                max={todayInput}
-                min={draftRange.from ? toApiDate(draftRange.from) : undefined}
-                value={draftRange.to ? toApiDate(draftRange.to) : ''}
-                onChange={(event) => {
-                  const nextTo = parseInputDate(event.target.value);
-                  setDraftRange((prev) => {
-                    const next = { ...prev, to: nextTo };
-                    if (next.from && next.to && next.from > next.to) next.from = nextTo;
-                    return next;
-                  });
-                }}
-              />
-            </label>
+            {loading ? (
+              <AdvanceLoad variant="list" label="Loading transactions" />
+            ) : sections.length === 0 ? (
+              <div className="empty-copy">
+                <strong>{filtersOn ? 'No matching transactions' : 'No transactions yet'}</strong>
+                <p>
+                  {error ||
+                    (filtersOn
+                      ? 'Try changing or clearing the filters.'
+                      : 'Your consultation and order payments will appear here.')}
+                </p>
+              </div>
+            ) : (
+              <>
+                {sections.map((section) => (
+                  <Fragment key={section.title}>
+                    <h3 className="pay-month">{section.title}</h3>
+                    <div className="pay-list">
+                      {section.data.map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          className="pay-card"
+                          onClick={() => openDetail(item)}
+                        >
+                          <span className="pay-card__mark" aria-hidden>
+                            {transactionIconGlyph(item.iconName)}
+                          </span>
+                          <span className="pay-card__body">
+                            <strong>{item.name}</strong>
+                            <small>
+                              {[item.paymentMethod, item.date].filter(Boolean).join(' · ')}
+                            </small>
+                          </span>
+                          <span className="pay-card__aside">
+                            <strong className={item.isCredit ? 'is-credit' : undefined}>
+                              {item.isCredit ? '+ ' : ''}
+                              {item.raw?.type === 'order'
+                                ? formatRupee(item.amount)
+                                : formatConsultationAmount(item.amount)}
+                            </strong>
+                            <em className={`txn-status ${String(item.status || '').toLowerCase()}`}>
+                              {item.status}
+                            </em>
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </Fragment>
+                ))}
+                {hasMore ? (
+                  <button type="button" className="pay-more" onClick={loadMore} disabled={loadingMore}>
+                    {loadingMore ? 'Loading…' : 'Load more'}
+                  </button>
+                ) : null}
+              </>
+            )}
           </div>
-        ) : null}
-      </Modal>
+        </div>
+      </section>
     </AppShell>
   );
 }

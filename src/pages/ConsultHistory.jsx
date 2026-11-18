@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
 import AdvanceLoad from '../components/ui/AdvanceLoad';
@@ -23,25 +23,28 @@ const TABS = [
   { key: 'last_6_months', label: 'Last 6 Months' },
 ];
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 8;
+
+const historyRows = (res) => {
+  const list = res?.data?.results || res?.results || [];
+  return Array.isArray(list) ? list.map(mapAppointment) : [];
+};
+
+const historyTotal = (res) => {
+  const count = Number(res?.data?.count ?? res?.count);
+  return Number.isFinite(count) ? count : 0;
+};
+
+const historyHasNext = (res, pageNo) => {
+  if (res?.data?.next || res?.next) return true;
+  const count = historyTotal(res);
+  return count > 0 && pageNo * PAGE_SIZE < count;
+};
+
+const rowKey = (item) => String(item.consultationId || item.appointmentId || item.id || '');
 
 const HIDDEN_HISTORY_STATUSES = new Set(['testing', 'test', 'draft']);
 const PAST_STATUSES = ['completed', 'cancelled', 'missed', 'expired', 'no_show', 'noshow'];
-
-const STATUS_STYLE = {
-  confirmed: { background: '#eef4ff', color: '#1048b9' },
-  upcoming: { background: '#eef4ff', color: '#1048b9' },
-  booked: { background: '#eef4ff', color: '#1048b9' },
-  pending: { background: '#fff7ed', color: '#ea580c' },
-  cancelled: { background: '#fee2e2', color: '#ef4444' },
-  completed: { background: '#dcfce7', color: '#16a34a' },
-  missed: { background: '#f3f4f6', color: '#6b7280' },
-  expired: { background: '#f3f4f6', color: '#6b7280' },
-  no_show: { background: '#f3f4f6', color: '#6b7280' },
-  noshow: { background: '#f3f4f6', color: '#6b7280' },
-  reschedule: { background: '#fef3c7', color: '#b45309' },
-  rescheduled: { background: '#fef3c7', color: '#b45309' },
-};
 
 const weekdayFrom = (dateStr) => {
   const ymd = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(dateStr || ''));
@@ -65,34 +68,64 @@ export default function ConsultHistory() {
   const [debounced, setDebounced] = useState('');
   const [tab, setTab] = useState('all');
   const [history, setHistory] = useState([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(0);
-  const [reload, setReload] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const requestRef = useRef(0);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebounced(search.trim().toLowerCase()), 400);
     return () => clearTimeout(timer);
   }, [search]);
 
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      if (!(await requireAuth('Please login to view consultation history'))) return;
-      setLoading(true);
-      const res = await getConsultHistory({ period: tab });
-      if (!alive) return;
+  const loadPage = useCallback(async (pageNo, mode = 'replace') => {
+    if (!(await requireAuth('Please login to view consultation history'))) return;
+    const requestId = ++requestRef.current;
+    if (mode === 'append') setLoadingMore(true);
+    else setLoading(true);
+    try {
+      const res = await getConsultHistory({
+        period: tab,
+        page: pageNo,
+        page_size: PAGE_SIZE,
+      });
+      if (requestId !== requestRef.current) return;
       if (res?.success === false) {
-        setHistory([]);
-      } else {
-        const list = res?.data?.results || res?.results || [];
-        setHistory(Array.isArray(list) ? list.map(mapAppointment) : []);
+        if (mode !== 'append') {
+          setHistory([]);
+          setTotal(0);
+          setHasMore(false);
+        }
+        return;
       }
-      setLoading(false);
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [tab, reload]);
+      const mapped = historyRows(res);
+      setTotal(historyTotal(res));
+      setHistory((prev) => {
+        const base = mode === 'append' ? prev : [];
+        const seen = new Set(base.map(rowKey));
+        const next = mapped.filter((item) => {
+          const key = rowKey(item);
+          if (!key || seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+        return [...base, ...next];
+      });
+      setPage(pageNo);
+      setHasMore(historyHasNext(res, pageNo));
+    } finally {
+      if (requestId === requestRef.current) {
+        setLoading(false);
+        setLoadingMore(false);
+      }
+    }
+  }, [tab]);
+
+  useEffect(() => {
+    loadPage(1, 'replace');
+  }, [loadPage]);
 
   const filtered = useMemo(() => {
     // Hide internal / unfinished statuses from patient history (same as the app).
@@ -111,18 +144,6 @@ export default function ConsultHistory() {
       );
     });
   }, [history, debounced]);
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-
-  useEffect(() => {
-    setPage(0);
-  }, [tab, debounced]);
-
-  useEffect(() => {
-    if (page >= totalPages) setPage(Math.max(0, totalPages - 1));
-  }, [filtered.length, page, totalPages]);
-
-  const paged = filtered.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
 
   const openDetails = (item) => {
     const lookupId = resolveAppointmentLookupId({ rawData: item.raw, ...item });
@@ -147,91 +168,87 @@ export default function ConsultHistory() {
   return (
     <AppShell tab="consult">
       <section className="catalog-page history-page">
-        <div className="hx-bar">
-          <button type="button" className="text-back" onClick={() => navigate(-1)}>
-            ← Back
-          </button>
-          <div className="hx-bar__title">
-            <h1>Consultation History</h1>
-            <p>Track your medical journey</p>
-          </div>
-          <form
-            className="hx-bar__search"
-            onSubmit={(e) => {
-              e.preventDefault();
-              setDebounced(search.trim().toLowerCase());
-            }}
-          >
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search doctors..."
-              aria-label="Search doctors"
-            />
-            <button type="submit" className="cta">
-              Search
+        <header className="hx-head">
+          <div className="hx-head__top">
+            <button type="button" className="hx-back" onClick={() => navigate(-1)}>
+              ← Back
             </button>
-          </form>
-          <div className="hx-bar__chips">
-            {TABS.map((item) => (
-              <button
-                key={item.key}
-                type="button"
-                className={`chip ${tab === item.key ? 'on' : ''}`}
-                onClick={() => setTab(item.key)}
-              >
-                {item.label}
-              </button>
-            ))}
+            <div className="hx-head__title">
+              <h1>Consultation History</h1>
+              <p>{total > 0 ? `${history.length} of ${total} visits` : 'Your visits'}</p>
+            </div>
+            <button
+              type="button"
+              className="hx-refresh"
+              disabled={loading || loadingMore}
+              onClick={() => {
+                invalidateApiCache('customers/doctors/consultation-history/');
+                loadPage(1, 'replace');
+              }}
+            >
+              Refresh
+            </button>
           </div>
-          <button
-            type="button"
-            className="hx-bar__refresh"
-            disabled={loading}
-            onClick={() => {
-              invalidateApiCache('customers/doctors/consultation-history/');
-              setReload((n) => n + 1);
-            }}
-          >
-            Refresh
-          </button>
-        </div>
+          <div className="hx-head__tools">
+            <form
+              className="hx-search"
+              onSubmit={(e) => {
+                e.preventDefault();
+                setDebounced(search.trim().toLowerCase());
+              }}
+            >
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search doctor or status"
+                aria-label="Search doctors"
+              />
+            </form>
+            <div className="hx-tabs" role="tablist" aria-label="Time period">
+              {TABS.map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === item.key}
+                  className={tab === item.key ? 'is-on' : ''}
+                  onClick={() => setTab(item.key)}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </header>
 
         {loading && history.length === 0 ? (
           <AdvanceLoad variant="list" label="Loading consultations" />
         ) : filtered.length === 0 ? (
-          <div className="empty-copy">
-            <strong>{history.length === 0 ? 'No Appointments Yet' : 'Appointment Not Found'}</strong>
-            <p>
-              {history.length === 0
-                ? 'Your consultations will appear here.'
-                : 'Try another doctor name or clear filters.'}
-            </p>
-          </div>
+          <>
+            <div className="empty-copy">
+              <strong>{history.length === 0 ? 'No Appointments Yet' : 'Appointment Not Found'}</strong>
+              <p>
+                {history.length === 0
+                  ? 'Your consultations will appear here.'
+                  : 'Try another doctor name, or load the next page.'}
+              </p>
+            </div>
+            {hasMore ? (
+              <button
+                type="button"
+                className="hx-more"
+                disabled={loadingMore}
+                onClick={() => loadPage(page + 1, 'append')}
+              >
+                {loadingMore ? 'Loading…' : 'Load more'}
+              </button>
+            ) : null}
+          </>
         ) : (
           <>
-            {totalPages > 1 ? (
-              <div className="history-pager">
-                <button type="button" disabled={page <= 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>
-                  ‹
-                </button>
-                <span>
-                  Page {page + 1} of {totalPages}
-                </span>
-                <button
-                  type="button"
-                  disabled={page >= totalPages - 1}
-                  onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                >
-                  ›
-                </button>
-              </div>
-            ) : null}
-
             <div className="hx-list">
-            {paged.map((item) => {
+            {filtered.map((item) => {
               const status = String(item.status || '').toLowerCase();
-              const statusStyle = STATUS_STYLE[status] || { background: '#f3f4f6', color: '#000' };
               const showReschedule = canOfferReschedule(status, item.date, item.time, item);
               const showReceipt = Boolean(item.consultationId);
               const showBookAgain = !showReschedule && PAST_STATUSES.includes(status);
@@ -253,13 +270,13 @@ export default function ConsultHistory() {
                     <span className="hx-card__who">
                       <span className="hx-card__name">
                         <strong>{doctorName}</strong>
+                        <DietitianBadge doctor={item} />
                         {status ? (
-                          <em style={{ background: statusStyle.background, color: statusStyle.color }}>
+                          <em className={`hx-status hx-status--${status.replace(/_/g, '-')}`}>
                             {formatStatusLabel(status)}
                           </em>
                         ) : null}
                       </span>
-                      <DietitianBadge doctor={item} />
                       <small>{item.specialty || 'General Physician'}</small>
                     </span>
                     {when || timeLabel ? (
@@ -269,32 +286,40 @@ export default function ConsultHistory() {
                       </span>
                     ) : null}
                   </button>
-                  {showReceipt || showReschedule || showBookAgain ? (
-                    <div className="hx-card__actions">
-                      {showReceipt ? (
-                        <button
-                          type="button"
-                          className="ghost"
-                          onClick={() => navigate(`/profile/receipts/${item.consultationId}`)}
-                        >
-                          Receipt
-                        </button>
-                      ) : null}
-                      {showReschedule ? (
-                        <button type="button" className="cta" onClick={() => openSlots(item, { reschedule: true })}>
-                          {status === 'reschedule' ? 'Request Change' : 'Reschedule'}
-                        </button>
-                      ) : showBookAgain && item.doctorId ? (
-                        <button type="button" className="cta" onClick={() => openSlots(item)}>
-                          Book Again
-                        </button>
-                      ) : null}
-                    </div>
-                  ) : null}
+                  <div className="hx-card__actions">
+                    {showReceipt ? (
+                      <button
+                        type="button"
+                        className="ghost"
+                        onClick={() => navigate(`/profile/receipts/${item.consultationId}`)}
+                      >
+                        Receipt
+                      </button>
+                    ) : null}
+                    {showReschedule ? (
+                      <button type="button" className="cta" onClick={() => openSlots(item, { reschedule: true })}>
+                        {status === 'reschedule' ? 'Request Change' : 'Reschedule'}
+                      </button>
+                    ) : showBookAgain && item.doctorId ? (
+                      <button type="button" className="cta" onClick={() => openSlots(item)}>
+                        Book Again
+                      </button>
+                    ) : null}
+                  </div>
                 </article>
               );
             })}
             </div>
+            {hasMore ? (
+              <button
+                type="button"
+                className="hx-more"
+                disabled={loadingMore}
+                onClick={() => loadPage(page + 1, 'append')}
+              >
+                {loadingMore ? 'Loading…' : `Load more${total > history.length ? ` · ${total - history.length} left` : ''}`}
+              </button>
+            ) : null}
           </>
         )}
       </section>

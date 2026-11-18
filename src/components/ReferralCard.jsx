@@ -166,15 +166,15 @@ export default function ReferralCard() {
           variant="secondary"
           size="sm"
           onClick={copyLink}
-          icon={<Copy size={16} />}
+          leadingIcon={<Copy size={16} aria-hidden />}
         >
-          Copy Link
+          Copy link
         </Button>
         <Button
           variant="primary"
           size="sm"
           onClick={shareReferral}
-          icon={<Share2 size={16} />}
+          leadingIcon={<Share2 size={16} aria-hidden />}
         >
           Share
         </Button>

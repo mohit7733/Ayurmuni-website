@@ -29,7 +29,7 @@ export default function ReviewCard({
           <h3 className="am-review__name">{name || "Verified patient"}</h3>
           {date ? <p className="am-review__date">{date}</p> : null}
         </div>
-        <Rating value={rating} />
+        <Rating value={rating} stars />
       </header>
       {text ? <p className="am-review__text">{text}</p> : null}
       {shown.length ? (

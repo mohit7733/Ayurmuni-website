@@ -206,14 +206,6 @@ const MEAL_LABELS = {
   dinner: 'DINNER',
 };
 
-const MEAL_TIMES = {
-  morning: '07:00 AM',
-  breakfast: '08:30 AM',
-  midday: '11:00 AM',
-  lunch: '01:15 PM',
-  dinner: '07:45 PM',
-};
-
 /** API may send diet as strings OR { name, notes, quantity } objects. */
 export const normalizeDietFoodItem = (item) => {
   if (item == null) return null;
@@ -338,26 +330,33 @@ export const getDietPlanGallery = (item) => {
 
 export const resolveDietImage = (item) => getDietPlanCoverUrl(item) || '';
 
-/** Meal-level gallery from plan_json.*.diet_gallery */
-export const getMealGalleryUrl = (mealRaw) => {
-  if (!mealRaw || typeof mealRaw !== 'object') return '';
-
-  const gallery = Array.isArray(mealRaw?.diet_gallery)
-    ? mealRaw.diet_gallery
-    : Array.isArray(mealRaw?.gallery)
-      ? mealRaw.gallery
+const galleryUrlFromNode = (node) => {
+  if (!node || typeof node !== 'object') return '';
+  const gallery = Array.isArray(node.diet_gallery)
+    ? node.diet_gallery
+    : Array.isArray(node.gallery)
+      ? node.gallery
       : [];
-
-  const first = gallery.find((g) => galleryItemUrl(g));
-  const fromGallery = galleryItemUrl(first);
+  const fromGallery = galleryItemUrl(gallery.find((item) => galleryItemUrl(item)));
   if (fromGallery) return fromGallery;
-
   return String(
-    mealRaw?.image_url ||
-      mealRaw?.thumbnail_url ||
-      (typeof mealRaw?.image === 'string' ? mealRaw.image : '') ||
+    node.image_url ||
+      node.thumbnail_url ||
+      (typeof node.image === 'string' ? node.image : '') ||
       '',
   ).trim();
+};
+
+/** Meal-level gallery from plan_json.*.diet_gallery, including galleries on each food. */
+export const getMealGalleryUrl = (mealRaw) => {
+  const direct = galleryUrlFromNode(mealRaw);
+  if (direct) return direct;
+  const foods = Array.isArray(mealRaw?.diet) ? mealRaw.diet : [];
+  for (const food of foods) {
+    const url = galleryUrlFromNode(food);
+    if (url) return url;
+  }
+  return '';
 };
 
 export const resolveMealImage = (mealRaw) => getMealGalleryUrl(mealRaw) || '';
@@ -1154,26 +1153,47 @@ export const mapPlanJsonMeals = (
 
   return mealKeys.map(mealKey => {
     const raw = dayData[mealKey] || {};
+    const dietRows = Array.isArray(raw.diet) ? raw.diet : [];
     const dietItemDetails = normalizeDietFoodItems(raw.diet);
     const dietItems = dietItemDetails.map(item => item.label);
-    const steps = Array.isArray(raw.preparation_steps)
-      ? raw.preparation_steps.map(toSafeText).filter(Boolean)
-      : [];
+    const steps = [
+      ...(Array.isArray(raw.preparation_steps) ? raw.preparation_steps : []),
+      ...dietRows.flatMap((food) =>
+        Array.isArray(food?.preparation_steps) ? food.preparation_steps : [],
+      ),
+    ]
+      .map(toSafeText)
+      .filter(Boolean);
     const preparationVideos = resolveMealPreparationVideos(raw);
-    const nutrition = raw.nutrition || {};
-    const kcal = nutritionValue(nutrition, 'total_calories');
-    const carbs = nutritionValue(nutrition, 'carbs');
-    const protein = nutritionValue(nutrition, 'protein');
-    const fat = nutritionValue(nutrition, 'fat');
+    const fromMeal = {
+      kcal: nutritionValue(raw.nutrition, 'total_calories'),
+      carbs: nutritionValue(raw.nutrition, 'carbs'),
+      protein: nutritionValue(raw.nutrition, 'protein'),
+      fat: nutritionValue(raw.nutrition, 'fat'),
+    };
+    const fromFoods = dietRows.reduce(
+      (sum, food) => ({
+        kcal: sum.kcal + nutritionValue(food?.nutrition, 'total_calories'),
+        carbs: sum.carbs + nutritionValue(food?.nutrition, 'carbs'),
+        protein: sum.protein + nutritionValue(food?.nutrition, 'protein'),
+        fat: sum.fat + nutritionValue(food?.nutrition, 'fat'),
+      }),
+      { kcal: 0, carbs: 0, protein: 0, fat: 0 },
+    );
+    const useMealNutrition =
+      fromMeal.kcal > 0 || fromMeal.carbs > 0 || fromMeal.protein > 0 || fromMeal.fat > 0;
+    const nutrition = useMealNutrition ? fromMeal : fromFoods;
+    const { kcal, carbs, protein, fat } = nutrition;
     const done = isMealCompleted(progress, dayKey, mealKey);
     const mealImage = resolveMealImage(raw);
+    const time = String(raw.time || raw.meal_time || raw.timing || '').trim();
 
     return {
       id: `${dayKey}-${mealKey}`,
       dayKey,
       mealKey,
       type: MEAL_LABELS[mealKey] || mealKey.toUpperCase(),
-      time: MEAL_TIMES[mealKey] || '',
+      time,
       title:
         dietItemDetails[0]?.name ||
         dietItems[0] ||
@@ -1207,7 +1227,9 @@ export const mapPlanJsonMeals = (
 export const calculateDayGoalKcal = (plan, dayKey) => {
   const meals = mapPlanJsonMeals(plan, dayKey, []);
   const total = meals.reduce((sum, m) => sum + (m.kcal || 0), 0);
-  return total > 0 ? total : 2200;
+  if (total > 0) return total;
+  const average = Number(plan?.avg_daily_calories);
+  return Number.isFinite(average) && average > 0 ? average : 0;
 };
 
 export const calculateDietNutrition = (
@@ -1225,7 +1247,7 @@ export const calculateDietNutrition = (
   const goalKcal =
     (dayKey && plan ? calculateDayGoalKcal(plan, dayKey) : 0) ||
     meals.reduce((sum, m) => sum + (m.kcal || 0), 0) ||
-    2200;
+    (Number(plan?.avg_daily_calories) > 0 ? Number(plan.avg_daily_calories) : 0);
 
   const burnedKcal = Number(extras?.burnedKcal ?? 0);
   const waterMl = Number(extras?.waterMl ?? 0);

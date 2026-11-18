@@ -72,14 +72,14 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: var(--am-space-3);
-  margin-top: var(--am-space-6);
+  margin-top: 24px;
 }
 
 .ab-hero__art {
   display: block;
   width: min(1080px, 100%);
   height: auto;
-  margin-top: var(--am-space-6);
+  margin-top: 24px;
 }
 
 /* ---------- Services for you ---------- */
@@ -171,7 +171,7 @@
   flex: 1;
   flex-direction: column;
   gap: var(--am-space-2);
-  padding: var(--am-space-5) var(--am-space-5) var(--am-space-6);
+  padding: var(--am-space-5) var(--am-space-5) 24px;
 }
 
 .ab-service__index {
@@ -378,7 +378,7 @@
 @media (min-width: 1080px) {
   .ab-services__row {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--am-space-6);
+    gap: 24px;
   }
 }
 

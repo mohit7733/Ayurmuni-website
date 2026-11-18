@@ -280,6 +280,7 @@
 @media (min-width: 1024px) {
   .hm-page .hm-panel.cs-promises {
     padding: var(--am-space-5) var(--am-space-8);
+    margin: 0 0 16px 0 ;
   }
 
   .cs-promises__label {

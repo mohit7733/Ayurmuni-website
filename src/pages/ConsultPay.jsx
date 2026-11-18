@@ -30,6 +30,7 @@ import {
   resolveDoctorSpecializations,
 } from "../consult/doctors";
 import { formatDoctorDisplayName } from "../consult/appointmentUtils";
+import { formatRecordType, isImageRecord } from "../services/patientService";
 import {
   getConsultBenefit,
   consultationCheckout,
@@ -158,6 +159,7 @@ export default function ConsultPay() {
   const [feeQuoteLoading, setFeeQuoteLoading] = useState(true);
   const [paying, setPaying] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [recordPreview, setRecordPreview] = useState(null);
   const startedRef = useRef(false);
   const { gateways, gateway, setGateway } = usePaymentGateways();
   const [planSheetOpen, setPlanSheetOpen] = useState(false);
@@ -730,6 +732,8 @@ export default function ConsultPay() {
             backTo={`/consult/doctors/${doctorId}/slots`}
           />
           <EmptyState
+            className="bk-pay-empty"
+            compact
             title={T.noSlotTitle}
             description={T.noSlotText}
             action={
@@ -799,7 +803,7 @@ export default function ConsultPay() {
               </div>
             </div>
 
-            {patients.length > 0 ? (
+            {/* {patients.length > 0 ? (
               <section className="bk-card" aria-labelledby="bk-patient-title">
                 <div className="bk-card__head">
                   <h2 id="bk-patient-title">{T.patientTitle}</h2>
@@ -838,7 +842,7 @@ export default function ConsultPay() {
                   })}
                 </div>
               </section>
-            ) : null}
+            ) : null} */}
 
             {booking.concern ? (
               <section className="bk-card" aria-labelledby="bk-pay-concern">
@@ -855,28 +859,33 @@ export default function ConsultPay() {
                   <h2 id="bk-pay-records">{T.attachedRecords}</h2>
                 </div>
                 <ul className="bk-record-list">
-                  {records.map((item) => (
-                    <li key={item.id} className="bk-record">
-                      <span className="bk-record__copy">
-                        <strong>
-                          {item.description || item.title || "Record"}
-                        </strong>
-                      </span>
-                    </li>
-                  ))}
+                  {records.map((item) => {
+                    const title = item.description || item.title || item.file_name || "Record";
+                    const fileUrl = item.file_url || item.thumbnail_url || "";
+                    return (
+                      <li key={item.id} className="bk-record">
+                        <span className="bk-record__copy">
+                          <strong title={title}>{title}</strong>
+                          <small>{formatRecordType(item.medical_record_type)}</small>
+                        </span>
+                        {fileUrl ? (
+                          <button
+                            type="button"
+                            className="bk-record__view"
+                            onClick={() => {
+                              if (isImageRecord(item)) setRecordPreview(item);
+                              else window.open(fileUrl, "_blank", "noopener,noreferrer");
+                            }}
+                          >
+                            View
+                          </button>
+                        ) : null}
+                      </li>
+                    );
+                  })}
                 </ul>
               </section>
             ) : null}
-          </div>
-
-          <aside className="bk-aside">
-            <div className="bk-card bk-payment-hero">
-              <div className="bk-payment-hero__head">
-                <span className="bk-payment-tag">Total payable</span>
-                <strong>{priceLoading ? T.calculating : money(totalAmount)}</strong>
-              </div>
-              <p>{planIsFree ? `Paid via ${selectedPlan?.name || "plan"}` : "Secure payment at checkout"}</p>
-            </div>
 
             {activePlans.length > 0 ? (
               selectedPlan ? (
@@ -948,6 +957,16 @@ export default function ConsultPay() {
                 />
               </div>
             ) : null}
+          </div>
+
+          <aside className="bk-aside">
+            <div className="bk-card bk-payment-hero">
+              <div className="bk-payment-hero__head">
+                <span className="bk-payment-tag">Total payable</span>
+                <strong>{priceLoading ? T.calculating : money(totalAmount)}</strong>
+              </div>
+              <p>{planIsFree ? `Paid via ${selectedPlan?.name || "plan"}` : "Secure payment at checkout"}</p>
+            </div>
 
             <section className="bk-card" aria-labelledby="bk-bill-title">
               <div className="bk-card__head">
@@ -1057,6 +1076,18 @@ export default function ConsultPay() {
         }}
         onClose={() => setPlanSheetOpen(false)}
       />
+
+      {recordPreview ? (
+        <div className="web-modal" role="dialog" onClick={() => setRecordPreview(null)}>
+          <div className="web-modal-card record-preview" onClick={(event) => event.stopPropagation()}>
+            <h3>{recordPreview.description || recordPreview.title || "Record"}</h3>
+            <img src={recordPreview.file_url || recordPreview.thumbnail_url} alt="" />
+            <button type="button" className="ghost" onClick={() => setRecordPreview(null)}>
+              Close
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       {verifying ? (
         <div

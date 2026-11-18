@@ -137,3 +137,19 @@ export const getAverageRating = (reviews) => {
   return Math.round((total / reviews.length) * 10) / 10;
 };
 
+export const formatReviewDate = (value) => {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+};
+
+export const getRatingBreakdown = (reviews) => {
+  const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  (Array.isArray(reviews) ? reviews : []).forEach((item) => {
+    const star = Math.round(Number(item?.rating) || 0);
+    if (counts[star] != null) counts[star] += 1;
+  });
+  return [5, 4, 3, 2, 1].map((star) => ({ star, count: counts[star] }));
+};
+

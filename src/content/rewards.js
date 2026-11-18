@@ -4,9 +4,9 @@ export const REWARDS_COPY = {
   loading: 'Loading rewards…',
   filtersLabel: 'Reward type',
   filters: [
-    { key: 'all', label: 'All' },
-    { key: 'referral', label: 'Referral' },
-    { key: 'reward', label: 'Reward' },
+    { key: 'all', mark: 'All', label: 'All rewards', hint: 'Every coupon' },
+    { key: 'referral', mark: 'Ref', label: 'Referral', hint: 'From invites' },
+    { key: 'reward', mark: 'Rwd', label: 'Reward', hint: 'Earned' },
   ],
   highlight: (n) => `${n} New Reward${n === 1 ? '' : 's'}`,
   emptyTitle: 'No rewards yet',

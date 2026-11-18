@@ -180,7 +180,7 @@ export const PROFILE_EXPLORE = [
   { title: 'Medicines', subtitle: 'Ayurvedic care', to: '/medicines', icon: 'pill' },
   { title: 'Products', subtitle: 'Wellness picks', to: '/products', icon: 'bag' },
   { title: 'Yoga', subtitle: 'Sessions', to: '/yoga', icon: 'yoga' },
-  { title: 'Mentor', subtitle: 'Consult a guide', to: '/mentor', icon: 'mentor' },
+  // { title: 'Mentor', subtitle: 'Consult a guide', to: '/mentor', icon: 'mentor' },
   { title: 'Diet Plan', subtitle: 'Personalized', to: '/diet', icon: 'diet' },
   { title: 'Prakriti', subtitle: 'Know your type', to: '/prakriti-profile', icon: 'leaf' },
 ];

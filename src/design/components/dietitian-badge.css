@@ -18,5 +18,24 @@
   position: absolute;
   left: 0;
   bottom: 10px;
-  z-index: 99;
+  z-index: 9;
+}
+.site-user-menu__head{
+  justify-content: space-between;
+}
+.site-account-level {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #0d614e;
+  color: #fff;
+}
+.site-account-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 }

@@ -60,8 +60,8 @@ export default function WeeklyMeal() {
 
   const plan = planDetail || selectedSummary || location.state?.item;
   const hasPlan = Boolean(resolvedId && plan);
-  const eaten = hasPlan ? Number(nutrition.eatenKcal) || 0 : 1840;
-  const goal = hasPlan ? Number(nutrition.goalKcal) || 2200 : 2200;
+  const eaten = hasPlan ? Number(nutrition.eatenKcal) || 0 : 0;
+  const goal = hasPlan ? Number(nutrition.goalKcal) || 0 : 0;
   const percent = goal > 0 ? Math.min(100, Math.round((eaten / goal) * 100)) : 0;
 
   const macros = hasPlan
@@ -69,12 +69,12 @@ export default function WeeklyMeal() {
         {
           label: 'Protein',
           value: `${Math.round(nutrition.proteinG || 0)}g`,
-          total: `${Math.round(meals.reduce((sum, item) => sum + (Number(item.protein) || 0), 0) || 150)}g`,
+          total: `${Math.round(meals.reduce((sum, item) => sum + (Number(item.protein) || 0), 0))}g`,
         },
         {
           label: 'Carbs',
           value: `${Math.round(nutrition.carbsG || 0)}g`,
-          total: `${Math.round(meals.reduce((sum, item) => sum + (Number(item.carbs) || 0), 0) || 250)}g`,
+          total: `${Math.round(meals.reduce((sum, item) => sum + (Number(item.carbs) || 0), 0))}g`,
         },
       ]
     : DEMO_MACROS;

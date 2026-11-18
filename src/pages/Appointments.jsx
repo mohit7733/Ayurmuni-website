@@ -463,60 +463,80 @@ export default function Appointments() {
         />
 
         <div className="ap-layout">
-          <aside className="ap-side" aria-label="Filter appointments">
+          <aside className="st-cat-col ap-side" aria-label="Filter appointments">
+            <p className="st-cat-col__eyebrow">Filter</p>
+            <h3 id="ap-filter-title">Appointments</h3>
             {!upcomingOnly ? (
               <div className="ap-side__group">
                 <p className="ap-side__label" id="ap-when-label">When</p>
-                <div className="ap-side__list" role="tablist" aria-labelledby="ap-when-label">
+                <ul className="st-cat-filter" role="tablist" aria-labelledby="ap-when-label">
                   {[
                     { id: "upcoming", label: "Upcoming" },
                     { id: "past", label: "Past" },
                   ].map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      role="tab"
-                      aria-selected={tab === item.id}
-                      className={`ap-side__opt${tab === item.id ? " is-on" : ""}`}
-                      onClick={() => handleTabChange(item.id)}
-                    >
-                      {item.label}
-                    </button>
+                    <li key={item.id}>
+                      <button
+                        type="button"
+                        role="tab"
+                        aria-selected={tab === item.id}
+                        className={tab === item.id ? "is-on" : ""}
+                        onClick={() => handleTabChange(item.id)}
+                      >
+                        <span className="st-cat-filter__mark" aria-hidden>
+                          {item.label.charAt(0)}
+                        </span>
+                        <span className="st-cat-filter__copy">
+                          <strong>{item.label}</strong>
+                        </span>
+                      </button>
+                    </li>
                   ))}
-                </div>
+                </ul>
               </div>
             ) : null}
             <div className="ap-side__group">
               <p className="ap-side__label" id="ap-visit-label">Visit</p>
-              <div className="ap-side__list" role="group" aria-labelledby="ap-visit-label">
+              <ul className="st-cat-filter" role="group" aria-labelledby="ap-visit-label">
                 {FOLLOW_UP_FILTERS.map((item) => (
-                  <button
-                    key={item.key}
-                    type="button"
-                    aria-pressed={followUpFilter === item.key}
-                    className={`ap-side__opt${followUpFilter === item.key ? " is-on" : ""}`}
-                    onClick={() => setFollowUpFilter(item.key)}
-                  >
-                    {item.label}
-                  </button>
+                  <li key={item.key}>
+                    <button
+                      type="button"
+                      aria-pressed={followUpFilter === item.key}
+                      className={followUpFilter === item.key ? "is-on" : ""}
+                      onClick={() => setFollowUpFilter(item.key)}
+                    >
+                      <span className="st-cat-filter__mark" aria-hidden>
+                        {item.label.charAt(0)}
+                      </span>
+                      <span className="st-cat-filter__copy">
+                        <strong>{item.label}</strong>
+                      </span>
+                    </button>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
             <div className="ap-side__group">
               <p className="ap-side__label" id="ap-status-label">Status</p>
-              <div className="ap-side__list" role="group" aria-labelledby="ap-status-label">
+              <ul className="st-cat-filter" role="group" aria-labelledby="ap-status-label">
                 {statusChips.map((item) => (
-                  <button
-                    key={item.key}
-                    type="button"
-                    aria-pressed={statusFilter === item.key}
-                    className={`ap-side__opt${statusFilter === item.key ? " is-on" : ""}`}
-                    onClick={() => setStatusFilter(item.key)}
-                  >
-                    {item.label}
-                  </button>
+                  <li key={item.key}>
+                    <button
+                      type="button"
+                      aria-pressed={statusFilter === item.key}
+                      className={statusFilter === item.key ? "is-on" : ""}
+                      onClick={() => setStatusFilter(item.key)}
+                    >
+                      <span className="st-cat-filter__mark" aria-hidden>
+                        {item.label.charAt(0)}
+                      </span>
+                      <span className="st-cat-filter__copy">
+                        <strong>{item.label}</strong>
+                      </span>
+                    </button>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
           </aside>
           <div className="ap-layout__main">
@@ -726,7 +746,7 @@ export default function Appointments() {
         {!loading && hasMore && visible.length > 0 ? (
           <button
             type="button"
-            className="ghost"
+            className="ap-more"
             disabled={loadingMore}
             onClick={() => loadPage(page + 1, "append")}
           >

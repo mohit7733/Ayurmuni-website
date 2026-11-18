@@ -4,7 +4,7 @@ import { ChevronRight, Leaf, Salad } from 'lucide-react';
 import dietCoverImg from '/images/login/14.webp';
 import AppShell from '../components/AppShell';
 import PageHeader from '../components/PageHeader';
-import { Badge, Button, EmptyState, Tabs } from '../components/ui';
+import { Badge, Button, EmptyState } from '../components/ui';
 import { formatRupee } from '../home/catalog';
 import { requireAuth } from '../services/guestAuth';
 import { getMyDietPlans } from '../services/dietService';
@@ -15,10 +15,25 @@ import {
 } from '../diet/utils';
 import '../design/pages/orders.css';
 
-const TABS = [
-  { id: 'active', label: 'Active' },
-  { id: 'purchased', label: 'Purchased' },
+const STATUS_FILTERS = [
+  { id: 'all', mark: 'All', label: 'All diets', hint: 'Every plan' },
+  { id: 'active', mark: 'On', label: 'Active', hint: 'Following now' },
+  { id: 'purchased', mark: 'Buy', label: 'Purchased', hint: 'Plans you bought' },
+  { id: 'paused', mark: 'Pa', label: 'Paused', hint: 'On hold' },
+  { id: 'in_progress', mark: 'In', label: 'In progress', hint: 'Started' },
+  { id: 'completed', mark: 'Do', label: 'Completed', hint: 'Finished' },
+  { id: 'stopped', mark: 'St', label: 'Stopped', hint: 'Ended' },
 ];
+
+const EMPTY_COPY = {
+  all: ['No diet plans yet', 'Start a plan and it will show up here.'],
+  active: ['No diet is active right now', 'Start a plan and it will show up here.'],
+  purchased: ['No purchased diet plans yet', 'Paid plans you buy will be listed here.'],
+  paused: ['No paused diets', 'Plans you pause will be listed here.'],
+  in_progress: ['No diets in progress', 'A plan you have started will be listed here.'],
+  completed: ['No completed diets', 'Finished plans will be listed here.'],
+  stopped: ['No stopped diets', 'Plans you stop will be listed here.'],
+};
 
 const durationLabel = (plan) => {
   if (plan?.duration) return String(plan.duration);
@@ -30,7 +45,7 @@ const priceLabel = (plan) =>
   plan?.is_paid === false || Number(plan?.price) === 0 ? 'Free' : formatRupee(plan?.price);
 
 const statusTone = (status) => {
-  if (status === 'active') return 'success';
+  if (status === 'active' || status === 'in_progress') return 'success';
   if (status === 'paused') return 'warning';
   if (status === 'completed') return 'info';
   return 'neutral';
@@ -38,7 +53,7 @@ const statusTone = (status) => {
 
 export default function MyDiets() {
   const navigate = useNavigate();
-  const [tab, setTab] = useState('active');
+  const [status, setStatus] = useState('active');
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -48,14 +63,12 @@ export default function MyDiets() {
     (async () => {
       if (!(await requireAuth('Please login to view your diets'))) return;
       try {
-        const params =
-          tab === 'purchased'
-            ? { page: 1, page_size: 40, is_purchased: 'true' }
-            : { page: 1, page_size: 40, patient_assignment_status: 'active' };
+        const params = { page: 1, page_size: 40 };
+        if (status === 'purchased') params.is_purchased = 'true';
+        else if (status !== 'all') params.patient_assignment_status = status;
         const res = await getMyDietPlans(params);
         if (!alive) return;
-        const list = res?.success === false ? [] : normalizeDietPlanList(res);
-        setPlans(tab === 'active' ? list.filter((plan) => getDietListStatus(plan) === 'active') : list);
+        setPlans(res?.success === false ? [] : normalizeDietPlanList(res));
       } catch {
         if (alive) setPlans([]);
       } finally {
@@ -65,20 +78,44 @@ export default function MyDiets() {
     return () => {
       alive = false;
     };
-  }, [tab]);
+  }, [status]);
 
   return (
     <AppShell tab="profile">
-      <section className="or-page or-page--history">
+      <section className="or-page or-page--history md-page">
         <PageHeader
           title="Your diets"
-          subtitle="The plan you are following, and the plans you have already bought."
+          subtitle="Plans grouped by where you are with them."
           backTo="/profile"
           backLabel="Profile"
         />
 
-        <Tabs label="Diet plans" value={tab} onChange={setTab} items={TABS} />
-
+        <div className="md-layout">
+          <aside className="st-cat-col md-filter" aria-labelledby="md-filter-title">
+            <p className="st-cat-col__eyebrow">Filter</p>
+            <h3 id="md-filter-title">Diet status</h3>
+            <ul className="st-cat-filter">
+              {STATUS_FILTERS.map((item) => (
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    aria-pressed={status === item.id}
+                    className={status === item.id ? 'is-on' : ''}
+                    onClick={() => setStatus(item.id)}
+                  >
+                    <span className="st-cat-filter__mark" aria-hidden>
+                      {item.mark}
+                    </span>
+                    <span className="st-cat-filter__copy">
+                      <strong>{item.label}</strong>
+                      <em>{item.hint}</em>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </aside>
+          <div className="md-main">
         {loading ? (
           <p className="or-row__meta" role="status">
             Loading diets…
@@ -86,12 +123,8 @@ export default function MyDiets() {
         ) : plans.length === 0 ? (
           <EmptyState
             icon={<Salad size={28} />}
-            title={tab === 'active' ? 'No diet is active right now' : 'No purchased diet plans yet'}
-            description={
-              tab === 'active'
-                ? 'Start a plan and it will show up here.'
-                : 'Paid plans you buy will be listed in this tab.'
-            }
+            title={EMPTY_COPY[status][0]}
+            description={EMPTY_COPY[status][1]}
             action={
               <Button onClick={() => navigate('/diet')}>Browse diet plans</Button>
             }
@@ -99,7 +132,7 @@ export default function MyDiets() {
         ) : (
           <div className="or-list">
             {plans.map((plan) => {
-              const status = getDietListStatus(plan);
+              const planStatus = getDietListStatus(plan);
               const cover = getDietPlanCoverUrl(plan) || dietCoverImg;
               const routeId = String(plan.diet_plan_id || plan.id || '').trim();
               const meta = [durationLabel(plan), plan.prakriti, priceLabel(plan)].filter(Boolean);
@@ -120,8 +153,8 @@ export default function MyDiets() {
                     {meta.length ? <p className="or-row__meta or-row__meta--line">{meta.map((item) => <span key={item}>{item}</span>)}</p> : null}
                   </div>
                   <div className="or-row__aside">
-                    {status && status !== 'none' ? (
-                      <Badge tone={statusTone(status)}>{status.replace(/_/g, ' ')}</Badge>
+                    {planStatus && planStatus !== 'none' ? (
+                      <Badge tone={statusTone(planStatus)}>{planStatus.replace(/_/g, ' ')}</Badge>
                     ) : null}
                   </div>
                   <ChevronRight className="or-row__chev" size={18} aria-hidden />
@@ -130,6 +163,8 @@ export default function MyDiets() {
             })}
           </div>
         )}
+          </div>
+        </div>
       </section>
     </AppShell>
   );

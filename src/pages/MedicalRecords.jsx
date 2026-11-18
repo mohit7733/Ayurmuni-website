@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Search, Upload } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import PageHeader from '../components/PageHeader';
 import AdvanceLoad from '../components/ui/AdvanceLoad';
 import { requireAuth } from '../services/guestAuth';
 import { showSuccessToast } from '../config/key';
@@ -15,11 +16,12 @@ import {
   isImageRecord,
   listMedicalRecords,
 } from '../services/patientService';
+import '../design/pages/records.css';
 
 const TABS = [
-  { key: 'All Records', type: null, label: 'All' },
-  { key: 'Prescriptions', type: 'prescription', label: 'Prescriptions' },
-  { key: 'Lab Reports', type: 'lab_report', label: 'Lab Reports' },
+  { key: 'All Records', type: null, mark: 'All', label: 'All records', hint: 'Every file' },
+  { key: 'Prescriptions', type: 'prescription', mark: 'Rx', label: 'Prescriptions', hint: 'Doctor notes' },
+  { key: 'Lab Reports', type: 'lab_report', mark: 'Lab', label: 'Lab reports', hint: 'Test results' },
 ];
 
 const RECORD_TYPES = [
@@ -28,7 +30,7 @@ const RECORD_TYPES = [
 ];
 
 export default function MedicalRecords() {
-  const navigate = useNavigate();
+  const fileRef = useRef(null);
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -162,112 +164,134 @@ export default function MedicalRecords() {
   return (
     <AppShell tab="profile">
       <section className="catalog-page records-page">
-        <header className="catalog-head">
-          <div>
-            <button type="button" className="text-back" onClick={() => navigate(-1)}>
-              ← Back
+        <PageHeader
+          title="Medical Records"
+          subtitle="Prescriptions and lab reports, kept in one place."
+          backTo="/profile"
+          backLabel="Profile"
+          actions={
+            <button
+              type="button"
+              className="rc-upload"
+              disabled={uploading}
+              onClick={() => fileRef.current?.click()}
+            >
+              <Upload size={16} aria-hidden />
+              {uploading ? 'Uploading…' : 'Upload'}
             </button>
-            <h1>Medical Records</h1>
-            <p>Your health documents in one place</p>
-          </div>
-        </header>
-
-        <form
-          className="search-form"
-          onSubmit={(e) => {
-            e.preventDefault();
-            setDebounced(search.trim());
+          }
+        />
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*,application/pdf"
+          hidden
+          disabled={uploading}
+          onChange={(e) => {
+            pickFile(e.target.files);
+            e.target.value = '';
           }}
-        >
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by title or type…"
-          />
-          <button type="submit" className="cta">
-            Search
-          </button>
-        </form>
+        />
 
-        <div className="diet-chips">
-          {TABS.map((tab) => {
-            const count = tab.type == null ? counts.all : counts[tab.type];
-            return (
-              <button
-                key={tab.key}
-                type="button"
-                className={`chip ${activeTab === tab.key ? 'on' : ''}`}
-                onClick={() => setActiveTab(tab.key)}
-              >
-                {tab.label} · {count}
-              </button>
-            );
-          })}
-        </div>
+        <div className="rc-layout">
+          <aside className="st-cat-col rc-filter" aria-labelledby="rc-filter-title">
+            <p className="st-cat-col__eyebrow">Filter</p>
+            <h3 id="rc-filter-title">Records</h3>
+            <ul className="st-cat-filter">
+              {TABS.map((tab) => {
+                const count = tab.type == null ? counts.all : counts[tab.type];
+                return (
+                  <li key={tab.key}>
+                    <button
+                      type="button"
+                      aria-pressed={activeTab === tab.key}
+                      className={activeTab === tab.key ? 'is-on' : ''}
+                      onClick={() => setActiveTab(tab.key)}
+                    >
+                      <span className="st-cat-filter__mark" aria-hidden>
+                        {tab.mark}
+                      </span>
+                      <span className="st-cat-filter__copy">
+                        <strong>{tab.label}</strong>
+                        <em>
+                          {tab.hint} · {count}
+                        </em>
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </aside>
 
-        <label className="upload-drop record-upload">
-          <strong>{uploading ? 'Uploading…' : 'Upload medical record'}</strong>
-          <small>Prescription, lab report · PDF or image</small>
-          <input
-            type="file"
-            accept="image/*,application/pdf"
-            hidden
-            disabled={uploading}
-            onChange={(e) => {
-              pickFile(e.target.files);
-              e.target.value = '';
-            }}
-          />
-        </label>
+          <div className="rc-main">
+            <form
+              className="rc-search"
+              onSubmit={(e) => {
+                e.preventDefault();
+                setDebounced(search.trim());
+              }}
+            >
+              <Search size={16} aria-hidden />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by title or type"
+                aria-label="Search records"
+              />
+            </form>
 
-        <div className="home-section-head">
-          <h2>Your documents</h2>
-          <span className="muted">
-            {filtered.length} {filtered.length === 1 ? 'file' : 'files'}
-          </span>
-        </div>
-
-        {loading && records.length === 0 ? (
-          <AdvanceLoad variant="list" label="Loading records" />
-        ) : filtered.length === 0 ? (
-          <div className="empty-copy">
-            <strong>No records yet</strong>
-            <p>Upload a prescription or lab report to keep it handy.</p>
-          </div>
-        ) : (
-          filtered.map((item) => {
-            const title = item?.title || item?.description || item?.file_name || 'Medical record';
-            const typeLabel = formatRecordType(item?.medical_record_type);
-            const dateLabel = formatRecordDate(item?.created_at || item?.uploaded_at || item?.updated_at);
-            const thumb = item?.file_url || item?.thumbnail_url || '';
-            const image = isImageRecord(item);
-            return (
-              <div key={item.id} className="record-row">
-                <button type="button" className="record-main" onClick={() => openPreview(item)}>
-                  {image && thumb ? (
-                    <img src={thumb} alt="" />
-                  ) : (
-                    <span className="record-file">{String(item.file_type || 'FILE').toUpperCase()}</span>
-                  )}
-                  <div>
-                    <strong>{title}</strong>
-                    <small>
-                      {typeLabel}
-                      {item.file_type ? ` · ${String(item.file_type).toUpperCase()}` : ''}
-                      {dateLabel ? ` · ${dateLabel}` : ''}
-                    </small>
-                  </div>
-                </button>
-                <button type="button" className="ghost" onClick={() => openPreview(item)}>
-                  View
-                </button>
-                <button type="button" className="ghost" onClick={() => setDeleteTarget(item)}>
-                  Delete
-                </button>
+            {loading && records.length === 0 ? (
+              <AdvanceLoad variant="list" label="Loading records" />
+            ) : filtered.length === 0 ? (
+              <div className="empty-copy rc-empty">
+                <strong>{debounced ? 'No matching records' : 'No records yet'}</strong>
+                <p>
+                  {debounced
+                    ? 'Try another title or type.'
+                    : 'Upload a prescription or lab report to keep it handy.'}
+                </p>
               </div>
-            );
-          })
-        )}
+            ) : (
+              <div className="rc-grid">
+                {filtered.map((item) => {
+                  const title = item?.title || item?.description || item?.file_name || 'Medical record';
+                  const typeLabel = formatRecordType(item?.medical_record_type);
+                  const dateLabel = formatRecordDate(item?.created_at || item?.uploaded_at || item?.updated_at);
+                  const thumb = item?.file_url || item?.thumbnail_url || '';
+                  const image = isImageRecord(item);
+                  return (
+                    <article key={item.id} className="rc-card">
+                      <button type="button" className="rc-card__open" onClick={() => openPreview(item)}>
+                        {image && thumb ? (
+                          <img src={thumb} alt="" />
+                        ) : (
+                          <span className="rc-card__file">{String(item.file_type || 'FILE').slice(0, 4).toUpperCase()}</span>
+                        )}
+                        <span className="rc-card__body">
+                          <strong>{title}</strong>
+                          <em>{typeLabel}</em>
+                          <small>
+                            {item.file_type ? String(item.file_type).toUpperCase() : 'File'}
+                            {dateLabel ? ` · ${dateLabel}` : ''}
+                          </small>
+                        </span>
+                      </button>
+                      <div className="rc-card__actions">
+                        <button type="button" onClick={() => openPreview(item)}>
+                          View
+                        </button>
+                        <button type="button" className="is-danger" onClick={() => setDeleteTarget(item)}>
+                          Delete
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
       </section>
 
       {pickedFile ? (

@@ -58,7 +58,9 @@ import {
   resolveSocialAccounts,
 } from '../consult/doctors';
 import {
+  collectReviewImageUrls,
   extractReviewsList,
+  formatReviewDate,
   isReviewVideoUrl,
   normalizeReviewsForDisplay,
 } from '../utils/reviewUtils';
@@ -67,7 +69,7 @@ import {
   EmptyState,
   ErrorState,
   FavButton,
-  Rating,
+  RatingSummary,
   ReviewCard,
 } from '../components/ui';
 import { DOCTOR_PROFILE_COPY as T } from '../content/doctorProfile';
@@ -180,6 +182,7 @@ export default function DoctorProfile() {
   const experienceLabel = doctorExperience(doctor);
   const ratingValue = doctorRating(doctor);
   const reviewCount = Number(doctor?.total_reviews || reviews.length || 0);
+  const reviewGallery = useMemo(() => collectReviewImageUrls(reviews), [reviews]);
   const isVerified = Boolean(doctor?.is_verified);
   const hasAvailability = Boolean(doctor?.has_availability);
   const slotsCount = Number(doctor?.available_slots_count || 0);
@@ -474,19 +477,33 @@ export default function DoctorProfile() {
             }
           >
             {ratingValue ? (
-              <div className="dp-score">
-                <strong>{ratingValue}</strong>
-                <div>
-                  <Rating value={ratingValue} size="md" />
-                  <small>
-                    {reviewCount} {T.reviews.toLowerCase()}
-                  </small>
-                </div>
-              </div>
+              <RatingSummary
+                average={ratingValue}
+                count={reviewCount}
+                reviews={reviews}
+                extra={
+                  reviewGallery.length > 0 ? (
+                    <button
+                      type="button"
+                      className="am-rating-summary__media"
+                      onClick={() =>
+                        navigate('/reviews/gallery', {
+                          state: { images: reviewGallery, selectedIndex: 0 },
+                        })
+                      }
+                    >
+                      {reviewGallery.slice(0, 3).map((url) => (
+                        <img key={url} src={url} alt="" />
+                      ))}
+                      <span>{reviewGallery.length}</span>
+                    </button>
+                  ) : null
+                }
+              />
             ) : null}
             {reviews.length > 0 ? (
               <div className="dp-reviews">
-                {reviews.slice(0, 3).map((item, index) => {
+                {reviews.slice(0, 4).map((item, index) => {
                   const media = (item.image_urls || []).map((url) => ({
                     url,
                     type: isReviewVideoUrl(url) ? 'video' : 'image',
@@ -496,8 +513,10 @@ export default function DoctorProfile() {
                       key={item.id || index}
                       name={item.patient_name || 'Patient'}
                       rating={item.rating}
+                      date={formatReviewDate(item.created_at || item.updated_at || item.date)}
                       text={item.comment || item.review || item.message || ''}
                       media={media}
+                      maxMedia={2}
                       onMediaClick={(mediaIndex) =>
                         navigate('/reviews/gallery', {
                           state: { images: item.image_urls, selectedIndex: mediaIndex },
