@@ -6,6 +6,7 @@ import {
   Bookmark,
   CalendarCheck,
   Camera,
+  ImagePlus,
   ChevronRight,
   CircleHelp,
   ClipboardList,
@@ -36,6 +37,7 @@ import {
   Utensils,
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import ProfileCamera, { wantsNativeCamera } from '../components/ProfileCamera';
 import PageHeader from '../components/PageHeader';
 import { Utils } from '../common/utils';
 import { showSuccessToast } from '../config/key';
@@ -98,7 +100,9 @@ export default function Profile() {
   const [photoViewer, setPhotoViewer] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
   const [photoBusy, setPhotoBusy] = useState(false);
+  const [cameraOpen, setCameraOpen] = useState(false);
   const fileRef = useRef(null);
+  const cameraFileRef = useRef(null);
   const { stats: dashboardStats } = useProfileDashboardStats(level === 'full');
 
   useEffect(() => {
@@ -156,9 +160,7 @@ export default function Profile() {
     }
   };
 
-  const onPickPhoto = async (event) => {
-    const file = event.target.files?.[0];
-    event.target.value = '';
+  const uploadPickedFile = async (file) => {
     if (!file || photoBusy) return;
     setPhotoBusy(true);
     try {
@@ -177,6 +179,12 @@ export default function Profile() {
     }
   };
 
+  const onPickPhoto = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (file) await uploadPickedFile(file);
+  };
+
   const confirmRemovePhoto = async () => {
     setPhotoBusy(true);
     try {
@@ -191,7 +199,10 @@ export default function Profile() {
     setPhotoSheet(false);
     if (key === 'view') setPhotoViewer(true);
     else if (key === 'change') fileRef.current?.click();
-    else if (key === 'remove') setRemoveOpen(true);
+    else if (key === 'camera') {
+      if (wantsNativeCamera()) cameraFileRef.current?.click();
+      else setCameraOpen(true);
+    } else if (key === 'remove') setRemoveOpen(true);
   };
 
   const go = (item) => {
@@ -298,6 +309,14 @@ export default function Profile() {
               </i>
             </button>
             <input ref={fileRef} type="file" accept="image/*" hidden onChange={onPickPhoto} />
+            <input
+              ref={cameraFileRef}
+              type="file"
+              accept="image/*"
+              capture="user"
+              hidden
+              onChange={onPickPhoto}
+            />
             <div className="pf-identity__copy">
               <p className="pf-identity__eyebrow">Ayurmuni member</p>
               <h1>{name}</h1>
@@ -412,6 +431,15 @@ export default function Profile() {
           </>
         }
       />
+      <ProfileCamera
+        open={cameraOpen}
+        onClose={() => setCameraOpen(false)}
+        onPhoto={uploadPickedFile}
+        onChooseFile={() => {
+          setCameraOpen(false);
+          fileRef.current?.click();
+        }}
+      />
       <Modal open={photoSheet} onClose={() => setPhotoSheet(false)} title="Profile photo" size="sm">
         <div className="pf-photo-actions">
           {buildPhotoOptions(Boolean(photo)).map((option) => (
@@ -422,7 +450,8 @@ export default function Profile() {
               onClick={() => onPhotoAction(option.key)}
             >
               {option.key === 'view' ? <Eye size={18} aria-hidden /> : null}
-              {option.key === 'change' ? <Camera size={18} aria-hidden /> : null}
+              {option.key === 'camera' ? <Camera size={18} aria-hidden /> : null}
+              {option.key === 'change' ? <ImagePlus size={18} aria-hidden /> : null}
               {option.key === 'remove' ? <Trash2 size={18} aria-hidden /> : null}
               <span>{option.label}</span>
             </button>
