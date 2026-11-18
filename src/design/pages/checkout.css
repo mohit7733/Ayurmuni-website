@@ -338,6 +338,8 @@ button.co-card:active {
 
 /* Checkout page composition */
 .co-page {
+  display: flex;
+  flex-direction: column;
   box-sizing: border-box;
   width: min(100%, var(--am-container));
   margin-inline: auto;

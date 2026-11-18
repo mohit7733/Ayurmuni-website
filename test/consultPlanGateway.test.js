@@ -231,6 +231,18 @@ describe('consultPayment helpers', () => {
     expect(cp.planRemainingLabel(plan, true)).toBe('1 of 3 consultation left');
     expect(cp.planRemainingLabel({ benefits: [{ label: 'Consultation' }] })).toBe('Unlimited consultations');
   });
+
+  it('prefers diet consultation benefits for dietitian bookings', () => {
+    const plan = {
+      benefits: [
+        { label: 'Doctor Consultation', quantity_remaining: 0, status: 'exhausted' },
+        { label: 'Diet consultation', quantity_remaining: 2, quantity_total: 3, status: 'available' },
+      ],
+    };
+    expect(cp.getConsultBenefit(plan, { kind: 'diet' }).label).toBe('Diet consultation');
+    expect(cp.planRemainingLabel(plan, true, { kind: 'diet' })).toBe('2 of 3 diet consultations left');
+    expect(cp.getPlanConsultState(plan, Date.now(), { kind: 'diet' })).toBe('usable');
+  });
 });
 
 describe('prepaid verify helpers', () => {

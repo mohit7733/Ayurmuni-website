@@ -26,6 +26,7 @@ import {
   doctorImage,
   doctorQualification,
   formatSlotTime,
+  isDietitian,
   listedConsultationFee,
   resolveDoctorSpecializations,
 } from "../consult/doctors";
@@ -258,6 +259,8 @@ export default function ConsultPay() {
     quotedCouponCode,
   ]);
 
+  const dietitianVisit = isDietitian(doctor) || isDietitian({ is_dietitian: booking?.is_dietitian });
+  const planBenefitKind = dietitianVisit ? "diet" : "doctor";
   const { plans: activePlans, eligibility: planEligibility, usablePlans } = useConsultPlans({
     doctorId: doctorId || doctor?.doctor_id || doctor?.id,
     slotId: slot?.id,
@@ -320,10 +323,12 @@ export default function ConsultPay() {
     ? Math.max(0, roundMoney(feeBreakdown.total - planPayable))
     : 0;
   const planIsFree = usingPlan && planPayable === 0;
-  const selectedBenefit = selectedPlan ? getConsultBenefit(selectedPlan) : null;
+  const selectedBenefit = selectedPlan
+    ? getConsultBenefit(selectedPlan, { kind: planBenefitKind })
+    : null;
   const selectedPlanRemaining = !selectedBenefit
     ? ""
-    : planRemainingLabel(selectedPlan);
+    : planRemainingLabel(selectedPlan, false, { kind: planBenefitKind });
 
   useEffect(() => {
     preloadCashfree();
@@ -1069,6 +1074,7 @@ export default function ConsultPay() {
         plans={activePlans}
         eligibility={planEligibility}
         selectedId={selectedPlan?.id}
+        benefitKind={planBenefitKind}
         onSelect={handleSelectPlan}
         onPayNormally={() => {
           setPlanSheetOpen(false);

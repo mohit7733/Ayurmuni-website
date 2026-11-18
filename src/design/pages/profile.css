@@ -577,6 +577,10 @@
     gap: 16px;
   }
 
+  .pf-page.pf-page--addresses {
+    gap: var(--am-space-5);
+  }
+
   .pf-menus:not(.pf-menus--stack) {
     display: grid;
     grid-template-columns: 1fr 1fr;

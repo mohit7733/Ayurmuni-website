@@ -169,12 +169,12 @@ export const planBilling = (plan) => {
   return `Autopay${every ? ` ${every}` : ''}`;
 };
 
-/** App labels: rail uses Buy now / Book; the full card uses Buy now / Buy again / Book consultation. */
-export const planCta = (plan, { owned = false, rail = false } = {}) => {
+/** Catalog CTAs stay buyable. A previous purchase does not change the label. */
+export const planCta = (plan, { rail = false } = {}) => {
   const care = isCarePlan(plan);
-  if (rail) return care ? (owned ? 'Buy again' : 'Buy now') : 'Book';
+  if (rail) return care ? 'Buy now' : 'Book';
   if (plan?.buttonAction === 'book_consultation' || plan?.canBePurchased === false || !care) {
     return 'Book consultation';
   }
-  return owned ? 'Buy again' : 'Buy now';
+  return 'Buy now';
 };

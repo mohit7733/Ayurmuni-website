@@ -4,7 +4,6 @@ import { Link, useNavigate } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { Button, EmptyState, ErrorState, SkeletonGrid } from "../components/ui";
 import { formatPlanMoney, getPlanTheme, isCarePlan, planCta, planDiscount, planDuration, railThemeTones, themeStyle } from "../packages/planTheme";
-import PlanTransferModal from "../components/PlanTransferModal";
 import PackagePaymentModal from "../components/PackagePaymentModal";
 import usePackagePurchase from "../hooks/usePackagePurchase";
 import { isAuthenticated, requireAuth } from "../services/guestAuth";
@@ -25,7 +24,6 @@ function PlanCard({ item, busy, onAction, highlight = false, tone = 0 }) {
   const [imageFailed, setImageFailed] = useState(false);
   const care = isCarePlan(item);
   const discount = planDiscount(item);
-  const owned = item.mode === "purchase" && item.purchased;
   const lines = item.includes || [];
   const shown = lines.slice(0, MAX_LIST);
   const extra = lines.length - shown.length;
@@ -35,7 +33,7 @@ function PlanCard({ item, busy, onAction, highlight = false, tone = 0 }) {
 
   return (
     <article
-      className={`pp-card${highlight ? " is-highlight" : ""}${owned ? " is-owned" : ""}`}
+      className={`pp-card${highlight ? " is-highlight" : ""}`}
       style={themeStyle(getPlanTheme(item, tone))}
       aria-label={item.name}
     >
@@ -56,9 +54,7 @@ function PlanCard({ item, busy, onAction, highlight = false, tone = 0 }) {
         )}
         <span className="pp-card__shade" />
         <div className="pp-card__flags">
-          {owned ? (
-            <span className="pp-card__owned"><Award size={11} aria-hidden /> Owned</span>
-          ) : care ? (
+          {care ? (
             <span className="pp-card__badge"><Star size={10} aria-hidden /> Care plan</span>
           ) : (
             <span className="pp-card__badge is-quiet">{item.group || "Plan"}</span>
@@ -100,11 +96,11 @@ function PlanCard({ item, busy, onAction, highlight = false, tone = 0 }) {
 
         <button
           type="button"
-          className={`pp-card__cta${owned ? " is-owned" : ""}`}
+          className="pp-card__cta"
           disabled={busy}
           onClick={() => onAction(item)}
         >
-          {busy ? "Please wait..." : planCta(item, { owned })}
+          {busy ? "Please wait..." : planCta(item)}
           {!busy ? <ArrowRight size={14} aria-hidden /> : null}
         </button>
       </div>
@@ -175,16 +171,11 @@ export default function Packages() {
     return ordered;
   }, [kinds, plans]);
 
-  // verify-payment succeeded: cache already dropped, reload so the card flips to "Purchased" (then My Plans opens).
-  const onPurchased = useCallback(
-    async (item) => {
-      setPlans((current) => current.map((plan) => (plan.id === item.id ? { ...plan, purchased: true } : plan)));
-      await load({ silent: true });
-    },
-    [load],
-  );
-  const { start: buyPlan, busyId: buyingId, prompt: transferPrompt, confirm: confirmTransfer, cancel: cancelTransfer, sheet: paymentSheet } =
-    usePackagePurchase({ onPurchased });
+  // verify-payment succeeded: reload the catalog. The card stays buyable.
+  const onPurchased = useCallback(async () => {
+    await load({ silent: true });
+  }, [load]);
+  const { start: buyPlan, busyId: buyingId, sheet: paymentSheet } = usePackagePurchase({ onPurchased });
 
   const onAction = (item) => {
     if (!isCarePlan(item)) {
@@ -284,7 +275,6 @@ export default function Packages() {
             })
           : null}
 
-        <PlanTransferModal prompt={transferPrompt} onYes={confirmTransfer} onNo={cancelTransfer} />
         <PackagePaymentModal {...paymentSheet} />
 
         <button type="button" className="pp-help" onClick={talkToTeam}>

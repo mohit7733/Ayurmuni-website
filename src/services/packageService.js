@@ -86,17 +86,6 @@ const sessionCount = (row) => {
 
 const ACTIVE_STATUSES = new Set(['active', 'paid', 'success', 'successful', 'completed', 'captured', 'purchased']);
 
-/** True when a plan row from the catalog already says the signed-in user owns it. */
-const rowPurchased = (row) => {
-  if (!row) return false;
-  const flags = [row.is_purchased, row.purchased, row.already_purchased, row.has_purchased, row.is_active_for_user, row.is_owned];
-  if (flags.some((flag) => flag === true)) return true;
-  const nested = row.user_purchase || row.current_purchase || row.active_purchase || row.my_purchase;
-  if (nested && typeof nested === 'object') return purchaseIsActive(nested);
-  const status = String(row.purchase_status || row.user_purchase_status || '').toLowerCase();
-  return ACTIVE_STATUSES.has(status);
-};
-
 function purchaseIsActive(entry) {
   if (!entry) return false;
   if (entry.is_active === false || entry.active === false) return false;
@@ -161,7 +150,8 @@ export const mapConsultPackage = (row) => {
     validityDays: Number(pickFirst(row, ['validity_days', 'duration_days', 'validity_in_days', 'valid_for_days'])) || 0,
     duration: durationLabel(row),
     sessions: sessionCount(row),
-    purchased: rowPurchased(row),
+    // Catalog cards stay buyable. Ownership lives on each purchase in My Plans.
+    purchased: false,
   };
 };
 
@@ -335,9 +325,29 @@ const ACTIVE_PLANS_TTL_MS = 60 * 1000;
 let activePlansCache = null;
 let activePlansInflight = null;
 
+/** Every page of packages/my/ for the given filters. A failed first page throws. */
+export async function loadPackagePurchasePages(params = {}) {
+  const collected = [];
+  for (let page = 1; page <= 10; page += 1) {
+    const res = await getMyPackages({ ...params, page });
+    if (!res || res.success === false || res.aborted) {
+      if (page === 1) {
+        const error = new Error(res?.message || 'Unable to load packages');
+        error.failed = true;
+        throw error;
+      }
+      break;
+    }
+    const batch = normalizeApiList(res);
+    collected.push(...batch);
+    if (!res?.data?.next || !batch.length) break;
+  }
+  return collected;
+}
+
 /**
- * Active purchased plans, one request per minute at most; `force` bypasses the cache
- * (used right before buying so the transfer prompt is accurate).
+ * Active purchased plans, one request sequence per minute at most.
+ * `force` bypasses the cache. Every page is included so later purchases stay selectable.
  */
 export async function fetchActivePlans(force = false) {
   if (!force && activePlansCache && Date.now() - activePlansCache.at < ACTIVE_PLANS_TTL_MS) {
@@ -346,9 +356,8 @@ export async function fetchActivePlans(force = false) {
   if (activePlansInflight) return activePlansInflight;
   activePlansInflight = (async () => {
     try {
-      const res = await getMyPackages({ status: 'active' });
-      if (!res?.success) return activePlansCache?.plans ?? [];
-      const plans = normalizeApiList(res).filter((plan) => String(plan?.status || '').toLowerCase() === 'active');
+      const rows = await loadPackagePurchasePages({ status: 'active' });
+      const plans = rows.filter((plan) => String(plan?.status || '').toLowerCase() === 'active');
       activePlansCache = { plans, at: Date.now() };
       return plans;
     } catch {
@@ -370,21 +379,19 @@ export const refreshPackageCache = () => {
   invalidateApiCache(['packages/']);
 };
 
-/** Plans (+ the user's purchases) with `purchased` / `remaining` resolved on every item. */
+/**
+ * Catalog plans only. Purchases are not folded onto the card: two buys of the same
+ * package stay independent and the card stays buyable.
+ */
 export async function loadPackagesWithStatus() {
-  const [plans, mine] = await Promise.all([loadConsultPackages(), loadMyPackagePurchases()]);
-  const local = getLocallyPurchasedIds();
-  const activeMine = new Map(mine.filter((entry) => entry.active).map((entry) => [entry.planId, entry]));
-  return plans.map((plan) => {
-    const owned = activeMine.get(plan.id);
-    return {
-      ...plan,
-      purchased: Boolean(plan.purchased || owned || local.has(plan.id)),
-      remaining: owned?.remaining ?? null,
-      total: owned?.total ?? (plan.sessions > 0 ? plan.sessions : null),
-      expiresAt: owned?.expiresAt || '',
-    };
-  });
+  const plans = await loadConsultPackages();
+  return plans.map((plan) => ({
+    ...plan,
+    purchased: false,
+    remaining: null,
+    total: plan.sessions > 0 ? plan.sessions : null,
+    expiresAt: '',
+  }));
 }
 
 /** There is no packages/plans/:id/ endpoint (404), so the detail page reads the catalog list. */

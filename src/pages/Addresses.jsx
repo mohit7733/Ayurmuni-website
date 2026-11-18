@@ -97,7 +97,7 @@ export default function Addresses() {
 
   return (
     <AppShell tab="profile">
-      <section className="pf-page">
+      <section className="pf-page pf-page--addresses">
         <PageHeader
           title={T.addressesTitle}
           subtitle={T.addressesSubtitle}
