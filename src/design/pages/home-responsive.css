@@ -1,0 +1,71 @@
+/* Homepage-only responsive tweaks.
+   Imported from Home.jsx and scoped to .hm-page:not(.svc-page) so
+   Medicines / Consult / Diet / Yoga (hm-page svc-page) are unaffected.
+   Desktop layouts at 1024px and above are left unchanged. */
+
+/* Visited doctor cards sit in a 2-up grid from 481px, but the heart +
+   "Book again" actions stay on the name row until 600px. Between 601px
+   and 1023px that row is too narrow, so names and credentials ellipsize
+   (at 640px they can disappear entirely). Reuse the existing stacked
+   phone action row in that range only. */
+@media (min-width: 481px) and (max-width: 1023px) {
+  .hm-page:not(.svc-page) .vd-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .hm-page:not(.svc-page) .vd-card__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed rgba(201, 162, 78, 0.45);
+  }
+
+  .hm-page:not(.svc-page) .vd-card__visit {
+    padding-top: 0;
+    border-top: 0;
+    min-width: 0;
+  }
+
+  .hm-page:not(.svc-page) .vd-card__actions {
+    grid-column: auto;
+    grid-row: auto;
+    gap: 6px;
+    flex: 0 0 auto;
+  }
+
+  .hm-page:not(.svc-page) .vd-card__name strong,
+  .hm-page:not(.svc-page) .vd-card__cred {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+  }
+}
+
+/* Yoga for Mind & Body: on phones show exactly one full card per snap.
+   Existing yoga items are locked at 220px, so a phone rail peeks the next
+   card and the right-edge fade covers part of it. Tablet/desktop unchanged
+   (640px+ rules in home.css / home-pair.css stay in effect). */
+@media (max-width: 639px) {
+  .hm-page:not(.svc-page) .hm-wellness .hm-well--move .am-rail.hm-yoga-rail,
+  .hm-page:not(.svc-page) .hm-well--move .am-rail.hm-yoga-rail {
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 0;
+    padding-inline: 0;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .hm-page:not(.svc-page) .hm-yoga-rail > .am-rail__item,
+  .hm-page:not(.svc-page) .hm-well--move .am-rail.hm-yoga-rail > .am-rail__item,
+  .hm-page:not(.svc-page) .hm-wellness .hm-well .am-rail.hm-yoga-rail > .am-rail__item,
+  .hm-page:not(.svc-page) .hm-wellness:not(.hm-wellness--pair) .hm-well .am-rail.hm-yoga-rail > .am-rail__item {
+    flex: 0 0 100%;
+    width: 100%;
+    min-width: 100%;
+    max-width: 100%;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+}

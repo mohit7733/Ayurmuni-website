@@ -78,7 +78,8 @@
 .svc-consult-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--am-space-3);
+  /* Same gap as the homepage doctor rail (.hm-doc-rail). */
+  gap: 16px;
   align-items: stretch;
   width: 100%;
   min-width: 0;
@@ -90,7 +91,7 @@
 @media (max-width: 639px) {
   .svc-consult-grid {
     display: flex;
-    gap: 10px;
+    gap: 12px;
     overflow-x: auto;
     overscroll-behavior-x: contain;
     scroll-snap-type: x mandatory;
