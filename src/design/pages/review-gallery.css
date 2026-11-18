@@ -1,0 +1,106 @@
+/* Review media gallery layout.
+   Scoped to .review-gallery-page so Share Experience and other catalog
+   pages are unchanged. The viewer frame wraps the selected image or
+   video; the page follows the catalog-page / logo gutter; thumbnails
+   sit in a compact strip; bottom padding clears View cart and Ayurchat. */
+
+.app-shell:not(.auth-shell) .app-shell-body > .catalog-page.review-gallery-page,
+.review-gallery-page {
+  width: 100%;
+  max-width: var(--am-container-max);
+  margin-inline: auto;
+  padding-inline: var(--am-gutter);
+  box-sizing: border-box;
+  /* Tab bar + cart (52px) + gap, matching footer float clearance. */
+  padding-bottom: calc(var(--am-tabbar-h) + 72px + env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 768px) {
+  .app-shell:not(.auth-shell) .app-shell-body > .catalog-page.review-gallery-page,
+  .review-gallery-page {
+    /* Tab bar is typically hidden; cart sits 56px up and is 52px tall. */
+    padding-bottom: calc(56px + 52px + 24px);
+  }
+}
+
+.review-gallery-page .review-gallery-hero {
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
+  margin-bottom: 16px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--am-text);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.review-gallery-page .review-gallery-hero img,
+.review-gallery-page .review-gallery-hero video {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  /* Prefer ~70vh, but shrink so the frame + thumbnail strip sit above
+     the View cart pill and Ayurchat FAB. */
+  max-height: min(
+    70vh,
+    calc(
+      100dvh
+      - var(--am-header-h, 56px)
+      - 130px
+      - 88px
+      - 16px
+      - 52px
+      - var(--am-tabbar-h, 56px)
+      - env(safe-area-inset-bottom, 0px)
+    )
+  );
+  object-fit: contain;
+  margin: 0;
+}
+
+.review-gallery-page .catalog-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 100%;
+  margin-inline: auto;
+  grid-template-columns: none;
+}
+
+.review-gallery-page .review-media-tile {
+  flex: 0 0 auto;
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--am-text);
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.review-gallery-page .review-media-tile.on {
+  border-color: var(--am-gold-500, var(--am-accent, #c9972f));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--am-gold-500, #c9972f) 35%, transparent);
+}
+
+.review-gallery-page .review-media-tile:focus-visible {
+  outline: 2px solid var(--am-gold-500, var(--am-accent, #c9972f));
+  outline-offset: 2px;
+}
+
+.review-gallery-page .review-media-tile img,
+.review-gallery-page .review-media-tile video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}

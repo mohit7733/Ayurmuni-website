@@ -428,33 +428,59 @@
 }
 @media (min-width: 768px) {
   .app-shell .pd-page--brand .pd-pack-buy > .pd-field { flex: 0 0 auto; max-width: none; }
+  /* Packs sit in a horizontal row (side by side), never stacked into a single column. */
   .app-shell .pd-page--brand .pd-pack-buy .pd-packs {
-    display: grid; grid-template-columns: repeat(1, 104px); gap: 8px; overflow: visible;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    overflow: visible;
   }
-  .app-shell .pd-page--brand .pd-pack-buy .pd-packs:has(> .pd-pack:nth-child(2)) { grid-template-columns: repeat(2, 104px); }
   .app-shell .pd-page--brand .pd-pack-buy > .pd-purchase { flex: 1 1 200px; max-width: 340px; }
 }
-@media (min-width: 1024px) and (max-width: 1279px) {
-  .app-shell .pd-page--brand .pd-pack-buy .pd-packs:has(> .pd-pack:nth-child(2)) { grid-template-columns: 104px; }
-}
 
-/* t65u: Product detail top grid = exact 50/50 (gallery | info) wherever the columns sit side by side */
+/* Gallery column narrower than info (was 50/50); shrinks the image from the right. */
 @media (min-width: 860px) {
-  .app-shell .pd-page--brand .pd-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-}
-/* t67u: image box keeps its previous height (old square size) at the 50/50 width; image covers */
-@media (min-width: 860px) {
-  .app-shell .pd-page--brand .pd-layout { container-type: inline-size; }
-  .app-shell .pd-page--brand .pd-gallery__main {
-    aspect-ratio: auto;
-    height: min(52cqw, max(320px, calc(100vh - var(--am-header-h, 64px) - 140px)));
+  .app-shell .pd-page--brand .pd-layout {
+    grid-template-columns: minmax(320px, 1fr) minmax(0, 1fr);
   }
 }
-
-/* t68u: the brand CSS caps .pd-gallery at (100vh - header - 140px); on short viewports (zoom, small screens) that made
-   the image narrower than its 50% column. Drop the width cap; the image box height rule above still uses the same cap. */
+/* Main image fills the gallery column beside the vertical thumbs strip. */
 @media (min-width: 860px) {
-  .app-shell .pd-page--brand .pd-gallery { max-width: none; }
+  .app-shell .pd-page--brand .pd-layout { container-type: inline-size; }
+  .app-shell .pd-page--brand .pd-gallery {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 10px;
+    max-width: none;
+    width: 100%;
+  }
+  .app-shell .pd-page--brand .pd-gallery__main {
+    flex: 1 1 auto;
+    width: auto;
+    max-width: calc(100% - 78px);
+    min-width: 0;
+    aspect-ratio: 1 / 1;
+    height: auto;
+    max-height: min(62cqw, calc(100vh - var(--am-header-h, 64px) - 120px));
+  }
+  .app-shell .pd-page--brand .pd-thumbs {
+    flex: 0 0 auto;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    width: 68px;
+    max-height: min(62cqw, calc(100vh - var(--am-header-h, 64px) - 120px));
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 0;
+    scrollbar-width: thin;
+  }
+  .app-shell .pd-page--brand .pd-thumb {
+    flex: 0 0 68px;
+    width: 68px;
+    height: 68px;
+  }
 }
 
 /* t70u: buttons never overflow the info card. Cause: the pack column was flex: 0 0 auto (no shrink) and the
@@ -468,11 +494,8 @@
   .app-shell .pd-page--brand .pd-pack-buy .pd-purchase .am-stepper,
   .app-shell .pd-page--brand .pd-pack-buy .pd-purchase .pd-buy .am-btn { min-width: 0; max-width: 100%; box-sizing: border-box; }
 }
-/* two pack cards side by side need 220px; drop to one column of packs before squeezing the buttons */
-@container pdbuy (max-width: 400px) {
-  .app-shell .pd-page--brand .pd-pack-buy .pd-packs:has(> .pd-pack:nth-child(2)) { grid-template-columns: 104px; }
-}
-/* not enough room for pack card + 170px buttons: buttons go under the pack card, full width */
+/* Purchase already sits under packs (full width); keep packs wrapping side-by-side.
+   Only stack the buy row under packs when the container is too narrow for a side layout. */
 @container pdbuy (max-width: 290px) {
   .app-shell .pd-page--brand .pd-pack-buy { flex-direction: column; align-items: stretch; }
   .app-shell .pd-page--brand .pd-pack-buy > .pd-field + .pd-purchase { margin-top: 0; }

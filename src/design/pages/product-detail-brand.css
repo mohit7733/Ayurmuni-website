@@ -53,7 +53,9 @@
   max-width: max(320px, calc(100vh - var(--am-header-h, 64px) - 140px));
   margin-inline: auto;
 }
-@media (min-width: 1024px) {
+/* Sticky gallery from the two-column layout so scrolling keeps the image in view
+   like a normal product detail page (was 1024px, which left tablet/960px without sticky). */
+@media (min-width: 860px) {
   .pd-page--brand .pd-gallery {
     position: sticky;
     top: calc(var(--am-header-h, 64px) + 16px);
