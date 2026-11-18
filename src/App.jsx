@@ -13,6 +13,7 @@ import GlobalLoadBar from "./components/GlobalLoadBar";
 import { Utils } from "./common/utils";
 import { getAccessLevel } from "./services/guestAuth";
 import { syncPushForSession } from "./services/pushNotificationService";
+import { trackMetaPageView } from "./services/metaPixel";
 import { runWhenIdle } from "./hooks/useLazySection";
 import Splash from "./pages/Splash";
 import Welcome from "./pages/Welcome";
@@ -260,6 +261,15 @@ function ScrollToTop() {
   return null;
 }
 
+/** Meta Pixel PageView on first load and every SPA route change. */
+function MetaPixelPageView() {
+  const { pathname, search } = useLocation();
+  useEffect(() => {
+    trackMetaPageView();
+  }, [pathname, search]);
+  return null;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -268,6 +278,7 @@ export default function App() {
           <CartProvider>
             <NavBinder />
             <ScrollToTop />
+            <MetaPixelPageView />
             <ToastHost />
             <GlobalLoadBar />
             <PushSessionSync />
