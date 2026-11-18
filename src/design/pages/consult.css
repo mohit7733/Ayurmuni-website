@@ -287,6 +287,16 @@
   }
 }
 
+/* Desktop and phone body gap is 4px. Homepage panels sit 18px apart
+   (the doctor/product row gap). Restore that between the benefits bar,
+   Recent Consultation, and Consult by Concern. */
+@media (max-width: 639px), (min-width: 1024px) {
+  .hm-page.svc-page .hm-body > .cs-promises,
+  .hm-page.svc-page .hm-body > .hm-product-row {
+    margin-bottom: 14px;
+  }
+}
+
 /* ---------- Doctors list: filters + results ---------- */
 .cs-browse {
   display: grid;
