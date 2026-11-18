@@ -14,6 +14,7 @@ import { Utils } from "./common/utils";
 import { getAccessLevel } from "./services/guestAuth";
 import { syncPushForSession } from "./services/pushNotificationService";
 import { trackMetaPageView } from "./services/metaPixel";
+import { trackGoogleAdsPageView } from "./services/googleAds";
 import { runWhenIdle } from "./hooks/useLazySection";
 import Splash from "./pages/Splash";
 import Welcome from "./pages/Welcome";
@@ -261,11 +262,12 @@ function ScrollToTop() {
   return null;
 }
 
-/** Meta Pixel PageView on first load and every SPA route change. */
-function MetaPixelPageView() {
+/** Meta Pixel + Google Ads tags on first load and every SPA route change. */
+function TrackingPageView() {
   const { pathname, search } = useLocation();
   useEffect(() => {
     trackMetaPageView();
+    trackGoogleAdsPageView();
   }, [pathname, search]);
   return null;
 }
@@ -278,7 +280,7 @@ export default function App() {
           <CartProvider>
             <NavBinder />
             <ScrollToTop />
-            <MetaPixelPageView />
+            <TrackingPageView />
             <ToastHost />
             <GlobalLoadBar />
             <PushSessionSync />

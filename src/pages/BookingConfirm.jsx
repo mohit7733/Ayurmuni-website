@@ -18,6 +18,7 @@ import { getConsultationPaymentSource } from '../utils/doctorSlipUtils';
 import { formatAppointmentId } from '../utils/formatDisplayId';
 import { showSuccessToast } from '../config/key';
 import { Utils } from '../common/utils';
+import { trackGoogleAdsLeadConversion } from '../services/googleAds';
 import {
   Badge,
   Button,
@@ -133,6 +134,11 @@ export default function BookingConfirm() {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!detail) return;
+    trackGoogleAdsLeadConversion(bookingCode(detail) || 'booking');
+  }, [detail]);
 
   const booking = useMemo(() => {
     if (!detail) return null;
