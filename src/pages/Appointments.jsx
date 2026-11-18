@@ -48,8 +48,8 @@ const PAST_STATUS = [
 ];
 
 const FOLLOW_UP_FILTERS = [
-  { key: "all", label: "All visits" },
-  { key: "follow_up", label: "Follow-up" },
+  // { key: "all", label: "All visits" },
+  // { key: "follow_up", label: "Follow-up" },
 ];
 
 const followUpDetails = (item) => {
@@ -404,7 +404,7 @@ export default function Appointments() {
                 </ul>
               </div>
             ) : null}
-            <div className="ap-side__group">
+            {/* <div className="ap-side__group">
               <p className="ap-side__label" id="ap-visit-label">Visit</p>
               <ul className="st-cat-filter" role="group" aria-labelledby="ap-visit-label">
                 {FOLLOW_UP_FILTERS.map((item) => (
@@ -425,7 +425,7 @@ export default function Appointments() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </div> */}
             <div className="ap-side__group">
               <p className="ap-side__label" id="ap-status-label">Status</p>
               <ul className="st-cat-filter" role="group" aria-labelledby="ap-status-label">

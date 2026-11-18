@@ -76,7 +76,7 @@ export const PROFILE_COPY = {
       title: 'Account',
       items: [
         { title: 'Edit Profile', subtitle: 'Name, email, phone number', to: '/profile/edit' },
-        { title: 'Patient Details', subtitle: 'Manage family profiles', to: '/profile/patients' },
+        // { title: 'Patient Details', subtitle: 'Manage family profiles', to: '/profile/patients' },
         { title: 'Saved Address', subtitle: 'Delivery locations', to: '/profile/addresses' },
         { title: 'My Rewards', subtitle: 'Coupons and referrals', to: '/profile/rewards' },
       ],
@@ -156,7 +156,7 @@ const PROFILE_HEALTH = [
   { title: 'Medical Records', to: '/profile/records', icon: 'records' },
   { title: 'Medical History', to: '/medical-history', icon: 'file' },
   { title: 'Analysis', to: '/prakriti-profile', icon: 'activity' },
-  { title: 'Patient Details', to: '/profile/patients', icon: 'users' },
+  // { title: 'Patient Details', to: '/profile/patients', icon: 'users' },
 ];
 
 const PROFILE_SHOP = [
