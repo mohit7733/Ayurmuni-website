@@ -55,8 +55,11 @@ describe('profile dashboard stats', () => {
     });
   });
 
-  it('offers view/change/remove only when a photo exists', () => {
-    expect(buildPhotoOptions(true).map((o) => o.key)).toEqual(['view', 'change', 'remove']);
-    expect(buildPhotoOptions(false).map((o) => [o.key, o.label])).toEqual([['change', 'Add photo']]);
+  it('offers view, camera, change, and remove when a photo exists', () => {
+    expect(buildPhotoOptions(true).map((o) => o.key)).toEqual(['view', 'camera', 'change', 'remove']);
+    expect(buildPhotoOptions(false).map((o) => [o.key, o.label])).toEqual([
+      ['camera', 'Take photo'],
+      ['change', 'Add photo'],
+    ]);
   });
 });
