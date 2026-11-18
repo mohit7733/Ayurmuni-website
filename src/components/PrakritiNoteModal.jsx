@@ -36,7 +36,7 @@ export default function PrakritiNoteModal({ visible, onClose, onBegin }) {
 
   return (
     <div
-      className="modal-backdrop"
+      className="modal-backdrop note-backdrop"
       onClick={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
@@ -49,12 +49,12 @@ export default function PrakritiNoteModal({ visible, onClose, onBegin }) {
         aria-labelledby="prakriti-note-title"
         tabIndex={-1}
       >
+        <button type="button" className="note-close" onClick={onClose} aria-label="Close">
+          <X size={18} aria-hidden />
+        </button>
         <div className="note-head">
-          <span>BEFORE YOU BEGIN</span>
+          <span className="note-kicker">BEFORE YOU BEGIN</span>
           <h3 id="prakriti-note-title">A note on your answers</h3>
-          <button type="button" className="note-close" onClick={onClose} aria-label="Close">
-            <X size={19} aria-hidden />
-          </button>
         </div>
         <div className="note-body">
           <p>

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Camera, UserRound } from 'lucide-react';
 import { Utils } from '../common/utils';
 import ChangeNumberAction from '../components/auth/ChangeNumberAction';
 import { EmailValidator, genderOptions } from '../common/validator';
@@ -279,203 +280,246 @@ export default function Onboarding() {
 
   return (
     <section className="onboard">
-      <div className="onboard-hero">
-        <button className="onboard-back" onClick={handleBack} type="button">
-          ←
-        </button>
-        <div className="step-pill">Step 1 of 2</div>
-        <h1>Welcome to Ayurmuni</h1>
-        <p>
-          Create your profile to unlock personalized Ayurvedic care, orders, and
-          consultations.
-        </p>
-      </div>
-
-      <div className="onboard-card">
-        <h2>Create Account</h2>
-        <p className="onboard-sub">
-          Add your details below. This helps us tailor recommendations for you.
-        </p>
-
+      <aside className="onboard-hero">
         <button
+          className="onboard-back"
+          onClick={handleBack}
           type="button"
-          className="avatar-wrap"
-          onClick={() => fileRef.current?.click()}
+          aria-label="Go back"
         >
-          <div className="avatar-ring">
-            {isLoadingImage ? (
-              <span className="avatar-loading">…</span>
-            ) : previewUrl ? (
-              <img src={previewUrl} alt="" />
-            ) : formData.firstName ? (
-              <span className="avatar-letter">
-                {formData.firstName.charAt(0).toUpperCase()}
+          <ArrowLeft size={18} strokeWidth={1.75} />
+        </button>
+
+        <div className="onboard-hero-copy">
+          <p className="onboard-kicker">
+            <span>01</span>
+            Profile
+          </p>
+          <h1>
+            Welcome to <em>Ayurmuni</em>
+          </h1>
+          <p className="onboard-lead">
+            A private profile for care that is composed around you — consultations,
+            orders, and recommendations in one place.
+          </p>
+          <ul className="onboard-points">
+            <li>Guidance shaped to your constitution</li>
+            <li>Consultations and orders together</li>
+            <li>Details kept only for your care</li>
+          </ul>
+        </div>
+
+        <p className="onboard-hero-foot">Step 1 of 2 · Your details</p>
+      </aside>
+
+      <div className="onboard-stage">
+        <form
+          className="onboard-card"
+          onSubmit={(event) => {
+            event.preventDefault();
+            handleProceed();
+          }}
+        >
+          <header className="onboard-head">
+            <p className="onboard-eyebrow">Create account</p>
+            <h2>Tell us who you are</h2>
+            <p className="onboard-sub">
+              These details help us tailor recommendations, remedies, and visits.
+            </p>
+          </header>
+
+          <div className="avatar-row">
+            <button
+              type="button"
+              className="avatar-wrap"
+              onClick={() => fileRef.current?.click()}
+              aria-label="Upload profile photo"
+            >
+              <div className="avatar-ring">
+                {isLoadingImage ? (
+                  <span className="avatar-loading">…</span>
+                ) : previewUrl ? (
+                  <img src={previewUrl} alt="" />
+                ) : formData.firstName ? (
+                  <span className="avatar-letter">
+                    {formData.firstName.charAt(0).toUpperCase()}
+                  </span>
+                ) : (
+                  <UserRound className="avatar-upload" size={28} strokeWidth={1.5} />
+                )}
+              </div>
+              <span className="avatar-cam" aria-hidden>
+                <Camera size={14} strokeWidth={1.75} />
               </span>
-            ) : (
-              <span className="avatar-upload">Upload Photo</span>
-            )}
+            </button>
+            <div className="avatar-copy">
+              <strong>Profile photo</strong>
+              <span>Optional. A clear portrait helps your practitioner recognise you.</span>
+            </div>
           </div>
-          <span className="avatar-cam">📷</span>
-        </button>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*"
-          hidden
-          onChange={(e) => uploadProfileImage(e.target.files?.[0])}
-        />
-
-        <div className="name-row">
-          <label>
-            First Name <span className="req">*</span>
-            <input
-              placeholder="ABC"
-              value={formData.firstName}
-              onChange={(e) => handleFieldChange('firstName', e.target.value)}
-            />
-            {errors.firstName ? (
-              <span className="field-error">{errors.firstName}</span>
-            ) : null}
-          </label>
-          <label>
-            Last Name <span className="req">*</span>
-            <input
-              placeholder="XYZ"
-              value={formData.lastName}
-              onChange={(e) => handleFieldChange('lastName', e.target.value)}
-            />
-            {errors.lastName ? (
-              <span className="field-error">{errors.lastName}</span>
-            ) : null}
-          </label>
-        </div>
-
-        <label className="full-label">
-          Email Address <span className="opt">(optional)</span>
           <input
-            type="email"
-            placeholder="email@gmail.com"
-            value={formData.email}
-            onChange={(e) => handleFieldChange('email', e.target.value)}
-            autoCapitalize="none"
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={(e) => uploadProfileImage(e.target.files?.[0])}
           />
-          {errors.email ? (
-            <span className="field-error">{errors.email}</span>
-          ) : null}
-        </label>
 
-        <div className="full-label">
-          Gender <span className="req">*</span>
-          <div className="gender-row">
-            {genderOptions.map((item) => (
-              <button
-                type="button"
-                key={item.id}
-                className={formData.gender === item.value ? 'on' : ''}
-                onClick={() => handleFieldChange('gender', item.value)}
-              >
-                {item.label}
-              </button>
-            ))}
+          <div className="name-row">
+            <label>
+              First name <span className="req">*</span>
+              <input
+                placeholder="Aarav"
+                autoComplete="given-name"
+                value={formData.firstName}
+                onChange={(e) => handleFieldChange('firstName', e.target.value)}
+              />
+              {errors.firstName ? (
+                <span className="field-error">{errors.firstName}</span>
+              ) : null}
+            </label>
+            <label>
+              Last name <span className="req">*</span>
+              <input
+                placeholder="Sharma"
+                autoComplete="family-name"
+                value={formData.lastName}
+                onChange={(e) => handleFieldChange('lastName', e.target.value)}
+              />
+              {errors.lastName ? (
+                <span className="field-error">{errors.lastName}</span>
+              ) : null}
+            </label>
           </div>
-          {errors.gender ? (
-            <span className="field-error">{errors.gender}</span>
-          ) : null}
-        </div>
 
-        <div className="full-label">
-          Date of Birth <span className="req">*</span>
-          <div className="dob-row">
+          <label className="full-label">
+            Email <span className="opt">Optional</span>
             <input
-              placeholder={focusedField === 'day' || dob.year === '' ? 'DD' : ''}
-              value={dob.day}
-              maxLength={2}
-              inputMode="numeric"
-              onFocus={() => {
-                setFocusedField('day');
-                clearDobError();
-              }}
-              onBlur={() => setFocusedField(null)}
-              onChange={(e) => {
-                clearDobError();
-                const value = e.target.value.replace(/[^0-9]/g, '');
-                setDob({ ...dob, day: value });
-                if (value.length === 2) monthRef.current?.focus();
-              }}
+              type="email"
+              placeholder="name@email.com"
+              autoComplete="email"
+              value={formData.email}
+              onChange={(e) => handleFieldChange('email', e.target.value)}
+              autoCapitalize="none"
             />
-            <input
-              ref={monthRef}
-              placeholder={
-                focusedField === 'month' || dob.year === '' ? 'MM' : ''
-              }
-              value={dob.month}
-              maxLength={2}
-              inputMode="numeric"
-              onFocus={() => {
-                setFocusedField('month');
-                clearDobError();
-              }}
-              onBlur={() => setFocusedField(null)}
-              onChange={(e) => {
-                clearDobError();
-                const value = e.target.value.replace(/[^0-9]/g, '');
-                setDob({ ...dob, month: value });
-                if (value.length === 2) yearRef.current?.focus();
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Backspace' && dob.month.length === 0) {
-                  e.preventDefault();
+            {errors.email ? (
+              <span className="field-error">{errors.email}</span>
+            ) : null}
+          </label>
+
+          <div className="full-label">
+            Gender <span className="req">*</span>
+            <div className="gender-row" role="group" aria-label="Gender">
+              {genderOptions.map((item) => (
+                <button
+                  type="button"
+                  key={item.id}
+                  className={formData.gender === item.value ? 'on' : ''}
+                  aria-pressed={formData.gender === item.value}
+                  onClick={() => handleFieldChange('gender', item.value)}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+            {errors.gender ? (
+              <span className="field-error">{errors.gender}</span>
+            ) : null}
+          </div>
+
+          <div className="full-label">
+            Date of birth <span className="req">*</span>
+            <div className="dob-row">
+              <input
+                aria-label="Day"
+                placeholder={focusedField === 'day' || dob.day === '' ? 'DD' : ''}
+                value={dob.day}
+                maxLength={2}
+                inputMode="numeric"
+                onFocus={() => {
+                  setFocusedField('day');
+                  clearDobError();
+                }}
+                onBlur={() => setFocusedField(null)}
+                onChange={(e) => {
+                  clearDobError();
+                  const value = e.target.value.replace(/[^0-9]/g, '');
+                  setDob({ ...dob, day: value });
+                  if (value.length === 2) monthRef.current?.focus();
+                }}
+              />
+              <input
+                ref={monthRef}
+                aria-label="Month"
+                placeholder={
+                  focusedField === 'month' || dob.month === '' ? 'MM' : ''
                 }
-              }}
-            />
-            <input
-              ref={yearRef}
-              className="dob-year"
-              placeholder={
-                focusedField === 'year' || dob.year === '' ? 'YYYY' : ''
-              }
-              value={dob.year}
-              maxLength={4}
-              inputMode="numeric"
-              onFocus={() => {
-                setFocusedField('year');
-                clearDobError();
-              }}
-              onBlur={() => setFocusedField(null)}
-              onChange={(e) => {
-                clearDobError();
-                const value = e.target.value.replace(/[^0-9]/g, '');
-                setDob({ ...dob, year: value });
-              }}
-            />
+                value={dob.month}
+                maxLength={2}
+                inputMode="numeric"
+                onFocus={() => {
+                  setFocusedField('month');
+                  clearDobError();
+                }}
+                onBlur={() => setFocusedField(null)}
+                onChange={(e) => {
+                  clearDobError();
+                  const value = e.target.value.replace(/[^0-9]/g, '');
+                  setDob({ ...dob, month: value });
+                  if (value.length === 2) yearRef.current?.focus();
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Backspace' && dob.month.length === 0) {
+                    e.preventDefault();
+                  }
+                }}
+              />
+              <input
+                ref={yearRef}
+                className="dob-year"
+                aria-label="Year"
+                placeholder={
+                  focusedField === 'year' || dob.year === '' ? 'YYYY' : ''
+                }
+                value={dob.year}
+                maxLength={4}
+                inputMode="numeric"
+                onFocus={() => {
+                  setFocusedField('year');
+                  clearDobError();
+                }}
+                onBlur={() => setFocusedField(null)}
+                onChange={(e) => {
+                  clearDobError();
+                  const value = e.target.value.replace(/[^0-9]/g, '');
+                  setDob({ ...dob, year: value });
+                }}
+              />
+            </div>
+            {errors.dob ? <span className="field-error">{errors.dob}</span> : null}
           </div>
-          {errors.dob ? <span className="field-error">{errors.dob}</span> : null}
-        </div>
 
-        <p className="onboard-terms">
-          After creating your profile you will review and accept our{' '}
-          <button type="button" onClick={() => openPolicy('terms_of_service')}>
-            Terms of Use
-          </button>{' '}
-          and{' '}
-          <button type="button" onClick={() => openPolicy('privacy_policy')}>
-            Privacy Policy
-          </button>
-          .
-        </p>
-      </div>
+          <p className="onboard-terms">
+            Next you will review and accept our{' '}
+            <button type="button" onClick={() => openPolicy('terms_of_service')}>
+              Terms of Use
+            </button>{' '}
+            and{' '}
+            <button type="button" onClick={() => openPolicy('privacy_policy')}>
+              Privacy Policy
+            </button>
+            .
+          </p>
 
-      <div className="onboard-bottom">
-        <button
-          className="cta"
-          disabled={!canProceed || isLoading}
-          onClick={handleProceed}
-        >
-          {isLoading ? 'Please wait…' : 'Proceed'}
-        </button>
-      </div>
-      <div className="onboard-change">
-        <ChangeNumberAction />
+          <div className="onboard-bottom">
+            <button className="cta" disabled={!canProceed || isLoading} type="submit">
+              {isLoading ? 'Please wait…' : 'Continue'}
+            </button>
+          </div>
+          <div className="onboard-change">
+            <ChangeNumberAction />
+          </div>
+        </form>
       </div>
     </section>
   );
