@@ -104,13 +104,24 @@ const HISTORY_STATUSES = new Set([
   'missed',
 ]);
 
-/** History API accepts `status`, and a date filter only when both ends are set. */
+const HISTORY_TIMEFRAMES = new Set(['upcoming', 'today', 'past', 'all']);
+
+/** History API accepts `status`, `timeframe`, and a date filter only when both ends are set. */
 const historyQuery = (params = {}) => {
   const next = { ...params };
   const requested = String(next.status || next.appointment_status || '').trim().toLowerCase();
   delete next.appointment_status;
-  if (HISTORY_STATUSES.has(requested)) next.status = requested;
-  else delete next.status;
+  if (HISTORY_TIMEFRAMES.has(requested)) {
+    if (!next.timeframe && requested !== 'all') next.timeframe = requested;
+    delete next.status;
+  } else if (HISTORY_STATUSES.has(requested)) {
+    next.status = requested;
+  } else {
+    delete next.status;
+  }
+  const timeframe = String(next.timeframe || '').trim().toLowerCase();
+  if (!HISTORY_TIMEFRAMES.has(timeframe)) delete next.timeframe;
+  else next.timeframe = timeframe;
   if (!next.from_date || !next.to_date) {
     delete next.from_date;
     delete next.to_date;

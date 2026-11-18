@@ -285,6 +285,18 @@
 }
 .appointments-page.ap-premium .ap-card .confirm-meta-chip small svg { color: var(--ap-gold); }
 .appointments-page.ap-premium .ap-card .confirm-meta-chip strong { margin-top: 2px; font-size: 13px; color: var(--ap-green-dark); }
+.appointments-page.ap-premium .ap-card .confirm-meta-chip--follow {
+  grid-column: 1 / -1;
+  border-left: 0;
+  border-top: 1px solid rgba(201, 165, 90, 0.4);
+}
+.appointments-page.ap-premium .ap-card .confirm-meta-chip--follow span {
+  display: block;
+  margin-top: 2px;
+  color: var(--am-text-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
 .appointments-page.ap-premium .ap-card .appoint-followup {
   margin: 8px 0 0; background: #f8ecc9; color: #8a6b2e; border: 1px solid rgba(201, 165, 90, 0.5);
 }
