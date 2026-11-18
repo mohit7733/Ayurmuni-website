@@ -2502,6 +2502,13 @@
 .hm-page .hm-wellness {
   gap: 18px;
 }
+
+/* Reveal adds 16px margin; inside a gapped row that doubles the space.
+   Keep Visited Doctors → Our Doctors at the same 18px as other panels. */
+.hm-page .hm-doctor-row > .am-reveal.is-shown,
+.hm-page .hm-doctor-row > .hm-section {
+  margin-bottom: 0;
+}
 .hm-page .hm-wellness{
   margin-top: 18px;
 }
