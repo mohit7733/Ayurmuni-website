@@ -82,8 +82,6 @@ export default function EditProfile() {
       cameraFileRef.current?.click();
       return;
     }
-    setCameraError('');
-    setCameraReady(false);
     setCameraOpen(true);
   };
 
