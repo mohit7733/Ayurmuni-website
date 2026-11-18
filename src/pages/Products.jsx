@@ -31,7 +31,6 @@ import {
   SectionHeader,
 } from "../components/ui";
 import { CatalogPageSkeleton } from "../components/skeletons";
-import { filterItemsByQuery } from "../home/concernCatalog";
 import { STORE_COPY as T } from "../content/store";
 import "../design/pages/store.css";
 import "../design/brand.css";
@@ -48,13 +47,22 @@ export default function Products() {
     [dashboardCategories],
   );
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
+  const [search, setSearch] = useState("");
+  const [query, setQuery] = useState("");
+  useEffect(() => {
+    const timer = setTimeout(() => setQuery(search.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
   const productFilter = useMemo(() => {
-    if (!selectedCategoryId) return {};
+    const next = {};
+    if (query) next.search = query;
+    if (!selectedCategoryId) return next;
     return {
+      ...next,
       id: selectedCategoryId,
       ...(productsCategoryId ? { service_category_id: productsCategoryId } : {}),
     };
-  }, [productsCategoryId, selectedCategoryId]);
+  }, [productsCategoryId, selectedCategoryId, query]);
   const { products, loading, loadingMore, refreshing, hasMore, loadMore } =
     useCategoryProducts(productFilter, [], {
       enabled: Boolean(productsCategoryId) || !homeLoading,
@@ -64,6 +72,7 @@ export default function Products() {
   const serviceEmpty =
     Boolean(productsCategoryId) &&
     !selectedCategoryId &&
+    !query &&
     !loading &&
     products.length === 0;
   const catalogFallback = useCategoryProducts({}, [], { enabled: serviceEmpty });
@@ -77,14 +86,6 @@ export default function Products() {
 
   const [recentProducts, setRecentProducts] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [query, setQuery] = useState("");
-  // Page search filters this page in place (debounced while typing; Search/Enter applies now).
-  useEffect(() => {
-    const timer = setTimeout(() => setQuery(search.trim()), 300);
-    return () => clearTimeout(timer);
-  }, [search]);
-
   // Filter & Sort States
   const [sortBy, setSortBy] = useState("relevance");
   const [priceRange, setPriceRange] = useState([0, 10000]);
@@ -155,7 +156,7 @@ export default function Products() {
 
   // Apply client-side filters and sorting
   const filteredAndSortedProducts = useMemo(() => {
-    let filtered = [...filterItemsByQuery(listProducts, query)];
+    let filtered = [...listProducts];
 
     // Filter by price range (items without a numeric price are kept)
     filtered = filtered.filter((product) => {
@@ -182,7 +183,7 @@ export default function Products() {
 
     return orderListedProducts(filtered, { sortBy });
 
-  }, [listProducts, query, priceRange, minRating, inStockOnly, sortBy]);
+  }, [listProducts, priceRange, minRating, inStockOnly, sortBy]);
 
   const hasActiveFilters =
     priceRange[0] !== 0 ||

@@ -1010,8 +1010,9 @@ export default function Home() {
             <Reveal as="section" className="hm-section hm-panel" aria-labelledby="hm-packages-title">
               <SectionHeader
                 id="hm-packages-title"
+                className="hm-doctor-head"
                 title={T.packagesTitle}
-                action={<ViewAll label={T.packagesTitle} onClick={() => navigate('/packages')} />}
+                action={<ViewAll plain label={T.packagesTitle} onClick={() => navigate('/packages')} />}
               />
               <div className="hm-plan-band">
                 <p className="hm-plan-band__tag">

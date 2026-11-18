@@ -30,7 +30,6 @@ import {
 } from '../utils/productSearchUtils';
 import { orderListedProducts } from '../products/listingOrder';
 import { STORE_COPY as T } from '../content/store';
-import { filterItemsByQuery } from '../home/concernCatalog';
 import '../design/pages/store.css';
 import '../design/pages/products.css';
 import '../design/brand.css';
@@ -286,8 +285,9 @@ export default function CategoryProducts() {
       min_rating: minRating > 0 ? minRating : null,
       dosha_type: dosha === 'all' ? null : dosha,
       sort: toProductApiSort(sortBy),
+      search: query || null,
     }),
-    [priceRange, minRating, dosha, sortBy],
+    [priceRange, minRating, dosha, sortBy, query],
   );
 
   const requestFilter = useMemo(
@@ -494,7 +494,7 @@ export default function CategoryProducts() {
       : products;
     const scoped = brandMatched.filter(inService);
     let filtered = applyProductFilters({
-      products: filterItemsByQuery(scoped, query),
+      products: scoped,
       sortBy: catalogSort,
       brandIds: !brandId && brandIds.length > 0 ? brandIds : null,
       brandNames: brandNames.length > 0 ? brandNames : null,
@@ -528,7 +528,6 @@ export default function CategoryProducts() {
 
   }, [
     products,
-    query,
     priceRange,
     minRating,
     inStockOnly,

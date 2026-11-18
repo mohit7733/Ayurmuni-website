@@ -14,12 +14,7 @@ export const toQuery = (filter, page, pageSize) => {
   if (filter.min_rating != null && filter.min_rating !== "") query.min_rating = filter.min_rating;
   if (filter.dosha_type) query.dosha_type = filter.dosha_type;
   if (filter.sort) query.sort = filter.sort;
-  if (filter.search?.trim()) {
-    // Search spans the whole catalog (no category scoping); a chosen brand still applies, as in the app.
-    query.search = filter.search.trim();
-    if (filter.brand_name_id) query.brand_name_id = filter.brand_name_id;
-    return query;
-  }
+  if (filter.search?.trim()) query.search = filter.search.trim();
   [
     "id",
     "product_subcategory_id",
