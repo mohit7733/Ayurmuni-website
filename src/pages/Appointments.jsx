@@ -18,7 +18,6 @@ import {
   canOfferReschedule,
   hasAlreadyRescheduled,
   isAppointmentJoinable,
-  isAppointmentInPast,
   formatAppointmentDateFull,
   formatAppointmentTimeLabel,
   formatDoctorDisplayName,
@@ -50,9 +49,26 @@ const PAST_STATUS = [
 
 const FOLLOW_UP_FILTERS = [
   { key: "all", label: "All visits" },
-  { key: "true", label: "Follow-up" },
-  { key: "false", label: "Regular" },
+  { key: "follow_up", label: "Follow-up" },
 ];
+
+const followUpDetails = (item) => {
+  const raw = item?.raw || {};
+  const appointment = raw.appointment || {};
+  const followUp = raw.follow_up || appointment.follow_up || {};
+  const scheduled =
+    followUp.schedule === true || String(followUp.schedule).toLowerCase() === "true";
+  const date = String(followUp.date || "").trim();
+  const reason = String(followUp.reason || "").trim();
+  return {
+    scheduled,
+    date,
+    reason,
+    dateLabel: date ? formatAppointmentDateFull(date) : "",
+  };
+};
+
+const isFollowUpVisit = (item) => followUpDetails(item).scheduled;
 
 const UPCOMING_STATUS_FILTERS = [
   { key: "all", label: "Any status" },
@@ -63,6 +79,16 @@ const UPCOMING_STATUS_FILTERS = [
 
 const PAST_STATUS_FILTERS = [
   { key: "all", label: "Any status" },
+  { key: "completed", label: "Completed" },
+  { key: "cancelled", label: "Cancelled" },
+  { key: "missed", label: "Missed" },
+];
+
+const ALL_STATUS_FILTERS = [
+  { key: "all", label: "Any status" },
+  { key: "pending", label: "Pending" },
+  { key: "confirmed", label: "Confirmed" },
+  { key: "reschedule", label: "Reschedule" },
   { key: "completed", label: "Completed" },
   { key: "cancelled", label: "Cancelled" },
   { key: "missed", label: "Missed" },
@@ -113,45 +139,6 @@ const paymentPendingOf = (item) => {
     .trim()
     .toLowerCase();
   return PAYMENT_PENDING_RE.test(value);
-};
-
-const LIVE_CALL = ["in_progress", "live", "ongoing", "started"];
-
-const apiDay = (date = new Date()) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
-
-const visitDate = (item) => {
-  const raw = item?.raw || {};
-  const appointment = raw.appointment || {};
-  return (
-    item?.date ||
-    appointment.appointment_date ||
-    raw.appointment_date ||
-    raw.date ||
-    ""
-  );
-};
-
-/** Calendar date is before today, even if the status is still Confirmed. */
-const isBeforeToday = (value) => {
-  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value || "").trim());
-  if (!match) return false;
-  const day = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return day < today;
-};
-
-/** A finished visit belongs in Past: earlier calendar day, or today's slot has ended. */
-const isPastVisit = (item) => {
-  const call = String(item?.call_status || "").toLowerCase();
-  if (LIVE_CALL.includes(call)) return false;
-  if (isBeforeToday(visitDate(item))) return true;
-  return isAppointmentInPast(item);
 };
 
 function VisitPhoto({ src, name }) {
@@ -217,12 +204,10 @@ export default function Appointments() {
   const listScope = upcomingOnly ? "upcoming" : tab;
 
   const apiFilters = useMemo(() => {
-    const filters = {};
-    filters.appointment_status =
-      statusFilter !== "all" ? statusFilter : listScope;
-    if (followUpFilter !== "all") filters.follow_up = followUpFilter;
+    const filters = { timeframe: listScope };
+    if (statusFilter !== "all") filters.status = statusFilter;
     return filters;
-  }, [listScope, statusFilter, followUpFilter]);
+  }, [listScope, statusFilter]);
 
   // Tab / filter switches and refresh race: only the newest list request may write state.
   const listRequestRef = useRef(0);
@@ -242,70 +227,14 @@ export default function Appointments() {
         const hasNext = (res, mapped) =>
           Boolean(res?.data?.next || res?.next) || mapped.length >= PAGE_SIZE;
 
-        const today = apiDay();
-        let mapped = [];
-        let more = false;
-        if (listScope === "past" && statusFilter === "all") {
-          const followUp =
-            followUpFilter !== "all" ? { follow_up: followUpFilter } : {};
-          const [pastRes, activeRes] = await Promise.all([
-            getConsultHistory({
-              page: pageNo,
-              page_size: PAGE_SIZE,
-              appointment_status: "past",
-              ...followUp,
-            }),
-            getConsultHistory({
-              page: pageNo,
-              page_size: PAGE_SIZE,
-              to_date: today,
-              ...followUp,
-            }),
-          ]);
-          if (requestId !== listRequestRef.current) return;
-          const pastList = mapList(pastRes);
-          const endedActive = mapList(activeRes).filter(isPastVisit);
-          const seen = new Set();
-          mapped = [...pastList, ...endedActive].filter((item) => {
-            const key = String(item.consultationId || item.appointmentId || item.id);
-            if (!key || seen.has(key)) return false;
-            seen.add(key);
-            return true;
-          });
-          more = hasNext(pastRes, pastList) || hasNext(activeRes, mapList(activeRes));
-        } else if (listScope === "upcoming" && statusFilter === "all") {
-          const followUp =
-            followUpFilter !== "all" ? { follow_up: followUpFilter } : {};
-          const results = await Promise.all(
-            ["confirmed", "pending", "reschedule", "rescheduled", "cancellation_requested"].map(
-              (status) =>
-                getConsultHistory({
-                  page: pageNo,
-                  page_size: PAGE_SIZE,
-                  status,
-                  ...followUp,
-                }).catch(() => null),
-            ),
-          );
-          if (requestId !== listRequestRef.current) return;
-          const seen = new Set();
-          mapped = results.flatMap(mapList).filter((item) => {
-            const key = String(item.consultationId || item.appointmentId || item.id);
-            if (!key || seen.has(key)) return false;
-            seen.add(key);
-            return true;
-          });
-          more = results.some((res) => hasNext(res, mapList(res)));
-        } else {
-          const res = await getConsultHistory({
-            page: pageNo,
-            page_size: PAGE_SIZE,
-            ...apiFilters,
-          });
-          if (requestId !== listRequestRef.current) return;
-          mapped = mapList(res);
-          more = hasNext(res, mapped);
-        }
+        const res = await getConsultHistory({
+          page: pageNo,
+          page_size: PAGE_SIZE,
+          ...apiFilters,
+        });
+        if (requestId !== listRequestRef.current) return;
+        const mapped = mapList(res);
+        const more = hasNext(res, mapped);
         setItems((prev) => (mode === "append" ? [...prev, ...mapped] : mapped));
         setPage(pageNo);
         setHasMore(more);
@@ -317,7 +246,7 @@ export default function Appointments() {
         }
       }
     },
-    [apiFilters, followUpFilter, listScope, statusFilter],
+    [apiFilters],
   );
 
   useEffect(() => {
@@ -337,20 +266,7 @@ export default function Appointments() {
     () =>
       items.filter((item) => {
         const status = String(item.status || "").toLowerCase();
-        const ended = isPastVisit(item);
-        if (statusFilter === "all") {
-          if (listScope === "upcoming") {
-            if (PAST_STATUS.includes(status) || ended) return false;
-          } else if (
-            !PAST_STATUS.includes(status) &&
-            status !== "past" &&
-            !ended
-          ) {
-            return false;
-          }
-        } else if (listScope === "upcoming" && ended) {
-          return false;
-        } else if (status !== statusFilter && status !== `${statusFilter}d`) {
+        if (statusFilter !== "all" && status !== statusFilter && status !== `${statusFilter}d`) {
           if (
             !(
               statusFilter === "reschedule" &&
@@ -360,21 +276,10 @@ export default function Appointments() {
             return false;
           }
         }
-        if (followUpFilter !== "all") {
-          const raw = item.raw || {};
-          const fu = raw.follow_up;
-          const hasFollowUp = Boolean(
-            item.followUpDate ||
-            fu?.date ||
-            fu?.schedule ||
-            raw.follow_up_active,
-          );
-          if (followUpFilter === "true" && !hasFollowUp) return false;
-          if (followUpFilter === "false" && hasFollowUp) return false;
-        }
+        if (followUpFilter === "follow_up" && !isFollowUpVisit(item)) return false;
         return true;
       }),
-    [items, listScope, statusFilter, followUpFilter],
+    [items, statusFilter, followUpFilter],
   );
 
   const openDetails = (item, action) => {
@@ -420,7 +325,11 @@ export default function Appointments() {
   };
 
   const statusChips =
-    listScope === "upcoming" ? UPCOMING_STATUS_FILTERS : PAST_STATUS_FILTERS;
+    listScope === "upcoming"
+      ? UPCOMING_STATUS_FILTERS
+      : listScope === "past"
+        ? PAST_STATUS_FILTERS
+        : ALL_STATUS_FILTERS;
   const filtersOn = followUpFilter !== "all" || statusFilter !== "all";
   const resultLabel = loading
     ? "Loading…"
@@ -471,6 +380,7 @@ export default function Appointments() {
                 <p className="ap-side__label" id="ap-when-label">When</p>
                 <ul className="st-cat-filter" role="tablist" aria-labelledby="ap-when-label">
                   {[
+                    { id: "all", label: "All" },
                     { id: "upcoming", label: "Upcoming" },
                     { id: "past", label: "Past" },
                   ].map((item) => (
@@ -558,14 +468,18 @@ export default function Appointments() {
                 ? "No visits match these filters"
                 : listScope === "upcoming"
                   ? "No upcoming appointments"
-                  : "No past appointments"}
+                  : listScope === "past"
+                    ? "No past appointments"
+                    : "No appointments"}
             </strong>
             <p>
               {filtersOn
                 ? "Clear Visit or Status to see the rest of this list."
                 : listScope === "upcoming"
                   ? "Book a doctor to schedule your next consultation."
-                  : "Finished visits show up here, including ones still marked confirmed."}
+                  : listScope === "past"
+                    ? "Finished visits show up here, including ones still marked confirmed."
+                    : "Upcoming and past visits show up here."}
             </p>
             {filtersOn ? (
               <button type="button" className="cta" onClick={clearFilters}>
@@ -618,7 +532,7 @@ export default function Appointments() {
               const showViewDetails = hasRx && PAST_STATUS.includes(status);
               const showJoinCall = isAppointmentJoinable(item);
               const refund = getRefundProgress(status, item.raw, item);
-              const followUp = item.followUpDate;
+              const followUp = followUpDetails(item);
               const doctorName = formatDoctorDisplayName(item.doctorName);
               const photo = item.image || consultationDoctorPhoto(item);
               const facts = visitFacts(item);
@@ -675,16 +589,20 @@ export default function Appointments() {
                       </small>
                       <strong>{timeRange || "—"}</strong>
                     </div>
+                    {followUp.scheduled ? (
+                      <div className="confirm-meta-chip confirm-meta-chip--follow">
+                        <small>
+                          <CalendarDays size={13} aria-hidden /> Follow-up
+                        </small>
+                        <strong>{followUp.dateLabel || "Scheduled"}</strong>
+                        {followUp.reason ? <span>{followUp.reason}</span> : null}
+                      </div>
+                    ) : null}
                   </div>
                   {refund ? (
                     <p className="appoint-followup">
                       {refund.title} {refund.amount != null ? formatConsultationAmount(refund.amount) : ""}
                       {refund.at ? ` · ${formatPaymentTimestamp(refund.at)}` : ""}
-                    </p>
-                  ) : null}
-                  {followUp ? (
-                    <p className="appoint-followup">
-                      Follow-up scheduled · {followUp}
                     </p>
                   ) : null}
                   {withinModify || showViewDetails || showJoinCall ? (
