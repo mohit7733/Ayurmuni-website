@@ -32,9 +32,16 @@ import { formatPaymentTimestamp, getRefundProgress } from "../utils/paymentHisto
 import { requireAuth } from "../services/guestAuth";
 import { getConsultHistory } from "../services/consultService";
 import { invalidateApiCache } from "../services/apiClient";
-import { fetchUpcomingAppointmentList } from "../hooks/useUpcomingAppointments";
 import { consultationHasPrescription } from "../utils/prescriptionDetailUtils";
 import "../design/pages/appointments.css";
+
+/** API `timeframe` values: upcoming | today | past | all (default all). */
+const TIMEFRAME_TABS = [
+  { id: "all", label: "All" },
+  { id: "upcoming", label: "Upcoming" },
+  { id: "today", label: "Today" },
+  { id: "past", label: "Past" },
+];
 
 const PAGE_SIZE = 20;
 
@@ -215,16 +222,6 @@ export default function Appointments() {
       else if (mode === "refresh") setRefreshing(true);
       else setLoading(true);
       try {
-        // Match HomeJoinAppointments / useUpcomingAppointments so "+3 more" opens the same set.
-        if (listScope === "upcoming") {
-          const mapped = await fetchUpcomingAppointmentList(Math.max(PAGE_SIZE, 50));
-          if (requestId !== listRequestRef.current) return;
-          setItems(mapped);
-          setPage(1);
-          setHasMore(false);
-          return;
-        }
-
         const mapList = (res) => {
           const list = res?.data?.results || res?.results || [];
           return Array.isArray(list) ? list.map(mapAppointment) : [];
@@ -232,6 +229,7 @@ export default function Appointments() {
         const hasNext = (res, mapped) =>
           Boolean(res?.data?.next || res?.next) || mapped.length >= PAGE_SIZE;
 
+        // Always filter by appointment date via API `timeframe`.
         const res = await getConsultHistory({
           page: pageNo,
           page_size: PAGE_SIZE,
@@ -331,7 +329,7 @@ export default function Appointments() {
   };
 
   const statusChips =
-    listScope === "upcoming"
+    listScope === "upcoming" || listScope === "today"
       ? UPCOMING_STATUS_FILTERS
       : listScope === "past"
         ? PAST_STATUS_FILTERS
@@ -385,11 +383,7 @@ export default function Appointments() {
               <div className="ap-side__group">
                 <p className="ap-side__label" id="ap-when-label">When</p>
                 <ul className="st-cat-filter" role="tablist" aria-labelledby="ap-when-label">
-                  {[
-                    { id: "all", label: "All" },
-                    { id: "upcoming", label: "Upcoming" },
-                    { id: "past", label: "Past" },
-                  ].map((item) => (
+                  {TIMEFRAME_TABS.map((item) => (
                     <li key={item.id}>
                       <button
                         type="button"
