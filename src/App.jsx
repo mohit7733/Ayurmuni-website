@@ -281,7 +281,7 @@ export default function App() {
           <CartProvider>
             <NavBinder />
             <ScrollToTop />
-            <MetaPixelPageView />
+            <TrackingPageView />
             <ComingSoonGate />
             <ToastHost />
             <GlobalLoadBar />
