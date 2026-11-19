@@ -2783,6 +2783,7 @@
   .hm-page .hm-panel :is(.hm-concerns-head, .hm-brands-head) .am-section-header__title {
     grid-column: 1;
     grid-row: 1;
+    margin-top: 12px;
     min-width: 0;
   }
 
@@ -2938,6 +2939,7 @@
   isolation: isolate;
   padding-top: 8px;
   padding-bottom: 8px;
+  margin-top: 12px;
 }
 
 .hm-page .hm-brands-panel .hm-brands-head.am-section-header {
