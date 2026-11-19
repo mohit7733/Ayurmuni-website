@@ -3003,10 +3003,10 @@
 
 .hm-page .hm-brands-panel .am-concerns__track>li {
   display: flex;
-  flex: 0 0 88px;
+  flex: 0 0 104px;
   align-self: stretch;
-  width: 88px;
-  height: 80px;
+  width: 104px;
+  height: 96px;
   max-width: none;
 }
 
@@ -3015,12 +3015,12 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  gap: 4px;
-  width: 88px;
-  height: 80px;
-  min-height: 80px;
+  gap: 5px;
+  width: 104px;
+  height: 96px;
+  min-height: 96px;
   aspect-ratio: auto;
-  padding: 6px;
+  padding: 8px;
   border: 1px solid color-mix(in srgb, #c9a55a 42%, #e7e1d4);
   border-radius: 18px;
   background:
@@ -3039,8 +3039,8 @@
   display: grid;
   place-items: center;
   flex: 0 0 auto;
-  width: 48px;
-  height: 48px;
+  width: 58px;
+  height: 58px;
   padding: 0;
   overflow: hidden;
   border-radius: 50%;
@@ -3111,17 +3111,17 @@
 
   .hm-page .hm-brands-panel .am-concerns__track>li,
   .hm-page .hm-brands-panel .am-tile.hm-brand-tile {
-    flex-basis: 84px;
-    width: 84px;
-    height: 70px;
-    min-height: 70px;
-    padding: 6px 5px 5px;
-    gap: 3px;
+    flex-basis: 96px;
+    width: 96px;
+    height: 88px;
+    min-height: 88px;
+    padding: 7px 6px 6px;
+    gap: 4px;
   }
 
   .hm-page .hm-brands-panel .hm-brand-tile .am-tile__img {
-    width: 40px;
-    height: 40px;
+    width: 52px;
+    height: 52px;
     padding: 0;
   }
 }
