@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, BadgeCheck, Briefcase, Repeat, Sparkles, Star } from 'lucide-react';
 import { formatDoctorDisplayName } from '../consult/appointmentUtils';
@@ -20,6 +20,43 @@ import FavButton from './ui/FavButton';
 import DietitianBadge from './DietitianBadge';
 import { nameInitial } from '../utils/initials';
 import Rail, { RailItem } from './ui/Rail';
+
+/** Scrolls long doctor names horizontally when they don't fit. */
+function MarqueeName({ children }) {
+  const wrapRef = useRef(null);
+  const textRef = useRef(null);
+  const [shift, setShift] = useState(0);
+
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    const text = textRef.current;
+    if (!wrap || !text) return undefined;
+
+    const measure = () => {
+      const delta = Math.ceil(text.scrollWidth - wrap.clientWidth);
+      setShift(delta > 2 ? delta : 0);
+    };
+
+    measure();
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
+    ro?.observe(wrap);
+    window.addEventListener('resize', measure);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, [children]);
+
+  return (
+    <span
+      ref={wrapRef}
+      className={`vd-card__name-scroll${shift ? ' is-marquee' : ''}`}
+      style={shift ? { '--vd-name-shift': `-${shift}px` } : undefined}
+    >
+      <strong ref={textRef}>{children}</strong>
+    </span>
+  );
+}
 
 /**
  * T129 — "Visited Doctors" (app parity: VisitedDoctorHomeCard).
@@ -90,7 +127,7 @@ function VisitedDoctorCard({ item, fallbackSpeciality }) {
         <span className="vd-card__id">
           <span className="vd-card__name-row">
             <span className="vd-card__name">
-              <strong>{name}</strong>
+              <MarqueeName>{name}</MarqueeName>
               {verified ? <BadgeCheck size={15} aria-label="Verified" /> : null}
             </span>
             {experience ? (
