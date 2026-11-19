@@ -10,6 +10,7 @@ import usePackagePurchase from "../hooks/usePackagePurchase";
 import { isAuthenticated, requireAuth } from "../services/guestAuth";
 import PackageCount from "../components/PackageCount";
 import { loadPackageById } from "../services/packageService";
+import { trackMetaViewContent } from "../services/metaPixel";
 import "../design/pages/packages-premium.css";
 
 const formatDate = (value) => {
@@ -54,6 +55,17 @@ export default function PackageDetails() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    if (!item?.id) return;
+    trackMetaViewContent({
+      contentIds: [String(item.id)],
+      contentType: "product",
+      contentName: item.name || item.title,
+      value: Number(item.fees?.totalPayable || item.price) || undefined,
+      currency: "INR",
+    });
+  }, [item?.id]); // eslint-disable-line react-hooks/exhaustive-deps -- once per package load
 
   const back = () => {
     if (window.history.length > 1) navigate(-1);

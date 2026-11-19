@@ -30,6 +30,7 @@ import ReviewSubmitModal from '../components/ReviewSubmitModal';
 import ShareButton from '../components/ShareButton';
 import { formatRupee, resolveImageUrl } from '../home/catalog';
 import { useCart } from '../hooks/useCart';
+import { trackMetaViewContent } from '../services/metaPixel';
 import {
   getAddQtyBlockMessage,
   getProductStockDisplay,
@@ -177,6 +178,18 @@ export default function ProductDetails({ medicine = false } = {}) {
 
   const active = selected || defaultVariant || product;
   const cartVariantId = String(active?.id ?? active?.variant_id ?? variantId ?? '').trim();
+
+  useEffect(() => {
+    if (!product || !cartVariantId) return;
+    const value = Number(active?.selling_price ?? active?.price ?? product?.selling_price) || undefined;
+    trackMetaViewContent({
+      contentIds: [cartVariantId],
+      contentType: 'product',
+      contentName: product?.name || active?.name,
+      value,
+      currency: 'INR',
+    });
+  }, [product, cartVariantId]); // eslint-disable-line react-hooks/exhaustive-deps -- fire once per loaded product/variant
   const cartQty = variantQuantities[cartVariantId] ?? 0;
   const adding = addingVariantId === cartVariantId;
   const images = galleryFromProduct(product, active);

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import DietitianBadge from '../components/DietitianBadge';
+import { trackMetaFindLocation, trackMetaViewContent } from '../services/metaPixel';
 import {
   ActionStack,
   DetailCard,
@@ -159,7 +160,19 @@ export default function DoctorProfile() {
   useEffect(() => {
     setPhotoFailed(false);
   }, [image]);
+
   const fee = doctorConsultFee(doctor);
+
+  useEffect(() => {
+    if (!doctor || !id) return;
+    trackMetaViewContent({
+      contentIds: [String(id)],
+      contentType: 'product',
+      contentName: doctor?.name || doctor?.full_name,
+      value: Number(fee) || undefined,
+      currency: 'INR',
+    });
+  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps -- once per doctor profile
   const feeLabel = fee ? formatConsultationAmount(fee) : '';
   const about = String(doctor?.bio || doctor?.about || doctor?.description || '')
     .replace(/\r\n/g, '\n')
@@ -177,6 +190,15 @@ export default function DoctorProfile() {
   const hiddenConditions = Math.max(0, healthDiseases.length - 6);
   const qualification = doctorQualification(doctor);
   const locationLabel = doctorLocation(doctor);
+
+  useEffect(() => {
+    if (!id || !locationLabel) return;
+    trackMetaFindLocation({
+      contentIds: [String(id)],
+      contentName: doctor?.name || doctor?.full_name,
+      locationName: locationLabel,
+    });
+  }, [id, locationLabel]); // eslint-disable-line react-hooks/exhaustive-deps -- once per doctor location
   const experienceLabel = doctorExperience(doctor);
   const ratingValue = doctorRating(doctor);
   const reviewCount = Number(doctor?.total_reviews || reviews.length || 0);

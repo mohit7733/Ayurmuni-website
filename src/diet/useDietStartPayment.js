@@ -7,6 +7,11 @@ import {
   requestDietPurchase,
 } from '../payment/dietCheckout';
 import { dietPlanNeedsPurchase } from '../payment/dietPurchase';
+import {
+  trackMetaPurchase,
+  trackMetaStartTrial,
+  trackMetaSubscribe,
+} from '../services/metaPixel';
 import { requireAuth } from '../services/guestAuth';
 
 /**
@@ -30,6 +35,16 @@ export default function useDietStartPayment({ plan, planId, status, startPlan, o
       if (result === true) {
         clearDietPaymentSettled(planId);
         setSettled(false);
+        // Free diet start ≈ StartTrial (no paid checkout).
+        if (!dietPlanNeedsPurchase(plan, status)) {
+          trackMetaStartTrial({
+            eventId: `trial_diet_${planId}`,
+            contentIds: [String(planId)],
+            contentName: plan?.title || plan?.name || 'diet_plan',
+            value: 0,
+            currency: 'INR',
+          });
+        }
       }
       if (result?.conflict) {
         onConflictRef.current?.({
@@ -42,7 +57,7 @@ export default function useDietStartPayment({ plan, planId, status, startPlan, o
       }
       return result;
     },
-    [planId, startPlan],
+    [plan, planId, startPlan, status],
   );
 
   const quote = useCallback(
@@ -103,6 +118,25 @@ export default function useDietStartPayment({ plan, planId, status, startPlan, o
     if (outcome === 'redirect') return;
     if (outcome === 'verified') {
       rememberDietPaymentSettled(planId, current.quote.purchaseId);
+      const purchaseId = current.quote.purchaseId || planId;
+      const value =
+        Number(current.quote?.totalPayable ?? current.quote?.paid_price ?? current.item?.price) ||
+        undefined;
+      trackMetaPurchase({
+        eventId: `diet_${purchaseId}`,
+        contentIds: [String(planId)],
+        contentName: current.item?.title || current.item?.name,
+        value,
+        currency: 'INR',
+        orderId: String(purchaseId),
+      });
+      trackMetaSubscribe({
+        eventId: `subscribe_diet_${purchaseId}`,
+        contentIds: [String(planId)],
+        contentName: current.item?.title || current.item?.name,
+        value,
+        currency: 'INR',
+      });
       setSettled(true);
       setReview(null);
       await finish(current.options);

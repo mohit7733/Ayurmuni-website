@@ -25,6 +25,7 @@ import { isProfileComplete, markAsGuest, syncAccessFromProfile } from '../servic
 import { parsePolicyAcceptedCustomer } from '../utils/policyUtils';
 import { Button, Modal } from '../components/ui';
 import { AUTH_COPY as T } from '../content/auth';
+import { trackMetaCompleteRegistration } from '../services/metaPixel';
 import '../design/pages/auth.css';
 
 const OTP_LEN = 4;
@@ -183,6 +184,11 @@ export default function OtpVerify() {
         if (refreshToken) {
           await Utils.storeData('_REFRESH_TOKEN', refreshToken);
         }
+
+        trackMetaCompleteRegistration({
+          eventId: `register_user_${userId}`,
+          contentName: 'customer_register',
+        });
 
         await markAsGuest();
         showSuccessToast(response?.message || 'OTP verified successfully', 'success');

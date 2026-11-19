@@ -4,10 +4,13 @@ import AppShell from '../components/AppShell';
 import PageHeader from '../components/PageHeader';
 import { Button } from '../components/ui';
 import { STATIC_COPY as T } from '../content/static';
+import { trackMetaContact } from '../services/metaPixel';
 import '../design/pages/static.css';
 
 export default function Contact() {
   const navigate = useNavigate();
+  const onEmailContact = () => trackMetaContact({ method: 'email', contentName: 'support_email' });
+  const onCallContact = () => trackMetaContact({ method: 'phone', contentName: 'emergency_call' });
 
   return (
     <AppShell tab="profile">
@@ -33,7 +36,9 @@ export default function Contact() {
               <div>
                 <strong>Need emergency care?</strong>
                 <p>{T.contactNote}</p>
-                <a href="tel:112">Call 112</a>
+                <a href="tel:112" onClick={onCallContact}>
+                  Call 112
+                </a>
               </div>
             </aside>
           </div>
@@ -46,12 +51,13 @@ export default function Contact() {
               <span className="sx-contact-page__card-label">EMAIL SUPPORT</span>
               <h2>Talk to our team</h2>
               <p>For help with orders, appointments, or your account, send us an email.</p>
-              <a className="sx-contact-page__email" href={T.contactEmailHref}>
+              <a className="sx-contact-page__email" href={T.contactEmailHref} onClick={onEmailContact}>
                 {T.contactEmail}
               </a>
               <Button
                 variant="primary"
                 href={T.contactEmailHref}
+                onClick={onEmailContact}
                 trailingIcon={<ArrowRight size={17} aria-hidden="true" />}
               >
                 {T.faqEmail}

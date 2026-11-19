@@ -6,6 +6,7 @@
 import { useEffect, useState } from 'react';
 import { subscribeApiSession } from '../services/apiClient';
 import { toggleWishlistProduct } from '../services/productService';
+import { trackMetaAddToWishlist } from '../services/metaPixel';
 
 const wishlistCache = new Map();
 const listeners = new Set();
@@ -83,6 +84,18 @@ export async function toggleWishlistItem(item) {
       const resolved = readWishlistFlag(serverFlag);
       wishlistCache.set(variantId, resolved);
       if (resolved !== next) emit(variantId, resolved);
+    }
+    const wishlisted =
+      serverFlag != null ? readWishlistFlag(serverFlag) : next;
+    if (wishlisted) {
+      const unit = Number(item?.selling_price ?? item?.price) || undefined;
+      trackMetaAddToWishlist({
+        contentIds: [variantId],
+        contentType: 'product',
+        contentName: item?.name || item?.title,
+        value: unit,
+        currency: 'INR',
+      });
     }
     return 'ok';
   } catch {

@@ -24,6 +24,7 @@ import {
   toggleAnswer,
 } from './utils';
 import { promoteToFullUser, resolveAccessLikeProfile } from '../services/guestAuth';
+import { trackMetaPrakritiTestComplete } from '../services/metaPixel';
 
 export const useQuestionnaireFlow = (mode) => {
   const navigate = useNavigate();
@@ -174,6 +175,11 @@ export const useQuestionnaireFlow = (mode) => {
         return;
       }
       if (isPrakriti) {
+        trackMetaPrakritiTestComplete({
+          eventId: `prakriti_web_${Date.now()}`,
+          contentName: answers.prakritiType || 'prakriti',
+          result: answers.prakritiType,
+        });
         await promoteToFullUser();
         await resolveAccessLikeProfile();
       }
