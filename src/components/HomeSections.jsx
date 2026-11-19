@@ -23,21 +23,23 @@ export function ViewAll({ onClick, label, plain = false, className }) {
   );
 }
 
-/** Homepage rail header (title + View all + description). */
+/** Homepage rail header (eyebrow + title on one line, View all, description). */
 export function DoctorRailHeader({ id, eyebrow, title, description, onViewAll, reserveEyebrow = false }) {
   return (
     <div className="hm-doctor-head">
-      {eyebrow ? (
-        <p className="am-eyebrow">{eyebrow}</p>
-      ) : reserveEyebrow ? (
-        <p className="am-eyebrow" aria-hidden="true">
-          &nbsp;
-        </p>
-      ) : null}
       <div className="hm-doctor-head__row">
-        <h2 id={id} className="hm-doctor-head__title">
-          {title}
-        </h2>
+        <div className="hm-doctor-head__lead">
+          {eyebrow ? (
+            <p className="am-eyebrow">{eyebrow}</p>
+          ) : reserveEyebrow ? (
+            <p className="am-eyebrow" aria-hidden="true">
+              &nbsp;
+            </p>
+          ) : null}
+          <h2 id={id} className="hm-doctor-head__title">
+            {title}
+          </h2>
+        </div>
         <ViewAll plain label={title} onClick={onViewAll} />
       </div>
       {description ? <p className="hm-doctor-head__desc">{description}</p> : null}

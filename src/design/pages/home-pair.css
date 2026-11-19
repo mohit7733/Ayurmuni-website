@@ -144,19 +144,24 @@
 
 @media (max-width: 639px) {
   .hm-page .am-diet-active.hm-appt {
-    grid-template-columns: auto minmax(0, 1fr);
-    grid-template-areas:
-      'media body'
-      'status status'
-      'strip strip'
-      'actions actions';
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: 'media body cta' 'foot foot foot';
     padding: 12px;
   }
   .hm-appt__status { justify-self: start; }
   .hm-appt__strip > div { padding: 0 12px; }
   .hm-appt__strip dd { font-size: 13px; }
-  .hm-appt__cta { flex: 1 1 auto; justify-content: center; }
-  .hm-pair .am-diet-active:not(.hm-appt) { grid-template-columns: auto minmax(0, 1fr); }
+  .hm-appt__cta {
+    flex: 0 0 auto;
+    width: auto;
+    min-height: 36px;
+    padding: 0 12px;
+    font-size: 12.5px;
+    justify-content: center;
+  }
+  .hm-pair .am-diet-active:not(.hm-appt) {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .hm-appt__skel { animation: none; }
@@ -235,8 +240,16 @@
   -webkit-box-orient: vertical;
 }
 .hm-page .hm-pair .am-diet-active__sub { margin: 1px 0 0; font-size: 12px; line-height: 1.25; }
-.hm-page .hm-pair .am-diet-active__cta {
-  position: relative; min-height: 36px; padding: 0 14px; font-size: 12.5px; justify-content: center; box-shadow: none;
+.hm-page .hm-pair .am-diet-active__cta,
+.hm-page .hm-pair .hm-appt__cta {
+  position: relative;
+  min-height: 36px;
+  padding: 0 14px;
+  font-size: 12.5px;
+  justify-content: center;
+  box-shadow: none;
+  width: auto;
+  flex: 0 0 auto;
 }
 .hm-page .hm-pair .am-diet-active__cta svg { width: 14px; height: 14px; }
 @media (pointer: coarse) {

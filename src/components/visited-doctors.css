@@ -13,29 +13,61 @@
   flex-direction: column;
   gap: 8px;
   min-width: 0;
+  overflow: visible;
 }
 
-.vd-list {
-  list-style: none;
+/* Visited doctors — horizontal autoplay rail (same pattern as Our Doctors) */
+.vd-list.am-rail,
+.am-rail.vd-list {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 12px;
   margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 8px;
-  grid-template-columns: repeat(2, 1fr);
+  padding: 2px 2px 10px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 2px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
 
-@media (max-width: 480px) {
-  .vd-list {
-    grid-template-columns: 1fr;
+.vd-list.am-rail::-webkit-scrollbar,
+.am-rail.vd-list::-webkit-scrollbar {
+  display: none;
+}
+
+.am-rail.vd-list > .am-rail__item,
+.am-rail.vd-list > .vd-list__item {
+  flex: 0 0 min(320px, 86%);
+  width: min(320px, 86%);
+  min-width: min(320px, 86%);
+  max-width: 360px;
+  scroll-snap-align: start;
+  align-self: stretch;
+}
+
+.am-rail.vd-list .vd-card {
+  height: 100%;
+}
+
+@media (max-width: 720px) {
+  .am-rail.vd-list > .am-rail__item,
+  .am-rail.vd-list > .vd-list__item {
+    flex: 0 0 min(300px, 86vw);
+    width: min(300px, 86vw);
+    min-width: min(300px, 86vw);
+    max-width: 320px;
   }
 }
 
 .vd-card {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto;
   align-items: center;
-  gap: 6px 12px;
-  padding: 10px 10px 10px 12px;
+  gap: 6px 10px;
+  min-width: 0;
+  padding: 10px;
   border-radius: 16px;
   background: linear-gradient(180deg, #fffdf8, #fbf6ea);
   border: 1px solid rgba(228, 196, 122, 0.55);
@@ -49,6 +81,8 @@
 }
 
 .vd-card__main {
+  grid-column: 1;
+  grid-row: 1;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -61,6 +95,21 @@
   cursor: pointer;
   color: inherit;
   font: inherit;
+}
+
+.vd-card__avatar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  min-width: 52px;
+}
+
+.vd-card__avatar .vd-chip--new {
+  height: 20px;
+  padding: 0 7px;
+  font-size: 10.5px;
 }
 
 .vd-card__ring {
@@ -106,20 +155,57 @@
   min-width: 0;
 }
 
+.vd-card__name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+}
+
 .vd-card__name {
   display: flex;
+  flex: 1 1 auto;
   align-items: center;
   gap: 5px;
   min-width: 0;
   color: #105343;
 }
 
-.vd-card__name strong {
+.vd-card__name-scroll {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.vd-card__name-scroll strong {
+  display: inline-block;
+  max-width: none;
   font: 700 15px/1.25 'Gilroy', 'Satoshi', sans-serif;
   color: #17302a;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+}
+
+.vd-card__name-scroll.is-marquee strong {
+  animation: vd-name-marquee 7s ease-in-out infinite alternate;
+}
+
+@keyframes vd-name-marquee {
+  0%,
+  18% {
+    transform: translateX(0);
+  }
+  82%,
+  100% {
+    transform: translateX(var(--vd-name-shift, 0));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vd-card__name-scroll.is-marquee strong {
+    animation: none;
+  }
 }
 
 .vd-card__name svg {
@@ -176,27 +262,32 @@
   letter-spacing: 0.03em;
 }
 
+.vd-chip--exp {
+  flex: 0 0 auto;
+}
+
 .vd-card__foot {
-  display: contents;
+  grid-column: 1;
+  grid-row: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 2px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(201, 162, 78, 0.45);
 }
 
 .vd-card__visit {
-  grid-column: 1;
-  grid-row: 2;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding-top: 7px;
-  border-top: 1px dashed rgba(201, 162, 78, 0.45);
+  position: relative;
   font-size: 12px;
   color: #4d625b;
   font-weight: 600;
   min-width: 0;
   white-space: nowrap;
-}
-
-.vd-card__visit {
-  position: relative;
 }
 
 .vd-card__visit svg {
@@ -224,11 +315,10 @@
 }
 
 .vd-card__actions {
-  grid-column: 2;
-  grid-row: 1 / span 2;
   display: flex;
   align-items: center;
   gap: 8px;
+  flex: 0 0 auto;
 }
 
 .vd-card .vd-card__fav {
@@ -263,32 +353,27 @@
 }
 
 
-/* phones: stacked cards, actions on their own row */
+/* phones: keep exp above the dashed line; tighten actions */
 @media (max-width: 600px) {
   .vd-card {
     grid-template-columns: minmax(0, 1fr);
     padding: 10px;
   }
 
-  .vd-card__foot {
-    display: flex;
+  .vd-card__name-row {
     align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding-top: 8px;
-    border-top: 1px dashed rgba(201, 162, 78, 0.45);
+  }
+
+  .vd-card__name {
+    align-items: center;
   }
 
   .vd-card__visit {
-    padding-top: 0;
-    border-top: 0;
-    min-width: 0;
     font-size: 11.5px;
   }
 
   .vd-card__actions {
     gap: 6px;
-    flex: 0 0 auto;
   }
 
   .vd-card__book {
@@ -340,19 +425,15 @@
   }
 }
 
-/* T135: 2 visited vs 3 suggested — side-by-side panels share one height, visited cards fill it (no empty gap) */
+/* T135: visited vs suggested — side-by-side panels share one height */
 @media (min-width: 768px) {
   .hm-doctor-row--split {
     align-items: stretch;
   }
 
-  .hm-doctor-row--split>.hm-visited .vd-list {
+  .hm-doctor-row--split>.hm-visited .vd-wrap,
+  .hm-doctor-row--split>.hm-visited .am-rail-scroller {
     flex: 1 1 auto;
-    grid-auto-rows: 1fr;
-  }
-
-  .hm-doctor-row--split>.hm-visited .vd-card {
-    height: 100%;
-    align-content: center;
+    min-width: 0;
   }
 }

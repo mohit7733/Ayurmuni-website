@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { logoutOneSignalUser } from '../services/pushNotificationService';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -17,6 +17,7 @@ import {
   Flower2,
   Gift,
   Heart,
+  HeartHandshake,
   History,
   Leaf,
   LogOut,
@@ -46,8 +47,13 @@ import {
   isProfileComplete,
   navigateToCompleteDetails,
   persistProfileAndSyncAccess,
+  requireAuth,
   resolveAccessLikeProfile,
 } from '../services/guestAuth';
+import DiseaseSelectionModal from '../components/DiseaseSelectionModal';
+import { getHomeCategory } from '../services/homeService';
+import { getServiceCategoryId, normalizeServiceCategories } from '../home/serviceCategories';
+import { diseaseIdsOf, resolveDiseaseList } from '../profile/healthConcerns';
 import { update_Profile, UploadProfilePhoto } from '../services/profileService';
 import useProfileDashboardStats from '../hooks/useProfileDashboardStats';
 import { LOGGED_OUT_STATS, buildPhotoOptions, buildProfilePayload } from '../profile/dashboardStats';
@@ -101,6 +107,8 @@ export default function Profile() {
   const [removeOpen, setRemoveOpen] = useState(false);
   const [photoBusy, setPhotoBusy] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
+  const [showDiseaseModal, setShowDiseaseModal] = useState(false);
+  const [medicineCategoryId, setMedicineCategoryId] = useState(null);
   const fileRef = useRef(null);
   const cameraFileRef = useRef(null);
   const { stats: dashboardStats } = useProfileDashboardStats(level === 'full');
@@ -125,6 +133,23 @@ export default function Profile() {
       }
       setLevel(resolved.level === 'guest' ? 'guest' : 'full');
       setUser(resolved.profile);
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const res = await getHomeCategory();
+        if (!alive) return;
+        const list = normalizeServiceCategories(res?.data ?? res);
+        setMedicineCategoryId(getServiceCategoryId(list, 'medicine') || null);
+      } catch {
+        /* modal still works with the unscoped diseases catalog */
+      }
     })();
     return () => {
       alive = false;
@@ -211,6 +236,21 @@ export default function Profile() {
       return;
     }
     navigate(item.to, item.state ? { state: item.state } : undefined);
+  };
+
+  const diseases = useMemo(() => resolveDiseaseList(user), [user]);
+  const selectedDiseaseIds = useMemo(() => diseaseIdsOf(diseases), [diseases]);
+
+  const openConcernsEditor = async () => {
+    if (!(await requireAuth('Sign in to update your health concerns'))) return;
+    setShowDiseaseModal(true);
+  };
+
+  const onDiseaseSaved = async (saved) => {
+    setShowDiseaseModal(false);
+    if (!saved) return;
+    const resolved = await resolveAccessLikeProfile();
+    if (resolved.profile) setUser(resolved.profile);
   };
 
   if (level === null) {
@@ -354,6 +394,46 @@ export default function Profile() {
             ))}
           </div>
         </article>
+
+        <section className="pf-concerns" aria-label="Health concerns">
+          <header className="pf-concerns__head">
+            <span className="pf-concerns__icon" aria-hidden>
+              <HeartHandshake size={18} />
+            </span>
+            <h2>Health concerns</h2>
+            <button type="button" className="pf-concerns__edit" onClick={openConcernsEditor}>
+              <Pencil size={14} aria-hidden />
+              {diseases.length ? 'Edit' : 'Add'}
+            </button>
+          </header>
+          <div className="pf-concerns__body">
+            {diseases.length ? (
+              <ul className="pf-concerns__chips">
+                {diseases.map((item) => (
+                  <li key={item.id}>
+                    <span className="pf-concerns__chip">{item.name}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="pf-concerns__empty">Add concerns to personalize care</p>
+            )}
+          </div>
+        </section>
+
+        <DiseaseSelectionModal
+          visible={showDiseaseModal}
+          serviceCategoryId={medicineCategoryId}
+          initialSelectedIds={selectedDiseaseIds}
+          isEditMode={diseases.length > 0}
+          title={diseases.length ? 'Update health concerns' : 'Personalize your Ayurmuni'}
+          subtitle={
+            diseases.length
+              ? 'Personalize doctors, diet & products'
+              : 'Tell us your health concerns'
+          }
+          onDone={onDiseaseSaved}
+        />
 
         <section className="pf-block" aria-label={T.exploreLabel}>
           <header className="pf-block__head">

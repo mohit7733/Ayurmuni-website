@@ -32,6 +32,7 @@ import {
   parseConsultationReceiptBreakdown,
   receiptBreakdownIsIncomplete,
 } from '../utils/consultationReceiptUtils';
+import { createPlainTextPdfBytes } from '../utils/plainPdf';
 import { saveBrowserFile } from '../utils/prescriptionDetailUtils';
 import { getEmailShareUrl } from '../utils/shareUtils';
 import { buildReceiptDocument } from '../documents/documentData';
@@ -186,24 +187,42 @@ export default function MedicalReceipt() {
   const billRows = breakdown ? buildConsultationReceiptBillRows(breakdown) : [];
   const receiptText = receipt && breakdown ? buildReceiptText(receipt, breakdown) : '';
 
-  const downloadReceipt = async () => {
+  const receiptFileStem = () =>
+    `Medical_Receipt_${formatReceiptId(receipt?.consultation_id ?? receipt?.payment_id).replace(
+      /[^a-zA-Z0-9._-]/g,
+      '_',
+    )}`;
+
+  const downloadReceipt = () => {
+    if (!receipt || !receiptText) {
+      showSuccessToast('Receipt data not loaded yet', 'error');
+      return;
+    }
+    try {
+      const pdfText = receiptText.replace(/₹/g, 'Rs.');
+      saveBrowserFile(
+        new Blob([createPlainTextPdfBytes(pdfText)], { type: 'application/pdf' }),
+        `${receiptFileStem()}.pdf`,
+      );
+    } catch (error) {
+      showSuccessToast(error?.message || 'Unable to save receipt', 'error');
+    }
+  };
+
+  const printReceipt = async () => {
     if (!receipt) {
       showSuccessToast('Receipt data not loaded yet', 'error');
       return;
     }
     try {
-      // Designed receipt (same layout as the app PDF): opens the print dialog -> "Save as PDF".
       const html = renderDocumentHtml(
         buildReceiptDocument(receipt),
         `Medical Receipt ${formatReceiptId(receipt?.consultation_id ?? receipt?.payment_id)}`,
       );
       if (await printDocumentHtml(html)) return;
-      const fileName = `Medical_Receipt_${formatReceiptId(
-        receipt?.consultation_id ?? receipt?.payment_id,
-      ).replace(/[^a-zA-Z0-9._-]/g, '_')}.txt`;
-      saveBrowserFile(new Blob([receiptText], { type: 'text/plain;charset=utf-8' }), fileName);
+      window.print();
     } catch (error) {
-      showSuccessToast(error?.message || 'Unable to save receipt', 'error');
+      showSuccessToast(error?.message || 'Unable to print receipt', 'error');
     }
   };
 
@@ -246,7 +265,7 @@ export default function MedicalReceipt() {
                     <Button
                       variant="secondary"
                       leadingIcon={<Printer size={16} aria-hidden />}
-                      onClick={() => window.print()}
+                      onClick={printReceipt}
                     >
                       Print
                     </Button>

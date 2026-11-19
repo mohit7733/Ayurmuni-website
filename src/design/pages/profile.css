@@ -1388,3 +1388,109 @@
     gap: var(--am-space-3);
   }
 }
+
+/* Health concerns card — all chips wrap in the available width; Edit stays in the header. */
+.pf-concerns {
+  padding: 16px 20px 18px;
+  border: 1px solid color-mix(in srgb, var(--am-primary) 18%, var(--am-line));
+  border-radius: var(--am-radius-xl);
+  background:
+    linear-gradient(180deg, rgba(18, 114, 92, 0.06) 0%, rgba(18, 114, 92, 0.02) 100%),
+    #f7f4ec;
+}
+
+.pf-concerns__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.pf-concerns__icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--am-radius-md);
+  background: var(--am-primary-soft);
+  color: var(--am-primary);
+}
+
+.pf-concerns__head h2 {
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--am-text);
+  font-family: var(--am-font-display);
+  font-size: var(--am-text-lg);
+  font-weight: var(--am-weight-bold);
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+
+.pf-concerns__body {
+  min-width: 0;
+}
+
+.pf-concerns__chips {
+  display: flex;
+  flex-wrap: wrap;
+  flex: 1 1 auto;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pf-concerns__chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid color-mix(in srgb, var(--am-primary) 28%, var(--am-line));
+  border-radius: 999px;
+  background: #fff;
+  color: var(--am-green-900, #0b4136);
+  font-size: var(--am-text-sm);
+  font-weight: var(--am-weight-medium);
+}
+
+.pf-concerns__empty {
+  margin: 0;
+  color: var(--am-text-muted);
+  font-size: var(--am-text-sm);
+}
+
+.pf-concerns__edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  margin-left: auto;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid color-mix(in srgb, var(--am-primary) 32%, var(--am-line));
+  border-radius: var(--am-radius-pill);
+  background: transparent;
+  color: var(--am-primary);
+  font: inherit;
+  font-size: var(--am-text-sm);
+  font-weight: var(--am-weight-semibold);
+  cursor: pointer;
+}
+
+.pf-concerns__edit:hover {
+  background: rgba(18, 114, 92, 0.08);
+}
+
+.pf-concerns__edit:focus-visible {
+  outline: 2px solid var(--am-primary);
+  outline-offset: 2px;
+}
+
+@media (max-width: 420px) {
+  .pf-concerns {
+    padding: 14px 16px 16px;
+  }
+}

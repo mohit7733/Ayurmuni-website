@@ -17,6 +17,8 @@ export default function DiseaseSelectionModal({
   serviceCategoryId,
   title = 'Personalize your Ayurmuni',
   subtitle = 'Tell us your health concerns',
+  initialSelectedIds,
+  isEditMode = false,
 }) {
   const [options, setOptions] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -51,15 +53,24 @@ export default function DiseaseSelectionModal({
     }
   }, [serviceCategoryId]);
 
+  const initialKey = (Array.isArray(initialSelectedIds) ? initialSelectedIds : [])
+    .map((id) => String(id).trim())
+    .filter(Boolean)
+    .join(',');
+
   useEffect(() => {
-    if (!visible) return;
-    const key = String(serviceCategoryId || 'all');
+    if (!visible) {
+      loadedFor.current = '';
+      return;
+    }
+    const seed = initialKey ? initialKey.split(',') : [];
+    const key = `${String(serviceCategoryId || 'all')}:${initialKey}`;
     if (loadedFor.current === key) return;
     loadedFor.current = key;
-    setSelectedIds([]);
+    setSelectedIds(seed);
     setQuery('');
     loadOptions();
-  }, [visible, serviceCategoryId, loadOptions]);
+  }, [visible, serviceCategoryId, initialKey, loadOptions]);
 
   const toggleDisease = (id) => {
     const key = String(id);
@@ -71,7 +82,7 @@ export default function DiseaseSelectionModal({
   const handleSkip = () => onDone?.(false);
 
   const handleSubmit = async () => {
-    if (!selectedIds.length || submitting) return;
+    if ((!isEditMode && !selectedIds.length) || submitting) return;
     setSubmitting(true);
     try {
       const response = await update_Profile({ health_disease_ids: selectedIds });
@@ -87,11 +98,18 @@ export default function DiseaseSelectionModal({
       }));
       await Utils.storeData('_USER_INFO', {
         ...cached,
-        has_health_diseases: true,
+        has_health_diseases: selectedIds.length > 0,
         health_diseases: diseases,
         health_disease_ids: selectedIds,
       });
-      showSuccessToast('Health preferences saved', 'success');
+      showSuccessToast(
+        !selectedIds.length
+          ? 'Health concerns cleared'
+          : isEditMode
+            ? 'Health concerns updated'
+            : 'Health preferences saved',
+        'success',
+      );
       onDone?.(true);
     } catch (error) {
       showSuccessToast(error?.message || 'Unable to save health concerns', 'error');
@@ -214,11 +232,11 @@ export default function DiseaseSelectionModal({
             <button
               type="button"
               className="pz-save"
-              disabled={!count || submitting}
+              disabled={(!isEditMode && !count) || submitting}
               aria-busy={submitting || undefined}
               onClick={handleSubmit}
             >
-              {submitting ? 'Saving…' : count ? `Save (${count})` : 'Save'}
+              {submitting ? 'Saving…' : count ? `Save (${count})` : isEditMode ? 'Clear concerns' : 'Save'}
               <ArrowRight size={16} aria-hidden />
             </button>
           </footer>

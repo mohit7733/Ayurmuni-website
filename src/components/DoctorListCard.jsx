@@ -24,7 +24,7 @@ import FavButton from './ui/FavButton';
 import DietitianBadge from './DietitianBadge';
 import { nameInitial } from '../utils/initials';
 
-/** T131 — compact premium card for the All doctors grid (same data + actions as SuggestedDoctorCard). */
+/** T131 — compact premium card for the All doctors grid. */
 export default function DoctorListCard({ item, fallbackSpeciality = 'Ayurveda' }) {
   const navigate = useNavigate();
   const id = getDoctorId(item);
@@ -40,6 +40,8 @@ export default function DoctorListCard({ item, fallbackSpeciality = 'Ayurveda' }
   const availability = getDoctorAvailabilityLabel(item);
   const initial = nameInitial(name);
   const [fav, setFav] = useState(() => doctorFavorite(item));
+  const [imgFailed, setImgFailed] = useState(false);
+  const showPhoto = Boolean(image) && !imgFailed;
 
   const openProfile = () => {
     if (id) navigate(`/consult/doctors/${id}`);
@@ -68,88 +70,85 @@ export default function DoctorListCard({ item, fallbackSpeciality = 'Ayurveda' }
   };
 
   return (
-    <article className="am-flip-doc">
-      <div className="am-flip-doc__media">
-        {image ? (
-          <img src={image} alt="" loading="lazy" decoding="async" />
-        ) : (
-          <span className="am-flip-doc__fallback" aria-hidden>
-            {nameInitial(name)}
-          </span>
-        )}
-        <div className="am-flip-doc__shade" aria-hidden />
-
-        <div className="am-flip-doc__chips">
+    <article className="dl-card">
+      <div className="dl-card__top">
+        <span className={`dl-card__ring${showPhoto ? '' : ' is-mono'}`}>
+          {showPhoto ? (
+            <img
+              src={image}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              onError={() => setImgFailed(true)}
+            />
+          ) : (
+            <span className="dl-card__mono" aria-hidden>
+              {initial}
+            </span>
+          )}
+        </span>
+        <div className="dl-card__rate">
           {rating ? (
-            <span className="am-flip-doc__chip">
-              <Star size={12} aria-hidden fill="currentColor" />
-              {rating}
-              {reviewCount ? <span>({reviewCount})</span> : null}
-            </span>
-          ) : null}
-          {verified ? (
-            <span className="am-flip-doc__chip am-flip-doc__chip--verified">
-              <BadgeCheck size={13} aria-hidden />
-              Verified
-            </span>
-          ) : null}
-        </div>
-
-        <div className="am-card-corner">
-          <FavButton
-            on={fav}
-            label={fav ? `Remove ${name} from favourites` : `Save ${name}`}
-            onClick={toggleFav}
-          />
-        </div>
-        <div className="hm-doc-card__dietitian">
-          <DietitianBadge doctor={item} />
-        </div>
-      </div>
-
-      <div className="am-flip-doc__body">
-        <h3 className="am-flip-doc__name">
-          <button type="button" className="am-stretched" onClick={openProfile}>
-            {name}
-          </button>
-        </h3>
-        {credential ? <p className="am-flip-doc__spec">{credential}</p> : null}
-        {experience || location ? (
-          <ul className="hm-doc-card__specialized-bio" aria-label="Specialized Bio">
-            {item.specialized_bio.length ?
-              item.specialized_bio.map((bio) => (
-                <li key={bio} className="hm-doc-card__specialized-bio-item">
-                  <span>{bio}</span>
-                </li>
-              )) : null}
-            {/* {experience ? (
-            <li>
-              <Briefcase size={13} aria-hidden />
-              {experience}
-            </li>
-          ) : null}
-          {location ? (
-            <li>
-              <MapPin size={13} aria-hidden />
-              {location}
-            </li>
-          ) : null} */}
-          </ul>
-        ) : null}
-        <div className="am-flip-doc__cta">
-          {fee ? (
-            <span className="am-flip-doc__fee">
-              <small>Consult</small>
-              {fee}
+            <span className="dl-chip dl-chip--rating">
+              <Star size={12} fill="currentColor" aria-hidden />
+              <b>{rating}</b>
+              {reviewCount ? <em>({reviewCount})</em> : null}
             </span>
           ) : (
-            <span />
+            <span className="dl-chip dl-chip--new">
+              <Sparkles size={12} aria-hidden />
+              New
+            </span>
           )}
-          <button type="button" className="am-flip-doc__cta-link" onClick={openProfile}>
-            View profile
-            <ArrowRight size={14} aria-hidden />
-          </button>
         </div>
+        <FavButton
+          on={fav}
+          className="dl-card__fav"
+          label={fav ? `Remove ${name} from favourites` : `Save ${name}`}
+          onClick={toggleFav}
+        />
+      </div>
+
+      <h3 className="dl-card__name">
+        <button type="button" className="am-stretched" onClick={openProfile}>
+          {name}
+        </button>
+        {verified ? <BadgeCheck size={15} aria-label="Verified" /> : null}
+      </h3>
+      <DietitianBadge doctor={item} />
+      {credential ? <p className="dl-card__cred">{credential}</p> : null}
+
+      <ul className="dl-card__facts">
+        {experience ? (
+          <li>
+            <Briefcase size={12} aria-hidden />
+            {experience}
+          </li>
+        ) : null}
+        {location ? (
+          <li>
+            <MapPin size={12} aria-hidden />
+            <span>{location}</span>
+          </li>
+        ) : null}
+        <li className={`dl-card__avail${availability === 'Available' ? ' is-on' : ''}`}>
+          <span>{availability}</span>
+        </li>
+      </ul>
+
+      <div className="dl-card__foot">
+        {fee ? (
+          <span className="dl-card__fee">
+            <small>Consult</small>
+            {fee}
+          </span>
+        ) : (
+          <span />
+        )}
+        <button type="button" className="dl-card__cta" onClick={openProfile}>
+          View profile
+          <ArrowRight size={14} aria-hidden />
+        </button>
       </div>
     </article>
   );
