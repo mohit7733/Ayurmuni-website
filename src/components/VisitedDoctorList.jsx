@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, BadgeCheck, Briefcase, CalendarCheck, Repeat, Sparkles, Star } from 'lucide-react';
-import { formatAppointmentDateFull, formatDoctorDisplayName } from '../consult/appointmentUtils';
+import { ArrowRight, BadgeCheck, Briefcase, Repeat, Sparkles, Star } from 'lucide-react';
+import { formatDoctorDisplayName } from '../consult/appointmentUtils';
 import {
   doctorDisplayName,
   doctorExperience,
@@ -37,7 +37,6 @@ function VisitedDoctorCard({ item, fallbackSpeciality }) {
   const reviewCount = Number(item?.total_reviews || item?.review_count || item?.reviews_count || 0);
   const verified = Boolean(item?.is_verified);
   const available = item?.has_availability === true;
-  const lastVisit = formatAppointmentDateFull(item?.last_consulted_date || '');
   const visits = Number(item?.consultation_count || 0);
   const [fav, setFav] = useState(() => doctorFavorite(item));
 
@@ -115,24 +114,11 @@ function VisitedDoctorCard({ item, fallbackSpeciality }) {
         </span>
       </button>
       <div className="vd-card__foot">
-        {lastVisit || visits > 0 ? (
-          <span className="vd-card__visit" title={lastVisit ? `Last visit ${lastVisit}` : undefined}>
-            {lastVisit ? (
-              <>
-                <CalendarCheck size={13} aria-hidden />
-                <span className="vd-card__visit-text">
-                  <span className="vd-card__visit-label">Last visit · </span>
-                  {lastVisit}
-                </span>
-              </>
-            ) : null}
-            {visits > 0 ? (
-              <span className="vd-chip vd-chip--visits">
-                <Repeat size={12} aria-hidden />
-                <b>{visits}</b>
-                {visits === 1 ? ' visit' : ' visits'}
-              </span>
-            ) : null}
+        {visits > 0 ? (
+          <span className="vd-chip vd-chip--visits">
+            <Repeat size={12} aria-hidden />
+            <b>{visits}</b>
+            {visits === 1 ? ' visit' : ' visits'}
           </span>
         ) : (
           <span />
