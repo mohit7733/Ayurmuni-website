@@ -3007,7 +3007,7 @@
   flex: 0 0 104px;
   align-self: stretch;
   width: 104px;
-  height: 104px;
+  height: 110px;
   max-width: none;
 }
 
@@ -3016,10 +3016,10 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  gap: 5px;
+  gap: 10px;
   width: 104px;
-  height: 104px;
-  min-height: 104px;
+  height: 110px;
+  min-height: 110px;
   aspect-ratio: auto;
   padding: 8px 8px 10px;
   border: 1px solid color-mix(in srgb, #c9a55a 42%, #e7e1d4);
@@ -3066,7 +3066,7 @@
   width: 100%;
   min-height: 0;
   max-height: 1.25em;
-  margin: 0;
+  margin: 2px 0 0;
   padding: 0;
   overflow: hidden;
   font-size: 12.5px;
@@ -3114,16 +3114,21 @@
   .hm-page .hm-brands-panel .am-tile.hm-brand-tile {
     flex-basis: 96px;
     width: 96px;
-    height: 98px;
-    min-height: 98px;
-    padding: 7px 6px 9px;
-    gap: 4px;
+    height: 112px;
+    min-height: 112px;
+    padding: 7px 6px 10px;
+    gap: 12px;
   }
 
   .hm-page .hm-brands-panel .hm-brand-tile .am-tile__img {
     width: 52px;
     height: 52px;
+    margin-bottom: 2px;
     padding: 0;
+  }
+
+  .hm-page .hm-brands-panel .hm-brand-tile .am-tile__label {
+    margin-top: 4px;
   }
 }
 
