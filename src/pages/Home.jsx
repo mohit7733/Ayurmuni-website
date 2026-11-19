@@ -1120,7 +1120,6 @@ export default function Home() {
                 {!isSectionDone('doctors') && !doctors.length ? (
                   <section className="hm-section" aria-busy="true">
                     <DoctorRailHeader
-                      eyebrow={T.doctorsEyebrow}
                       title={"Our Doctors" || T.doctorsTitle}
                       description={T.doctorsText}
                       onViewAll={() => navigate('/consult/doctors')}
@@ -1133,7 +1132,6 @@ export default function Home() {
                   <Reveal as="section" className="hm-section" delay={120} aria-labelledby="hm-doctors-title">
                     <DoctorRailHeader
                       id="hm-doctors-title"
-                      eyebrow={T.doctorsEyebrow}
                       title={"Our Doctors" || T.doctorsTitle}
                       description={T.doctorsText}
                       onViewAll={() => navigate('/consult/doctors')}

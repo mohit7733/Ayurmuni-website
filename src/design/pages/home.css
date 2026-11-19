@@ -1571,12 +1571,7 @@
   font-size: 12px;
 }
 
-@media (min-width: 1080px) {
-  .hm-wellness--pair {
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.9fr);
-    align-items: stretch;
-  }
-}
+/* Diet + Yoga always stack (one under the other), never side-by-side. */
 
 @media (prefers-reduced-motion: reduce) {
 
@@ -2533,18 +2528,12 @@
   gap: var(--hm-section-gap, 16px);
 }
 
-/* Diet + Yoga were stuck together: gap only works when the wrapper is flex/grid. */
-.hm-page .hm-wellness {
+/* Diet + Yoga stack vertically with section gap between them. */
+.hm-page .hm-wellness,
+.hm-page .hm-wellness.hm-wellness--pair {
   display: flex;
   flex-direction: column;
-}
-
-@media (min-width: 1080px) {
-  .hm-page .hm-wellness.hm-wellness--pair {
-    display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.9fr);
-    align-items: stretch;
-  }
+  gap: var(--hm-section-gap, 16px);
 }
 
 /* .am-reveal.is-shown adds 16px margin-bottom globally — that stacks on top of
