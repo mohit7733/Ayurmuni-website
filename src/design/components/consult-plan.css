@@ -2,7 +2,13 @@
 .cp-list {
   display: grid;
   gap: 8px;
+  max-height: min(52vh, 420px);
   margin: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 2px;
+  scrollbar-gutter: stable;
 }
 
 .cp-row {

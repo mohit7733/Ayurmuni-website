@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   AlertCircle,
@@ -22,7 +22,6 @@ import { requireAuth } from '../services/guestAuth';
 import { getMyPackages, isPlanExpired } from '../services/packageService';
 import PackageCount from '../components/PackageCount';
 import {
-  buildPlanNameMap,
   daysLeft,
   formatPlanDate,
   formatPlanTime,
@@ -31,6 +30,7 @@ import {
   getPlanAmounts,
   humanize,
   planBenefitIcon,
+  ownPurchaseBenefits,
   ALL_PLAN_STATUSES,
   PLAN_STATUS_TABS,
   readPlanPage,
@@ -75,66 +75,10 @@ const BenefitIcon = ({ label, size = 15 }) => {
   return <Icon size={size} aria-hidden />;
 };
 
-const benefitKey = (label) =>
-  String(label || '')
-    .replace(/^\d+(?:\.\d+)?\s*/, '')
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '')
-    .replace(/s$/, '');
-
-const countOf = (value) => {
-  const number = Number(value);
-  return Number.isFinite(number) ? number : 0;
-};
-
-const carriedForBenefit = (benefit, shifted) => {
-  const key = benefitKey(benefit?.label);
-  if (!key) return [];
-  return shifted.filter((item) => benefitKey(item.label) === key && countOf(item.quantity_total) > 0);
-};
-
-function ShiftedRow({ item, fromPlanName }) {
-  const shiftedOn = formatPlanDate(item.valid_from);
-  const validTill = formatPlanDate(item.valid_until);
-  const originalTill = formatPlanDate(item.original_valid_until);
-  const fromLabel =
-    fromPlanName ||
-    (item.shifted_from_purchase ? `Plan #${String(item.shifted_from_purchase).slice(0, 8).toUpperCase()}` : '');
-  const expired =
-    String(item.status || '').toLowerCase() === 'expired' ||
-    (Boolean(item.valid_until) &&
-      Number.isFinite(new Date(item.valid_until).getTime()) &&
-      new Date(item.valid_until).getTime() < Date.now());
-  return (
-    <li className="mp-benefit is-shifted">
-      <span className="mp-benefit__icon">
-        <BenefitIcon label={item.label} />
-      </span>
-      <div className="mp-benefit__body">
-        <div className="mp-benefit__top">
-          <p className="mp-benefit__label">{item.label}</p>
-          <span className="mp-benefit__pill">{humanize(item.status) || 'Shifted'}</span>
-        </div>
-        {fromLabel ? <p className="mp-benefit__meta">From {fromLabel}</p> : null}
-        <PackageCount
-          remaining={item.quantity_remaining}
-          total={item.quantity_total}
-          expired={expired}
-          shiftedOn={shiftedOn}
-          validTill={validTill}
-          originalTill={originalTill}
-        />
-      </div>
-    </li>
-  );
-}
-
-function PlanCard({ plan, highlighted, planNames }) {
+function PlanCard({ plan, highlighted }) {
   const expired = isPlanExpired(plan);
   const statusKey = getPlanStatusKey(plan);
   const status = getPlanStatus(plan);
-  const shifted = (plan.shifted_consumables ?? []).filter((item) => item?.label);
   const pending = plan.status === 'pending';
   const autopay = Boolean(plan.billing_mode) && plan.billing_mode !== 'one_time';
   const { amount, saved, original } = getPlanAmounts(plan);
@@ -143,7 +87,7 @@ function PlanCard({ plan, highlighted, planNames }) {
   const startTime = formatPlanTime(plan.starts_at);
   const expiryDate = formatPlanDate(plan.expires_at);
   const expiryTime = formatPlanTime(plan.expires_at);
-  const benefits = (plan.benefits ?? []).filter((benefit) => benefit?.label);
+  const benefits = ownPurchaseBenefits(plan);
   const showValidity = Boolean(expiryDate) && remainingDays !== null && plan.status === 'active' && !expired;
   const cardRef = useRef(null);
 
@@ -248,70 +192,26 @@ function PlanCard({ plan, highlighted, planNames }) {
           </div>
         ) : null}
 
-        {benefits.length > 0 ? (
-          <div>
-            <h3 className="mp-section">Your benefits</h3>
+        <div className="mp-benefits-block">
+          <h3 className="mp-section">Your benefits</h3>
+          {benefits.length > 0 ? (
             <ul className="mp-benefits">
-              {benefits.map((benefit, index) => {
-                const carried = carriedForBenefit(benefit, shifted);
-                const carriedTotal = carried.reduce((sum, item) => sum + countOf(item.quantity_total), 0);
-                const carriedRemaining = carried.reduce((sum, item) => sum + countOf(item.quantity_remaining), 0);
-                const ownTotal =
-                  benefit.quantity_total != null && carriedTotal > 0
-                    ? Math.max(0, countOf(benefit.quantity_total) - carriedTotal)
-                    : benefit.quantity_total;
-                const ownRemaining =
-                  benefit.quantity_remaining != null && carriedTotal > 0
-                    ? Math.max(0, countOf(benefit.quantity_remaining) - carriedRemaining)
-                    : benefit.quantity_remaining;
-                const sources = [
-                  ...new Set(
-                    carried.map((item) =>
-                      item.shifted_from_purchase
-                        ? planNames[item.shifted_from_purchase] ||
-                          `Plan #${String(item.shifted_from_purchase).slice(0, 8).toUpperCase()}`
-                        : 'previous plan',
-                    ),
-                  ),
-                ];
-                return (
-                  <li className="mp-benefit" key={`${plan.id}-${index}`}>
-                    <span className="mp-benefit__icon">
-                      <BenefitIcon label={benefit.label} />
-                    </span>
-                    <div className="mp-benefit__body">
-                      <p className="mp-benefit__label">{benefit.label}</p>
-                      <PackageCount
-                        remaining={ownRemaining}
-                        total={ownTotal}
-                        carriedRemaining={carriedTotal > 0 ? carriedRemaining : undefined}
-                        carriedTotal={carriedTotal > 0 ? carriedTotal : undefined}
-                        carriedFrom={sources.join(', ')}
-                      />
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        ) : null}
-
-        {shifted.length > 0 ? (
-          <div>
-            <h3 className="mp-section">
-              Shifted benefits <span>{shifted.length} shifted</span>
-            </h3>
-            <ul className="mp-benefits mp-benefits--shifted">
-              {shifted.map((item, index) => (
-                <ShiftedRow
-                  key={item.id || `${plan.id}-shifted-${index}`}
-                  item={item}
-                  fromPlanName={item.shifted_from_purchase ? planNames[item.shifted_from_purchase] ?? '' : ''}
-                />
+              {benefits.map((benefit, index) => (
+                <li className="mp-benefit" key={`${plan.id}-${index}`}>
+                  <span className="mp-benefit__icon">
+                    <BenefitIcon label={benefit.label} />
+                  </span>
+                  <div className="mp-benefit__body">
+                    <p className="mp-benefit__label">{benefit.label}</p>
+                    <PackageCount remaining={benefit.remaining} total={benefit.total} expired={expired} />
+                  </div>
+                </li>
               ))}
             </ul>
-          </div>
-        ) : null}
+          ) : (
+            <p className="mp-benefits__empty">No benefits listed for this plan.</p>
+          )}
+        </div>
 
         <p className="mp-id">Plan ID · {String(plan.id).slice(0, 8).toUpperCase()}</p>
       </div>
@@ -397,28 +297,31 @@ export default function MyPlans() {
     };
   }, [fetchPage]);
 
-  const planNames = useMemo(() => buildPlanNameMap(plans), [plans]);
-
   return (
     <AppShell tab="profile">
-      <section className="or-page">
-        <PageHeader title="My Plans" subtitle="Care plans you have purchased" backTo="/profile" />
-
-        <div className="or-toolbar">
-          <SearchField
-            value={searchText}
-            onChange={setSearchText}
-            placeholder="Search your plans"
-            label="Search your plans"
-          />
-          <div className="or-filters" role="group" aria-label="Plan status">
-            {PLAN_STATUS_TABS.map((tab) => (
-              <Chip key={tab.label} selected={tab.value === status} onClick={() => setStatus(tab.value)}>
-                {tab.label}
-              </Chip>
-            ))}
-          </div>
-        </div>
+      <section className="or-page mp-page">
+        <PageHeader
+          title="My Plans"
+          subtitle="Care plans you have purchased"
+          backTo="/profile"
+          actions={
+            <div className="mp-toolbar">
+              <SearchField
+                value={searchText}
+                onChange={setSearchText}
+                placeholder="Search your plans"
+                label="Search your plans"
+              />
+              <div className="mp-filters" role="group" aria-label="Plan status">
+                {PLAN_STATUS_TABS.map((tab) => (
+                  <Chip key={tab.label} selected={tab.value === status} onClick={() => setStatus(tab.value)}>
+                    {tab.label}
+                  </Chip>
+                ))}
+              </div>
+            </div>
+          }
+        />
 
         {loading ? (
           <SectionHold label="Loading plans" minHeight={280} />
@@ -450,7 +353,7 @@ export default function MyPlans() {
           <>
             <div className="mp-list">
               {plans.map((plan) => (
-                <PlanCard key={plan.id} plan={plan} highlighted={plan.id === highlightId} planNames={planNames} />
+                <PlanCard key={plan.id} plan={plan} highlighted={plan.id === highlightId} />
               ))}
             </div>
             {hasMore ? (

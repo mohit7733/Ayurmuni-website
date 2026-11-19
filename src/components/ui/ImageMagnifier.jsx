@@ -63,7 +63,7 @@ export default function ImageMagnifier({ src, zoom = 2.5, anchorRef, gap = 16, c
     if (!wrap || !lens || !pane || !img || !pointer.current) return;
     const anchor = (anchorRef?.current || wrap).getBoundingClientRect();
     const left = anchor.right + gap;
-    const width = Math.min(anchor.width * 1.15, window.innerWidth - left - gap);
+    const width = Math.min(anchor.width, window.innerWidth - left - gap);
     const height = Math.min(anchor.height, window.innerHeight - Math.max(anchor.top, 8) - 8);
     if (width < 220 || height < 160) {
       lens.style.opacity = '0';

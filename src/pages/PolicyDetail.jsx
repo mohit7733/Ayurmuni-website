@@ -118,10 +118,19 @@ export default function PolicyDetail() {
     <section
       className={`sx-page sx-policy-detail${requireAccept ? " has-sticky" : ""}`}
     >
-      <PageHeader eyebrow="Policy document" onBack={handleBack} />
+      <PageHeader
+        eyebrow="Policy document"
+        title={loading ? headerTitle : policy?.title || headerTitle}
+        subtitle={policy?.subtitle || undefined}
+        onBack={handleBack}
+      >
+        {isPolicyAccepted(policyEntry) ? (
+          <em className="sx-policy-detail__version">{T.policyUpdated(policy?.version)}</em>
+        ) : null}
+      </PageHeader>
 
       {loading ? (
-        <SectionHold label={T.policyLoading} minHeight={280} />
+        <SectionHold label={T.policyLoading} minHeight={180} />
       ) : error ? (
         <EmptyState
           title={error}
@@ -133,16 +142,6 @@ export default function PolicyDetail() {
         />
       ) : (
         <>
-          <div
-            className="sx-policy-banner sx-policy-detail__banner"
-            style={{ marginTop: "-14px" }}
-          >
-            <strong>{policy?.title || headerTitle}</strong>
-            {policy?.subtitle ? <p>{policy.subtitle}</p> : null}
-            {isPolicyAccepted(policyEntry) ? (
-              <em>{T.policyUpdated(policy?.version)}</em>
-            ) : null}
-          </div>
           <div className="sx-policy-card">
             <PolicyContent content={policy?.content} />
           </div>

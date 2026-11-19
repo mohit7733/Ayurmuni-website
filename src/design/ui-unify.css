@@ -6,7 +6,7 @@
  * steppers, and image crops are left alone.
  */
 
-.app-shell :is(.cta, .ghost, .am-btn, .ap-btn, .cp-btn, .do-card__book):not(.am-btn--link) {
+.app-shell :is(.cta, .ghost, .am-btn, .ap-btn, .cp-btn, .do-card__book):not(.am-btn--link):not(.note-body .cta) {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -40,7 +40,7 @@
   padding-inline: var(--am-space-5) !important;
 }
 
-.app-shell :is(.cta, .am-btn--primary, .ap-btn--primary, .cp-btn, .do-card__book):not(.danger):not(.ghost):not(.cp-btn--ghost):not(.am-btn--secondary):not(.am-btn--ghost):not(.am-btn--danger):not(.am-btn--accent):not(.am-btn--link):not(.do-card--lab .do-card__book):not(.do-card--therapy .do-card__book) {
+.app-shell :is(.cta, .am-btn--primary, .ap-btn--primary, .cp-btn, .do-card__book):not(.danger):not(.ghost):not(.cp-btn--ghost):not(.am-btn--secondary):not(.am-btn--ghost):not(.am-btn--danger):not(.am-btn--accent):not(.am-btn--link):not(.do-card--lab .do-card__book):not(.do-card--therapy .do-card__book):not(.note-body .cta) {
   border: 1px solid transparent !important;
   background: linear-gradient(
     180deg,
@@ -54,7 +54,7 @@
     0 1px 2px rgba(10, 40, 32, 0.2) !important;
 }
 
-.app-shell :is(.cta, .am-btn--primary, .ap-btn--primary, .cp-btn, .do-card__book):not(.danger):not(.ghost):not(.cp-btn--ghost):not(.am-btn--secondary):not(.am-btn--ghost):not(.am-btn--danger):not(.am-btn--accent):not(.am-btn--link):not(.do-card--lab .do-card__book):not(.do-card--therapy .do-card__book):hover:not(:disabled) {
+.app-shell :is(.cta, .am-btn--primary, .ap-btn--primary, .cp-btn, .do-card__book):not(.danger):not(.ghost):not(.cp-btn--ghost):not(.am-btn--secondary):not(.am-btn--ghost):not(.am-btn--danger):not(.am-btn--accent):not(.am-btn--link):not(.do-card--lab .do-card__book):not(.do-card--therapy .do-card__book):not(.note-body .cta):hover:not(:disabled) {
   background: linear-gradient(
     180deg,
     var(--am-primary) -40%,
@@ -186,7 +186,7 @@
 
 .app-shell .am-section-header {
   gap: var(--am-space-4) !important;
-  margin-bottom: 0 !important;
+  /* margin-bottom: 0 !important; */
 }
 
 .app-shell .am-page-header {
@@ -214,7 +214,7 @@
   .notif-row,
   .appoint-filters,
   .phone-pill
-):not([class*="icon"]):not([class*="badge"]):not([class*="avatar"]):not([class*="media"]):not([class*="thumb"]):not([class*="img"]):not([class*="image"]):not([class*="photo"]) {
+):not([class*="icon"]):not([class*="badge"]):not([class*="avatar"]):not([class*="media"]):not([class*="thumb"]):not([class*="img"]):not([class*="image"]):not([class*="photo"]):not(.note-card) {
   border-radius: var(--am-radius-lg) !important;
 }
 

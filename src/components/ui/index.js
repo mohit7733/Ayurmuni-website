@@ -12,6 +12,7 @@ export { default as MediaCard } from './MediaCard';
 export { default as PageBar } from './PageBar';
 export { default as Rail, RailItem, RailSkeleton } from './Rail';
 export { default as Rating } from './Rating';
+export { default as RatingSummary } from './RatingSummary';
 export { default as Reveal } from './Reveal';
 export { default as ReviewCard } from './ReviewCard';
 export { default as SearchField } from './SearchField';

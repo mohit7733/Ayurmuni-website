@@ -46,6 +46,7 @@ import {
   addMedicalRecord,
   formatRecordType,
   getMedicalRecords,
+  isImageRecord,
   listMedicalRecords,
 } from '../services/patientService';
 import { UploadProfilePhoto } from '../services/profileService';
@@ -89,6 +90,7 @@ export default function DoctorSlot() {
   const [selectedRecords, setSelectedRecords] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [pickedFile, setPickedFile] = useState(null);
+  const [recordPreview, setRecordPreview] = useState(null);
   const [recordName, setRecordName] = useState('');
   const [recordType, setRecordType] = useState('');
   const [globalFee, setGlobalFee] = useState(null);
@@ -528,14 +530,30 @@ export default function DoctorSlot() {
                   {records.map((item) => {
                     const id = String(item.id);
                     const checked = selectedRecords.includes(id);
+                    const title = item.description || item.title || item.file_name || 'Record';
+                    const fileUrl = item.file_url || item.thumbnail_url || '';
                     return (
-                      <label key={id} className={`bk-record${checked ? ' is-on' : ''}`}>
-                        <input type="checkbox" checked={checked} onChange={() => toggleRecord(id)} />
-                        <span className="bk-record__copy">
-                          <strong>{item.description || item.title || 'Record'}</strong>
-                          <small>{formatRecordType(item.medical_record_type)}</small>
-                        </span>
-                      </label>
+                      <div key={id} className={`bk-record${checked ? ' is-on' : ''}`}>
+                        <label>
+                          <input type="checkbox" checked={checked} onChange={() => toggleRecord(id)} />
+                          <span className="bk-record__copy">
+                            <strong title={title}>{title}</strong>
+                            <small>{formatRecordType(item.medical_record_type)}</small>
+                          </span>
+                        </label>
+                        {fileUrl ? (
+                          <button
+                            type="button"
+                            className="bk-record__view"
+                            onClick={() => {
+                              if (isImageRecord(item)) setRecordPreview(item);
+                              else window.open(fileUrl, '_blank', 'noopener,noreferrer');
+                            }}
+                          >
+                            View
+                          </button>
+                        ) : null}
+                      </div>
                     );
                   })}
                 </div>
@@ -608,6 +626,18 @@ export default function DoctorSlot() {
                 {uploading ? T.uploading : T.uploadSubmit}
               </button>
             </div>
+          </div>
+        </div>
+      ) : null}
+
+      {recordPreview ? (
+        <div className="web-modal" role="dialog" onClick={() => setRecordPreview(null)}>
+          <div className="web-modal-card record-preview" onClick={(event) => event.stopPropagation()}>
+            <h3>{recordPreview.description || recordPreview.title || 'Record'}</h3>
+            <img src={recordPreview.file_url || recordPreview.thumbnail_url} alt="" />
+            <button type="button" className="ghost" onClick={() => setRecordPreview(null)}>
+              Close
+            </button>
           </div>
         </div>
       ) : null}

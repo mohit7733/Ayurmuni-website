@@ -249,35 +249,54 @@ const benefitStillUsable = (benefit) => {
   return true;
 };
 
-/** Consultation or follow-up benefit of a purchased plan (label based). */
-export const getConsultBenefit = (plan) => {
+const isDietBenefit = (label) => /diet/i.test(String(label || ''));
+const isDoctorBenefit = (label) => /doctor/i.test(String(label || '')) && !isDietBenefit(label);
+const isFollowBenefit = (label) => /follow/i.test(String(label || ''));
+const isConsultBenefit = (label) => /consult/i.test(String(label || '')) && !isFollowBenefit(label);
+
+const findUsable = (rows, match) => rows.find((b) => match(b.label) && benefitStillUsable(b)) ?? null;
+const findAny = (rows, match) => rows.find((b) => match(b.label)) ?? null;
+
+/**
+ * Consultation or follow-up benefit of a purchased plan (label based).
+ * `kind: 'diet'` prefers diet consultation benefits for dietitian bookings.
+ */
+export const getConsultBenefit = (plan, { kind = 'doctor' } = {}) => {
   const rows = (plan?.benefits || []).filter((b) =>
     /consult|follow-?up/i.test(String(b?.label || '')),
   );
-  const doctorConsult = rows.find(
-    (b) => /doctor/i.test(String(b.label)) && /consult/i.test(String(b.label)) && !/follow/i.test(String(b.label)),
-  );
-  if (doctorConsult && benefitStillUsable(doctorConsult)) return doctorConsult;
-  const doctorFollow = rows.find(
-    (b) => /doctor/i.test(String(b.label)) && /follow/i.test(String(b.label)),
-  );
-  if (doctorFollow && benefitStillUsable(doctorFollow)) return doctorFollow;
+  if (!rows.length) return null;
+
+  if (kind === 'diet') {
+    return (
+      findUsable(rows, (label) => isDietBenefit(label) && isConsultBenefit(label)) ||
+      findUsable(rows, (label) => isDietBenefit(label) && isFollowBenefit(label)) ||
+      findUsable(rows, isDietBenefit) ||
+      rows.find(benefitStillUsable) ||
+      findAny(rows, isDietBenefit) ||
+      rows[0] ||
+      null
+    );
+  }
+
   return (
-    rows.find(benefitStillUsable) ??
-    doctorConsult ??
-    rows.find((b) => /doctor/i.test(String(b.label))) ??
-    rows.find((b) => !/diet/i.test(String(b.label))) ??
-    rows[0] ??
+    findUsable(rows, (label) => isDoctorBenefit(label) && isConsultBenefit(label)) ||
+    findUsable(rows, (label) => isDoctorBenefit(label) && isFollowBenefit(label)) ||
+    rows.find(benefitStillUsable) ||
+    findAny(rows, (label) => isDoctorBenefit(label) && isConsultBenefit(label)) ||
+    findAny(rows, isDoctorBenefit) ||
+    rows.find((b) => !isDietBenefit(b.label)) ||
+    rows[0] ||
     null
   );
 };
 
-export const getPlanConsultState = (plan, now = Date.now()) => {
+export const getPlanConsultState = (plan, now = Date.now(), options = {}) => {
   if (plan?.expires_at) {
     const expires = new Date(plan.expires_at).getTime();
     if (Number.isFinite(expires) && expires <= now) return 'expired';
   }
-  const benefit = getConsultBenefit(plan);
+  const benefit = getConsultBenefit(plan, options);
   if (!benefit) return 'no_consult';
   const status = String(benefit.status || 'available').toLowerCase();
   if (status !== 'available') return 'exhausted';
@@ -288,10 +307,11 @@ export const getPlanConsultState = (plan, now = Date.now()) => {
 export const isActivePlan = (plan) => String(plan?.status || '').toLowerCase() === 'active';
 
 /** "3 of 5 consultations left" style label for the plan picker / selected plan card. */
-export const planRemainingLabel = (plan, withTotal = false) => {
-  const benefit = getConsultBenefit(plan);
+export const planRemainingLabel = (plan, withTotal = false, options = {}) => {
+  const benefit = getConsultBenefit(plan, options);
   if (!benefit) return '';
-  if (benefit.quantity_remaining == null) return 'Unlimited consultations';
+  const unit = options.kind === 'diet' ? 'diet consultation' : 'consultation';
+  if (benefit.quantity_remaining == null) return `Unlimited ${unit}s`;
   const total = withTotal && benefit.quantity_total != null ? ` of ${benefit.quantity_total}` : '';
-  return `${benefit.quantity_remaining}${total} consultation${benefit.quantity_remaining === 1 ? '' : 's'} left`;
+  return `${benefit.quantity_remaining}${total} ${unit}${benefit.quantity_remaining === 1 ? '' : 's'} left`;
 };

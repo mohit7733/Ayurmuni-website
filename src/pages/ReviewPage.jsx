@@ -3,23 +3,20 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
 import AdvanceLoad from '../components/ui/AdvanceLoad';
 import PageHeader from '../components/PageHeader';
+import ReviewCard from '../components/ui/ReviewCard';
+import RatingSummary from '../components/ui/RatingSummary';
 import { getReviews } from '../services/productService';
 import {
   collectReviewImageUrls,
   extractReviewsList,
+  formatReviewDate,
   getAverageRating,
   isReviewVideoUrl,
   normalizeReviewsForDisplay,
 } from '../utils/reviewUtils';
+import '../design/pages/reviews.css';
 
-const FILTERS = [
-  { key: 'all', label: 'All' },
-  { key: 'photos', label: 'Photos' },
-  { key: '5', label: '5★' },
-  { key: '4', label: '4★' },
-  { key: '3', label: '3★' },
-  { key: 'recent', label: 'Recent' },
-];
+const STAR_FILTERS = ['5', '4', '3', '2', '1'];
 
 export default function ReviewPage() {
   const navigate = useNavigate();
@@ -57,9 +54,29 @@ export default function ReviewPage() {
     [fetched, seeded],
   );
 
+  const counts = useMemo(() => {
+    const next = { photos: 0, 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    reviews.forEach((item) => {
+      if (item.image_urls?.length) next.photos += 1;
+      const star = Math.round(Number(item.rating) || 0);
+      if (next[star] != null) next[star] += 1;
+    });
+    return next;
+  }, [reviews]);
+
+  const filters = useMemo(() => {
+    const items = [{ key: 'all', label: `All ${reviews.length}` }];
+    if (counts.photos) items.push({ key: 'photos', label: `Photos ${counts.photos}` });
+    STAR_FILTERS.forEach((key) => {
+      if (counts[key]) items.push({ key, label: `${key}★ ${counts[key]}` });
+    });
+    if (reviews.length > 1) items.push({ key: 'recent', label: 'Recent' });
+    return items;
+  }, [counts, reviews.length]);
+
   const visible = useMemo(() => {
     if (filter === 'photos') return reviews.filter((item) => item.image_urls?.length);
-    if (filter === '5' || filter === '4' || filter === '3') {
+    if (STAR_FILTERS.includes(filter)) {
       return reviews.filter((item) => Math.round(Number(item.rating) || 0) === Number(filter));
     }
     if (filter === 'recent') {
@@ -73,76 +90,71 @@ export default function ReviewPage() {
   const average = getAverageRating(reviews);
   const gallery = collectReviewImageUrls(reviews);
 
+  const openGallery = (images, selectedIndex = 0) => {
+    navigate('/reviews/gallery', { state: { images, selectedIndex } });
+  };
+
   return (
     <AppShell tab={entityType === 'product' ? 'products' : 'consult'}>
-      <section className="catalog-page reviews-page">
-        <PageHeader
-          title="Reviews"
-          subtitle={
-            reviews.length
-              ? `${average || '—'} average · ${reviews.length} reviews`
-              : 'What patients are saying'
-          }
-        />
-        <div className="home-rail subcat-rail">
-          {FILTERS.map((item) => (
-            <button
-              key={item.key}
-              type="button"
-              className={`chip ${filter === item.key ? 'on' : ''}`}
-              onClick={() => setFilter(item.key)}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-        {gallery.length > 0 ? (
-          <button
-            type="button"
-            className="ghost"
-            onClick={() =>
-              navigate('/reviews/gallery', { state: { images: gallery, selectedIndex: 0 } })
+      <section className="catalog-page rv-page">
+        <PageHeader title="Reviews" />
+        {reviews.length > 0 ? (
+          <RatingSummary
+            average={average}
+            count={reviews.length}
+            reviews={reviews}
+            extra={
+              gallery.length > 0 ? (
+                <button type="button" className="am-rating-summary__media" onClick={() => openGallery(gallery)}>
+                  {gallery.filter((url) => !isReviewVideoUrl(url)).slice(0, 3).map((url) => (
+                    <img key={url} src={url} alt="" />
+                  ))}
+                  <span>{gallery.length} photos</span>
+                </button>
+              ) : null
             }
-          >
-            View media ({gallery.length})
-          </button>
+          />
+        ) : null}
+        {reviews.length > 0 ? (
+          <div className="rv-filters">
+            {filters.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                className={`chip ${filter === item.key ? 'on' : ''}`}
+                aria-pressed={filter === item.key}
+                onClick={() => setFilter(item.key)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
         ) : null}
         {loading && reviews.length === 0 ? (
           <AdvanceLoad variant="list" count={3} label="Loading reviews" />
         ) : visible.length === 0 ? (
           <p className="empty-copy">No reviews yet</p>
         ) : (
-          visible.map((item, index) => (
-            <article key={item.id || index} className="checkout-card review-card">
-              <header>
-                <strong>{item.patient_name || 'Patient'}</strong>
-                <span>{item.rating ? `${item.rating}★` : ''}</span>
-              </header>
-              <p>{item.comment || item.review || item.message || ''}</p>
-              {item.image_urls?.length ? (
-                <div className="review-media-grid">
-                  {item.image_urls.map((url, mediaIndex) =>
-                    isReviewVideoUrl(url) ? (
-                      <video key={url} src={url} controls />
-                    ) : (
-                      <button
-                        key={url}
-                        type="button"
-                        className="review-media-tile"
-                        onClick={() =>
-                          navigate('/reviews/gallery', {
-                            state: { images: item.image_urls, selectedIndex: mediaIndex },
-                          })
-                        }
-                      >
-                        <img src={url} alt="" />
-                      </button>
-                    ),
-                  )}
-                </div>
-              ) : null}
-            </article>
-          ))
+          <div className="rv-grid">
+            {visible.map((item, index) => {
+              const media = (item.image_urls || []).map((url) => ({
+                url,
+                type: isReviewVideoUrl(url) ? 'video' : 'image',
+              }));
+              return (
+                <ReviewCard
+                  key={item.id || index}
+                  name={item.patient_name || 'Patient'}
+                  rating={item.rating}
+                  date={formatReviewDate(item.created_at || item.updated_at || item.date)}
+                  text={item.comment || item.review || item.message || ''}
+                  media={media}
+                  maxMedia={3}
+                  onMediaClick={(mediaIndex) => openGallery(item.image_urls, mediaIndex)}
+                />
+              );
+            })}
+          </div>
         )}
       </section>
     </AppShell>

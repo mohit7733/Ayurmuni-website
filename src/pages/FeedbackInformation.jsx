@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, CircleHelp, FileText, Scale, Shield } from 'lucide-react';
+import { ChevronRight, CircleHelp, FileText, Mail, MessageSquare, Scale, Shield } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import PageHeader from '../components/PageHeader';
 import { STATIC_COPY as T } from '../content/static';
@@ -11,15 +11,51 @@ const ICONS = {
   terms: FileText,
   privacy: Shield,
   legal: Scale,
+  mail: Mail,
+  contact: MessageSquare,
 };
 
 export default function FeedbackInformation() {
   const navigate = useNavigate();
-  const supportItems = T.feedbackItems.filter((item) => item.icon === 'help');
+  const helpItem = T.feedbackItems.find((item) => item.icon === 'help');
   const legalItems = T.feedbackItems.filter((item) => item.icon !== 'help');
+  const supportItems = [
+    helpItem,
+    {
+      title: T.contactTitle,
+      subtitle: T.contactSubtitle,
+      to: '/contact',
+      icon: 'contact',
+    },
+    {
+      title: T.contactEmailLabel,
+      subtitle: T.contactEmail,
+      href: T.contactEmailHref,
+      icon: 'mail',
+    },
+  ].filter(Boolean);
 
   const renderItem = (item) => {
     const Icon = ICONS[item.icon] || FileText;
+    const body = (
+      <>
+        <span className="sx-feedback-card__icon" aria-hidden>
+          <Icon size={18} />
+        </span>
+        <span className="sx-feedback-card__copy">
+          <strong>{item.title}</strong>
+          <small>{item.subtitle}</small>
+        </span>
+        <ChevronRight className="sx-feedback-card__arrow" size={16} aria-hidden />
+      </>
+    );
+    if (item.href) {
+      return (
+        <a key={item.title} className="sx-feedback-card" href={item.href}>
+          {body}
+        </a>
+      );
+    }
     return (
       <button
         key={item.title}
@@ -27,14 +63,7 @@ export default function FeedbackInformation() {
         className="sx-feedback-card"
         onClick={() => navigate(item.to, item.state ? { state: item.state } : undefined)}
       >
-        <span className="sx-feedback-card__icon" aria-hidden>
-          <Icon size={20} />
-        </span>
-        <span className="sx-feedback-card__copy">
-          <strong>{item.title}</strong>
-          <small>{item.subtitle}</small>
-        </span>
-        <ChevronRight className="sx-feedback-card__arrow" size={20} aria-hidden />
+        {body}
       </button>
     );
   };
@@ -46,20 +75,28 @@ export default function FeedbackInformation() {
           eyebrow="Support & information"
           title={T.feedbackTitle}
           subtitle={T.feedbackSubtitle}
-          onBack={() => navigate(-1)}
+          backTo="/profile"
         />
-        {supportItems.length ? (
-          <section className="sx-feedback-section" aria-labelledby="feedback-support-title">
+
+        <section className="sx-feedback-section" aria-labelledby="feedback-support-title">
+          <div className="sx-feedback-section__head">
             <h2 id="feedback-support-title">Help & support</h2>
-            <div className="sx-feedback-grid">{supportItems.map(renderItem)}</div>
-          </section>
-        ) : null}
+            <p>{T.contactLead}</p>
+          </div>
+          <div className="sx-feedback-grid sx-feedback-grid--support">{supportItems.map(renderItem)}</div>
+        </section>
+
         {legalItems.length ? (
           <section className="sx-feedback-section" aria-labelledby="feedback-legal-title">
-            <h2 id="feedback-legal-title">Policies & legal</h2>
+            <div className="sx-feedback-section__head">
+              <h2 id="feedback-legal-title">Policies & legal</h2>
+              <p>{legalItems.length} documents</p>
+            </div>
             <div className="sx-feedback-grid">{legalItems.map(renderItem)}</div>
           </section>
         ) : null}
+
+        <p className="sx-feedback-note">{T.contactNote}</p>
       </section>
     </AppShell>
   );

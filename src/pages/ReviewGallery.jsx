@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import AppShell from '../components/AppShell';
 import PageHeader from '../components/PageHeader';
 import { isReviewVideoUrl } from '../utils/reviewUtils';
+import '../design/pages/review-gallery.css';
 
 export default function ReviewGallery() {
   const location = useLocation();

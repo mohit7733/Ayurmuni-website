@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Camera } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import PageHeader from '../components/PageHeader';
+import ProfileCamera, { wantsNativeCamera } from '../components/ProfileCamera';
 import { Utils } from '../common/utils';
 import { showSuccessToast } from '../config/key';
 import { persistProfileAndSyncAccess, requireAuth } from '../services/guestAuth';
@@ -32,6 +34,9 @@ export default function EditProfile() {
   const [form, setForm] = useState(normalize({}));
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const galleryRef = useRef(null);
+  const cameraFileRef = useRef(null);
 
   useEffect(() => {
     (async () => {
@@ -45,10 +50,8 @@ export default function EditProfile() {
 
   const setField = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
-  const onImage = async (event) => {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    if (!file) return;
+  const uploadPhoto = async (file) => {
+    if (!file || uploading) return;
     setUploading(true);
     try {
       const body = new FormData();
@@ -65,6 +68,21 @@ export default function EditProfile() {
     } finally {
       setUploading(false);
     }
+  };
+
+  const onImage = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (file) await uploadPhoto(file);
+  };
+
+  const openCamera = () => {
+    if (uploading) return;
+    if (wantsNativeCamera()) {
+      cameraFileRef.current?.click();
+      return;
+    }
+    setCameraOpen(true);
   };
 
   const save = async () => {
@@ -103,27 +121,58 @@ export default function EditProfile() {
 
   return (
     <AppShell tab="profile">
-      <section className="pf-page">
+      <section className="pf-page pf-page--edit">
         <PageHeader title={T.editTitle} subtitle={T.editSubtitle} backTo="/profile" />
 
         <div className="pf-edit">
-          <aside>
-            <label className="pf-avatar-upload">
-              <div className="pf-hero__avatar" aria-hidden>
-                {form.profile_picture ? (
-                  <img src={form.profile_picture} alt="" />
-                ) : (
-                  <span>{(form.first_name || 'U').charAt(0)}</span>
-                )}
+          <div className="pf-avatar-upload">
+            <div className="pf-hero__avatar" aria-hidden>
+              {form.profile_picture ? (
+                <img src={form.profile_picture} alt="" />
+              ) : (
+                <span>{(form.first_name || 'U').charAt(0)}</span>
+              )}
+            </div>
+            <div className="pf-avatar-upload__copy">
+              <span className="pf-avatar-upload__title">Profile photo</span>
+              <div className="pf-avatar-upload__actions">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={uploading}
+                  onClick={() => galleryRef.current?.click()}
+                >
+                  {uploading ? T.uploading : T.changePhoto}
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  leadingIcon={<Camera size={15} aria-hidden />}
+                  disabled={uploading}
+                  onClick={openCamera}
+                >
+                  {T.takePhoto}
+                </Button>
               </div>
-              <span className="am-btn am-btn--secondary am-btn--sm" aria-hidden>
-                <span className="am-btn__label">{uploading ? T.uploading : T.changePhoto}</span>
-              </span>
-              <input type="file" accept="image/*" onChange={onImage} disabled={uploading} />
-            </label>
-          </aside>
+            </div>
+            <input
+              ref={galleryRef}
+              type="file"
+              accept="image/*"
+              onChange={onImage}
+              disabled={uploading}
+            />
+            <input
+              ref={cameraFileRef}
+              type="file"
+              accept="image/*"
+              capture="user"
+              onChange={onImage}
+              disabled={uploading}
+            />
+          </div>
 
-          <div>
+          <div className="pf-edit__fields">
             <div className="pf-form-grid">
               <Input
                 label={T.firstName}
@@ -133,6 +182,7 @@ export default function EditProfile() {
               />
               <Input
                 label={T.lastName}
+                required
                 value={form.last_name}
                 onChange={(e) => setField('last_name', e.target.value)}
               />
@@ -179,6 +229,15 @@ export default function EditProfile() {
           </div>
         </div>
 
+        <ProfileCamera
+          open={cameraOpen}
+          onClose={() => setCameraOpen(false)}
+          onPhoto={uploadPhoto}
+          onChooseFile={() => {
+            setCameraOpen(false);
+            galleryRef.current?.click();
+          }}
+        />
       </section>
     </AppShell>
   );

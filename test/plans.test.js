@@ -67,6 +67,24 @@ describe('fetchActivePlans', () => {
     expect(apiClient).toHaveBeenCalledTimes(2);
   });
 
+  it('follows every page and keeps two purchases of the same package', async () => {
+    apiClient
+      .mockResolvedValueOnce({
+        success: true,
+        data: { results: [{ id: 'buy-1', package_id: 'pkg', status: 'active' }], next: 'more' },
+      })
+      .mockResolvedValueOnce({
+        success: true,
+        data: { results: [{ id: 'buy-2', package_id: 'pkg', status: 'active' }, { id: 'buy-3', status: 'pending' }], next: null },
+      });
+    const plans = await svc.fetchActivePlans(true);
+    expect(plans.map((plan) => plan.id)).toEqual(['buy-1', 'buy-2']);
+    expect(apiClient.mock.calls.map((call) => call[0])).toEqual([
+      'packages/my/?page=1&status=active',
+      'packages/my/?page=2&status=active',
+    ]);
+  });
+
   it('falls back to an empty list on failure and refreshPackageCache drops the cache', async () => {
     apiClient.mockResolvedValue({ success: false, message: 'no' });
     expect(await svc.fetchActivePlans(true)).toEqual([]);
@@ -113,6 +131,28 @@ describe('planUtils', () => {
     expect(utils.readPlanPage({ data: { results: [1], next: 'n' } })).toEqual({ list: [1], next: 'n' });
     expect(utils.readPlanPage({ data: [1, 2] })).toEqual({ list: [1, 2], next: null });
     expect(utils.readPlanPage({})).toEqual({ list: [], next: null });
+  });
+
+  it('keeps each purchase benefit and expiry independent of shifted fields', () => {
+    const first = {
+      id: 'buy-1',
+      package_id: 'pkg',
+      expires_at: '2026-06-01',
+      benefits: [{ label: 'Doctor consultation', quantity_remaining: 2, quantity_total: 5, status: 'available' }],
+      shifted_consumables: [{ label: 'Doctor consultation', quantity_remaining: 9, quantity_total: 9 }],
+    };
+    const second = {
+      id: 'buy-2',
+      package_id: 'pkg',
+      expires_at: '2027-01-01',
+      benefits: [{ label: 'Doctor consultation', quantity_remaining: 5, quantity_total: 5, status: 'available' }],
+    };
+    expect(utils.ownPurchaseBenefits(first)).toEqual([
+      { label: 'Doctor consultation', remaining: 2, total: 5, status: 'available' },
+    ]);
+    expect(utils.ownPurchaseBenefits(second)[0].remaining).toBe(5);
+    expect(first.expires_at).not.toBe(second.expires_at);
+    expect(utils.ALL_PLAN_STATUSES).not.toContain('shifted');
   });
 
   it('buildPlanNameMap and benefit icons', () => {

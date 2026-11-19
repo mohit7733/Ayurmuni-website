@@ -4,20 +4,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { Button, EmptyState, ErrorState, SectionHold } from "../components/ui";
 import { formatPlanMoney, getPlanTheme, isCarePlan, planBilling, planCta, planDiscount, planDuration, themeStyle } from "../packages/planTheme";
-import PlanTransferModal from "../components/PlanTransferModal";
 import PackagePaymentModal from "../components/PackagePaymentModal";
 import usePackagePurchase from "../hooks/usePackagePurchase";
 import { isAuthenticated, requireAuth } from "../services/guestAuth";
-import PackageCount from "../components/PackageCount";
 import { loadPackageById } from "../services/packageService";
 import { trackMetaViewContent } from "../services/metaPixel";
 import "../design/pages/packages-premium.css";
-
-const formatDate = (value) => {
-  const time = new Date(value).getTime();
-  if (!Number.isFinite(time)) return "";
-  return new Date(time).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-};
 
 const rate = (value) => {
   const n = Number(value);
@@ -73,10 +65,9 @@ export default function PackageDetails() {
   };
 
   const onPurchased = useCallback(async () => {
-    setItem((current) => (current ? { ...current, purchased: true } : current));
     await load({ silent: true });
   }, [load]);
-  const { start, busyId, prompt, confirm, cancel, sheet } = usePackagePurchase({ onPurchased });
+  const { start, busyId, sheet } = usePackagePurchase({ onPurchased });
   const busy = Boolean(busyId);
 
   const onCta = () => {
@@ -90,13 +81,12 @@ export default function PackageDetails() {
     start(item);
   };
 
-  const owned = Boolean(item && item.mode === "purchase" && item.purchased);
   const discount = item ? planDiscount(item) : 0;
   const saving = item && item.mrp > item.price ? item.mrp - item.price : 0;
   const gst = Number(item?.fees?.gstAmount) || 0;
   const platform = Number(item?.fees?.platformFee) || 0;
   const payable = Number(item?.fees?.totalPayable) > 0 ? Number(item.fees.totalPayable) : item?.price || 0;
-  const ctaLabel = item ? planCta(item, { owned }) : "";
+  const ctaLabel = item ? planCta(item) : "";
 
   return (
     <AppShell tab="home">
@@ -158,19 +148,7 @@ export default function PackageDetails() {
                 <strong>{formatPlanMoney(payable)}</strong>
                 {item.mrp > item.price ? <s>{formatPlanMoney(item.mrp)}</s> : null}
               </div>
-              {owned && (item.remaining != null || item.total != null || item.expiresAt) ? (
-                <PackageCount
-                  remaining={item.remaining}
-                  total={item.total}
-                  includeUnit
-                  unit="consultation"
-                  variant="on-dark"
-                  expired={Boolean(item.expiresAt && Number.isFinite(new Date(item.expiresAt).getTime()) && new Date(item.expiresAt).getTime() < Date.now())}
-                  validTill={item.expiresAt && formatDate(item.expiresAt) ? formatDate(item.expiresAt) : ""}
-                />
-              ) : saving > 0 ? (
-                <p className="pp-detail__note">You save {formatPlanMoney(saving)}</p>
-              ) : null}
+              {saving > 0 ? <p className="pp-detail__note">You save {formatPlanMoney(saving)}</p> : null}
               <button type="button" className="pp-detail__cta" disabled={busy} onClick={onCta}>
                 {busy ? "Please wait..." : ctaLabel}
                 {!busy ? <ArrowRight size={15} aria-hidden /> : null}
@@ -296,7 +274,6 @@ export default function PackageDetails() {
           </article>
         ) : null}
 
-        <PlanTransferModal prompt={prompt} onYes={confirm} onNo={cancel} />
         <PackagePaymentModal {...sheet} />
       </section>
     </AppShell>

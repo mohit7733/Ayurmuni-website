@@ -143,16 +143,22 @@
   .app-shell .pd-page--brand .pd-auto-rail__control { display: none; }
 }
 
-/* Review cards: name + date, rating, 3-line text, neat square thumbs */
+/* Review cards: compact column — head, text, then thumbs (no empty stretch). */
 .app-shell .pd-page--brand .pd-review-item > .am-review {
   display: flex;
   flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
   gap: 8px;
+  height: auto;
+  min-height: 0;
   padding: 14px;
   border: 1px solid var(--am-line);
+  border-left: 1px solid var(--am-line);
   border-radius: 14px;
   background: var(--am-surface);
   box-shadow: var(--am-shadow-xs);
+  container-type: normal;
 }
 .app-shell .pd-page--brand .pd-review-item .am-review__head { margin: 0; }
 .app-shell .pd-page--brand .pd-review-item .am-review__text {
@@ -164,14 +170,18 @@
 }
 .app-shell .pd-page--brand .pd-review-item .am-review__media {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
-  margin: auto 0 0;
+  margin: 0;
   padding: 0;
+  grid-column: auto;
+  grid-row: auto;
+  align-self: flex-start;
 }
 .app-shell .pd-page--brand .pd-review-item .am-review__media button,
 .app-shell .pd-page--brand .pd-review-item .am-review__media img {
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
   border-radius: 10px;
   object-fit: cover;
 }
@@ -308,8 +318,13 @@
 @media (min-width: 1280px) {
   .app-shell .pd-page--brand .pd-discovery .pd-discovery__item { flex-basis: calc((100% - 16px) / 6); }
 }
-/* t60u: Reviews - fill width when few, balanced compact cards */
-.app-shell .pd-page--brand .pd-review-item > .am-review { min-height: 132px; justify-content: flex-start; gap: 10px; }
+/* t60u: Reviews — compact cards, thumbs under content, header actions aligned */
+.app-shell .pd-page--brand .pd-review-item > .am-review {
+  min-height: 0;
+  height: auto;
+  justify-content: flex-start;
+  gap: 10px;
+}
 .app-shell .pd-page--brand .pd-review-item > .am-review:hover { transform: none; }
 .app-shell .pd-page--brand .pd-review-item .am-review__head { align-items: center; gap: 10px; }
 .app-shell .pd-page--brand .pd-review-item .am-review__avatar {
@@ -323,9 +338,14 @@
 .app-shell .pd-page--brand .pd-review-item .am-review__text {
   display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; color: var(--am-text-soft);
 }
-.app-shell .pd-page--brand .pd-review-item .am-review__media { margin: 0; gap: 8px; overflow: visible; }
+.app-shell .pd-page--brand .pd-review-item .am-review__media {
+  margin: 0;
+  gap: 8px;
+  overflow: visible;
+  align-self: flex-start;
+}
 .app-shell .pd-page--brand .pd-review-item .am-review__media button {
-  position: relative; width: 60px; height: 60px; border-radius: 10px; overflow: hidden;
+  position: relative; width: 56px; height: 56px; border-radius: 10px; overflow: hidden;
   border: 1px solid var(--am-line); padding: 0;
 }
 .app-shell .pd-page--brand .pd-review-item .am-review__media img { width: 100%; height: 100%; border-radius: 0; object-fit: cover; }
@@ -333,12 +353,35 @@
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   background: rgba(11, 59, 48, 0.55); color: #fff; font-weight: 600; font-size: 14px;
 }
+.app-shell .pd-page--brand .pd-review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.app-shell .pd-page--brand .pd-reviews .am-section-header__action {
+  display: flex;
+  align-items: center;
+}
 @media (min-width: 640px) {
   .app-shell .pd-page--brand .pd-review-list.pd-review-list--few {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    overflow: visible; gap: 12px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    overflow: visible;
+    gap: 12px;
   }
-  .app-shell .pd-page--brand .pd-review-list--few > .pd-review-item { width: auto; flex: none; }
+  .app-shell .pd-page--brand .pd-review-list--few > .pd-review-item {
+    width: auto;
+    flex: none;
+    min-width: 0;
+  }
+}
+@media (min-width: 1024px) {
+  .app-shell .pd-page--brand .pd-review-list.pd-review-list--few:has(> :nth-child(3)) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 /* t61u: cap the action column next to the pack cards; no stray backgrounds behind buttons */
@@ -428,33 +471,59 @@
 }
 @media (min-width: 768px) {
   .app-shell .pd-page--brand .pd-pack-buy > .pd-field { flex: 0 0 auto; max-width: none; }
+  /* Packs sit in a horizontal row (side by side), never stacked into a single column. */
   .app-shell .pd-page--brand .pd-pack-buy .pd-packs {
-    display: grid; grid-template-columns: repeat(1, 104px); gap: 8px; overflow: visible;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    overflow: visible;
   }
-  .app-shell .pd-page--brand .pd-pack-buy .pd-packs:has(> .pd-pack:nth-child(2)) { grid-template-columns: repeat(2, 104px); }
   .app-shell .pd-page--brand .pd-pack-buy > .pd-purchase { flex: 1 1 200px; max-width: 340px; }
 }
-@media (min-width: 1024px) and (max-width: 1279px) {
-  .app-shell .pd-page--brand .pd-pack-buy .pd-packs:has(> .pd-pack:nth-child(2)) { grid-template-columns: 104px; }
-}
 
-/* t65u: Product detail top grid = exact 50/50 (gallery | info) wherever the columns sit side by side */
+/* Gallery column narrower than info (was 50/50); shrinks the image from the right. */
 @media (min-width: 860px) {
-  .app-shell .pd-page--brand .pd-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-}
-/* t67u: image box keeps its previous height (old square size) at the 50/50 width; image covers */
-@media (min-width: 860px) {
-  .app-shell .pd-page--brand .pd-layout { container-type: inline-size; }
-  .app-shell .pd-page--brand .pd-gallery__main {
-    aspect-ratio: auto;
-    height: min(52cqw, max(320px, calc(100vh - var(--am-header-h, 64px) - 140px)));
+  .app-shell .pd-page--brand .pd-layout {
+    grid-template-columns: minmax(320px, 1fr) minmax(0, 1fr);
   }
 }
-
-/* t68u: the brand CSS caps .pd-gallery at (100vh - header - 140px); on short viewports (zoom, small screens) that made
-   the image narrower than its 50% column. Drop the width cap; the image box height rule above still uses the same cap. */
+/* Main image fills the gallery column beside the vertical thumbs strip. */
 @media (min-width: 860px) {
-  .app-shell .pd-page--brand .pd-gallery { max-width: none; }
+  .app-shell .pd-page--brand .pd-layout { container-type: inline-size; }
+  .app-shell .pd-page--brand .pd-gallery {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 10px;
+    max-width: none;
+    width: 100%;
+  }
+  .app-shell .pd-page--brand .pd-gallery__main {
+    flex: 1 1 auto;
+    width: auto;
+    max-width: calc(100% - 78px);
+    min-width: 0;
+    aspect-ratio: 1 / 1;
+    height: auto;
+    max-height: min(62cqw, calc(100vh - var(--am-header-h, 64px) - 120px));
+  }
+  .app-shell .pd-page--brand .pd-thumbs {
+    flex: 0 0 auto;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    width: 68px;
+    max-height: min(62cqw, calc(100vh - var(--am-header-h, 64px) - 120px));
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 0;
+    scrollbar-width: thin;
+  }
+  .app-shell .pd-page--brand .pd-thumb {
+    flex: 0 0 68px;
+    width: 68px;
+    height: 68px;
+  }
 }
 
 /* t70u: buttons never overflow the info card. Cause: the pack column was flex: 0 0 auto (no shrink) and the
@@ -468,11 +537,8 @@
   .app-shell .pd-page--brand .pd-pack-buy .pd-purchase .am-stepper,
   .app-shell .pd-page--brand .pd-pack-buy .pd-purchase .pd-buy .am-btn { min-width: 0; max-width: 100%; box-sizing: border-box; }
 }
-/* two pack cards side by side need 220px; drop to one column of packs before squeezing the buttons */
-@container pdbuy (max-width: 400px) {
-  .app-shell .pd-page--brand .pd-pack-buy .pd-packs:has(> .pd-pack:nth-child(2)) { grid-template-columns: 104px; }
-}
-/* not enough room for pack card + 170px buttons: buttons go under the pack card, full width */
+/* Purchase already sits under packs (full width); keep packs wrapping side-by-side.
+   Only stack the buy row under packs when the container is too narrow for a side layout. */
 @container pdbuy (max-width: 290px) {
   .app-shell .pd-page--brand .pd-pack-buy { flex-direction: column; align-items: stretch; }
   .app-shell .pd-page--brand .pd-pack-buy > .pd-field + .pd-purchase { margin-top: 0; }

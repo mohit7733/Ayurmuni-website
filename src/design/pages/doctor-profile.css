@@ -281,7 +281,8 @@
 .dp-reviews {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--am-space-3);
+  align-items: start;
+  gap: 8px;
 }
 
 .dp-fee {
@@ -644,7 +645,11 @@
   );
 }
 .dp-reviews {
-  gap: var(--am-space-4);
+  gap: 8px;
+}
+.dp-page--dx .dx-card:has(#dp-reviews) {
+  gap: 8px;
+  padding: 12px;
 }
 
 /* Aside */
@@ -825,7 +830,7 @@
   }
 
   .dp-reviews {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .dp-fee {

@@ -4,6 +4,7 @@ import {
   Bell,
   Check,
   ChevronDown,
+  Edit,
   LogOut,
   MapPin,
   Menu,
@@ -350,7 +351,7 @@ export default function SiteHeader({ minimal = false }) {
     return (
       <header className={cx('site-header', 'is-minimal', scrolled && 'is-scrolled')}>
         <div className="site-header-inner">
-          <Link to="/welcome" className="site-brand" aria-label="Ayurmuni home">
+          <Link to="/" className="site-brand" aria-label="Ayurmuni home">
             <img src={logoImg} alt="" width="176" height="44" />
           </Link>
         </div>
@@ -556,12 +557,17 @@ export default function SiteHeader({ minimal = false }) {
                 {userOpen ? (
                   <div className="site-popover site-user-menu" role="menu">
                     <Link to="/profile" className="site-user-menu__head" onClick={() => setUserOpen(false)}>
-                      <span className="site-avatar">
-                        <Avatar user={user} letter={firstLetter} />
-                      </span>
-                      <span>
-                        <strong>{displayName || 'Member'}</strong>
-                        {email ? <small>{email}</small> : null}
+                      <div className="site-account-head">
+                        <span className="site-avatar">
+                          <Avatar user={user} letter={firstLetter} />
+                        </span>
+                        <span>
+                          <strong>{displayName || 'Member'}</strong>
+                          {email ? <small>{email}</small> : null}
+                        </span>
+                      </div>
+                      <span className="site-account-level">
+                        <Edit size={16} aria-hidden />
                       </span>
                     </Link>
                     <Link className="site-menu-row" to="/profile/orders" onClick={() => setUserOpen(false)}>

@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { normalizeApiList } from '../home/catalog';
-import { getMyPackages } from '../services/packageService';
+import { loadPackagePurchasePages } from '../services/packageService';
 import { getConsultationFeeQuote } from '../services/consultService';
 import { isAuthenticated } from '../services/guestAuth';
 import { isActivePlan, readPlanFunding } from '../consult/consultPayment';
 
 /**
- * Active plans of the customer for this doctor + each plan's fee-quote `package_funding`
- * (decides whether the plan can pay for this slot). Mirrors the app's Confirm Booking screen.
+ * Every active purchase + each purchase's fee-quote `package_funding` for this slot.
+ * Purchases are loaded without doctor_id so multiple independent buys all appear;
+ * the fee quote decides which ones can fund this consultation.
  */
 export default function useConsultPlans({ doctorId, slotId }) {
   const [plans, setPlans] = useState([]);
@@ -16,10 +16,6 @@ export default function useConsultPlans({ doctorId, slotId }) {
 
   useEffect(() => {
     let alive = true;
-    if (!doctor) {
-      setPlans([]);
-      return undefined;
-    }
     // isAuthenticated() is async: it must be awaited, a bare call is always truthy.
     Promise.resolve(isAuthenticated())
       .then((signedIn) => {
@@ -28,9 +24,9 @@ export default function useConsultPlans({ doctorId, slotId }) {
           setPlans([]);
           return null;
         }
-        return getMyPackages({ status: 'active', doctor_id: doctor }).then((res) => {
+        return loadPackagePurchasePages({ status: 'active' }).then((rows) => {
           if (!alive) return;
-          setPlans(res?.success === false ? [] : normalizeApiList(res).filter(isActivePlan));
+          setPlans(rows.filter(isActivePlan));
         });
       })
       .catch(() => alive && setPlans([]));

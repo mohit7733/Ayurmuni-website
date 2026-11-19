@@ -53,12 +53,16 @@ export const buildProfilePayload = (user, profilePicture) => ({
   profile_picture: profilePicture,
 });
 
-/** Builds the photo-action list the header sheet shows (view/change/remove), as in the app. */
+/** Builds the photo-action list the header sheet shows (view/camera/change/remove). */
 export const buildPhotoOptions = (hasPhoto) =>
   hasPhoto
     ? [
         { key: 'view', label: 'View photo' },
+        { key: 'camera', label: 'Take photo' },
         { key: 'change', label: 'Change photo' },
         { key: 'remove', label: 'Remove photo', destructive: true },
       ]
-    : [{ key: 'change', label: 'Add photo' }];
+    : [
+        { key: 'camera', label: 'Take photo' },
+        { key: 'change', label: 'Add photo' },
+      ];

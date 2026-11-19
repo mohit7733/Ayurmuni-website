@@ -245,7 +245,7 @@ export default function DietPlan() {
           }
         >
           <span className="dt-meal__img">
-            <img src={meal.image || dietCoverImg} alt="" loading="lazy" />
+            <img src={meal.image || cover} alt="" loading="lazy" />
           </span>
           <span className="dt-meal__body">
             <small className="dt-meal__type">
@@ -322,9 +322,22 @@ export default function DietPlan() {
   };
 
   const title = plan?.title || plan?.name || 'Diet Plan';
-  const durationLabel = plan?.duration || (plan?.duration_days ? `${plan.duration_days} days` : '');
+  const totalDays = Number(plan?.total_days);
+  const durationLabel =
+    plan?.duration ||
+    (Number(plan?.duration_days) > 0
+      ? `${plan.duration_days} ${Number(plan.duration_days) === 1 ? 'day' : 'days'}`
+      : '') ||
+    (Number.isFinite(totalDays) && totalDays > 0
+      ? `${totalDays} ${totalDays === 1 ? 'day' : 'days'}`
+      : '');
   const statusText = status && status !== 'not_started' ? status.replace(/_/g, ' ') : '';
-  const season = plan?.season ? String(plan.season).replace(/^\w/, (c) => c.toUpperCase()) : '';
+  const season = plan?.season
+    ? String(plan.season)
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, (letter) => letter.toUpperCase())
+    : '';
+  const dailyCalories = Number(plan?.avg_daily_calories);
 
   return (
     <AppShell tab="home">
@@ -534,6 +547,10 @@ export default function DietPlan() {
                           value: plan?.meals_per_day ?? (previewMeals.length || ''),
                         },
                         {
+                          label: 'Daily calories',
+                          value: Number.isFinite(dailyCalories) && dailyCalories > 0 ? `${dailyCalories} kcal` : '',
+                        },
+                        {
                           label: 'Water goal',
                           value: waterGoalMl ? `${(waterGoalMl / 1000).toFixed(1).replace(/\.0$/, '')} L / day` : '',
                         },
@@ -634,10 +651,12 @@ export default function DietPlan() {
                         <strong>{Math.round(nutrition.leftKcal)}</strong>
                         <small>kcal left</small>
                       </div>
-                      <div>
-                        <strong>{Math.round(nutrition.burnedKcal || 0)}</strong>
-                        <small>kcal burned</small>
-                      </div>
+                      {nutrition.burnedKcal > 0 ? (
+                        <div>
+                          <strong>{Math.round(nutrition.burnedKcal)}</strong>
+                          <small>kcal burned</small>
+                        </div>
+                      ) : null}
                       <div>
                         <strong>{Math.round(nutrition.goalKcal || 0)}</strong>
                         <small>kcal goal</small>

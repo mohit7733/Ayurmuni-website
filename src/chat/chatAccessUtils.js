@@ -44,13 +44,6 @@ export const isFollowUpChatWindowOpen = (followUp, appointmentDate, fallback) =>
   return false;
 };
 
-const isFollowUpWindowEnded = (followUp) => {
-  if (!followUp?.date) return false;
-  const followUpDay = parseDate(followUp.date);
-  if (!followUpDay) return false;
-  return followUpDay < startOfDay(new Date());
-};
-
 /** Backend send-gate codes (communication/services/chat_service.py send_consultation_chat_message). */
 export const CHAT_POLICY_ERROR_CODES = ['doctor_followup_policy_violation', 'chat_closed'];
 
@@ -63,48 +56,12 @@ export const chatPolicyErrorReason = (error) => {
   return [error?.message, first].filter(Boolean).join(' ');
 };
 
-export function isChatSendEnabled(access, appointmentDate, fallback) {
-  if (!access && !fallback) return false;
-
-  // Server is authoritative: chat_access.can_send === (resolve_active_chat_phase != None),
-  // the exact check the send endpoint enforces (live call, post-consult window from
-  // call_ended_at + policy days, follow-up only if policy follow_up_extends_chat, package chat).
-  // Local date heuristics only apply before chat_access has loaded.
-  if (typeof access?.can_send === 'boolean') return access.can_send;
-
-  const mergedFollowUp = {
-    schedule: access?.follow_up?.schedule ?? fallback?.follow_up?.schedule,
-    date: access?.follow_up?.date ?? fallback?.follow_up?.date ?? null,
-    reason: access?.follow_up?.reason ?? null,
-  };
-  const merged = {
-    call_status: access?.call_status ?? fallback?.call_status,
-    appointment_status: access?.appointment_status ?? fallback?.appointment_status,
-    follow_up_active: access?.follow_up_active,
-    follow_up: access?.follow_up || fallback?.follow_up ? mergedFollowUp : undefined,
-  };
-  const callStatus = normalize(merged.call_status);
-  const appointmentStatus = normalize(merged.appointment_status);
-  const followUp = merged.follow_up;
-  const resolvedDate = appointmentDate ?? fallback?.appointment_date;
-  const withinWindow = isWithinDefaultChatWindow(resolvedDate, fallback);
-
-  if (callStatus === 'in_progress') return true;
-  if (merged.follow_up_active === true) return true;
-  if (isFollowUpChatWindowOpen(followUp, resolvedDate, fallback)) return true;
-
-  // A confirmed visit stays open through the appointment day and the
-  // following DEFAULT_CHAT_DAYS. After that it is read-only, same as a
-  // completed visit. An explicit API allow does not extend a closed window.
-  if (access?.can_send === true || appointmentStatus === 'confirmed' || appointmentStatus === 'in_progress') {
-    return withinWindow;
-  }
-
-  const isCompleted = appointmentStatus === 'completed' || callStatus === 'ended';
-  if (isCompleted) {
-    if (followUp?.date || followUp?.schedule) return false;
-    return withinWindow;
-  }
+export function isChatSendEnabled(access) {
+  if (!access || typeof access !== 'object') return false;
+  // The appointment's chat_access is the only source. A missing payload must not
+  // open chat from a date window or from some other active package.
+  if (typeof access.can_send === 'boolean') return access.can_send;
+  if (typeof access.follow_up_active === 'boolean') return access.follow_up_active;
   return false;
 }
 
@@ -116,35 +73,17 @@ export function isChatVisibleForAppointment(appointment) {
   return !!appointment;
 }
 
-export function getChatDisabledReason(access, appointmentDate, fallback) {
-  if (isChatSendEnabled(access, appointmentDate, fallback)) return '';
+export function getChatDisabledReason(access) {
+  if (isChatSendEnabled(access)) return '';
   if (access?.closed_reason) return access.closed_reason;
   if (access?.can_send === false && access?.follow_up_active === true) {
-    return 'Post-consultation chat is not available. Follow-up chat is not active under the doctor follow-up policy — you can still read previous messages';
+    return 'Post-consultation chat is not available for this visit — you can still read previous messages';
   }
   if (access?.can_send === false && normalize(access?.appointment_status) === 'cancelled') {
     return 'This appointment was cancelled — you can still read previous messages';
   }
-  if (access?.can_send === false && !access?.follow_up?.date && !access?.follow_up?.schedule) {
-    return 'Post-consultation chat window has closed — you can still read previous messages';
-  }
-  const followUp = {
-    schedule: access?.follow_up?.schedule ?? fallback?.follow_up?.schedule,
-    date: access?.follow_up?.date ?? fallback?.follow_up?.date ?? null,
-  };
-  if (isFollowUpWindowEnded(followUp)) {
-    return 'Follow-up chat period has ended — you can still read previous messages';
-  }
-  if (
-    access?.follow_up_active === false &&
-    !isFollowUpChatWindowOpen(followUp, appointmentDate ?? fallback?.appointment_date, fallback)
-  ) {
-    return 'Follow-up chat is inactive — you can read previous messages but cannot send new ones';
-  }
-  if (followUp?.schedule && !followUp.date) {
-    return 'Follow-up chat is inactive — you can read previous messages but cannot send new ones';
-  }
-  return `Chat closed — ${DEFAULT_CHAT_DAYS}-day consultation window has ended. You can still read previous messages`;
+  if (!access) return 'Chat is not available for this appointment yet';
+  return 'You can still read previous messages';
 }
 
 export function shouldSuppressChatError(error, messageCount = 0) {

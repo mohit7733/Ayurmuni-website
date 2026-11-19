@@ -280,10 +280,21 @@
 @media (min-width: 1024px) {
   .hm-page .hm-panel.cs-promises {
     padding: var(--am-space-5) var(--am-space-8);
+    margin: 0 0 16px 0 ;
   }
 
   .cs-promises__label {
     font-size: var(--am-text-md);
+  }
+}
+
+/* Desktop and phone body gap is 4px. Homepage panels sit 18px apart
+   (the doctor/product row gap). Restore that between the benefits bar,
+   Recent Consultation, and Consult by Concern. */
+@media (max-width: 639px), (min-width: 1024px) {
+  .hm-page.svc-page .hm-body > .cs-promises,
+  .hm-page.svc-page .hm-body > .hm-product-row {
+    margin-bottom: 14px;
   }
 }
 

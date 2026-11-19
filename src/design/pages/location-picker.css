@@ -1,4 +1,11 @@
-﻿/* Premium location picker — logo green + gold. Scoped to .loc-premium. */
+/* Premium location picker — logo green + gold. Scoped to .loc-premium. */
+.app-shell .app-shell-body > .catalog-page.loc-page {
+  width: min(720px, 100%);
+  max-width: 720px;
+  padding-top: 12px;
+  padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px));
+}
+
 .loc-premium {
   --lp-green: #0d614e;
   --lp-green-dark: #0b4136;

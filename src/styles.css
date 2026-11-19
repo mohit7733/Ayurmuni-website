@@ -2826,17 +2826,18 @@
   margin-bottom: 8px;
 }
 
+/* Legacy gallery hero rules — live styles live in review-gallery.css
+   (.review-gallery-page .review-gallery-hero) so the stage can fill width. */
 .review-gallery-hero {
   margin-bottom: 16px;
   border-radius: var(--radius-lg);
   overflow: hidden;
-  background: var(--am-text);
 }
 
 .review-gallery-hero img,
 .review-gallery-hero video {
   width: 100%;
-  max-height: 420px;
+  height: 100%;
   object-fit: contain;
   margin: 0 auto;
 }

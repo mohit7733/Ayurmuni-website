@@ -174,92 +174,104 @@ export default function AddressForm() {
 
   return (
     <AppShell tab="profile">
-      <section className="pf-page">
+      <section className="pf-page pf-page--address">
         <PageHeader
           title={isNew ? T.formAddTitle : T.formEditTitle}
           subtitle={T.formSubtitle}
           onBack={() => navigate(-1)}
         />
 
-        <div className="pf-map-actions">
-          <Button
-            variant="secondary"
-            size="sm"
-            leadingIcon={<MapPinned size={16} aria-hidden />}
-            onClick={() => navigate('/location-picker', { state: mapState })}
-          >
-            {T.pickOnMap}
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            leadingIcon={<LocateFixed size={16} aria-hidden />}
-            onClick={() => navigate('/location-picker', { state: { ...mapState, useGps: true } })}
-          >
-            {T.useCurrentLocation}
-          </Button>
-        </div>
-
-        {selectedLocation?.formatted_address || form.city ? (
-          <p className="pf-preview">
-            {selectedLocation?.formatted_address ||
-              [form.address_line_1, form.city, form.state, form.zipcode].filter(Boolean).join(', ')}
-          </p>
-        ) : null}
-
-        <div className="pf-gender" role="group" aria-label="Address type">
-          {T.addressTypes.map((item) => (
-            <Chip
-              key={item.value}
-              selected={form.address_type === item.value}
-              onClick={() => setField('address_type', item.value)}
+        <form
+          className="pf-address-card"
+          onSubmit={(event) => {
+            event.preventDefault();
+            save();
+          }}
+        >
+          <div className="pf-map-actions">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              leadingIcon={<MapPinned size={16} aria-hidden />}
+              onClick={() => navigate('/location-picker', { state: mapState })}
             >
-              {item.label}
-            </Chip>
-          ))}
-        </div>
+              {T.pickOnMap}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              leadingIcon={<LocateFixed size={16} aria-hidden />}
+              onClick={() => navigate('/location-picker', { state: { ...mapState, useGps: true } })}
+            >
+              {T.useCurrentLocation}
+            </Button>
+          </div>
 
-        <div className="pf-form-grid">
-          <Input
-            label={T.addressLine1}
-            required
-            value={form.address_line_1}
-            onChange={(e) => setField('address_line_1', e.target.value)}
-          />
-          <Input
-            label={T.addressLine2}
-            value={form.address_line_2}
-            onChange={(e) => setField('address_line_2', e.target.value)}
-          />
-          <Input
-            label={T.city}
-            required
-            value={form.city}
-            disabled={cityStateLocked}
-            onChange={(e) => setField('city', e.target.value)}
-          />
-          <Input
-            label={T.state}
-            value={form.state}
-            disabled={cityStateLocked}
-            onChange={(e) => setField('state', e.target.value)}
-          />
-          <Input
-            label={T.pincode}
-            required
-            hint={pincodeLoading ? T.pincodeLookingUp : cityStateLocked ? T.cityStateLockedHint : undefined}
-            inputMode="numeric"
-            value={form.zipcode}
-            onChange={(e) => setZipcode(e.target.value)}
-          />
-        </div>
+          {selectedLocation?.formatted_address || form.city ? (
+            <p className="pf-preview">
+              {selectedLocation?.formatted_address ||
+                [form.address_line_1, form.city, form.state, form.zipcode].filter(Boolean).join(', ')}
+            </p>
+          ) : null}
 
-        <div className="pf-form-actions">
-          <Button variant="primary" block loading={saving} onClick={save}>
-            {saving ? T.saving : T.saveAddress}
-          </Button>
-        </div>
+          <div className="pf-gender" role="group" aria-label="Address type">
+            {T.addressTypes.map((item) => (
+              <Chip
+                key={item.value}
+                selected={form.address_type === item.value}
+                onClick={() => setField('address_type', item.value)}
+              >
+                {item.label}
+              </Chip>
+            ))}
+          </div>
 
+          <div className="pf-form-grid pf-form-grid--address">
+            <Input
+              className="is-wide"
+              label={T.addressLine1}
+              required
+              value={form.address_line_1}
+              onChange={(e) => setField('address_line_1', e.target.value)}
+            />
+            <Input
+              className="is-wide"
+              label={T.addressLine2}
+              value={form.address_line_2}
+              onChange={(e) => setField('address_line_2', e.target.value)}
+            />
+            <Input
+              label={T.city}
+              required
+              value={form.city}
+              disabled={cityStateLocked}
+              onChange={(e) => setField('city', e.target.value)}
+            />
+            <Input
+              label={T.state}
+              value={form.state}
+              disabled={cityStateLocked}
+              onChange={(e) => setField('state', e.target.value)}
+            />
+            <Input
+              className="is-pin"
+              label={T.pincode}
+              required
+              hint={pincodeLoading ? T.pincodeLookingUp : cityStateLocked ? T.cityStateLockedHint : undefined}
+              inputMode="numeric"
+              value={form.zipcode}
+              onChange={(e) => setZipcode(e.target.value)}
+            />
+          </div>
+
+          <div className="pf-form-actions">
+            <Button type="submit" variant="primary" loading={saving}>
+              {saving ? T.saving : T.saveAddress}
+            </Button>
+          </div>
+        </form>
       </section>
     </AppShell>
   );

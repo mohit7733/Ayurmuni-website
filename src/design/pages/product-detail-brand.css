@@ -53,7 +53,9 @@
   max-width: max(320px, calc(100vh - var(--am-header-h, 64px) - 140px));
   margin-inline: auto;
 }
-@media (min-width: 1024px) {
+/* Sticky gallery from the two-column layout so scrolling keeps the image in view
+   like a normal product detail page (was 1024px, which left tablet/960px without sticky). */
+@media (min-width: 860px) {
   .pd-page--brand .pd-gallery {
     position: sticky;
     top: calc(var(--am-header-h, 64px) + 16px);
@@ -84,7 +86,7 @@
   max-height: none;
   padding: 0;
   border-radius: 0;
-  object-fit: cover;
+  object-fit: fill;
   transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 @media (hover: hover) {
@@ -733,6 +735,7 @@
 
 /* ── Section headers (reviews + related) like the homepage ── */
 .pd-page--brand .am-section-header { align-items: center; gap: 12px; margin-bottom: 14px; }
+.pd-page--brand .am-section-header__action { display: flex; align-items: center; }
 .pd-page--brand .am-section-header__title {
   font-family: var(--am-font-display);
   font-size: clamp(1.15rem, 1rem + 0.5vw, 1.35rem);
@@ -908,10 +911,14 @@
 .pd-page--brand .pd-review-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   justify-content: flex-end;
   gap: 8px;
 }
-.pd-page--brand .pd-review-actions .am-btn { border-radius: var(--am-radius-pill); }
+.pd-page--brand .pd-review-actions .am-btn {
+  border-radius: var(--am-radius-pill);
+  align-self: center;
+}
 .pd-page--brand .pd-details__title {
   display: flex;
   align-items: center;

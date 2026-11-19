@@ -15,40 +15,50 @@ const UNUSABLE_LABEL = {
 };
 
 /** "Which plan do you want to go with?" - reuses Modal and the booking radio rows. */
-export default function ConsultPlanPicker({ open, plans, eligibility, selectedId, onSelect, onPayNormally, onClose }) {
+export default function ConsultPlanPicker({
+  open,
+  plans,
+  eligibility,
+  selectedId,
+  onSelect,
+  onPayNormally,
+  onClose,
+  benefitKind = 'doctor',
+}) {
   const [pickedId, setPickedId] = useState(selectedId ?? null);
+  const benefitOptions = { kind: benefitKind };
 
   const rowStatus = (plan) => {
     const quote = eligibility?.[plan.id];
     if (quote) {
       if (quote.loading) return { usable: false, loading: true, label: 'Checking plan for this doctor...' };
       if (!quote.canFund) return { usable: false, loading: false, label: quote.reason };
+      const unit = benefitKind === 'diet' ? 'diet consultation' : 'consultation';
       const left =
         quote.quantityRemaining != null
-          ? `${quote.quantityRemaining} consultation${quote.quantityRemaining === 1 ? '' : 's'} left`
-          : planRemainingLabel(plan, true);
+          ? `${quote.quantityRemaining} ${unit}${quote.quantityRemaining === 1 ? '' : 's'} left`
+          : planRemainingLabel(plan, true, benefitOptions);
       return { usable: true, loading: false, label: left };
     }
-    const state = getPlanConsultState(plan);
+    const state = getPlanConsultState(plan, Date.now(), benefitOptions);
     return state === 'usable'
-      ? { usable: true, loading: false, label: planRemainingLabel(plan, true) }
+      ? { usable: true, loading: false, label: planRemainingLabel(plan, true, benefitOptions) }
       : { usable: false, loading: false, label: UNUSABLE_LABEL[state] };
   };
 
-  const firstUsableId = plans.find((p) => rowStatus(p).usable)?.id ?? null;
-  const hasUsable = firstUsableId != null;
-  const checking = plans.some((p) => rowStatus(p).loading);
+  const hasUsable = plans.some((plan) => rowStatus(plan).usable);
+  const checking = plans.some((plan) => rowStatus(plan).loading);
 
   useEffect(() => {
-    if (open) setPickedId(selectedId ?? firstUsableId);
-  }, [open, selectedId, firstUsableId]);
+    if (open) setPickedId(selectedId ?? null);
+  }, [open, selectedId]);
 
   const picked = plans.find((p) => p.id === pickedId && rowStatus(p).usable) ?? null;
 
   const description = checking && !hasUsable
-    ? 'Checking which of your plans can be used for this doctor...'
+    ? 'Checking which of your plans can be used for this consultation...'
     : hasUsable
-      ? 'No payment needed - this consultation is covered by your plan.'
+      ? `Showing all ${plans.length} active plan${plans.length === 1 ? '' : 's'}. Pick one to cover this consultation.`
       : 'Your plans cannot be used for this consultation. You can continue with normal payment.';
 
   return (
@@ -83,7 +93,7 @@ export default function ConsultPlanPicker({ open, plans, eligibility, selectedId
           const quote = eligibility?.[plan.id];
           const payable = quote?.payable;
           const price = Number(plan.paid_price || plan.original_price || 0);
-          const benefit = getConsultBenefit(plan);
+          const benefit = getConsultBenefit(plan, benefitOptions);
           const remaining = quote?.quantityRemaining ?? benefit?.quantity_remaining;
           const total = benefit?.quantity_total;
           return (

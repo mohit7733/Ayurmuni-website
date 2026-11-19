@@ -36,7 +36,6 @@ const readOfferPlan = (item = {}) => {
     billingMode: String(item.billingMode || item.billing_mode || 'one_time'),
     billingPeriod: String(item.billingPeriod || item.billing_period || '').trim(),
     billingInterval: amount(item.billingInterval ?? item.billing_interval) || 1,
-    purchased: Boolean(item.purchased),
   };
 };
 
@@ -76,7 +75,6 @@ export default function DummyOfferCard({ item, kind = 'lab', onClick, cta, tone 
   if (kind === 'package') {
     const plan = readOfferPlan(item);
     const discount = planDiscount(plan);
-    const owned = Boolean(plan.purchased);
     const lines = plan.includes.slice(0, 2);
     const more = Math.max(0, plan.includes.length - lines.length);
     const saving = plan.mrp > plan.price ? plan.mrp - plan.price : 0;
@@ -141,7 +139,7 @@ export default function DummyOfferCard({ item, kind = 'lab', onClick, cta, tone 
           {saving > 0 ? <span className="pp-rail__save">Save {formatPlanMoney(saving)}</span> : null}
         </span>
 
-        <span className="pp-rail__cta">{cta || planCta(plan, { owned, rail: true })}</span>
+        <span className="pp-rail__cta">{cta || planCta(plan, { rail: true })}</span>
       </button>
     );
   }

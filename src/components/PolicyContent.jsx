@@ -31,10 +31,7 @@ export default function PolicyContent({ content }) {
 
         if (type === "title") {
           return (
-            <h2
-              key={`title-${index}`}
-              style={{ marginTop: "10px", textAlign: "center" }}
-            >
+            <h2 key={`title-${index}`}>
               {text}
             </h2>
           );

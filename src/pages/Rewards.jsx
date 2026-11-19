@@ -23,7 +23,6 @@ import {
 import {
   Badge,
   Button,
-  Chip,
   EmptyState,
   Input,
   Modal,
@@ -70,6 +69,16 @@ export default function Rewards() {
   const filtered = useMemo(
     () => displayRewards.filter((item) => matchesFilter(item, filterKey)),
     [displayRewards, filterKey],
+  );
+  const filterCounts = useMemo(
+    () =>
+      Object.fromEntries(
+        T.filters.map((chip) => [
+          chip.key,
+          displayRewards.filter((item) => matchesFilter(item, chip.key)).length,
+        ]),
+      ),
+    [displayRewards],
   );
 
   const copyCode = async (coupon, reward) => {
@@ -142,41 +151,54 @@ export default function Rewards() {
           }
         />
 
-        {/* Referral Card */}
-        <div className="rw-referral-section">
-          <ReferralCard />
-        </div>
+        <div className="rw-layout">
+          <aside className="st-cat-col rw-filter" aria-labelledby="rw-filter-title">
+            <p className="st-cat-col__eyebrow">Filter</p>
+            <h3 id="rw-filter-title">Rewards</h3>
+            <ul className="st-cat-filter">
+              {T.filters.map((chip) => (
+                <li key={chip.key}>
+                  <button
+                    type="button"
+                    aria-pressed={filterKey === chip.key}
+                    className={filterKey === chip.key ? 'is-on' : ''}
+                    onClick={() => setFilterKey(chip.key)}
+                  >
+                    <span className="st-cat-filter__mark" aria-hidden>
+                      {chip.mark}
+                    </span>
+                    <span className="st-cat-filter__copy">
+                      <strong>{chip.label}</strong>
+                      <em>
+                        {chip.hint} · {filterCounts[chip.key] || 0}
+                      </em>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </aside>
 
-        <div className="rw-how">
-          <h2>{T.howTitle}</h2>
-          <p>{T.howText}</p>
-        </div>
-
-        <div className="rw-filters" role="group" aria-label={T.filtersLabel}>
-          {T.filters.map((chip) => (
-            <Chip
-              key={chip.key}
-              selected={filterKey === chip.key}
-              onClick={() => setFilterKey(chip.key)}
-            >
-              {chip.label}
-            </Chip>
-          ))}
-        </div>
+          <div className="rw-main">
+        <ReferralCard />
+        <p className="rw-how">
+          <strong>{T.howTitle}.</strong> {T.howText}
+        </p>
 
         {loading ? (
-          <SectionHold label={T.loading} minHeight={280} />
+          <SectionHold label={T.loading} minHeight={180} />
         ) : isEmptyAll ? (
           <EmptyState
-            icon={<Gift size={28} />}
+            compact
+            icon={<Gift size={22} />}
             title={T.emptyTitle}
             description={T.emptyText}
             action={
               <>
-                <Button variant="secondary" onClick={() => navigate('/products')}>
+                <Button variant="secondary" size="sm" onClick={() => navigate('/products')}>
                   {T.shopProducts}
                 </Button>
-                <Button variant="primary" onClick={() => navigate('/consult/doctors')}>
+                <Button variant="primary" size="sm" onClick={() => navigate('/consult/doctors')}>
                   {T.bookConsult}
                 </Button>
               </>
@@ -184,20 +206,18 @@ export default function Rewards() {
           />
         ) : isEmptyFilter ? (
           <EmptyState
-            icon={<Gift size={28} />}
+            compact
+            icon={<Gift size={22} />}
             title={T.emptyFilterTitle}
             description={T.emptyFilterText}
             action={
-              <Button variant="secondary" onClick={() => setFilterKey('all')}>
-                All
+              <Button variant="secondary" size="sm" onClick={() => setFilterKey('all')}>
+                All rewards
               </Button>
             }
           />
         ) : (
           <div className="rw-grid">
-            {filterKey === 'all' && displayRewards.length > 0 ? (
-              <p className="rw-highlight">{T.highlight(displayRewards.length)}</p>
-            ) : null}
             {filtered.map((reward) => {
               const coupon = reward.coupon;
               const theme = REWARD_THEMES[couponThemeIndex(coupon.code || coupon.id)];
@@ -210,7 +230,6 @@ export default function Rewards() {
                   key={reward.id}
                   type="button"
                   className="rw-card"
-                  style={{ background: theme.bg }}
                   onClick={() => setDetail({ coupon, reward })}
                 >
                   <div className="rw-card__top">
@@ -250,7 +269,8 @@ export default function Rewards() {
             })}
           </div>
         )}
-
+          </div>
+        </div>
       </section>
 
       <Modal

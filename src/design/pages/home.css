@@ -2502,6 +2502,13 @@
 .hm-page .hm-wellness {
   gap: 18px;
 }
+
+/* Reveal adds 16px margin; inside a gapped row that doubles the space.
+   Keep Visited Doctors → Our Doctors at the same 18px as other panels. */
+.hm-page .hm-doctor-row > .am-reveal.is-shown,
+.hm-page .hm-doctor-row > .hm-section {
+  margin-bottom: 0;
+}
 .hm-page .hm-wellness{
   margin-top: 18px;
 }
@@ -4694,19 +4701,25 @@ button.hm-pose {
   }
 }
 
-/* Homepage Health concerns: continuous marquee + edge alignment.
+/* Health concerns: continuous marquee on the homepage, and the same edge alignment
+   on every page that uses this panel (including Consult).
    Fixed tile width so the first icon's left edge (and the last visible content on the
    right) can be lined up with the heading / View all and neighbouring sections. */
-.hm-page:not(.svc-page) .hm-concerns-panel {
+.hm-page .hm-concerns-panel {
   --hc-li: 104px;
   --hc-icon: 68px;
+}
+
+.hm-page .hm-concerns-panel .am-concerns__track>li {
+  flex: 0 0 var(--hc-li);
+  width: var(--hc-li);
 }
 
 .hm-page:not(.svc-page) .hm-concerns-panel .am-concerns--marquee .am-concerns__track>li {
   flex: 0 0 var(--hc-li);
 }
 
-.hm-page:not(.svc-page) .hm-concerns-panel .am-concerns__viewport {
+.hm-page .hm-concerns-panel .am-concerns__viewport {
   margin-inline: calc((var(--hc-icon) - var(--hc-li)) / 2);
   padding-inline: 0;
   mask-image: none;
@@ -4758,12 +4771,12 @@ button.hm-pose {
 }
 
 @media (max-width: 639px) {
-  .hm-page:not(.svc-page) .hm-concerns-panel {
+  .hm-page .hm-concerns-panel {
     --hc-li: 108px;
     --hc-icon: 64px;
   }
 
-  .hm-page:not(.svc-page) .hm-concerns-panel .am-concerns__viewport {
+  .hm-page .hm-concerns-panel .am-concerns__viewport {
     margin-inline: 0;
     overflow-x: auto;
   }

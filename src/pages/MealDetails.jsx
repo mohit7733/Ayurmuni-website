@@ -31,6 +31,9 @@ import { getDietPlanProgress, getDietPlans, getMyDietPlans, updateDietPlanProgre
 import {
   extractDietPlanDetail,
   getDietListStatus,
+  getDietPlanCoverUrl,
+  getWaterGoalMl,
+  getWaterIntakeForDay,
   mapPlanJsonMeals,
   normalizeDietPlanList,
   normalizeProgressList,
@@ -45,11 +48,54 @@ const amount = (value) => {
   return Number.isFinite(n) && n > 0 ? n : 0;
 };
 
+const MEAL_LABELS = {
+  morning: 'Morning',
+  breakfast: 'Breakfast',
+  midday: 'Midday',
+  lunch: 'Lunch',
+  dinner: 'Dinner',
+};
+
 const splitMealId = (mealId) => {
   const match = String(mealId || '').match(/^(day_\d+)-(.+)$/i);
   if (!match) return null;
   return { dayKey: match[1], mealKey: match[2] };
 };
+
+const titleCase = (value) =>
+  String(value || '')
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+
+const formatStarted = (value) => {
+  const date = value ? new Date(value) : null;
+  if (!date || Number.isNaN(date.getTime())) return '';
+  return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+};
+
+const diseaseLabel = (plan) =>
+  (Array.isArray(plan?.health_diseases) ? plan.health_diseases : [])
+    .map((item) => item?.name)
+    .filter(Boolean)
+    .join(', ');
+
+const summaryMeal = (plan, parts, response) => ({
+  id: `${parts.dayKey}-${parts.mealKey}`,
+  dayKey: parts.dayKey,
+  mealKey: parts.mealKey,
+  type: MEAL_LABELS[parts.mealKey] || titleCase(parts.mealKey),
+  time: `Day ${String(parts.dayKey).replace(/\D/g, '') || '1'}`,
+  title: plan?.name || 'Meal',
+  description: diseaseLabel(plan),
+  image: getDietPlanCoverUrl(plan) || '',
+  kcal: Number(plan?.avg_daily_calories) || 0,
+  dietItemDetails: [],
+  dietItems: [],
+  preparationSteps: [],
+  preparationVideos: [],
+  summaryOnly: true,
+  prakriti: response?.customer_prakriti || plan?.prakriti || '',
+});
 
 export default function MealDetails() {
   const navigate = useNavigate();
@@ -57,6 +103,7 @@ export default function MealDetails() {
   const routeState = useLocation().state || {};
   const seeded = routeState.meal || null;
   const [item, setItem] = useState(seeded);
+  const [plan, setPlan] = useState(routeState.plan || null);
   const [loading, setLoading] = useState(!seeded);
   const [logging, setLogging] = useState(false);
   const [logged, setLogged] = useState(seeded?.status === 'done');
@@ -73,13 +120,13 @@ export default function MealDetails() {
           patient_assignment_status: 'active',
         });
         const active = res?.success === false ? [] : normalizeDietPlanList(res);
-        const match = active.some((plan) => {
-          const id = String(plan.diet_plan_id || plan.id || '');
-          return id === String(planId) && getDietListStatus(plan) === 'active';
+        const match = active.some((entry) => {
+          const id = String(entry.diet_plan_id || entry.id || '');
+          return id === String(planId) && getDietListStatus(entry) === 'active';
         });
-        if (alive) setCanLog(match);
+        if (alive && match) setCanLog(true);
       } catch {
-        if (alive) setCanLog(false);
+        /* assignment detail decides whether this meal can be logged */
       }
     })();
     return () => {
@@ -97,7 +144,27 @@ export default function MealDetails() {
     let alive = true;
     (async () => {
       try {
-        const detail = extractDietPlanDetail(await getDietPlans({ id: planId }));
+        const assignmentRes = await getMyDietPlans({ id: planId });
+        const assignment = extractDietPlanDetail(assignmentRes);
+        let catalogRes = null;
+        let catalog = null;
+        if (!assignment?.plan_json) {
+          try {
+            catalogRes = await getDietPlans({ id: planId });
+            catalog = extractDietPlanDetail(catalogRes);
+          } catch {
+            catalog = null;
+          }
+        }
+        const detail = assignment || catalog
+          ? {
+              ...(catalog || {}),
+              ...(assignment || {}),
+              plan_json: assignment?.plan_json || catalog?.plan_json,
+              customer_prakriti:
+                assignmentRes?.customer_prakriti || catalogRes?.customer_prakriti || '',
+            }
+          : null;
         let progress = [];
         if (detail?.patient_diet_plan_id) {
           try {
@@ -110,8 +177,11 @@ export default function MealDetails() {
           (entry) => entry.id === mealId || entry.mealKey === parts.mealKey,
         );
         if (!alive) return;
-        setItem(meal || null);
-        setLogged(meal?.status === 'done');
+        setPlan(detail);
+        setCanLog(getDietListStatus(detail) === 'active');
+        const next = meal || (detail ? summaryMeal(detail, parts, assignment?.id ? assignmentRes : catalogRes) : null);
+        setItem(next);
+        setLogged(next?.status === 'done');
       } catch {
         if (alive) setItem(null);
       } finally {
@@ -156,13 +226,41 @@ export default function MealDetails() {
       : (item.dietItems || []).map((entry) => ({ name: entry, quantity: '', notes: '' }));
   const steps = item.preparationSteps || [];
   const videos = item.preparationVideos || [];
+  const summary = Boolean(item.summaryOnly);
   const kcal = amount(item.kcal);
-  const nutrition = [
-    kcal ? { label: 'Calories', value: String(kcal) } : null,
-    amount(item.carbs) ? { label: 'Carbs', value: grams(amount(item.carbs)) } : null,
-    amount(item.protein) ? { label: 'Protein', value: grams(amount(item.protein)) } : null,
-    amount(item.fat) ? { label: 'Fat', value: grams(amount(item.fat)) } : null,
-  ].filter(Boolean);
+  const waterGoal = summary ? getWaterGoalMl(plan) : 0;
+  const waterNow = summary ? getWaterIntakeForDay(plan, item.dayKey) : 0;
+  const status = summary ? titleCase(getDietListStatus(plan) || plan?.patient_assignment_status) : '';
+  const started = summary ? formatStarted(plan?.started_at) : '';
+  const diseases = summary ? diseaseLabel(plan) || item.description || '' : '';
+  const mealsPerDay = Number(plan?.meals_per_day) || 0;
+  const totalDays = Number(plan?.total_days) || 0;
+  const nutrition = summary
+    ? []
+    : [
+        kcal ? { label: 'Calories', value: String(kcal) } : null,
+        amount(item.carbs) ? { label: 'Carbs', value: grams(amount(item.carbs)) } : null,
+        amount(item.protein) ? { label: 'Protein', value: grams(amount(item.protein)) } : null,
+        amount(item.fat) ? { label: 'Fat', value: grams(amount(item.fat)) } : null,
+      ].filter(Boolean);
+  const planFacts = summary
+    ? [
+        kcal ? { label: 'Avg calories', value: `${kcal} kcal` } : null,
+        mealsPerDay ? { label: 'Meals / day', value: String(mealsPerDay) } : null,
+        totalDays ? { label: 'Plan length', value: `${totalDays} ${totalDays === 1 ? 'day' : 'days'}` } : null,
+        { label: 'Water today', value: `${waterNow} / ${waterGoal} ml` },
+      ].filter(Boolean)
+    : [];
+  const planNotes = summary
+    ? [
+        diseases ? `For ${diseases}` : '',
+        status ? `Status ${status}` : '',
+        started ? `Started ${started}` : '',
+        plan?.season ? titleCase(plan.season) : '',
+        item.prakriti ? `Prakriti ${item.prakriti}` : '',
+        plan?.is_purchased ? (Number(plan.price) > 0 ? `Purchased · ₹${plan.price}` : 'Purchased · Free') : '',
+      ].filter(Boolean)
+    : [];
 
   const onLogMeal = async () => {
     if (!item.dayKey || !item.mealKey) {
@@ -200,7 +298,7 @@ export default function MealDetails() {
         <DetailHero
           className="meal-page__hero"
           titleId="meal-title"
-          media={<img src={item.image || dietCoverImg} alt="" />}
+          media={<img src={item.image || getDietPlanCoverUrl(plan) || dietCoverImg} alt="" />}
           eyebrow={[item.type, item.time].filter(Boolean).join(' · ') || 'Meal'}
           title={item.title || 'Meal'}
           lede={item.description || ''}
@@ -208,9 +306,15 @@ export default function MealDetails() {
             <>
               {kcal ? (
                 <MetaChip icon={Flame} tone="gold">
-                  {kcal} kcal
+                  {summary ? `${kcal} kcal / day` : `${kcal} kcal`}
                 </MetaChip>
               ) : null}
+              {summary && waterGoal ? (
+                <MetaChip icon={Leaf}>
+                  Water {waterNow} / {waterGoal} ml
+                </MetaChip>
+              ) : null}
+              {summary && status ? <MetaChip>{status}</MetaChip> : null}
               {ingredients.length ? (
                 <MetaChip icon={Leaf}>
                   {ingredients.length} {ingredients.length === 1 ? 'ingredient' : 'ingredients'}
@@ -236,6 +340,13 @@ export default function MealDetails() {
         </DetailHero>
 
         <DetailLayout>
+          {summary ? (
+            <DetailCard id="meal-plan" title={item.type || 'This meal'} icon={Leaf} meta={item.time || ''}>
+              {planFacts.length ? <StatGrid items={planFacts} /> : null}
+              {planNotes.length ? <p className="dx-prose">{planNotes.join(' · ')}</p> : null}
+            </DetailCard>
+          ) : null}
+
           {nutrition.length ? (
             <DetailCard id="meal-nutrition" title="Nutrition" icon={Wheat} meta="Per serving">
               <StatGrid items={nutrition} />
@@ -293,7 +404,7 @@ export default function MealDetails() {
             </DetailCard>
           ) : null}
 
-          {!ingredients.length && !steps.length ? (
+          {!summary && !ingredients.length && !steps.length ? (
             <DetailCard id="meal-empty" title="Recipe" icon={ChefHat}>
               <p className="dx-prose">Your nutritionist has not added a recipe for this meal yet.</p>
             </DetailCard>

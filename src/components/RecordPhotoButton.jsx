@@ -189,7 +189,7 @@ export default function RecordPhotoButton({ disabled, onPhoto }) {
                       {T.cameraChoose}
                     </button>
                   ) : (
-                    <button type="button" className="cta" disabled={!ready} onClick={capture}>
+                    <button type="button" className="cta am-btn am-btn--secondary am-btn--sm" disabled={!ready} onClick={capture}>
                       {T.cameraCapture}
                     </button>
                   )}

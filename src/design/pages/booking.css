@@ -789,35 +789,78 @@
 
 .bk-slots-page .bk-record-list {
   display: grid;
-  gap: var(--am-space-2);
+  gap: 6px;
+  max-height: 196px;
+  margin: 0;
+  overflow-y: auto;
+  padding-right: 2px;
 }
 
 .bk-slots-page .bk-record {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 40px;
+  padding: 4px 6px 4px 8px;
+  border: 1px solid var(--am-line);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.bk-slots-page .bk-record:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: rgba(16, 83, 67, 0.28);
+}
+
+.bk-slots-page .bk-record label {
   display: flex;
   align-items: center;
-  gap: var(--am-space-3);
+  gap: 8px;
   min-width: 0;
-  padding: var(--am-space-3);
-  border: 1px solid var(--am-line);
-  border-radius: var(--am-radius-md);
   cursor: pointer;
 }
 
 .bk-slots-page .bk-record__copy {
   display: grid;
   min-width: 0;
-  gap: var(--am-space-1);
+  gap: 0;
 }
 
 .bk-slots-page .bk-record__copy strong {
-  overflow-wrap: anywhere;
+  overflow: hidden;
   color: var(--am-text);
-  font-size: var(--am-text-sm);
+  font-size: 13px;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .bk-slots-page .bk-record__copy small {
+  overflow: hidden;
   color: var(--am-text-muted);
-  font-size: var(--am-text-xs);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bk-slots-page .bk-record__view {
+  flex: none;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--am-primary-tint, #b7d8ce);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--am-primary);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.bk-slots-page .bk-record__view:hover {
+  background: var(--am-primary-soft, #e8f3ef);
 }
 
 .bk-slots-page .bk-upload-row {
@@ -982,14 +1025,16 @@
 }
 
 /* Consultation payment */
-.bk-pay-page {
+.app-shell .app-shell-body > .bk-pay-page {
   display: flex;
-  width: min(100%, var(--am-container));
+  width: min(1080px, 100%);
+  max-width: 1080px;
   box-sizing: border-box;
   flex-direction: column;
-  gap: var(--am-space-5);
+  gap: 12px;
   margin-inline: auto;
-  padding: var(--am-space-6) var(--am-gutter) var(--am-space-10);
+  padding-top: 12px;
+  padding-bottom: 28px;
 }
 
 .bk-pay-page > .am-page-header,
@@ -1000,9 +1045,9 @@
 
 .bk-pay-page .bk-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(300px, 0.85fr);
+  grid-template-columns: minmax(0, 1.15fr) minmax(280px, 360px);
   align-items: start;
-  gap: var(--am-space-5);
+  gap: 12px;
 }
 
 .bk-pay-page .bk-main,
@@ -1010,7 +1055,7 @@
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: var(--am-space-4);
+  gap: 10px;
 }
 
 .bk-pay-page .bk-aside {
@@ -1021,15 +1066,15 @@
 .bk-pay-page .bk-card,
 .bk-pay-page .bk-doctor {
   min-width: 0;
-  padding: var(--am-space-5);
-  border: 1px solid var(--am-line);
-  border-radius: var(--am-radius-xl);
+  padding: 12px 14px;
+  border: 1px solid rgba(216, 204, 180, 0.85);
+  border-radius: 14px;
 }
 
 .bk-pay-page .bk-card {
   display: flex;
   flex-direction: column;
-  gap: var(--am-space-3);
+  gap: 8px;
 }
 
 .bk-pay-page .bk-card__head {
@@ -1102,8 +1147,10 @@
 
 .bk-pay-page .bk-record-list {
   display: grid;
-  gap: var(--am-space-2);
+  gap: 6px;
+  max-height: 180px;
   margin: 0;
+  overflow-y: auto;
   padding: 0;
   list-style: none;
 }
@@ -1143,6 +1190,26 @@
 .bk-pay-page .bk-record__copy small {
   color: var(--am-text-muted);
   font-size: var(--am-text-xs);
+}
+
+.bk-pay-page .bk-record__copy strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bk-pay-page .bk-record__view {
+  flex: none;
+  height: 28px;
+  margin-left: auto;
+  padding: 0 10px;
+  border: 1px solid var(--am-primary-tint, #b7d8ce);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--am-primary);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .bk-pay-page .bk-payment-hero {

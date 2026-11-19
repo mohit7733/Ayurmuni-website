@@ -13,7 +13,6 @@ export const ALL_PLAN_STATUSES = [
   'pending',
   'expired',
   'exhausted',
-  'shifted',
   'cancelled',
   'refunded',
   'failed',
@@ -72,7 +71,7 @@ export const getPlanAmounts = (plan) => {
   };
 };
 
-/** { purchaseId: planName } so a shifted benefit can show which plan it came from. */
+/** { purchaseId: planName } for the purchases currently loaded. */
 export const buildPlanNameMap = (plans) => {
   const map = {};
   (plans || []).forEach((plan) => {
@@ -89,6 +88,17 @@ export const readPlanPage = (res) => {
   if (Array.isArray(res?.results)) return { list: res.results, next: res.next ?? null };
   return { list: [], next: null };
 };
+
+/** This purchase's own benefits. Shifted or carried credits are not part of the row. */
+export const ownPurchaseBenefits = (plan) =>
+  (plan?.benefits ?? [])
+    .filter((benefit) => benefit?.label)
+    .map((benefit) => ({
+      label: benefit.label,
+      remaining: benefit.quantity_remaining ?? null,
+      total: benefit.quantity_total ?? null,
+      status: benefit.status || '',
+    }));
 
 export const planBenefitIcon = (label) => {
   const key = String(label || '').toLowerCase();

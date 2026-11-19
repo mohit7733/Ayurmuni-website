@@ -3,21 +3,19 @@ import { useNavigate } from 'react-router-dom';
 import { payPackagePurchase, requestPackagePurchase } from '../payment/packageCheckout';
 import { packageGatewayChoices, resolvePackageGateway } from '../payment/packagePurchase';
 import { requireAuth } from '../services/guestAuth';
-import { fetchActivePlans, isSamePackage } from '../services/packageService';
 import usePaymentGateways from './usePaymentGateways';
 import { trackMetaPurchase, trackMetaSubscribe } from '../services/metaPixel';
 
 /**
- * Package buy flow shared by the packages list and detail page:
- * login -> (existing active plan? confirm credit transfer) -> packages/purchase/ (chosen gateway)
- * -> payment sheet with the server fee breakdown -> Cashfree / Razorpay -> verify -> My Plans.
+ * Package buy flow shared by the packages list and detail page.
+ * Each purchase is independent: an existing active plan never blocks checkout
+ * and never supplies credits to the new purchase.
  * `onPurchased(item, purchase)` runs after verify-payment succeeds (before the My Plans redirect).
  */
 export default function usePackagePurchase({ onPurchased } = {}) {
   const navigate = useNavigate();
   const { gateways: enabled, gateway: preferred } = usePaymentGateways();
   const [busyId, setBusyId] = useState('');
-  const [prompt, setPrompt] = useState(null);
   const [review, setReview] = useState(null);
   const requestRef = useRef(0);
 
@@ -112,26 +110,10 @@ export default function usePackagePurchase({ onPurchased } = {}) {
     async (item) => {
       if (busyId) return;
       if (!(await requireAuth('Sign in to buy this package.'))) return;
-      setBusyId(item.id);
-      const active = await fetchActivePlans(true);
-      setBusyId('');
-      if (active.length > 0) {
-        const same = active.find((plan) => isSamePackage(plan, item.id));
-        setPrompt({ plan: item, samePlan: Boolean(same), currentPlan: same ?? active[0] });
-        return;
-      }
       run(item);
     },
     [busyId, run],
   );
-
-  const confirm = useCallback(() => {
-    const item = prompt?.plan;
-    setPrompt(null);
-    if (item) run(item);
-  }, [prompt, run]);
-
-  const cancel = useCallback(() => setPrompt(null), []);
 
   const sheet = {
     review,
@@ -141,5 +123,5 @@ export default function usePackagePurchase({ onPurchased } = {}) {
     onClose: closeReview,
   };
 
-  return { start, busyId: busyId || (review?.item?.id ?? ''), prompt, confirm, cancel, sheet };
+  return { start, busyId: busyId || (review?.item?.id ?? ''), sheet };
 }

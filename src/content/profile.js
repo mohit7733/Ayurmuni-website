@@ -41,7 +41,16 @@ export const PROFILE_COPY = {
   editTitle: 'Edit profile',
   editSubtitle: 'Name, email, and photo',
   changePhoto: 'Change photo',
+  takePhoto: 'Take photo',
   uploading: 'Uploading…',
+  cameraTitle: 'Take a photo',
+  cameraHint: 'Look at the camera, then capture.',
+  cameraCapture: 'Capture',
+  cameraStarting: 'Starting camera…',
+  cameraDenied: 'Camera access is blocked. Allow it in the browser, or choose a photo instead.',
+  cameraMissing: 'No camera was found. Choose a photo from your files instead.',
+  cameraChoose: 'Choose a photo',
+  cameraCancel: 'Cancel',
   firstName: 'First name',
   lastName: 'Last name',
   email: 'Email',
@@ -67,7 +76,7 @@ export const PROFILE_COPY = {
       title: 'Account',
       items: [
         { title: 'Edit Profile', subtitle: 'Name, email, phone number', to: '/profile/edit' },
-        { title: 'Patient Details', subtitle: 'Manage family profiles', to: '/profile/patients' },
+        // { title: 'Patient Details', subtitle: 'Manage family profiles', to: '/profile/patients' },
         { title: 'Saved Address', subtitle: 'Delivery locations', to: '/profile/addresses' },
         { title: 'My Rewards', subtitle: 'Coupons and referrals', to: '/profile/rewards' },
       ],
@@ -147,7 +156,7 @@ const PROFILE_HEALTH = [
   { title: 'Medical Records', to: '/profile/records', icon: 'records' },
   { title: 'Medical History', to: '/medical-history', icon: 'file' },
   { title: 'Analysis', to: '/prakriti-profile', icon: 'activity' },
-  { title: 'Patient Details', to: '/profile/patients', icon: 'users' },
+  // { title: 'Patient Details', to: '/profile/patients', icon: 'users' },
 ];
 
 const PROFILE_SHOP = [
@@ -180,7 +189,7 @@ export const PROFILE_EXPLORE = [
   { title: 'Medicines', subtitle: 'Ayurvedic care', to: '/medicines', icon: 'pill' },
   { title: 'Products', subtitle: 'Wellness picks', to: '/products', icon: 'bag' },
   { title: 'Yoga', subtitle: 'Sessions', to: '/yoga', icon: 'yoga' },
-  { title: 'Mentor', subtitle: 'Consult a guide', to: '/mentor', icon: 'mentor' },
+  // { title: 'Mentor', subtitle: 'Consult a guide', to: '/mentor', icon: 'mentor' },
   { title: 'Diet Plan', subtitle: 'Personalized', to: '/diet', icon: 'diet' },
   { title: 'Prakriti', subtitle: 'Know your type', to: '/prakriti-profile', icon: 'leaf' },
 ];
