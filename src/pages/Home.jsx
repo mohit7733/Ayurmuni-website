@@ -189,7 +189,7 @@ function CategoryRow({ items, renderItem }) {
     return () => observer.disconnect();
   }, [items]);
 
-  // Start at the first item (no auto-advance) and reveal tiles on scroll.
+  // Start at the first item and reveal tiles on scroll.
   useEffect(() => {
     const list = listRef.current;
     if (!list) return undefined;
@@ -207,6 +207,144 @@ function CategoryRow({ items, renderItem }) {
     io.observe(list);
     return () => io.disconnect();
   }, [items, revealed]);
+
+  // Phones only: when the row overflows, auto-advance one tile every 3s.
+  // Pause on hover, touch, or user scroll; resume after a short idle.
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list || !carousel || typeof window === 'undefined') return undefined;
+
+    const phoneMq = window.matchMedia('(max-width: 639px)');
+    const reduceMq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const hoverMq = window.matchMedia('(hover: hover)');
+    const hold = {
+      paused: false,
+      visible: true,
+      ignoreScroll: 0,
+      intervalId: 0,
+      resumeId: 0,
+    };
+
+    const tileStep = () => {
+      const item = list.querySelector(':scope > li');
+      if (!item) return 0;
+      const styles = getComputedStyle(list);
+      const gap = Number.parseFloat(styles.columnGap || styles.gap) || 0;
+      return item.getBoundingClientRect().width + gap;
+    };
+
+    const tick = () => {
+      if (hold.paused || document.hidden || !hold.visible) return;
+      const distance = tileStep();
+      if (!distance) return;
+      const max = list.scrollWidth - list.clientWidth;
+      if (max <= 8) return;
+      const atEnd = list.scrollLeft >= max - 4;
+      hold.ignoreScroll += 1;
+      list.scrollTo({
+        left: atEnd ? 0 : Math.min(list.scrollLeft + distance, max),
+        behavior: 'smooth',
+      });
+      window.setTimeout(() => {
+        hold.ignoreScroll = Math.max(0, hold.ignoreScroll - 1);
+      }, 700);
+    };
+
+    const stopInterval = () => {
+      window.clearInterval(hold.intervalId);
+      hold.intervalId = 0;
+    };
+    const startInterval = () => {
+      if (hold.intervalId || !phoneMq.matches || reduceMq.matches || !hold.visible) return;
+      hold.intervalId = window.setInterval(tick, 3000);
+    };
+    const scheduleResume = () => {
+      window.clearTimeout(hold.resumeId);
+      hold.resumeId = window.setTimeout(() => {
+        hold.paused = false;
+      }, 4000);
+    };
+    const pause = () => {
+      hold.paused = true;
+      scheduleResume();
+    };
+
+    const onEnter = () => {
+      hold.paused = true;
+      window.clearTimeout(hold.resumeId);
+    };
+    const onLeave = () => scheduleResume();
+    const onPointerDown = () => {
+      hold.paused = true;
+      window.clearTimeout(hold.resumeId);
+    };
+    const onPointerUp = () => scheduleResume();
+    const onPointerLeave = () => scheduleResume();
+    const onScroll = () => {
+      if (hold.ignoreScroll) return;
+      pause();
+    };
+    const onVisibility = () => {
+      if (document.hidden) stopInterval();
+      else startInterval();
+    };
+    const syncMode = () => {
+      stopInterval();
+      startInterval();
+    };
+    const listenMq = (mq, fn) => {
+      if (mq.addEventListener) mq.addEventListener('change', fn);
+      else mq.addListener(fn);
+      return () => {
+        if (mq.removeEventListener) mq.removeEventListener('change', fn);
+        else mq.removeListener(fn);
+      };
+    };
+
+    if (hoverMq.matches) {
+      list.addEventListener('mouseenter', onEnter);
+      list.addEventListener('mouseleave', onLeave);
+    }
+    list.addEventListener('pointerdown', onPointerDown);
+    list.addEventListener('pointerup', onPointerUp);
+    list.addEventListener('pointercancel', onPointerUp);
+    list.addEventListener('pointerleave', onPointerLeave);
+    list.addEventListener('touchend', onPointerUp, { passive: true });
+    list.addEventListener('scroll', onScroll, { passive: true });
+    document.addEventListener('visibilitychange', onVisibility);
+    const unPhone = listenMq(phoneMq, syncMode);
+    const unReduce = listenMq(reduceMq, syncMode);
+
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        hold.visible = Boolean(entry?.isIntersecting);
+        if (hold.visible) startInterval();
+        else stopInterval();
+      },
+      { threshold: 0.05 },
+    );
+    io.observe(list);
+    startInterval();
+
+    return () => {
+      stopInterval();
+      window.clearTimeout(hold.resumeId);
+      io.disconnect();
+      if (hoverMq.matches) {
+        list.removeEventListener('mouseenter', onEnter);
+        list.removeEventListener('mouseleave', onLeave);
+      }
+      list.removeEventListener('pointerdown', onPointerDown);
+      list.removeEventListener('pointerup', onPointerUp);
+      list.removeEventListener('pointercancel', onPointerUp);
+      list.removeEventListener('pointerleave', onPointerLeave);
+      list.removeEventListener('touchend', onPointerUp);
+      list.removeEventListener('scroll', onScroll);
+      document.removeEventListener('visibilitychange', onVisibility);
+      unPhone();
+      unReduce();
+    };
+  }, [carousel, items]);
 
   return (
     <ul
@@ -677,8 +815,8 @@ export default function Home() {
     (loadingVisitedDoctors && visitedDoctors.length === 0) || visitedDoctors.length > 0;
   const showSuggestedDoctors = (loading && !doctors.length) || doctors.length > 0;
   const splitDoctorRow = showVisitedDoctors && showSuggestedDoctors;
-  // Rohit: homepage shows max 2 visited and 3 suggested doctors; View all opens the full list.
-  const recentDoctors = visitedDoctors.slice(0, 2);
+  // Homepage shows max 3 visited and 5 suggested doctors; View all opens the full list.
+  const recentDoctors = visitedDoctors.slice(0, 3);
   const suggestedDoctors = doctors.slice(0, 5);
   const featuredProducts = sections.featured || [];
   const recentProducts = sections.recently_viewed || [];
@@ -889,7 +1027,7 @@ export default function Home() {
                   description="Certified Ayurvedic experts, ready to consult."
                   action={<ViewAll label="Our doctors" onClick={() => navigate('/consult/doctors')} />}
                 />
-                <Rail label="Our doctors">
+                <Rail label="Our doctors" auto interval={3200} controls>
                   {ourDoctors.map((item, index) => {
                     const id = getDoctorId(item);
                     return (
@@ -958,7 +1096,7 @@ export default function Home() {
                       description={T.visitedText}
                       onViewAll={() => navigate('/consult')}
                     />
-                    <SectionHold label={T.visitedTitle} minHeight={120} variant="list" count={2} />
+                    <SectionHold label={T.visitedTitle} minHeight={120} variant="list" count={3} />
                   </section>
                 ) : null}
 
@@ -1008,7 +1146,7 @@ export default function Home() {
           </LazyBlock>
 
           {consultPackages.length ? (
-            <Reveal as="section" className="hm-section hm-panel" aria-labelledby="hm-packages-title">
+            <Reveal as="section" className="hm-section hm-panel hm-packages" aria-labelledby="hm-packages-title">
               <SectionHeader
                 id="hm-packages-title"
                 className="hm-doctor-head"

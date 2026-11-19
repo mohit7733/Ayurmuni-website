@@ -13,9 +13,28 @@ function cardStep(el) {
 
 export default function Rail({ label, className, children, auto = false, interval = 3200, motionOverride = false, controls = false }) {
   const ref = useRef(null);
-  const hold = useRef({ hover: false, drag: false });
+  const hold = useRef({ hover: false, drag: false, resumeId: 0 });
   const [edges, setEdges] = useState({ left: false, right: false });
   const count = Children.count(children);
+
+  const clearResume = () => {
+    window.clearTimeout(hold.current.resumeId);
+    hold.current.resumeId = 0;
+  };
+
+  const pauseForTouch = () => {
+    hold.current.drag = true;
+    clearResume();
+  };
+
+  const resumeAfterTouch = () => {
+    clearResume();
+    hold.current.resumeId = window.setTimeout(() => {
+      hold.current.drag = false;
+      hold.current.hover = false;
+      hold.current.resumeId = 0;
+    }, 1800);
+  };
 
   useEffect(() => {
     if (!controls) return undefined;
@@ -96,6 +115,7 @@ export default function Rail({ label, className, children, auto = false, interva
 
     return () => {
       stop();
+      clearResume();
       observer.disconnect();
       document.removeEventListener('visibilitychange', onHide);
     };
@@ -112,6 +132,8 @@ export default function Rail({ label, className, children, auto = false, interva
       }}
       onMouseLeave={() => {
         hold.current.hover = false;
+        hold.current.drag = false;
+        clearResume();
       }}
       onFocus={(event) => {
         // Pause only for keyboard focus; a mouse/touch click must not freeze autoplay.
@@ -120,20 +142,11 @@ export default function Rail({ label, className, children, auto = false, interva
       onBlur={() => {
         hold.current.hover = false;
       }}
-      onPointerDown={() => {
-        hold.current.drag = true;
-      }}
-      onPointerUp={() => {
-        hold.current.drag = false;
-      }}
-      onTouchEnd={() => {
-        // Touch fires a synthetic mouseenter with no mouseleave; release it.
-        hold.current.hover = false;
-        hold.current.drag = false;
-      }}
-      onPointerCancel={() => {
-        hold.current.drag = false;
-      }}
+      onPointerDown={pauseForTouch}
+      onPointerUp={resumeAfterTouch}
+      onTouchEnd={resumeAfterTouch}
+      onPointerCancel={resumeAfterTouch}
+      onPointerLeave={resumeAfterTouch}
     >
       {children}
     </ul>

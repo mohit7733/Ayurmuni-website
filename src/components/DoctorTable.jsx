@@ -23,6 +23,7 @@ import { toggleFavDoctor } from '../services/consultService';
 import FavButton from './ui/FavButton';
 import DietitianBadge from './DietitianBadge';
 import { nameInitial } from '../utils/initials';
+import Rail, { RailItem } from './ui/Rail';
 
 /** Specialty / concern chips — skips values already shown as credential. */
 function focusTags(item, credential) {
@@ -186,17 +187,14 @@ function DoctorCard({ item, fallbackSpeciality, index }) {
 }
 
 export default function DoctorTable({ items, label, fallbackSpeciality = 'Ayurveda' }) {
+  if (!items?.length) return null;
   return (
-    <div className="hm-doc-rail" role="list" aria-label={label}>
+    <Rail label={label} className="hm-doc-rail" auto interval={3200} controls>
       {items.map((item, index) => (
-        <div
-          key={getDoctorId(item) || item.doctor_id || item.id}
-          className="hm-doc-rail__item"
-          role="listitem"
-        >
+        <RailItem key={getDoctorId(item) || item.doctor_id || item.id} className="hm-doc-rail__item">
           <DoctorCard item={item} fallbackSpeciality={fallbackSpeciality} index={index} />
-        </div>
+        </RailItem>
       ))}
-    </div>
+    </Rail>
   );
 }

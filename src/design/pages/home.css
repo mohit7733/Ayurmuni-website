@@ -466,9 +466,11 @@
    BODY LAYOUT
 ═══════════════════════════════════════════════════════════ */
 .hm-body {
+  /* Match Care Plan Packages rhythm (~16px) between every home section. */
+  --hm-section-gap: 16px;
   display: flex;
   flex-direction: column;
-  gap: var(--am-section-gap, var(--am-space-6));
+  gap: var(--hm-section-gap);
   width: 100%;
   max-width: var(--am-container-max, var(--am-container));
   margin: 0 auto;
@@ -525,7 +527,7 @@
 .hm-doctor-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--am-space-6);
+  gap: var(--hm-section-gap, 16px);
   align-items: start;
   width: 100%;
   min-width: 0;
@@ -537,7 +539,7 @@
   min-width: 0;
   padding: 14px 16px 16px;
   border: 0;
-  overflow: hidden;
+  overflow: visible;
   border-radius: 18px;
   background: var(--am-bg);
   box-shadow: 0 10px 28px color-mix(in srgb, var(--am-ink-900) 8%, transparent);
@@ -558,7 +560,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   min-width: 0;
 }
 
@@ -566,7 +568,10 @@
   margin: 0;
   color: var(--am-green-700);
   font-size: 11px;
+  font-weight: 800;
   letter-spacing: 0.14em;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .hm-doctor-head__row {
@@ -577,13 +582,21 @@
   min-width: 0;
 }
 
+.hm-doctor-head__lead {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  min-width: 0;
+}
+
 .hm-doctor-head__title {
   margin: 0;
   min-width: 0;
   color: var(--am-text);
   font-family: var(--am-font-display);
   font-size: 1.35rem;
-  font-weight: var(--am-weight-semibold);
+  font-weight: 500;
   line-height: 1.15;
 }
 
@@ -610,16 +623,34 @@
   box-shadow: none;
 }
 
-/* Suggested doctors — home hybrid of listing detail + focus tags */
-.hm-doc-rail {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 16px;
-  margin-top: 6px;
+/* Suggested doctors — horizontal rail (autoplay via Rail) */
+.hm-doc-rail.am-rail,
+.am-rail.hm-doc-rail {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 14px;
+  margin: 6px 0 0;
+  padding: 2px 2px 10px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 2px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
 
-.hm-doc-rail__item {
-  min-width: 0;
+.hm-doc-rail.am-rail::-webkit-scrollbar,
+.am-rail.hm-doc-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.hm-doc-rail__item.am-rail__item,
+.am-rail.hm-doc-rail > .am-rail__item,
+.am-rail.hm-doc-rail > .hm-doc-rail__item {
+  flex: 0 0 min(260px, 78%);
+  width: min(260px, 78%);
+  min-width: min(260px, 78%);
+  max-width: 280px;
+  scroll-snap-align: start;
 }
 
 .hm-doc-card {
@@ -984,32 +1015,22 @@
   }
 }
 
-@media (max-width: 1100px) {
-  .hm-doc-rail {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
 @media (max-width: 639px) {
-  .hm-doc-rail {
-    display: flex;
+  .hm-doc-rail.am-rail,
+  .am-rail.hm-doc-rail {
     gap: 12px;
-    margin: 8px -12px 0;
-    padding: 2px 12px 10px;
-    overflow-x: auto;
+    margin: 8px 0 0;
+    padding: 2px 0 10px;
     overscroll-behavior-x: contain;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
   }
 
-  .hm-doc-rail::-webkit-scrollbar {
-    display: none;
-  }
-
-  .hm-doc-rail__item {
+  .hm-doc-rail__item.am-rail__item,
+  .am-rail.hm-doc-rail > .am-rail__item,
+  .am-rail.hm-doc-rail > .hm-doc-rail__item {
     flex: 0 0 min(74vw, 268px);
-    scroll-snap-align: start;
+    width: min(74vw, 268px);
+    min-width: min(74vw, 268px);
+    max-width: 268px;
   }
 
   .hm-doctor-row {
@@ -1018,6 +1039,7 @@
 
   .hm-doctor-row>.hm-section {
     padding: 12px;
+    overflow: visible;
   }
 
   .hm-doctor-head {
@@ -1039,7 +1061,7 @@
 .hm-product-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--am-space-6);
+  gap: var(--hm-section-gap, 16px);
   align-items: start;
   width: 100%;
   min-width: 0;
@@ -1276,8 +1298,9 @@
 
 /* Move + Nourish — paired wellness panels. */
 .hm-wellness {
-  /* display: grid; */
-  gap: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--hm-section-gap, 16px);
   min-width: 0;
 }
 
@@ -1355,7 +1378,8 @@
 }
 
 .hm-well .am-rail {
-  gap: 12px;
+  gap: 14px;
+  column-gap: 14px;
   margin: 0;
   padding: 2px 2px 10px;
   scroll-padding-inline: 2px;
@@ -1562,9 +1586,15 @@
   }
 }
 
-.hm-doctor-row--split .hm-doc-rail {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.hm-doctor-row--split .hm-doc-rail.am-rail,
+.hm-doctor-row--split .am-rail.hm-doc-rail {
   gap: 12px;
+}
+
+.hm-doctor-row--split .am-rail.hm-doc-rail > .am-rail__item {
+  flex: 0 0 min(240px, 85%);
+  width: min(240px, 85%);
+  min-width: min(240px, 85%);
 }
 
 .hm-doctor-row--split .hm-doc-card__media {
@@ -2202,7 +2232,7 @@
   }
 
   .hm-body {
-    gap: var(--am-space-6);
+    gap: var(--hm-section-gap, 16px);
     padding-top: 6px;
   }
 
@@ -2496,22 +2526,40 @@
   }
 }
 
-/* Rows: one shared gap; a lone child spans the full row */
+/* Rows share the same section gap as .hm-body; a lone child spans the full row */
 .hm-page .hm-doctor-row,
 .hm-page .hm-product-row,
 .hm-page .hm-wellness {
-  gap: 18px;
+  gap: var(--hm-section-gap, 16px);
 }
 
-/* Reveal adds 16px margin; inside a gapped row that doubles the space.
-   Keep Visited Doctors → Our Doctors at the same 18px as other panels. */
+/* Diet + Yoga were stuck together: gap only works when the wrapper is flex/grid. */
+.hm-page .hm-wellness {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 1080px) {
+  .hm-page .hm-wellness.hm-wellness--pair {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.9fr);
+    align-items: stretch;
+  }
+}
+
+/* .am-reveal.is-shown adds 16px margin-bottom globally — that stacks on top of
+   flex/grid gap and makes some home blocks (e.g. Featured Products) too open.
+   Gap alone owns the rhythm between every next section. */
+.hm-page .hm-body > .am-reveal.is-shown,
+.hm-page .hm-body .am-reveal.is-shown,
 .hm-page .hm-doctor-row > .am-reveal.is-shown,
-.hm-page .hm-doctor-row > .hm-section {
+.hm-page .hm-doctor-row > .hm-section,
+.hm-page .hm-product-row > .am-reveal.is-shown,
+.hm-page .hm-product-row > .hm-section,
+.hm-page .hm-wellness > .am-reveal.is-shown {
   margin-bottom: 0;
 }
-.hm-page .hm-wellness{
-  margin-top: 18px;
-}
+
 .hm-page .hm-doctor-row> :only-child,
 .hm-page .hm-product-row> :only-child,
 .hm-page .hm-wellness> :only-child {
@@ -2544,7 +2592,6 @@
 .hm-page .hm-body .am-section-header__title,
 .hm-page .hm-showcase .am-section-header__title,
 .hm-page .hm-concerns-head .am-section-header__title,
-.hm-page .hm-doctor-head__title,
 .hm-page .hm-well__title {
   margin: 0;
   font-family: var(--am-font-display);
@@ -2554,6 +2601,21 @@
   letter-spacing: var(--am-tracking-display, -0.01em);
   color: var(--am-text);
   white-space: normal;
+}
+
+.hm-page .hm-doctor-head__title {
+  margin: 0;
+  font-family: var(--am-font-display);
+  font-size: clamp(1.15rem, 1rem + 0.5vw, 1.35rem);
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: var(--am-tracking-display, -0.01em);
+  color: var(--am-text);
+  white-space: normal;
+}
+
+.hm-page .hm-doctor-head .am-eyebrow {
+  font-weight: 800;
 }
 
 .hm-page .hm-body .am-section-header__title::after {
@@ -2678,7 +2740,6 @@
   gap: 6px;
   min-height: 0;
   padding: 4px 6px;
-  /* -8px vertical offsets the larger icon: panel height unchanged */
 }
 
 .hm-page .am-concerns .am-tile--cutout .am-tile__img {
@@ -2694,18 +2755,27 @@
 }
 
 @media (max-width: 639px) {
+  .hm-page .am-concerns .am-concerns__track {
+    gap: 2px;
+  }
+
   .hm-page .am-concerns .am-concerns__track>li {
-    flex-basis: 108px;
+    flex-basis: 72px;
+  }
+
+  .hm-page .am-concerns .am-tile {
+    gap: 4px;
+    padding: 2px;
   }
 
   .hm-page .am-concerns .am-tile--cutout .am-tile__img {
-    width: 64px;
-    height: 64px;
+    width: 52px;
+    height: 52px;
   }
 
   .hm-page .am-concerns .am-tile__label {
-    font-size: 12px;
-    min-height: 2.5em;
+    font-size: 11px;
+    min-height: 2.4em;
   }
 
   /* Title and View all share a row; the sentence uses the full width under them. */
@@ -2868,25 +2938,22 @@
   }
 }
 
-/* Health concerns sits tight against the block under it (featured brands).
-   .hm-body gap is 24px and .am-reveal.is-shown adds 16px; override both. */
+/* Health concerns keeps compact inner padding; section gap comes from .hm-body. */
 .hm-page .hm-concerns-panel {
   padding-block: 10px;
-}
-.hm-page .hm-concerns-panel.am-reveal.is-shown {
-  /* margin-bottom: -14px; */
 }
 
 /* ===== Featured brands: square cards + circular logo discs ===== */
 .hm-page .hm-brands-panel {
   position: relative;
   isolation: isolate;
-  padding-top: 10px;
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
 
 .hm-page .hm-brands-panel .hm-brands-head.am-section-header {
   align-items: center;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .hm-page .hm-brands-panel .hm-brands-head .am-section-header__title {
@@ -2931,7 +2998,7 @@
 
 .hm-page .hm-brands-panel .am-concerns__viewport {
   margin-inline: 0;
-  padding: 8px 2px 10px;
+  padding: 4px 2px 6px;
   mask-image: none;
 }
 
@@ -2945,10 +3012,10 @@
 
 .hm-page .hm-brands-panel .am-concerns__track>li {
   display: flex;
-  flex: 0 0 128px;
+  flex: 0 0 88px;
   align-self: stretch;
-  width: 128px;
-  height: 136px;
+  width: 88px;
+  height: 80px;
   max-width: none;
 }
 
@@ -2957,12 +3024,12 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  gap: 6px;
-  width: 128px;
-  height: 136px;
-  min-height: 136px;
+  gap: 4px;
+  width: 88px;
+  height: 80px;
+  min-height: 80px;
   aspect-ratio: auto;
-  padding: 10px 10px 8px;
+  padding: 6px;
   border: 1px solid color-mix(in srgb, #c9a55a 42%, #e7e1d4);
   border-radius: 18px;
   background:
@@ -2981,8 +3048,8 @@
   display: grid;
   place-items: center;
   flex: 0 0 auto;
-  width: 78px;
-  height: 78px;
+  width: 48px;
+  height: 48px;
   padding: 0;
   overflow: hidden;
   border-radius: 50%;
@@ -3002,11 +3069,11 @@
 }
 
 .hm-page .hm-brands-panel .hm-brand-tile .am-tile__label {
-  display: -webkit-box;
+  display: block;
   flex: 0 0 auto;
   width: 100%;
   min-height: 0;
-  max-height: 2.5em;
+  max-height: 1.25em;
   margin: 0;
   padding: 0;
   overflow: hidden;
@@ -3015,8 +3082,8 @@
   line-height: 1.25;
   letter-spacing: -0.01em;
   color: #1c2b26;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -3053,16 +3120,17 @@
 
   .hm-page .hm-brands-panel .am-concerns__track>li,
   .hm-page .hm-brands-panel .am-tile.hm-brand-tile {
-    flex-basis: 108px;
-    width: 108px;
-    height: 122px;
-    min-height: 122px;
-    padding: 8px 8px 6px;
+    flex-basis: 84px;
+    width: 84px;
+    height: 70px;
+    min-height: 70px;
+    padding: 6px 5px 5px;
+    gap: 3px;
   }
 
   .hm-page .hm-brands-panel .hm-brand-tile .am-tile__img {
-    width: 64px;
-    height: 64px;
+    width: 40px;
+    height: 40px;
     padding: 0;
   }
 }
@@ -3101,25 +3169,26 @@
   justify-content: flex-start;
 }
 
-/* ===== One-line section headers (desktop): title · description … View all ===== */
+/* ===== One-line section headers (desktop): TOP RATED Our Doctors · desc … View all ===== */
 @media (min-width: 768px) {
   .hm-page .hm-doctor-head {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
     column-gap: 12px;
-  }
-
-  .hm-page .hm-doctor-head>.am-eyebrow {
-    grid-column: 1 / -1;
+    margin-bottom: 8px;
   }
 
   .hm-page .hm-doctor-head__row {
     display: contents;
   }
 
-  .hm-page .hm-doctor-head__title {
+  .hm-page .hm-doctor-head__lead {
     order: 1;
+    flex-wrap: nowrap;
+  }
+
+  .hm-page .hm-doctor-head__title {
     white-space: nowrap;
   }
 
@@ -3127,7 +3196,8 @@
     order: 2;
   }
 
-  .hm-page .hm-doctor-head__row> :not(.hm-doctor-head__title) {
+  .hm-page .hm-doctor-head__row > .hm-doctor-head__link,
+  .hm-page .hm-doctor-head__row > .am-btn {
     order: 3;
     justify-self: end;
   }
@@ -3260,19 +3330,32 @@ button.hm-pose {
 
 /* Yoga stays a sideways carousel. A short list must not collapse into a static grid. */
 .hm-page .am-rail.hm-yoga-rail,
+.hm-page .hm-wellness .hm-well--move .am-rail.hm-yoga-rail,
 .hm-page .hm-wellness:not(.hm-wellness--pair) .hm-well .am-rail.hm-yoga-rail {
   display: flex;
   flex-wrap: nowrap;
+  gap: 14px;
+  column-gap: 14px;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
 }
 
 .hm-page .hm-yoga-rail>.am-rail__item,
+.hm-page .hm-wellness .hm-well--move .am-rail.hm-yoga-rail>.am-rail__item,
 .hm-page .hm-wellness:not(.hm-wellness--pair) .hm-well .am-rail.hm-yoga-rail>.am-rail__item {
   flex: 0 0 220px;
   width: 220px;
   min-width: 220px;
   max-width: 220px;
+  margin: 0;
+}
+
+.hm-page .am-rail.hm-diet-rail,
+.hm-page .hm-wellness .hm-well--nourish .am-rail.hm-diet-rail {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 14px;
+  column-gap: 14px;
 }
 
 .hm-page .hm-pose {
@@ -4344,7 +4427,7 @@ button.hm-pose {
 
 @media (max-width: 639px) {
   .hm-page .am-diet-active {
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr) auto;
     padding: 12px;
   }
 
@@ -4358,9 +4441,20 @@ button.hm-pose {
     font-size: 15.5px;
   }
 
+  .hm-page .am-diet-active:not(.hm-appt) .am-diet-active__cta,
   .am-diet-active__cta {
-    grid-column: 1 / -1;
+    grid-column: auto;
+    justify-self: end;
+    align-self: start;
+    width: auto;
     justify-content: center;
+  }
+
+  .hm-page .hm-pair .am-diet-active.hm-appt .am-diet-active__cta,
+  .hm-page .hm-pair .hm-appt__cta {
+    grid-column: auto;
+    width: auto;
+    flex: 0 0 auto;
   }
 }
 
@@ -4645,19 +4739,19 @@ button.hm-pose {
    below 1080px) cards keep the paired-layout size (~205-220px) and more of them fit. */
 @media (min-width: 640px) and (max-width: 1023px) {
   .hm-page .hm-well--move .am-rail__item {
-    flex-basis: min(220px, calc((100% - 24px) / 3));
+    flex-basis: min(220px, calc((100% - 28px) / 3));
   }
 }
 
 @media (min-width: 1024px) {
   .hm-page .hm-wellness:not(.hm-wellness--pair) .hm-well--move .am-rail__item {
-    flex-basis: min(204px, calc((100% - 48px) / 5));
+    flex-basis: min(204px, calc((100% - 56px) / 5));
   }
 }
 
 @media (min-width: 1024px) and (max-width: 1079px) {
   .hm-page .hm-wellness--pair .hm-well--move .am-rail__item {
-    flex-basis: min(204px, calc((100% - 48px) / 5));
+    flex-basis: min(204px, calc((100% - 56px) / 5));
   }
 }
 
@@ -4701,18 +4795,21 @@ button.hm-pose {
   }
 }
 
-/* Health concerns: continuous marquee on the homepage, and the same edge alignment
-   on every page that uses this panel (including Consult).
-   Fixed tile width so the first icon's left edge (and the last visible content on the
-   right) can be lined up with the heading / View all and neighbouring sections. */
+/* Health concerns: desktop keeps roomy tiles; phones pack more in one view. */
 .hm-page .hm-concerns-panel {
   --hc-li: 104px;
   --hc-icon: 68px;
+  --hc-gap: 8px;
+}
+
+.hm-page .hm-concerns-panel .am-concerns__track {
+  gap: var(--hc-gap);
 }
 
 .hm-page .hm-concerns-panel .am-concerns__track>li {
   flex: 0 0 var(--hc-li);
   width: var(--hc-li);
+  max-width: var(--hc-li);
 }
 
 .hm-page:not(.svc-page) .hm-concerns-panel .am-concerns--marquee .am-concerns__track>li {
@@ -4723,6 +4820,23 @@ button.hm-pose {
   margin-inline: calc((var(--hc-icon) - var(--hc-li)) / 2);
   padding-inline: 0;
   mask-image: none;
+}
+
+.hm-page .hm-concerns-panel .am-tile--cutout .am-tile__img {
+  width: var(--hc-icon);
+  height: var(--hc-icon);
+}
+
+@media (max-width: 639px) {
+  .hm-page .hm-concerns-panel {
+    --hc-li: 70px;
+    --hc-icon: 50px;
+    --hc-gap: 0px;
+  }
+
+  .hm-page .hm-concerns-panel .am-concerns__viewport {
+    margin-inline: 0;
+  }
 }
 
 .hm-page:not(.svc-page) .hm-concerns-panel .am-concerns--marquee .am-concerns__track {
@@ -4771,13 +4885,38 @@ button.hm-pose {
 }
 
 @media (max-width: 639px) {
+  /* Keep phone tiles dense so more concerns fit with less gap. */
   .hm-page .hm-concerns-panel {
-    --hc-li: 108px;
-    --hc-icon: 64px;
+    --hc-li: 70px;
+    --hc-icon: 50px;
+    --hc-gap: 0px;
+    padding-block: 6px 8px;
+  }
+
+  .hm-page .hm-concerns-panel .am-concerns__track {
+    gap: 0;
+  }
+
+  .hm-page .hm-concerns-panel .am-concerns__track>li {
+    flex: 0 0 var(--hc-li);
+    width: var(--hc-li);
+    max-width: var(--hc-li);
+  }
+
+  .hm-page .hm-concerns-panel .am-tile {
+    gap: 3px;
+    padding: 0;
+  }
+
+  .hm-page .hm-concerns-panel .am-tile__label {
+    font-size: 10.5px;
+    line-height: 1.15;
+    min-height: 2.3em;
   }
 
   .hm-page .hm-concerns-panel .am-concerns__viewport {
     margin-inline: 0;
+    padding-block: 4px;
     overflow-x: auto;
   }
 }

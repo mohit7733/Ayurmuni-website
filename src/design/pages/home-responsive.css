@@ -3,56 +3,32 @@
    Medicines / Consult / Diet / Yoga (hm-page svc-page) are unaffected.
    Desktop layouts at 1024px and above are left unchanged. */
 
-/* Visited doctor cards sit in a 2-up grid from 481px, but the heart +
-   "Book again" actions stay on the name row until 600px. Between 601px
-   and 1023px that row is too narrow, so names and credentials ellipsize
-   (at 640px they can disappear entirely). Reuse the existing stacked
-   phone action row in that range only. */
-@media (min-width: 481px) and (max-width: 1023px) {
-  .hm-page:not(.svc-page) .vd-card {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .hm-page:not(.svc-page) .vd-card__foot {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding-top: 8px;
-    border-top: 1px dashed rgba(201, 162, 78, 0.45);
-  }
-
-  .hm-page:not(.svc-page) .vd-card__visit {
-    padding-top: 0;
-    border-top: 0;
-    min-width: 0;
-  }
-
-  .hm-page:not(.svc-page) .vd-card__actions {
-    grid-column: auto;
-    grid-row: auto;
-    gap: 6px;
-    flex: 0 0 auto;
-  }
-
+/* Visited doctors rail: tighten type mid-widths; keep horizontal carousel. */
+@media (min-width: 721px) and (max-width: 1023px) {
   .hm-page:not(.svc-page) .vd-card__name strong,
   .hm-page:not(.svc-page) .vd-card__cred {
-    white-space: normal;
-    overflow: visible;
-    text-overflow: unset;
+    white-space: nowrap;
+  }
+
+  .hm-page:not(.svc-page) .vd-card__book {
+    padding: 0 12px;
+    font-size: 12.5px;
   }
 }
 
-/* Yoga for Mind & Body: on phones show exactly one full card per snap.
-   Existing yoga items are locked at 220px, so a phone rail peeks the next
-   card and the right-edge fade covers part of it. Tablet/desktop unchanged
-   (640px+ rules in home.css / home-pair.css stay in effect). */
+/* Yoga for Mind & Body: on phones show two full cards per view.
+   Width is calc((100% - gap) / 2) so a third card does not peek, and
+   the right-edge fade is removed so it cannot cover a card. Next/Prev
+   still advance one card (Rail.jsx steps by card width + gap).
+   Tablet/desktop unchanged (640px+ rules in home.css / home-pair.css). */
 @media (max-width: 639px) {
   .hm-page:not(.svc-page) .hm-wellness .hm-well--move .am-rail.hm-yoga-rail,
   .hm-page:not(.svc-page) .hm-well--move .am-rail.hm-yoga-rail {
     scroll-snap-type: x mandatory;
     scroll-padding-inline: 0;
     padding-inline: 0;
+    gap: 14px;
+    column-gap: 14px;
     -webkit-mask-image: none;
     mask-image: none;
   }
@@ -61,11 +37,317 @@
   .hm-page:not(.svc-page) .hm-well--move .am-rail.hm-yoga-rail > .am-rail__item,
   .hm-page:not(.svc-page) .hm-wellness .hm-well .am-rail.hm-yoga-rail > .am-rail__item,
   .hm-page:not(.svc-page) .hm-wellness:not(.hm-wellness--pair) .hm-well .am-rail.hm-yoga-rail > .am-rail__item {
-    flex: 0 0 100%;
-    width: 100%;
-    min-width: 100%;
-    max-width: 100%;
+    flex: 0 0 calc((100% - 14px) / 2);
+    width: calc((100% - 14px) / 2);
+    min-width: calc((100% - 14px) / 2);
+    max-width: calc((100% - 14px) / 2);
+    margin: 0;
     scroll-snap-align: start;
     scroll-snap-stop: always;
+  }
+
+  /* Narrower 4:5 cards: keep the level pill, play button, title and
+     duration readable without overlap or clipping. */
+  .hm-page:not(.svc-page) .hm-well--move .hm-pose__level {
+    top: 8px;
+    left: 8px;
+    padding: 2px 6px;
+    font-size: 10px;
+    max-width: calc(100% - 16px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .hm-page:not(.svc-page) .hm-well--move .hm-pose__play {
+    width: 34px;
+    height: 34px;
+  }
+
+  .hm-page:not(.svc-page) .hm-well--move .hm-pose__copy {
+    padding: 0 8px 8px;
+    gap: 2px;
+  }
+
+  .hm-page:not(.svc-page) .hm-well--move .hm-pose__title,
+  .hm-page:not(.svc-page) .hm-well--move .hm-pose__copy h3 {
+    font-size: 12px;
+    line-height: 1.25;
+  }
+
+  .hm-page:not(.svc-page) .hm-well--move .hm-pose__time,
+  .hm-page:not(.svc-page) .hm-well--move .hm-pose__copy p {
+    margin-top: 4px;
+    padding: 2px 7px;
+    font-size: 10px;
+  }
+
+  /* Smaller arrows so they don't swallow the narrower cards. */
+  .hm-page:not(.svc-page) .hm-well--move .am-rail-scroller:has(.hm-yoga-rail) .am-rail-scroller__btn {
+    width: 26px;
+    height: 26px;
+  }
+
+  .hm-page:not(.svc-page) .hm-well--move .am-rail-scroller:has(.hm-yoga-rail) .am-rail-scroller__btn svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+/* Diet plans: on phones show two full cards per view.
+   Same treatment as the Yoga rail. Tablet/desktop unchanged.
+   Diet service page (.svc-page) is not selected. */
+@media (max-width: 639px) {
+  .hm-page:not(.svc-page) .hm-wellness .hm-well--nourish .am-rail.hm-diet-rail,
+  .hm-page:not(.svc-page) .hm-well--nourish .am-rail.hm-diet-rail {
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 0;
+    padding-inline: 0;
+    gap: 14px;
+    column-gap: 14px;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .hm-page:not(.svc-page) .hm-diet-rail > .am-rail__item,
+  .hm-page:not(.svc-page) .hm-well--nourish .hm-diet-rail > .am-rail__item,
+  .hm-page:not(.svc-page) .hm-wellness:not(.hm-wellness--pair) .hm-well--nourish .hm-diet-rail > .am-rail__item,
+  .hm-page:not(.svc-page) .hm-wellness .hm-well .am-rail.hm-diet-rail > .am-rail__item {
+    flex: 0 0 calc((100% - 14px) / 2);
+    width: calc((100% - 14px) / 2);
+    min-width: calc((100% - 14px) / 2);
+    max-width: calc((100% - 14px) / 2);
+    margin: 0;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  /* Keep the existing diet-card image ratio on the narrower cards. */
+  .hm-page:not(.svc-page) .hm-well--nourish .hm-diet-card .hm-meal__media {
+    aspect-ratio: 16 / 10;
+  }
+
+  /* Scale type and badges so Free, season, title, meta and price fit. */
+  .hm-page:not(.svc-page) .hm-well--nourish .hm-diet-card__badge {
+    top: 6px;
+    left: 6px;
+    padding: 2px 6px;
+    font-size: 10px;
+  }
+
+  .hm-page:not(.svc-page) .hm-well--nourish .hm-diet-card .hm-meal__copy {
+    gap: 4px;
+    padding: 8px 8px 10px;
+  }
+
+  .hm-page:not(.svc-page) .hm-well--nourish .hm-meal__season {
+    font-size: 10px;
+    letter-spacing: 0.06em;
+  }
+
+  .hm-page:not(.svc-page) .hm-well--nourish .hm-diet-card .hm-meal__copy h3,
+  .hm-page:not(.svc-page) .hm-well--nourish .hm-diet-card .hm-meal__copy h3 button {
+    font-size: 12px;
+    line-height: 1.25;
+    min-height: 0;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+  }
+
+  .hm-page:not(.svc-page) .hm-well--nourish .hm-diet-card__facts {
+    gap: 2px 6px;
+  }
+
+  .hm-page:not(.svc-page) .hm-well--nourish .hm-diet-card__facts li {
+    font-size: 10px;
+  }
+
+  .hm-page:not(.svc-page) .hm-well--nourish .hm-diet-card__facts li span {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    overflow-wrap: anywhere;
+  }
+
+  .hm-page:not(.svc-page) .hm-well--nourish .hm-diet-card .hm-meal__copy p.hm-diet-card__price,
+  .hm-page:not(.svc-page) .hm-well--nourish .hm-diet-card__price strong {
+    font-size: 12px;
+  }
+
+  .hm-page:not(.svc-page) .hm-well--nourish .hm-diet-card__rate {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  /* Smaller arrows so they don't swallow the narrower cards. */
+  .hm-page:not(.svc-page) .hm-well--nourish .am-rail-scroller:has(.hm-diet-rail) .am-rail-scroller__btn {
+    width: 26px;
+    height: 26px;
+  }
+
+  .hm-page:not(.svc-page) .hm-well--nourish .am-rail-scroller:has(.hm-diet-rail) .am-rail-scroller__btn svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+/* Hide the Yoga for Mind & Body section description on phones only.
+   Scoped to the yoga well (.hm-well--move) so Diet and other section
+   descriptions stay visible. Title + View all sit on one row. */
+@media (max-width: 639px) {
+  .hm-page:not(.svc-page) .hm-wellness .hm-well--move .hm-well__text,
+  .hm-page:not(.svc-page) .hm-well--move .hm-well__text {
+    display: none;
+  }
+
+  .hm-page:not(.svc-page) .hm-wellness .hm-well--move .hm-well__head,
+  .hm-page:not(.svc-page) .hm-well--move .hm-well__head {
+    align-items: center;
+  }
+
+  .hm-page:not(.svc-page) .hm-wellness .hm-well--move .hm-well__lead,
+  .hm-page:not(.svc-page) .hm-well--move .hm-well__lead {
+    gap: 0;
+  }
+}
+
+/* Service category tiles: on phones show at least 5 per view.
+   Fewer than 5 grow to fill the row (no scroll). More than 5 stay 20%
+   wide so five are visible, with snap scrolling. Autoplay lives in
+   CategoryRow. Tablet/desktop (>=640) is unchanged. */
+@media (max-width: 639px) {
+  .hm-page:not(.svc-page) .hm-services .hm-services__grid,
+  .hm-page:not(.svc-page) .hm-services__grid {
+    justify-content: flex-start;
+    gap: 0;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 0;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .hm-page:not(.svc-page) .hm-services .hm-services__grid > li,
+  .hm-page:not(.svc-page) .hm-services__grid > li {
+    flex: 1 0 20%;
+    min-width: 20%;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  .hm-page:not(.svc-page) .hm-services .hm-service {
+    gap: 3px;
+    padding: 2px 1px 4px;
+  }
+
+  .hm-page:not(.svc-page) .hm-services .hm-service__tile {
+    width: 38px;
+    height: 38px;
+    padding: 2px;
+  }
+
+  .hm-page:not(.svc-page) .hm-services .hm-service__label {
+    max-width: 100%;
+    font-size: 11px;
+    line-height: 1.2;
+    letter-spacing: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    overflow-wrap: normal;
+    word-break: normal;
+    padding-bottom: 0;
+  }
+}
+
+/* Phones: keep a clear gap between the category tiles and the
+   appointment / diet pair. Cancels the -10px services margin, gives
+   labels room so they are not clipped, and lets card eyebrows wrap
+   instead of truncating (e.g. YOUR UPCOMING APPOI). Desktop unchanged. */
+@media (max-width: 639px) {
+  .hm-page:not(.svc-page) .hm-services {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    overflow: visible;
+  }
+
+  .hm-page:not(.svc-page) .hm-services .hm-services__grid,
+  .hm-page:not(.svc-page) .hm-services__grid {
+    padding-bottom: 6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .hm-page:not(.svc-page) .hm-services .hm-service {
+    padding-bottom: 6px;
+  }
+
+  .hm-page:not(.svc-page) .hm-pair .am-diet-active__eyebrow {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    letter-spacing: 0.04em;
+    font-size: 10px;
+    line-height: 1.25;
+  }
+
+  /* Keep View appointment on the right of the name (same as View plan). */
+  .hm-page:not(.svc-page) .hm-pair .am-diet-active.hm-appt {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: 'media body cta' 'foot foot foot';
+  }
+
+  .hm-page:not(.svc-page) .hm-pair .hm-appt__actions {
+    grid-area: cta;
+    justify-self: end;
+    align-self: start;
+    width: auto;
+  }
+
+  .hm-page:not(.svc-page) .hm-pair .hm-appt__cta,
+  .hm-page:not(.svc-page) .hm-pair .am-diet-active.hm-appt .am-diet-active__cta {
+    flex: 0 0 auto;
+    width: auto;
+    min-height: 36px;
+    padding: 0 12px;
+    font-size: 12.5px;
+    justify-content: center;
+  }
+}
+
+/* Hide the Health concerns section description on phones only.
+   Scoped to .hm-concerns-head so other section descriptions stay.
+   Title + View all already share row 1; hiding the desc removes row 2
+   and any leftover gap. Tablet/desktop unchanged. */
+@media (max-width: 639px) {
+  .hm-page:not(.svc-page) .hm-concerns-panel .hm-concerns-head .am-section-header__desc,
+  .hm-page:not(.svc-page) .hm-panel .hm-concerns-head .am-section-header__desc {
+    display: none;
+  }
+
+  .hm-page:not(.svc-page) .hm-concerns-panel .hm-concerns-head.am-section-header,
+  .hm-page:not(.svc-page) .hm-panel .hm-concerns-head.am-section-header {
+    row-gap: 0;
+    align-items: center;
+  }
+}
+
+/* Hide the homepage Our Doctors description at all breakpoints.
+   Scoped to the header that has #hm-doctors-title (TOP RATED / Our Doctors)
+   so Visited Doctors, product rails, hm-odocs, packages, and Consult keep
+   their copy. display:none also removes the desktop vertical divider
+   (::before). The 3-col desktop grid is collapsed so title + View all
+   stay on one row with no leftover gap. */
+.hm-page:not(.svc-page) .hm-doctor-head:has(#hm-doctors-title) .hm-doctor-head__desc,
+.hm-page:not(.svc-page) .hm-doctor-row > section:not(.hm-visited) .hm-doctor-head:has(#hm-doctors-title) .hm-doctor-head__desc {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .hm-page:not(.svc-page) .hm-doctor-head:has(#hm-doctors-title) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
   }
 }

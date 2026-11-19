@@ -8,6 +8,7 @@ export default function ConcernCarousel({ label = 'Health concerns', className, 
   const count = items.length;
   const viewportRef = useRef(null);
   const trackRef = useRef(null);
+  const pauseRef = useRef({ paused: false, resumeId: 0 });
   const [index, setIndex] = useState(0);
   const [step, setStep] = useState(0);
   const [perView, setPerView] = useState(1);
@@ -57,8 +58,7 @@ export default function ConcernCarousel({ label = 'Health concerns', className, 
     return () => observer.disconnect();
   }, [measure]);
 
-  // Marquee: continuous loop at every width, even when every item already fits.
-  // Phones use a native swipe rail instead, so labels stay whole and tappable.
+  // Desktop marquee: continuous loop. Phones use a swipe rail + auto-advance below.
   const loopWidth = count * step;
   const marqueeOn = marquee && !reduced && !narrow && count > 0 && step > 0;
   const copies = marqueeOn ? Math.max(2, Math.ceil(viewportWidth / loopWidth) + 1) : 1;
@@ -81,6 +81,89 @@ export default function ConcernCarousel({ label = 'Health concerns', className, 
     });
     return () => cancelAnimationFrame(frame);
   }, [jumping, index]);
+
+  // Phones: native horizontal scroll autoplay (marquee/transform are disabled in CSS).
+  useEffect(() => {
+    if (!narrow || reduced || count < 2) return undefined;
+    const viewport = viewportRef.current;
+    if (!viewport) return undefined;
+
+    let timer = 0;
+    let visible = false;
+    let ignoreScroll = 0;
+
+    const clearResume = () => {
+      window.clearTimeout(pauseRef.current.resumeId);
+      pauseRef.current.resumeId = 0;
+    };
+
+    const pause = () => {
+      pauseRef.current.paused = true;
+      clearResume();
+      pauseRef.current.resumeId = window.setTimeout(() => {
+        pauseRef.current.paused = false;
+      }, 2800);
+    };
+
+    const stepOnce = () => {
+      if (pauseRef.current.paused || document.hidden || !visible) return;
+      const first = trackRef.current?.querySelector(':scope > li');
+      if (!first) return;
+      const styles = getComputedStyle(trackRef.current);
+      const gap = parseFloat(styles.columnGap || styles.gap) || 0;
+      const distance = first.getBoundingClientRect().width + gap;
+      if (!distance) return;
+      const max = viewport.scrollWidth - viewport.clientWidth;
+      if (max <= 8) return;
+      const atEnd = viewport.scrollLeft >= max - 4;
+      ignoreScroll += 1;
+      viewport.scrollTo({
+        left: atEnd ? 0 : Math.min(viewport.scrollLeft + distance, max),
+        behavior: 'smooth',
+      });
+      window.setTimeout(() => {
+        ignoreScroll = Math.max(0, ignoreScroll - 1);
+      }, 700);
+    };
+
+    const start = () => {
+      if (timer) return;
+      timer = window.setInterval(stepOnce, INTERVAL);
+    };
+    const stop = () => {
+      window.clearInterval(timer);
+      timer = 0;
+    };
+
+    const onScroll = () => {
+      if (ignoreScroll) return;
+      pause();
+    };
+
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        visible = Boolean(entry?.isIntersecting);
+        if (visible) start();
+        else stop();
+      },
+      { threshold: 0.05 },
+    );
+    io.observe(viewport);
+
+    viewport.addEventListener('pointerdown', pause);
+    viewport.addEventListener('touchstart', pause, { passive: true });
+    viewport.addEventListener('scroll', onScroll, { passive: true });
+    start();
+
+    return () => {
+      stop();
+      clearResume();
+      io.disconnect();
+      viewport.removeEventListener('pointerdown', pause);
+      viewport.removeEventListener('touchstart', pause);
+      viewport.removeEventListener('scroll', onScroll);
+    };
+  }, [narrow, reduced, count, step]);
 
   const settle = (event) => {
     if (event.target !== trackRef.current || event.propertyName !== 'transform') return;

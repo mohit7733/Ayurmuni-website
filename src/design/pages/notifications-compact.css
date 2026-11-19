@@ -119,6 +119,47 @@
   .nt-act span { display: none; }
   .nt-row { padding: 9px 12px; }
 }
+
+/* Phones and tablets: put the action icons on a second row, right-aligned,
+   so every filter pill can use the full toolbar width. A horizontal snap
+   scroller with end padding reveals later type filters; nothing sits under
+   the icon group. Desktop (1024px+) is unchanged. */
+@media (max-width: 1023px) {
+  .nt-toolbar {
+    flex-wrap: wrap;
+    align-items: center;
+    row-gap: 6px;
+  }
+
+  .nt-toolbar__chips {
+    flex: 1 1 100%;
+    width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 4px;
+    overscroll-behavior-x: contain;
+  }
+
+  .nt-toolbar__chips::after {
+    content: '';
+    flex: none;
+    width: 12px;
+    height: 1px;
+    pointer-events: none;
+  }
+
+  .nt-chipgroup,
+  .nt-toolbar__sep,
+  .nt-chip {
+    scroll-snap-align: start;
+  }
+
+  .nt-toolbar__actions {
+    flex: 1 1 100%;
+    justify-content: flex-end;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .nt-act .is-refreshing { animation: none; }
   .nt-chip, .nt-row, .nt-head__back { transition: none; }

@@ -72,7 +72,7 @@ export default function BannerCarousel({
   const [frameReady, setFrameReady] = useState(() => framesCached(items));
   const active = count ? Math.min(index, count - 1) : 0;
   const paused = hoverPaused || userPaused;
-  const auto = false;
+  const auto = count > 1 && !reduced;
 
   useEffect(() => {
     if (count && index >= count) setIndex(0);
