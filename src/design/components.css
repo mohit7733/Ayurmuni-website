@@ -2174,16 +2174,26 @@
   .am-banner__slide:not(.is-on) .am-banner__hit img { --am-banner-blur: 1.5px; }
 }
 
+/* Stage doesn't steal taps meant for arrows (3D slides can inflate hit boxes on iPad). */
+.am-banner__stage {
+  pointer-events: none;
+}
+.am-banner__slide.is-on,
+.am-banner__slide.is-prev,
+.am-banner__slide.is-next {
+  pointer-events: auto;
+}
+
 /* ----- Arrows = site rail controls (.pd-auto-rail__control) ----- */
 .am-banner__nav {
   position: absolute;
   top: calc(50% - 16px);
-  z-index: 5;
+  z-index: 8;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   padding: 0;
   border: 1px solid var(--am-line-strong);
   border-radius: 50%;
@@ -2191,6 +2201,8 @@
   color: var(--am-primary);
   box-shadow: 0 2px 8px rgba(10, 40, 32, 0.1);
   cursor: pointer;
+  pointer-events: auto;
+  touch-action: manipulation;
   transform: translateY(-50%);
   transition:
     background-color var(--am-dur-fast, 150ms) ease,
@@ -2199,8 +2211,8 @@
     transform var(--am-dur-base, 220ms) var(--am-banner-ease);
 }
 .am-banner__nav { border-color: rgba(216, 204, 180, 0.9); background: #fff; box-shadow: 0 4px 14px rgba(10, 40, 32, 0.16); }
-.am-banner__nav--prev { left: 0; }
-.am-banner__nav--next { right: 0; }
+.am-banner__nav--prev { left: 8px; }
+.am-banner__nav--next { right: 8px; }
 .am-banner__nav:hover {
   border-color: var(--am-primary);
   background: var(--am-primary-soft);
@@ -2212,12 +2224,13 @@
 /* ----- Dots: quiet track in brand green; active fills over the interval ----- */
 .am-banner__controls {
   position: absolute;
-  z-index: 5;
+  z-index: 8;
   left: 50%;
   bottom: 8px;
   display: flex;
   align-items: center;
   gap: 2px;
+  pointer-events: auto;
   transform: translateX(-50%);
 }
 .am-banner__pause,
@@ -2306,11 +2319,25 @@
 }
 
 /* ----- Responsive ----- */
-@media (hover: none) {
+/* Phones: hide arrows (swipe + dots). Tablets keep arrows so advance isn't stuck. */
+@media (hover: none) and (max-width: 767px) {
   .am-banner__nav { display: none; }
 }
 @media (max-width: 1023px) {
-  .am-banner { --am-banner-w: 74cqw; --am-banner-tilt: 16deg; --am-banner-scale: 0.8; }
+  .am-banner {
+    --am-banner-w: min(88cqw, 720px);
+    --am-banner-tilt: 8deg;
+    --am-banner-shift: 72%;
+    --am-banner-scale: 0.86;
+    overflow-x: clip;
+  }
+  /* Side peeks must not sit on top of the arrow hit targets on iPad. */
+  .am-banner__slide.is-prev,
+  .am-banner__slide.is-next {
+    pointer-events: none;
+  }
+  .am-banner__nav--prev { left: 12px; }
+  .am-banner__nav--next { right: 12px; }
 }
 @media (max-width: 639px) {
   .am-banner {

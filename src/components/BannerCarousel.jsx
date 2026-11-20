@@ -38,6 +38,12 @@ const canHoverPointer = () =>
 const prefersReducedMotion = () =>
   typeof window !== 'undefined' && Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
 
+/** Desktop-only hover pause. Tablet widths skip it — Chrome device mode still reports hover:hover. */
+const canHoverPause = () =>
+  typeof window !== 'undefined' &&
+  canHoverPointer() &&
+  Boolean(window.matchMedia?.('(min-width: 1024px)').matches);
+
 /**
  * Items: image banners `{ id, image, title }` or coded slides
  * `{ id, title, render: ({ active }) => node }`. Coded slides ignore onSelect.
@@ -57,7 +63,8 @@ export default function BannerCarousel({
   const [userPaused, setUserPaused] = useState(false);
   const [ratio, setRatio] = useState(null);
   const [reduced] = useState(prefersReducedMotion);
-  const [hoverPointer] = useState(canHoverPointer);
+  const [hoverPointer, setHoverPointer] = useState(canHoverPointer);
+  const [hoverPauseOk, setHoverPauseOk] = useState(canHoverPause);
   const touchX = useRef(null);
   const ratios = useRef({});
   const hoverTimer = useRef(null);
@@ -84,6 +91,24 @@ export default function BannerCarousel({
   }, [active, reduced]);
 
   useEffect(() => () => clearTimeout(hoverTimer.current), []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return undefined;
+    const hoverMq = window.matchMedia('(hover: hover) and (pointer: fine)');
+    const widthMq = window.matchMedia('(min-width: 1024px)');
+    const sync = () => {
+      setHoverPointer(hoverMq.matches);
+      setHoverPauseOk(hoverMq.matches && widthMq.matches);
+      if (!(hoverMq.matches && widthMq.matches)) setHoverPaused(false);
+    };
+    sync();
+    hoverMq.addEventListener('change', sync);
+    widthMq.addEventListener('change', sync);
+    return () => {
+      hoverMq.removeEventListener('change', sync);
+      widthMq.removeEventListener('change', sync);
+    };
+  }, []);
 
   // Autoplay: one timeout per slide; pausing banks the elapsed time and
   // resuming waits only for the remainder, matching the CSS progress bar.
@@ -233,9 +258,11 @@ export default function BannerCarousel({
       style={{ '--am-banner-interval': `${interval}ms`, ...(ratio ? { '--am-banner-ratio': ratio } : null) }}
       aria-roledescription="carousel"
       aria-label={T.label}
-      onMouseEnter={() => setHoverPaused(true)}
+      onMouseEnter={() => {
+        if (hoverPauseOk) setHoverPaused(true);
+      }}
       onMouseLeave={() => {
-        setHoverPaused(false);
+        if (hoverPauseOk) setHoverPaused(false);
         cancelHoverIntent();
         hoverAnchorX.current = null;
       }}
@@ -245,12 +272,21 @@ export default function BannerCarousel({
           hoverAnchorX.current = null;
         }
       }}
-      onFocus={() => setHoverPaused(true)}
+      onFocus={(event) => {
+        // Pause only for keyboard focus; a tap must not freeze the carousel on iPad/tablet.
+        if (hoverPauseOk && event.target?.matches?.(':focus-visible')) setHoverPaused(true);
+      }}
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) setHoverPaused(false);
       }}
       onKeyDown={onKeyDown}
-      onTouchStart={onTouchStart}
+      onPointerDown={(event) => {
+        if (event.pointerType === 'touch' || event.pointerType === 'pen') setHoverPaused(false);
+      }}
+      onTouchStart={(event) => {
+        setHoverPaused(false);
+        onTouchStart(event);
+      }}
       onTouchEnd={onTouchEnd}
     >
       <div className="am-banner__stage" aria-live={auto && !paused ? 'off' : 'polite'}>
@@ -301,10 +337,32 @@ export default function BannerCarousel({
       </div>
       {count > 1 ? (
         <>
-          <button type="button" className="am-banner__nav am-banner__nav--prev" onClick={() => go(-1)} aria-label={T.prev}>
+          <button
+            type="button"
+            className="am-banner__nav am-banner__nav--prev"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              setHoverPaused(false);
+              go(-1);
+            }}
+            aria-label={T.prev}
+          >
             <ChevronLeft size={20} aria-hidden />
           </button>
-          <button type="button" className="am-banner__nav am-banner__nav--next" onClick={() => go(1)} aria-label={T.next}>
+          <button
+            type="button"
+            className="am-banner__nav am-banner__nav--next"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              setHoverPaused(false);
+              go(1);
+            }}
+            aria-label={T.next}
+          >
             <ChevronRight size={20} aria-hidden />
           </button>
           <div className="am-banner__controls">
@@ -323,7 +381,10 @@ export default function BannerCarousel({
                 key={item.id || item.image || i}
                 type="button"
                 className={cx('am-banner__dot', i === active && 'is-on')}
-                onClick={() => setIndex(i)}
+                onClick={() => {
+                  setHoverPaused(false);
+                  setIndex(i);
+                }}
                 aria-label={`${T.show} ${i + 1}`}
                 aria-current={i === active ? 'true' : undefined}
               >

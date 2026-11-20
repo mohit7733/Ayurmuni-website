@@ -15,7 +15,8 @@
   /* Matches the graded hero video backdrop (RGB 16, 83, 67) so the clip melts in. */
   --hm-canvas: #105343;
   position: relative;
-  overflow: hidden;
+  /* visible so banner side peeks + arrows aren't clipped (hero copy is currently unused). */
+  overflow: visible;
   background:
     radial-gradient(ellipse 32% 48% at 0% 100%, rgba(0, 0, 0, 0.2), transparent 72%),
     radial-gradient(ellipse 28% 42% at 100% 0%, rgba(0, 0, 0, 0.18), transparent 70%),
