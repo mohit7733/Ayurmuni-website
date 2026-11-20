@@ -296,7 +296,7 @@ export default function Medicines() {
   const showAllMedicines = () => selectCategory('', '');
 
   const openCategoryBrowse = (extra = {}) => {
-    const query = new URLSearchParams({ mode: 'product' });
+    const query = new URLSearchParams({ mode: 'medicine' });
     if (medicineCategoryId) query.set('service', medicineCategoryId);
     if (extra.category) query.set('category', extra.category);
     if (extra.name) query.set('name', extra.name);

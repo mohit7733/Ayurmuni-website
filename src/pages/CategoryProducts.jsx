@@ -44,9 +44,9 @@ const normalizeBrand = (value) =>
 const itemServiceId = (item) =>
   String(
     item?.service_category_id ??
-      item?.service_category?.id ??
-      item?.serviceCategoryId ??
-      '',
+    item?.service_category?.id ??
+    item?.serviceCategoryId ??
+    '',
   );
 
 export default function CategoryProducts() {
@@ -422,9 +422,9 @@ export default function CategoryProducts() {
 
   const loading = isBrandMix
     ? dashboardLoading ||
-      (canSplitBrand
-        ? brandProductCatalog.loading || brandMedicineCatalog.loading
-        : brandUnscopedCatalog.loading)
+    (canSplitBrand
+      ? brandProductCatalog.loading || brandMedicineCatalog.loading
+      : brandUnscopedCatalog.loading)
     : regularCatalog.loading;
   const loadingMore = isBrandMix
     ? canSplitBrand
@@ -475,22 +475,22 @@ export default function CategoryProducts() {
     };
     const brandMatched = brandId
       ? products.filter((product) => {
-          const ids = [
-            product?.brand_name_id,
-            product?.brand_id,
-            product?.brand?.id,
-            typeof product?.brand_name === 'object' ? product?.brand_name?.id : null,
-          ]
-            .filter((v) => v !== undefined && v !== null && v !== '')
-            .map(String);
-          if (ids.includes(String(brandId))) return true;
-          const name = normalizeBrand(
-            typeof product?.brand_name === 'object'
-              ? product?.brand_name?.name || product?.brand_name?.brand_name
-              : product?.brand_name || product?.brand?.name,
-          );
-          return Boolean(brandTitleKey) && name === brandTitleKey;
-        })
+        const ids = [
+          product?.brand_name_id,
+          product?.brand_id,
+          product?.brand?.id,
+          typeof product?.brand_name === 'object' ? product?.brand_name?.id : null,
+        ]
+          .filter((v) => v !== undefined && v !== null && v !== '')
+          .map(String);
+        if (ids.includes(String(brandId))) return true;
+        const name = normalizeBrand(
+          typeof product?.brand_name === 'object'
+            ? product?.brand_name?.name || product?.brand_name?.brand_name
+            : product?.brand_name || product?.brand?.name,
+        );
+        return Boolean(brandTitleKey) && name === brandTitleKey;
+      })
       : products;
     const scoped = brandMatched.filter(inService);
     let filtered = applyProductFilters({
@@ -548,9 +548,9 @@ export default function CategoryProducts() {
     { id: 'all', name: T.all, image_url: '', catalog: 'product' },
     ...(isBrandMix
       ? [
-          ...topCategories.map((item) => ({ ...item, catalog: 'product' })),
-          ...medicineCategories.map((item) => ({ ...item, catalog: 'medicine' })),
-        ]
+        ...topCategories.map((item) => ({ ...item, catalog: 'product' })),
+        ...medicineCategories.map((item) => ({ ...item, catalog: 'medicine' })),
+      ]
       : topCategories.map((item) => ({ ...item, catalog: 'product' }))),
   ];
   const concernList = [
@@ -593,8 +593,8 @@ export default function CategoryProducts() {
         mode: isBothMode ? 'both' : brandId || isMedicine ? mode : 'product',
         name: brandId
           ? brandOptions.find((b) => String(b.id) === String(brandId))?.name ||
-            params.get('name') ||
-            null
+          params.get('name') ||
+          null
           : isBothMode
             ? params.get('name') || 'Brands'
             : null,
@@ -820,7 +820,7 @@ export default function CategoryProducts() {
                 </div>
               ) : null}
 
-              {isBrandMix ? (
+              {isBrandMix && params.get('mode') == 'both' ? (
                 <div className={`cp-aside-group${openFilterPanel === 'type' ? ' is-open' : ''}`}>
                   <button
                     type="button"
@@ -892,8 +892,8 @@ export default function CategoryProducts() {
                       <em>
                         {mode === 'product' && activeCategoryId
                           ? [...topCategories, ...medicineCategories].find(
-                              (c) => String(c.id) === String(activeCategoryId),
-                            )?.name || 'Selected'
+                            (c) => String(c.id) === String(activeCategoryId),
+                          )?.name || 'Selected'
                           : 'All categories'}
                       </em>
                     </span>
@@ -914,7 +914,7 @@ export default function CategoryProducts() {
                           isBrandMix && item.catalog === 'product' && item.id !== 'all' &&
                           categoryList[index - 1]?.id === 'all';
                         const showMedicineHead =
-                          isBrandMix && item.catalog === 'medicine' &&
+                          isBrandMix && item.catalog === 'medicine' && params.get('mode') == 'both' &&
                           categoryList[index - 1]?.catalog !== 'medicine';
                         return (
                           <li key={`${item.catalog}-${item.id}`}>
@@ -931,7 +931,8 @@ export default function CategoryProducts() {
                               </span>
                               <span className="st-cat-filter__copy">
                                 <strong>{item.id === 'all' ? 'All categories' : item.name}</strong>
-                                {item.id === 'all' ? (
+                                
+                                {item.id === 'all' && params.get('mode') == 'both' ? (
                                   <em>{isBrandMix ? 'Products and medicines' : 'Any category'}</em>
                                 ) : null}
                               </span>
@@ -944,7 +945,7 @@ export default function CategoryProducts() {
                 </div>
               ) : null}
 
-              {concernList.length > 1 ? (
+              {concernList.length > 1 && params.get('mode') !== 'product' ? (
                 <div className={`cp-aside-group${openFilterPanel === 'concern' ? ' is-open' : ''}`}>
                   <button
                     type="button"
@@ -959,7 +960,7 @@ export default function CategoryProducts() {
                       <em>
                         {mode === 'health' && activeCategoryId
                           ? healthCategories.find((c) => c.id === activeCategoryId)?.name ||
-                            'Selected'
+                          'Selected'
                           : 'All concerns'}
                       </em>
                     </span>

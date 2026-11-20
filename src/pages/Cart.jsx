@@ -478,7 +478,11 @@ export default function Cart() {
               <button type="button" className="cp-btn cp-btn--ghost" onClick={() => navigate("/search")}>
                 {T.search}
               </button>
-              <button type="button" className="cp-btn" onClick={() => navigate("/products")}>
+              <button
+                type="button"
+                className="cp-btn"
+                onClick={() => navigate("/products/category?mode=both")}
+              >
                 {T.shopProducts}
               </button>
             </div>
@@ -519,6 +523,17 @@ export default function Cart() {
                 <div className="cp-empty cp-empty--inline">
                   <h2>{tab === "prescribed" ? T.emptyRxTitle : T.emptyTitle}</h2>
                   <p>{tab === "prescribed" ? T.emptyRxText : T.emptyText}</p>
+                  {tab !== "prescribed" ? (
+                    <div className="cp-empty__actions">
+                      <button
+                        type="button"
+                        className="cp-btn"
+                        onClick={() => navigate("/products/category?mode=both")}
+                      >
+                        {T.shopProducts}
+                      </button>
+                    </div>
+                  ) : null}
                 </div>
               ) : tab === "prescribed" ? (
                 rxGroups.map((group) => {
@@ -608,7 +623,18 @@ export default function Cart() {
                   );
                 })
               ) : (
-                visible.map(renderLine)
+                <>
+                  {visible.map(renderLine)}
+                  <div className="cp-browse-more">
+                    <button
+                      type="button"
+                      className="cp-btn cp-btn--ghost"
+                      onClick={() => navigate("/products/category?mode=both")}
+                    >
+                      {T.shopProducts}
+                    </button>
+                  </div>
+                </>
               )}
             </div>
 
@@ -689,9 +715,10 @@ export default function Cart() {
         onClose={() => setQtyConfirm(null)}
         title={T.qtyConfirmTitle}
         description={
-          qtyConfirm
+          (qtyConfirm
             ? T.qtyConfirmBody(qtyConfirm.doctorQty, qtyConfirm.item.name)
-            : undefined
+            : undefined)
+            +" And after you confirm, your changes will be shown in the cart page."
         }
         footer={
           <>

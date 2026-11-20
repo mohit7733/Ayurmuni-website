@@ -13,7 +13,7 @@ export const CART_COPY = {
   emptyText: 'Add wellness products or search the store to get started.',
   emptyRxTitle: 'No prescribed medicines',
   emptyRxText: 'Medicines from your doctor’s prescription will appear here.',
-  shopProducts: 'Shop products',
+  shopProducts: 'Browse more products',
   outOfStockBannerOne: '1 product is out of stock',
   outOfStockBannerMany: (n) => `${n} products are out of stock`,
   outOfStock: 'Out of stock',
