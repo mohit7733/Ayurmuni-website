@@ -895,7 +895,7 @@ export default function CategoryProducts() {
                 </div>
               ) : null}
 
-              {isBrandMix && params.get('mode') == 'both' ? (
+              {/* {isBrandMix && params.get('mode') == 'both' ? (
                 <div className={`cp-aside-group${openFilterPanel === 'type' ? ' is-open' : ''}`}>
                   <button
                     type="button"
@@ -917,7 +917,7 @@ export default function CategoryProducts() {
                     </span>
                     <ChevronDown size={16} aria-hidden className="cp-aside-toggle__icon" />
                   </button>
-                  {/* <div
+                  <div
                     id="cp-type-panel"
                     className="cp-aside-panel"
                     role="region"
@@ -948,9 +948,9 @@ export default function CategoryProducts() {
                         </li>
                       ))}
                     </ul>
-                  </div> */}
+                  </div>
                 </div>
-              ) : null}
+              ) : null} */}
 
               {categoryList.length > 1 ? (
                 <div className={`cp-aside-group${openFilterPanel === 'category' ? ' is-open' : ''}`}>
