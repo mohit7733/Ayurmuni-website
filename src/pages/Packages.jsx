@@ -196,6 +196,7 @@ export default function Packages() {
   return (
     <AppShell tab="home">
       <section className="pp-page">
+        <div className="pp-atmosphere" aria-hidden />
         <header className="pp-head">
           <button type="button" className="pp-head__back" onClick={() => navigate("/home")} aria-label="Back to home">
             <ArrowLeft size={18} aria-hidden />
@@ -251,11 +252,15 @@ export default function Packages() {
                 <section className="pp-group" key={group.id} aria-labelledby={`pp-${group.id}`}>
                   <header className="pp-group__head">
                     <span className="pp-group__icon"><Icon size={16} aria-hidden /></span>
-                    <h2 id={`pp-${group.id}`}>{group.name}</h2>
-                    <p>{group.description || "Plans in this category."}</p>
-                    <span className="pp-group__count">{group.plans.length} {group.plans.length === 1 ? "plan" : "plans"}</span>
+                    <div className="pp-group__titles">
+                      <div className="pp-group__title-row">
+                        <h2 id={`pp-${group.id}`}>{group.name}</h2>
+                        <span className="pp-group__count">{group.plans.length} {group.plans.length === 1 ? "plan" : "plans"}</span>
+                      </div>
+                      <p>{group.description || "Plans in this category."}</p>
+                    </div>
                   </header>
-                  <div className="pp-grid">
+                  <div className="pp-grid" data-count={Math.min(group.plans.length, 4)}>
                     {(() => {
                       const tones = railThemeTones(group.plans);
                       return group.plans.map((item, index) => (
