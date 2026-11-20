@@ -15,11 +15,23 @@ export const isPrescriptionRequired = (item) => {
 
 export const getProductStockQty = (item) => {
   if (!item || typeof item !== 'object') return null;
-  const top = toNumber(item.quantity);
-  if (top !== null) return top;
-  if (item.variant && typeof item.variant === 'object') {
-    const nested = toNumber(item.variant.quantity);
-    if (nested !== null) return nested;
+  // Wishlist / catalog often send `stock`; product detail often sends `quantity`.
+  const candidates = [
+    item.stock,
+    item.stock_quantity,
+    item.available_quantity,
+    item.quantity,
+    item.in_stock,
+    item.variant?.stock,
+    item.variant?.stock_quantity,
+    item.variant?.available_quantity,
+    item.variant?.quantity,
+  ];
+  for (const value of candidates) {
+    // Skip boolean availability flags — those are handled in isProductOutOfStock.
+    if (typeof value === 'boolean') continue;
+    const n = toNumber(value);
+    if (n !== null) return n;
   }
   return null;
 };
@@ -33,8 +45,10 @@ export const getCartInventoryQty = (item) => {
     item.in_stock === false;
   if (flagged === true || flagged === 1 || flagged === 'true') return 0;
   const fromFields =
+    toNumber(item.stock) ??
     toNumber(item.available_quantity) ??
     toNumber(item.stock_quantity) ??
+    toNumber(item.variant?.stock) ??
     toNumber(item.variant?.available_quantity) ??
     toNumber(item.variant?.quantity) ??
     toNumber(item.product?.quantity);
@@ -68,6 +82,8 @@ export const getProductStockDisplay = (item) => {
 export const isProductOutOfStock = (item) => {
   if (!item || typeof item !== 'object') return true;
   if (
+    item.out_of_stock === true ||
+    item.is_out_of_stock === true ||
     item.in_stock === false ||
     item.is_available === false ||
     item.available === false

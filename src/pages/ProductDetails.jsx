@@ -457,11 +457,15 @@ export default function ProductDetails({ medicine = false } = {}) {
         </Button>
         <Button
           variant="primary"
-          disabled={(cartQty <= 0 && out) || ctaBusy}
+          disabled={(out && cartQty <= 0) || ctaBusy}
           loading={buyBusy}
           onClick={() => addToCart(true)}
         >
-          {cartQty > 0 ? T.goToCart : T.buyNow}
+          {out && cartQty <= 0
+            ? T.soldOut
+            : cartQty > 0
+              ? T.goToCart
+              : T.buyNow}
         </Button>
       </div>
     );

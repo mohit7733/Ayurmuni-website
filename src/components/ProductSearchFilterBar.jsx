@@ -106,8 +106,8 @@ export default function ProductSearchFilterBar({
         ? 'Brand'
         : sheet === 'rating'
           ? 'Customer rating'
-          : sheet === 'dosha'
-            ? 'Dosha type'
+          // : sheet === 'dosha'
+          //   ? 'Dosha type'
             : 'Price range';
 
   return (

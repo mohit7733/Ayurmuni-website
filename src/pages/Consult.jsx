@@ -256,7 +256,7 @@ export default function Consult() {
                 >
                   <SectionHead
                     id="cs-suggested-doctors-title"
-                    eyebrow={T.topDoctorsEyebrow}
+                    // eyebrow={T.topDoctorsEyebrow}
                     title={T.topDoctorsTitle}
                     description={T.suggestedDoctorsText}
                     action={
@@ -289,9 +289,9 @@ export default function Consult() {
                 <Reveal as="section" className="hm-section hm-panel" aria-labelledby="cs-doctors-title">
                   <SectionHead
                     id="cs-doctors-title"
-                    eyebrow={T.topDoctorsEyebrow}
+                    // eyebrow={T.topDoctorsEyebrow}
                     title={T.topDoctorsTitle}
-                    description={T.doctorsText}
+                    // description={T.doctorsText}
                     action={
                       <div className="am-head-tools">
                         {headActions}
@@ -418,13 +418,13 @@ export default function Consult() {
                         ))}
                       </Rail>
                     )}
-                    {hasMore && products.length > 0 ? (
+                    {/* {hasMore && products.length > 0 ? (
                       <div className="st-more">
                         <Button variant="secondary" loading={loadingMore} onClick={loadMore}>
                           {loadingMore ? T.loadingMore : T.loadMore}
                         </Button>
                       </div>
-                    ) : null}
+                    ) : null} */}
                   </section>
                 </div>
               ) : null}

@@ -30,7 +30,7 @@ export const PRODUCT_DETAIL_COPY = {
   buyNow: 'Buy now',
   goToCart: 'Go to cart',
   adding: 'Adding…',
-  soldOut: 'Sold out',
+  soldOut: 'Out of stock',
   uploadRx: 'Upload prescription',
   saveWishlist: 'Save to wishlist',
   savedWishlist: 'Saved to wishlist',
