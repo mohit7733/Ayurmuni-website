@@ -110,10 +110,23 @@
   .svc-consult-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  /* Exactly 3 cards: center the orphan on the second row. */
+  .svc-consult-grid:has(> :nth-child(3):last-child) > :last-child {
+    grid-column: 1 / -1;
+    width: calc((100% - 16px) / 2);
+    justify-self: center;
+  }
 }
 @media (min-width: 1024px) {
   .svc-consult-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .svc-consult-grid:has(> :nth-child(3):last-child) > :last-child {
+    grid-column: auto;
+    width: auto;
+    justify-self: stretch;
   }
 }
 

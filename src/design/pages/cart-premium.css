@@ -179,8 +179,15 @@
   .cp-items__bar { display: flex; flex-wrap: wrap; min-height: 0; padding: 8px 12px; gap: 6px; }
   .cp-selectall { margin-left: 0; white-space: normal; }
   .cp-tabs .am-tabs__tab, .cp-tabs [role='tab'] { min-height: 44px; }
-  .cp-bar { gap: 8px; padding-inline: 12px; }
-  .cp-bar .cp-btn { padding-inline: 12px; flex: 1 1 auto; min-width: 0; }
+  .cp-bar { gap: 10px; padding-inline: 12px; }
+  .cp-bar__meta { flex: 1 1 auto; }
+  /* Content-sized Checkout — don’t stretch across most of the bar. */
+  .cp-bar .cp-btn {
+    flex: 0 0 auto;
+    max-width: 56%;
+    padding-inline: 14px;
+    min-width: 0;
+  }
   .cp-bar__meta strong { font-size: 16px; }
 }
 @media (prefers-reduced-motion: reduce) {

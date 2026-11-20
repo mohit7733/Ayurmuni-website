@@ -1109,7 +1109,24 @@
   flex: 0 0 calc((100% - var(--hm-rail-gap)) / 2);
 }
 
+/* Tablet / iPad: 3–4 roomier cards (6 was too congested around ~820px). */
 @media (min-width: 768px) {
+  .hm-products .am-rail {
+    --hm-rail-gap: 12px;
+  }
+
+  .hm-products .am-rail__item--product {
+    flex: 0 0 calc((100% - (var(--hm-rail-gap) * 2)) / 3);
+  }
+}
+
+@media (min-width: 900px) {
+  .hm-products .am-rail__item--product {
+    flex: 0 0 calc((100% - (var(--hm-rail-gap) * 3)) / 4);
+  }
+}
+
+@media (min-width: 1200px) {
   .hm-products .am-rail__item--product {
     flex: 0 0 calc((100% - (var(--hm-rail-gap) * 5)) / 6);
   }
@@ -1190,7 +1207,26 @@
   min-width: 0;
 }
 
+@container (min-width: 520px) {
+  .hm-showcase .am-rail {
+    --hm-show-visible: 3;
+    --hm-show-gap: 12px;
+  }
+}
+
 @container (min-width: 720px) {
+  .hm-showcase .am-rail {
+    --hm-show-visible: 4;
+  }
+}
+
+@container (min-width: 960px) {
+  .hm-showcase .am-rail {
+    --hm-show-visible: 5;
+  }
+}
+
+@container (min-width: 1100px) {
   .hm-showcase .am-rail {
     --hm-show-visible: 6;
   }
@@ -2668,7 +2704,7 @@
   flex: 0 0 min(240px, calc((100% - 12px) / 2));
 }
 
-/* Product panels: full-width stack; 2 cards mobile, 6 on desktop */
+/* Product panels: full-width stack; card count follows .hm-products rail rules above. */
 @media (min-width: 768px) {
   .hm-page .hm-product-grid {
     grid-template-columns: repeat(1, minmax(0, 1fr));
@@ -2681,11 +2717,6 @@
 
   .hm-page .hm-product-grid> :last-child:nth-child(odd) {
     grid-column: 1 / -1;
-  }
-
-  .hm-page .hm-product-grid .hm-products .am-rail__item--product,
-  .hm-page .hm-product-grid> :last-child:nth-child(odd) .am-rail__item--product {
-    flex: 0 0 calc((100% - (var(--hm-rail-gap) * 5)) / 6);
   }
 }
 
@@ -2959,6 +2990,25 @@
   padding-bottom: 18px;
   margin-top: 0;
   overflow: visible;
+}
+
+/* Phones: less space under brands / page before the footer trust strip. */
+@media (max-width: 639px) {
+  .hm-page {
+    padding-bottom: 8px;
+  }
+
+  .hm-page .hm-brands-panel {
+    padding-bottom: 8px;
+  }
+
+  .hm-page .hm-brands-panel .am-concerns__viewport {
+    padding-bottom: 4px;
+  }
+
+  .hm-page .hm-brands-panel .hm-doctor-head__desc {
+    display: none;
+  }
 }
 
 .hm-page .hm-brands-panel .hm-brands-head.am-section-header {

@@ -1048,20 +1048,11 @@ export default function Home() {
           <LazyBlock blockRef={brandsRef} done={brandsSeen && !brandsLoading} minHeight={120} skeleton={<SectionHold label={T.brandsTitle} minHeight={120} variant="chips" />}>
             {brands.length > 0 ? (
               <Reveal as="section" className="hm-section hm-panel hm-brands-panel " aria-labelledby="hm-brands-title">
-                <SectionHeader
-                  className="hm-concerns-head hm-doctor-head"
+                <DoctorRailHeader
                   id="hm-brands-title"
                   title={T.brandsTitle}
                   description={T.brandsText}
-                  action={
-                    <ViewAll
-                      plain={true}
-                      label={T.brandsTitle}
-                      onClick={() =>
-                        navigate('/products/category?mode=both&name=Brands')
-                      }
-                    />
-                  }
+                  onViewAll={() => navigate('/products/category?mode=both&name=Brands')}
                 />
                 <ConcernCarousel label={T.brandsTitle}>
                   {brands.map((item) => (

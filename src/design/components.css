@@ -3445,8 +3445,40 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 18%;
+  object-position: center top;
   transition: transform var(--am-dur-slower) var(--am-ease-out);
+}
+
+.am-flip-doc__name-scroll {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.am-flip-doc__name-scroll > span {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.am-flip-doc__name-scroll.is-marquee > span {
+  animation: am-flip-name-marquee 7s ease-in-out infinite alternate;
+}
+
+@keyframes am-flip-name-marquee {
+  0%,
+  18% {
+    transform: translateX(0);
+  }
+  82%,
+  100% {
+    transform: translateX(var(--am-flip-name-shift, 0));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .am-flip-doc__name-scroll.is-marquee > span {
+    animation: none;
+  }
 }
 
 .am-flip-doc__cta svg {
@@ -3543,12 +3575,13 @@
 }
 
 .am-flip-doc__name button {
-  display: -webkit-box;
+  display: block;
+  width: 100%;
+  min-width: 0;
   overflow: hidden;
   text-align: left;
   line-height: 1.2;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  white-space: nowrap;
 }
 
 .am-flip-doc__spec {
@@ -3654,6 +3687,106 @@
 
 .am-flip-doc .am-stretched:focus-visible::after {
   outline-color: var(--am-gold-300);
+}
+
+/* Phones: keep Top Doctors cards even — short bio, bottom-aligned CTA, faces in frame. */
+@media (max-width: 639px) {
+  .am-doctor-grid--portrait {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .am-flip-doc__media {
+    aspect-ratio: 1 / 1;
+  }
+
+  .am-flip-doc__media img {
+    object-position: center top;
+  }
+
+  /* Clearer glass pills so the profile photo shows through. */
+  .am-flip-doc__chip {
+    border-color: rgba(255, 255, 255, 0.55);
+    background: rgba(255, 253, 248, 0.12);
+    color: #fffdf8;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    box-shadow: none;
+  }
+
+  .am-flip-doc__chip svg {
+    color: #e4c47a;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
+  }
+
+  .am-flip-doc__chip--verified {
+    color: #fffdf8;
+  }
+
+  .am-flip-doc__chip--verified svg {
+    color: #7ddea8;
+  }
+
+  .am-flip-doc .hm-doc-card__dietitian .am-dietitian-badge,
+  .am-flip-doc .hm-doc-card__dietitian .am-badge {
+    border-color: rgba(255, 255, 255, 0.55);
+    background: rgba(255, 253, 248, 0.12);
+    color: #fffdf8;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  .am-flip-doc__body {
+    gap: 4px;
+    padding: 10px 8px 10px;
+    min-width: 0;
+  }
+
+  .am-flip-doc .hm-doc-card__specialized-bio {
+    gap: 3px;
+    max-height: 2.8em;
+    overflow: hidden;
+  }
+
+  .am-flip-doc .hm-doc-card__specialized-bio-item:nth-child(n + 2) {
+    display: none;
+  }
+
+  .am-flip-doc .hm-doc-card__specialized-bio-item span {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 11px;
+  }
+
+  /* Fee + View profile: stack so the button is never clipped. */
+  .am-flip-doc__cta {
+    flex-direction: column;
+    align-items: stretch;
+    margin-top: auto;
+    padding-top: 8px;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .am-flip-doc__fee {
+    font-size: 0.98rem;
+  }
+
+  .am-flip-doc__cta-link {
+    width: 100%;
+    min-width: 0;
+    justify-content: center;
+    padding: 8px 10px;
+    font-size: 11.5px;
+    box-sizing: border-box;
+  }
+
+  .am-flip-doc__cta-link svg {
+    width: 13px;
+    height: 13px;
+  }
 }
 
 /* ---------- Recently viewed doctor card ---------- */

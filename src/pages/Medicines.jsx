@@ -7,6 +7,7 @@ import AppShell from '../components/AppShell';
 import ProductCard from '../components/ProductCard';
 import CartAddButton from '../components/CartAddButton';
 import { DietPlanCard, SectionHead, ViewAll } from '../components/ServiceHome';
+import { DoctorRailHeader } from '../components/HomeSections';
 import {
   mapProductCategory,
   normalizeApiList,
@@ -602,21 +603,13 @@ export default function Medicines() {
 
               {brands.length > 0 ? (
                 <Reveal as="section" className="hm-section hm-panel hm-brands-panel" aria-labelledby="med-brands">
-                  <SectionHead
+                  <DoctorRailHeader
                     id="med-brands"
-                    eyebrow="Trusted"
-                    title="Brands"
-                    description="Formulas from houses we stock."
-                    action={
-                      <ViewAll
-                        label="Trusted brands"
-                        onClick={() =>
-                          navigate('/products/category?mode=both&name=Brands')
-                        }
-                      />
-                    }
+                    title={H.brandsTitle}
+                    description={H.brandsText}
+                    onViewAll={() => navigate('/products/category?mode=both&name=Brands')}
                   />
-                  <ConcernCarousel label="Trusted brands">
+                  <ConcernCarousel label={H.brandsTitle}>
                     {brands.map((item) => (
                       <Tile
                         key={item.id}

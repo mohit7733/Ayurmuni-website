@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Video } from 'lucide-react';
 import {
@@ -15,6 +15,43 @@ import {
 import { requireAuth } from '../services/guestAuth';
 import { nameInitials } from '../utils/initials';
 import './home-upcoming.css';
+
+/** Scrolls long doctor names when they don't fit beside the CTA. */
+function MarqueeName({ children }) {
+  const wrapRef = useRef(null);
+  const textRef = useRef(null);
+  const [shift, setShift] = useState(0);
+
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    const text = textRef.current;
+    if (!wrap || !text) return undefined;
+
+    const measure = () => {
+      const delta = Math.ceil(text.scrollWidth - wrap.clientWidth);
+      setShift(delta > 2 ? delta : 0);
+    };
+
+    measure();
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
+    ro?.observe(wrap);
+    window.addEventListener('resize', measure);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, [children]);
+
+  return (
+    <span
+      ref={wrapRef}
+      className={`hm-appt__name-scroll${shift ? ' is-marquee' : ''}`}
+      style={shift ? { '--hm-appt-name-shift': `-${shift}px` } : undefined}
+    >
+      <span ref={textRef}>{children}</span>
+    </span>
+  );
+}
 
 const statusLabel = (status) => {
   const raw = String(status || '').replace(/_/g, ' ').trim();
@@ -149,11 +186,15 @@ export default function HomeJoinAppointments({ appointments, loading }) {
         {next.image ? <img src={next.image} alt="" loading="lazy" /> : <span>{nameInitials(name, 2, 'D')}</span>}
       </div>
       <div className="am-diet-active__body">
-        <p className="am-diet-active__eyebrow">
+        <p className="am-diet-active__eyebrow hm-appt__eyebrow">
           <span className="am-diet-active__dot" aria-hidden />
-          {live ? 'Your consultation is live' : 'Your upcoming appointment'}
+          <MarqueeName>
+            {live ? 'Your consultation is live' : 'Your upcoming appointment'}
+          </MarqueeName>
         </p>
-        <h2 id="hm-appt-title" className="am-diet-active__title">{name}</h2>
+        <h2 id="hm-appt-title" className="am-diet-active__title hm-appt__title">
+          <MarqueeName>{name}</MarqueeName>
+        </h2>
         <p className="am-diet-active__sub">{sub}</p>
       </div>
       <div className="hm-appt__actions">

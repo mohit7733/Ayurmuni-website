@@ -146,53 +146,10 @@
   }
 }
 
-/* No page room is reserved for the floats: the footer's (c) row stays flush to the
-   bottom, and the cart + Ayurchat float on one baseline just above it. */
+/* Phones: hide the sticky View cart bar (tab bar + header cart cover that). */
 @media (max-width: 767px) {
-  /* Lift floats clear of the tab bar; chat icon-only so both fit without overlap. */
   .cart-float {
-    --cf-bottom: calc(var(--am-tabbar-h) + 18px + env(safe-area-inset-bottom));
-  }
-  body:has(.cart-float) .ci-launch {
-    --ci-launch-bottom: calc(var(--am-tabbar-h) + 18px + env(safe-area-inset-bottom));
-    right: max(12px, env(safe-area-inset-right));
-  }
-  body:has(.cart-float) .ci-launch:not(.is-open) .ci-launch__label {
     display: none;
-  }
-  body:has(.cart-float) .ci-launch:not(.is-open) .ci-launch__btn {
-    width: 48px;
-    height: 48px;
-    padding: 0;
-    justify-content: center;
-  }
-  body:has(.cart-float) .cart-float {
-    left: max(12px, env(safe-area-inset-left));
-    right: auto;
-    transform: none;
-    max-width: min(250px, calc(100vw - 84px));
-    animation-name: cf-in-left;
-  }
-}
-
-@keyframes cf-in-left {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@media (max-width: 360px) {
-  body:has(.cart-float) .cart-float {
-    max-width: min(210px, calc(100vw - 80px));
-  }
-  .cart-float__cta {
-    padding: 0 8px 0 10px;
-    font-size: 12px;
   }
 }
 
