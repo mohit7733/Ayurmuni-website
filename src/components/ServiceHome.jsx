@@ -22,11 +22,13 @@ export function ViewAll({ onClick, label }) {
 export function SectionHead({ id, eyebrow, title, description, action }) {
   return (
     <div className="hm-doctor-head">
-      {eyebrow ? <p className="am-eyebrow">{eyebrow}</p> : null}
       <div className="hm-doctor-head__row">
-        <h2 id={id} className="hm-doctor-head__title">
-          {title}
-        </h2>
+        <div className="hm-doctor-head__lead">
+          {eyebrow ? <p className="am-eyebrow">{eyebrow}</p> : null}
+          <h2 id={id} className="hm-doctor-head__title">
+            {title}
+          </h2>
+        </div>
         {action}
       </div>
       {description ? <p className="hm-doctor-head__desc">{description}</p> : null}

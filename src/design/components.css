@@ -2755,6 +2755,23 @@
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   }
 }
+
+/* Tablet 3-up: with 4 or 5 cards the last row (1–2 leftovers) sits centered. */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .svc-page .am-doctor-grid--portrait:has(> :nth-child(4):last-child),
+  .svc-page .am-doctor-grid--portrait:has(> :nth-child(5):last-child) {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .svc-page .am-doctor-grid--portrait:has(> :nth-child(4):last-child) > li,
+  .svc-page .am-doctor-grid--portrait:has(> :nth-child(5):last-child) > li {
+    flex: 0 0 calc((100% - 24px) / 3);
+    max-width: calc((100% - 24px) / 3);
+  }
+}
 .svc-page .am-flip-doc,
 .cs-doctors-page .am-flip-doc {
   border-color: color-mix(in srgb, var(--am-gold-300) 40%, var(--am-sand-100));

@@ -3262,7 +3262,8 @@
   }
 
   .hm-page .hm-doctor-head__row > .hm-doctor-head__link,
-  .hm-page .hm-doctor-head__row > .am-btn {
+  .hm-page .hm-doctor-head__row > .am-btn,
+  .hm-page .hm-doctor-head__row > .am-head-tools {
     order: 3;
     justify-self: end;
   }
