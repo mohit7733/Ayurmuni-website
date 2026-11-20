@@ -48,6 +48,8 @@ export default function ConsultPlanPicker({
 
   const hasUsable = plans.some((plan) => rowStatus(plan).usable);
   const checking = plans.some((plan) => rowStatus(plan).loading);
+  // Usable plans first so the customer sees what they can pick without scrolling past blocked ones.
+  const orderedPlans = [...plans].sort((a, b) => Number(rowStatus(b).usable) - Number(rowStatus(a).usable));
 
   useEffect(() => {
     if (open) setPickedId(selectedId ?? null);
@@ -86,7 +88,7 @@ export default function ConsultPlanPicker({
       }
     >
       <div className="cp-list" role="radiogroup" aria-label="Which plan do you want to go with?">
-        {plans.map((plan) => {
+        {orderedPlans.map((plan) => {
           const status = rowStatus(plan);
           const on = status.usable && plan.id === pickedId;
           const expires = formatPlanDate(plan.expires_at);

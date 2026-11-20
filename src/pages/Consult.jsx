@@ -115,7 +115,7 @@ export default function Consult() {
   const [debounced, setDebounced] = useState('');
   const [loading, setLoading] = useState(true);
   const productFilter = useMemo(() => (debounced ? { search: debounced } : {}), [debounced]);
-  const { products, loading: productsLoading, loadingMore, hasMore, loadMore } = useCategoryProducts(
+  const { products, loading: productsLoading } = useCategoryProducts(
     productFilter,
     [],
     { pageSize: 8 },
@@ -416,13 +416,6 @@ export default function Consult() {
                         ))}
                       </Rail>
                     )}
-                    {hasMore && products.length > 0 ? (
-                      <div className="st-more">
-                        <Button variant="secondary" loading={loadingMore} onClick={loadMore}>
-                          {loadingMore ? T.loadingMore : T.loadMore}
-                        </Button>
-                      </div>
-                    ) : null}
                   </section>
                 </div>
               ) : null}

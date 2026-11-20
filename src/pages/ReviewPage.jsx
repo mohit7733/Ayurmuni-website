@@ -106,7 +106,7 @@ export default function ReviewPage() {
             extra={
               gallery.length > 0 ? (
                 <button type="button" className="am-rating-summary__media" onClick={() => openGallery(gallery)}>
-                  {gallery.filter((url) => !isReviewVideoUrl(url)).slice(0, 3).map((url) => (
+                  {gallery.filter((url) => !isReviewVideoUrl(url)).slice(0, 12).map((url) => (
                     <img key={url} src={url} alt="" />
                   ))}
                   <span>{gallery.length} photos</span>

@@ -492,7 +492,7 @@ export default function DoctorProfile() {
                         })
                       }
                     >
-                      {reviewGallery.slice(0, 3).map((url) => (
+                      {reviewGallery.slice(0, 12).map((url) => (
                         <img key={url} src={url} alt="" />
                       ))}
                       <span>{reviewGallery.length}</span>
