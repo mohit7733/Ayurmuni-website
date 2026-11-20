@@ -42,7 +42,7 @@ export const HOME_COPY = {
   dietProgressLabel: 'Diet plan progress',
 
   viewAll: 'View all',
-  concernsTitle: 'Health concerns',
+  concernsTitle: 'Health Concerns',
   concernsText: 'Pick a concern to see specialist doctors, remedies, diet and yoga for it.',
   visitedTitle: 'Visited Doctors',
   visitedText: 'Doctors you have consulted recently',
@@ -60,7 +60,7 @@ export const HOME_COPY = {
   dietText: 'Seasonal meals shaped around your constitution.',
   packagesTitle: 'Care Plan Packages',
   brandsEyebrow: 'Authentic sourcing',
-  brandsTitle: 'Featured brands',
+  brandsTitle: 'Featured Brands',
   brandsSeeAll: 'See all',
   brandsText: 'Formulas from houses we stock.',
   labEyebrow: 'Home collection',

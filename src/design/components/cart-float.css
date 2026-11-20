@@ -146,35 +146,10 @@
   }
 }
 
-/* No page room is reserved for the floats: the footer's (c) row stays flush to the
-   bottom, and the cart + Ayurchat float on one baseline just above it. */
+/* Phones: hide the sticky View cart bar (tab bar + header cart cover that). */
 @media (max-width: 767px) {
-  /* Same baseline as the cart; the launcher goes icon-only so both fit side by side. */
-  body:has(.cart-float) .ci-launch {
-    --ci-launch-bottom: calc(var(--am-tabbar-h) + var(--am-space-4) + 10px + env(safe-area-inset-bottom));
-    right: max(12px, env(safe-area-inset-right));
-  }
-  body:has(.cart-float) .ci-launch:not(.is-open) .ci-launch__label {
+  .cart-float {
     display: none;
-  }
-  body:has(.cart-float) .ci-launch:not(.is-open) .ci-launch__btn {
-    width: 48px;
-    height: 48px;
-    padding: 0;
-    justify-content: center;
-  }
-  body:has(.cart-float) .cart-float {
-    max-width: min(260px, calc(100vw - 96px));
-  }
-}
-
-@media (max-width: 360px) {
-  body:has(.cart-float) .cart-float {
-    max-width: min(220px, calc(100vw - 88px));
-  }
-  .cart-float__cta {
-    padding: 0 8px 0 10px;
-    font-size: 12px;
   }
 }
 

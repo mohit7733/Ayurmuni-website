@@ -82,6 +82,7 @@ const Chat = loadPage(() => import("./pages/Chat"));
 const ChatInbox = loadPage(() => import("./pages/ChatInbox"));
 const PrescriptionDetail = loadPage(() => import("./pages/PrescriptionDetail"));
 const ShareExperience = loadPage(() => import("./pages/ShareExperience"));
+const DirectDoctorReview = loadPage(() => import("./pages/DirectDoctorReview"));
 const MedicalReceipt = loadPage(() => import("./pages/MedicalReceipt"));
 const PrivacyCenter = loadPage(() => import("./pages/PrivacyCenter"));
 const FeedbackInformation = loadPage(() => import("./pages/FeedbackInformation"));
@@ -438,6 +439,10 @@ export default function App() {
                       <Route
                         path="/share-experience"
                         element={<ShareExperience />}
+                      />
+                      <Route
+                        path="/rate-doctor"
+                        element={<DirectDoctorReview />}
                       />
                       <Route
                         path="/profile/receipts/:consultationId"

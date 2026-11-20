@@ -78,7 +78,7 @@ import '../design/pages/dummy-offers.css';
 import '../design/pages/plan-cards.css';
 import { isCarePlan, planDiscount, railThemeTones } from '../packages/planTheme';
 import '../design/pages/orange-lab.css';
-import { getDietPlanCoverUrl, getDietPlanRatingLabel } from '../diet/utils';
+import { getDietPlanCoverCandidates, getDietPlanRatingLabel } from '../diet/utils';
 
 let prakritiModalShownThisSession = false;
 let diseaseModalShownThisSession = false;
@@ -208,13 +208,13 @@ function CategoryRow({ items, renderItem }) {
     return () => io.disconnect();
   }, [items, revealed]);
 
-  // Phones only: when the row overflows, auto-advance one tile every 3s.
+  // Phones + tablets: when the row overflows, auto-advance one tile every 3s.
   // Pause on hover, touch, or user scroll; resume after a short idle.
   useEffect(() => {
     const list = listRef.current;
     if (!list || !carousel || typeof window === 'undefined') return undefined;
 
-    const phoneMq = window.matchMedia('(max-width: 639px)');
+    const narrowMq = window.matchMedia('(max-width: 1023px)');
     const reduceMq = window.matchMedia('(prefers-reduced-motion: reduce)');
     const hoverMq = window.matchMedia('(hover: hover)');
     const hold = {
@@ -255,7 +255,7 @@ function CategoryRow({ items, renderItem }) {
       hold.intervalId = 0;
     };
     const startInterval = () => {
-      if (hold.intervalId || !phoneMq.matches || reduceMq.matches || !hold.visible) return;
+      if (hold.intervalId || !narrowMq.matches || reduceMq.matches || !hold.visible) return;
       hold.intervalId = window.setInterval(tick, 3000);
     };
     const scheduleResume = () => {
@@ -312,7 +312,7 @@ function CategoryRow({ items, renderItem }) {
     list.addEventListener('touchend', onPointerUp, { passive: true });
     list.addEventListener('scroll', onScroll, { passive: true });
     document.addEventListener('visibilitychange', onVisibility);
-    const unPhone = listenMq(phoneMq, syncMode);
+    const unNarrow = listenMq(narrowMq, syncMode);
     const unReduce = listenMq(reduceMq, syncMode);
 
     const io = new IntersectionObserver(
@@ -341,7 +341,7 @@ function CategoryRow({ items, renderItem }) {
       list.removeEventListener('touchend', onPointerUp);
       list.removeEventListener('scroll', onScroll);
       document.removeEventListener('visibilitychange', onVisibility);
-      unPhone();
+      unNarrow();
       unReduce();
     };
   }, [carousel, items]);
@@ -465,7 +465,14 @@ function dietCaloriesLabel(plan) {
 }
 
 function DietPlanCard({ item, onClick }) {
-  const cover = getDietPlanCoverUrl(item);
+  const covers = useMemo(() => {
+    const list = getDietPlanCoverCandidates(item);
+    const extra = resolveImageUrl(item);
+    if (extra && !list.includes(extra)) list.push(extra);
+    return list;
+  }, [item]);
+  const [coverIndex, setCoverIndex] = useState(0);
+  const cover = covers[coverIndex] || '';
   const season = shortLabel(item.season);
   const prakriti = shortLabel(item.prakriti);
   const duration = dietDurationLabel(item);
@@ -483,7 +490,13 @@ function DietPlanCard({ item, onClick }) {
     <article className="hm-meal hm-diet-card">
       <div className="hm-meal__media">
         {cover ? (
-          <img src={cover} alt="" loading="lazy" decoding="async" />
+          <img
+            src={cover}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            onError={() => setCoverIndex((i) => i + 1)}
+          />
         ) : (
           <Salad size={28} aria-hidden />
         )}
@@ -1048,20 +1061,11 @@ export default function Home() {
           <LazyBlock blockRef={brandsRef} done={brandsSeen && !brandsLoading} minHeight={120} skeleton={<SectionHold label={T.brandsTitle} minHeight={120} variant="chips" />}>
             {brands.length > 0 ? (
               <Reveal as="section" className="hm-section hm-panel hm-brands-panel " aria-labelledby="hm-brands-title">
-                <SectionHeader
-                  className="hm-concerns-head hm-doctor-head"
+                <DoctorRailHeader
                   id="hm-brands-title"
                   title={T.brandsTitle}
                   description={T.brandsText}
-                  action={
-                    <ViewAll
-                      plain={true}
-                      label={T.brandsTitle}
-                      onClick={() =>
-                        navigate('/products/category?mode=both&name=Brands')
-                      }
-                    />
-                  }
+                  onViewAll={() => navigate('/products/category?mode=both&name=Brands')}
                 />
                 <ConcernCarousel label={T.brandsTitle}>
                   {brands.map((item) => (

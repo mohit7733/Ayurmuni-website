@@ -115,7 +115,7 @@ export default function Consult() {
   const [debounced, setDebounced] = useState('');
   const [loading, setLoading] = useState(true);
   const productFilter = useMemo(() => (debounced ? { search: debounced } : {}), [debounced]);
-  const { products, loading: productsLoading, loadingMore, hasMore, loadMore } = useCategoryProducts(
+  const { products, loading: productsLoading } = useCategoryProducts(
     productFilter,
     [],
     { pageSize: 8 },
@@ -256,7 +256,6 @@ export default function Consult() {
                 >
                   <SectionHead
                     id="cs-suggested-doctors-title"
-                    // eyebrow={T.topDoctorsEyebrow}
                     title={T.topDoctorsTitle}
                     description={T.suggestedDoctorsText}
                     action={
@@ -289,7 +288,6 @@ export default function Consult() {
                 <Reveal as="section" className="hm-section hm-panel" aria-labelledby="cs-doctors-title">
                   <SectionHead
                     id="cs-doctors-title"
-                    // eyebrow={T.topDoctorsEyebrow}
                     title={T.topDoctorsTitle}
                     // description={T.doctorsText}
                     action={
@@ -418,13 +416,6 @@ export default function Consult() {
                         ))}
                       </Rail>
                     )}
-                    {/* {hasMore && products.length > 0 ? (
-                      <div className="st-more">
-                        <Button variant="secondary" loading={loadingMore} onClick={loadMore}>
-                          {loadingMore ? T.loadingMore : T.loadMore}
-                        </Button>
-                      </div>
-                    ) : null} */}
                   </section>
                 </div>
               ) : null}

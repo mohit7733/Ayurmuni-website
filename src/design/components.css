@@ -1544,15 +1544,18 @@
 /* ---------- Rating summary ---------- */
 .am-rating-summary {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 200px);
   align-items: center;
+  justify-content: start;
   gap: 8px 14px;
   padding: 8px 10px;
   border-radius: 12px;
   background: linear-gradient(90deg, var(--am-gold-50), #fffdf8);
 }
 .am-rating-summary:has(.am-rating-summary__media) {
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  /* Score | capped bars | photos fill remaining space on the right */
+  grid-template-columns: auto minmax(0, 200px) minmax(0, 1fr);
+  column-gap: 28px;
 }
 .am-rating-summary__score {
   display: flex;
@@ -1578,7 +1581,10 @@
   margin: 0;
   padding: 0;
   list-style: none;
+  width: 100%;
+  max-width: 200px;
   min-width: 0;
+  justify-self: start;
 }
 .am-rating-summary__bars li {
   display: grid;
@@ -1606,8 +1612,13 @@
 .am-rating-summary__media {
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
   padding: 0;
+  overflow: hidden;
   border: 0;
   background: transparent;
   color: var(--am-primary-strong);
@@ -1616,19 +1627,30 @@
   cursor: pointer;
 }
 .am-rating-summary__media img {
-  width: 36px;
-  height: 36px;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
   border-radius: 8px;
   object-fit: cover;
   box-shadow: 0 0 0 1px var(--am-line);
+}
+.am-rating-summary__media > span {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 @media (max-width: 560px) {
   .am-rating-summary,
   .am-rating-summary:has(.am-rating-summary__media) {
     grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 14px;
+  }
+  .am-rating-summary__bars {
+    max-width: none;
   }
   .am-rating-summary__media {
     grid-column: 1 / -1;
+    justify-content: flex-start;
+    margin-top: 4px;
   }
 }
 
@@ -2152,16 +2174,26 @@
   .am-banner__slide:not(.is-on) .am-banner__hit img { --am-banner-blur: 1.5px; }
 }
 
+/* Stage doesn't steal taps meant for arrows (3D slides can inflate hit boxes on iPad). */
+.am-banner__stage {
+  pointer-events: none;
+}
+.am-banner__slide.is-on,
+.am-banner__slide.is-prev,
+.am-banner__slide.is-next {
+  pointer-events: auto;
+}
+
 /* ----- Arrows = site rail controls (.pd-auto-rail__control) ----- */
 .am-banner__nav {
   position: absolute;
   top: calc(50% - 16px);
-  z-index: 5;
+  z-index: 8;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   padding: 0;
   border: 1px solid var(--am-line-strong);
   border-radius: 50%;
@@ -2169,6 +2201,8 @@
   color: var(--am-primary);
   box-shadow: 0 2px 8px rgba(10, 40, 32, 0.1);
   cursor: pointer;
+  pointer-events: auto;
+  touch-action: manipulation;
   transform: translateY(-50%);
   transition:
     background-color var(--am-dur-fast, 150ms) ease,
@@ -2177,8 +2211,8 @@
     transform var(--am-dur-base, 220ms) var(--am-banner-ease);
 }
 .am-banner__nav { border-color: rgba(216, 204, 180, 0.9); background: #fff; box-shadow: 0 4px 14px rgba(10, 40, 32, 0.16); }
-.am-banner__nav--prev { left: 0; }
-.am-banner__nav--next { right: 0; }
+.am-banner__nav--prev { left: 8px; }
+.am-banner__nav--next { right: 8px; }
 .am-banner__nav:hover {
   border-color: var(--am-primary);
   background: var(--am-primary-soft);
@@ -2190,12 +2224,13 @@
 /* ----- Dots: quiet track in brand green; active fills over the interval ----- */
 .am-banner__controls {
   position: absolute;
-  z-index: 5;
+  z-index: 8;
   left: 50%;
   bottom: 8px;
   display: flex;
   align-items: center;
   gap: 2px;
+  pointer-events: auto;
   transform: translateX(-50%);
 }
 .am-banner__pause,
@@ -2284,11 +2319,25 @@
 }
 
 /* ----- Responsive ----- */
-@media (hover: none) {
+/* Phones: hide arrows (swipe + dots). Tablets keep arrows so advance isn't stuck. */
+@media (hover: none) and (max-width: 767px) {
   .am-banner__nav { display: none; }
 }
 @media (max-width: 1023px) {
-  .am-banner { --am-banner-w: 74cqw; --am-banner-tilt: 16deg; --am-banner-scale: 0.8; }
+  .am-banner {
+    --am-banner-w: min(88cqw, 720px);
+    --am-banner-tilt: 8deg;
+    --am-banner-shift: 72%;
+    --am-banner-scale: 0.86;
+    overflow-x: clip;
+  }
+  /* Side peeks must not sit on top of the arrow hit targets on iPad. */
+  .am-banner__slide.is-prev,
+  .am-banner__slide.is-next {
+    pointer-events: none;
+  }
+  .am-banner__nav--prev { left: 12px; }
+  .am-banner__nav--next { right: 12px; }
 }
 @media (max-width: 639px) {
   .am-banner {
@@ -2753,6 +2802,23 @@
 @media (min-width: 900px) {
   .am-doctor-grid--premium.am-doctor-grid--portrait {
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+}
+
+/* Tablet 3-up: with 4 or 5 cards the last row (1–2 leftovers) sits centered. */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .svc-page .am-doctor-grid--portrait:has(> :nth-child(4):last-child),
+  .svc-page .am-doctor-grid--portrait:has(> :nth-child(5):last-child) {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .svc-page .am-doctor-grid--portrait:has(> :nth-child(4):last-child) > li,
+  .svc-page .am-doctor-grid--portrait:has(> :nth-child(5):last-child) > li {
+    flex: 0 0 calc((100% - 24px) / 3);
+    max-width: calc((100% - 24px) / 3);
   }
 }
 .svc-page .am-flip-doc,
@@ -3445,8 +3511,40 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 18%;
+  object-position: center top;
   transition: transform var(--am-dur-slower) var(--am-ease-out);
+}
+
+.am-flip-doc__name-scroll {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.am-flip-doc__name-scroll > span {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.am-flip-doc__name-scroll.is-marquee > span {
+  animation: am-flip-name-marquee 7s ease-in-out infinite alternate;
+}
+
+@keyframes am-flip-name-marquee {
+  0%,
+  18% {
+    transform: translateX(0);
+  }
+  82%,
+  100% {
+    transform: translateX(var(--am-flip-name-shift, 0));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .am-flip-doc__name-scroll.is-marquee > span {
+    animation: none;
+  }
 }
 
 .am-flip-doc__cta svg {
@@ -3543,12 +3641,13 @@
 }
 
 .am-flip-doc__name button {
-  display: -webkit-box;
+  display: block;
+  width: 100%;
+  min-width: 0;
   overflow: hidden;
   text-align: left;
   line-height: 1.2;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  white-space: nowrap;
 }
 
 .am-flip-doc__spec {
@@ -3654,6 +3753,106 @@
 
 .am-flip-doc .am-stretched:focus-visible::after {
   outline-color: var(--am-gold-300);
+}
+
+/* Phones: keep Top Doctors cards even — short bio, bottom-aligned CTA, faces in frame. */
+@media (max-width: 639px) {
+  .am-doctor-grid--portrait {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .am-flip-doc__media {
+    aspect-ratio: 1 / 1;
+  }
+
+  .am-flip-doc__media img {
+    object-position: center top;
+  }
+
+  /* Clearer glass pills so the profile photo shows through. */
+  .am-flip-doc__chip {
+    border-color: rgba(255, 255, 255, 0.55);
+    background: rgba(255, 253, 248, 0.12);
+    color: #fffdf8;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    box-shadow: none;
+  }
+
+  .am-flip-doc__chip svg {
+    color: #e4c47a;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
+  }
+
+  .am-flip-doc__chip--verified {
+    color: #fffdf8;
+  }
+
+  .am-flip-doc__chip--verified svg {
+    color: #7ddea8;
+  }
+
+  .am-flip-doc .hm-doc-card__dietitian .am-dietitian-badge,
+  .am-flip-doc .hm-doc-card__dietitian .am-badge {
+    border-color: rgba(255, 255, 255, 0.55);
+    background: rgba(255, 253, 248, 0.12);
+    color: #fffdf8;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  .am-flip-doc__body {
+    gap: 4px;
+    padding: 10px 8px 10px;
+    min-width: 0;
+  }
+
+  .am-flip-doc .hm-doc-card__specialized-bio {
+    gap: 3px;
+    max-height: 2.8em;
+    overflow: hidden;
+  }
+
+  .am-flip-doc .hm-doc-card__specialized-bio-item:nth-child(n + 2) {
+    display: none;
+  }
+
+  .am-flip-doc .hm-doc-card__specialized-bio-item span {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 11px;
+  }
+
+  /* Fee + View profile: stack so the button is never clipped. */
+  .am-flip-doc__cta {
+    flex-direction: column;
+    align-items: stretch;
+    margin-top: auto;
+    padding-top: 8px;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .am-flip-doc__fee {
+    font-size: 0.98rem;
+  }
+
+  .am-flip-doc__cta-link {
+    width: 100%;
+    min-width: 0;
+    justify-content: center;
+    padding: 8px 10px;
+    font-size: 11.5px;
+    box-sizing: border-box;
+  }
+
+  .am-flip-doc__cta-link svg {
+    width: 13px;
+    height: 13px;
+  }
 }
 
 /* ---------- Recently viewed doctor card ---------- */

@@ -29,6 +29,7 @@ import {
   resolveYogaThumbnailUri,
   resolveYogaVideoUri,
 } from '../yoga/utils';
+import '../design/pages/yoga.css';
 
 const formatDuration = (value) => {
   const text = String(value ?? '').trim();
@@ -128,9 +129,23 @@ export default function YogaSession() {
     playFrom(item.startSeconds);
   };
 
+  const quickFacts = (
+    <DetailCard id="yoga-about" title={Y.quickFacts} icon={Flower2} className="yg-session-facts">
+      <InfoGrid
+        columns={2}
+        items={[
+          { label: 'Level', value: difficulty },
+          { label: 'Duration', value: durationLabel },
+          { label: 'Poses', value: breakdown.length || '' },
+          { label: 'Format', value: videoUri ? 'Guided video' : 'Self-paced' },
+        ]}
+      />
+    </DetailCard>
+  );
+
   return (
     <AppShell tab="home">
-      <DetailPage>
+      <DetailPage className="yg-session-page">
         <DetailTop
           backTo="/yoga"
           backLabel="Yoga"
@@ -159,6 +174,7 @@ export default function YogaSession() {
         ) : (
           <>
             <DetailHero
+              className="yg-session-hero"
               titleId="yoga-title"
               mediaClassName={videoUri ? 'dx-hero__media--video' : undefined}
               media={
@@ -196,6 +212,7 @@ export default function YogaSession() {
                   ) : null}
                 </>
               }
+              aside={quickFacts}
             >
               <div className="dx-actions dx-actions--row">
                 {videoUri ? (
@@ -218,34 +235,22 @@ export default function YogaSession() {
             </DetailHero>
 
             <DetailLayout
+              className="yg-session-layout"
               aside={
-                <>
-                  <DetailCard id="yoga-about" title={Y.quickFacts} icon={Flower2}>
-                    <InfoGrid
-                      columns={2}
-                      items={[
-                        { label: 'Level', value: difficulty },
-                        { label: 'Duration', value: durationLabel },
-                        { label: 'Poses', value: breakdown.length || '' },
-                        { label: 'Format', value: videoUri ? 'Guided video' : 'Self-paced' },
-                      ]}
+                instructor ? (
+                  <DetailCard id="yoga-mentor" title="Your mentor" icon={UserRound}>
+                    <PersonCard
+                      image={instructor.imageUri}
+                      name={instructor.name}
+                      role={instructor.subtitle || 'Yoga mentor'}
+                      onClick={() => navigate('/mentor/consult')}
                     />
+                    <p className="dx-prose">
+                      {instructor.description ||
+                        'Guided alignment and breathwork for a complete session.'}
+                    </p>
                   </DetailCard>
-                  {instructor ? (
-                    <DetailCard id="yoga-mentor" title="Your mentor" icon={UserRound}>
-                      <PersonCard
-                        image={instructor.imageUri}
-                        name={instructor.name}
-                        role={instructor.subtitle || 'Yoga mentor'}
-                        onClick={() => navigate('/mentor/consult')}
-                      />
-                      <p className="dx-prose">
-                        {instructor.description ||
-                          'Guided alignment and breathwork for a complete session.'}
-                      </p>
-                    </DetailCard>
-                  ) : null}
-                </>
+                ) : null
               }
             >
               {view?.benefits.length ? (

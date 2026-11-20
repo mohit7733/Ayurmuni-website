@@ -98,9 +98,16 @@ export function StatusPill({ status, tone, children }) {
   return <span className={cx('dx-status', `dx-status--${tone || statusTone(status)}`)}>{label}</span>;
 }
 
-export function DetailLayout({ children, aside, asideFirst = false }) {
+export function DetailLayout({ children, aside, asideFirst = false, className }) {
   return (
-    <div className={cx('dx-layout', !aside && 'dx-layout--single', asideFirst && 'dx-layout--aside-first')}>
+    <div
+      className={cx(
+        'dx-layout',
+        !aside && 'dx-layout--single',
+        asideFirst && 'dx-layout--aside-first',
+        className,
+      )}
+    >
       <div className="dx-main">{children}</div>
       {aside ? <aside className="dx-aside">{aside}</aside> : null}
     </div>

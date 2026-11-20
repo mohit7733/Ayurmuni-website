@@ -235,7 +235,10 @@
 .site-recent .site-live__all { justify-self: start; }
 
 .site-search-submit {
+  display: inline-flex;
   flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
   height: 38px;
   padding: 0 18px;
   border: 0;
@@ -245,6 +248,7 @@
   font: inherit;
   font-size: 14px;
   font-weight: var(--am-weight-semibold);
+  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -702,6 +706,18 @@
 
   .site-header.is-search-open .site-search--bar {
     display: flex;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    /* Keep the Search CTA inset so it doesn’t look clipped on the pill edge. */
+    padding: 4px 5px 4px 14px;
+    gap: 6px;
+  }
+
+  .site-header.is-search-open .site-search-submit {
+    height: 36px;
+    padding: 0 14px;
+    font-size: 13px;
   }
 
   .site-account-chev {
@@ -931,12 +947,18 @@
 }
 
 @media (max-width: 767px) {
-  .app-shell:not(.auth-shell):not(.is-logged-out) .app-shell-body {
+  /* Tab-bar clearance lives on the footer (or on body when footer is hidden).
+     Reserving it on body above the footer created a large empty cream gap. */
+  .app-shell:not(.auth-shell):not(.is-logged-out):has(.site-footer) .app-shell-body {
+    padding-bottom: 8px;
+  }
+
+  .app-shell:not(.auth-shell):not(.is-logged-out):not(:has(.site-footer)) .app-shell-body {
     padding-bottom: calc(var(--am-tabbar-h) + var(--am-space-8) + env(safe-area-inset-bottom));
   }
 
   .app-shell:not(.auth-shell):not(.is-logged-out) .site-footer {
-    padding-bottom: calc(var(--am-tabbar-h) + var(--am-space-5) + env(safe-area-inset-bottom));
+    padding-bottom: calc(var(--am-tabbar-h) + 8px + env(safe-area-inset-bottom));
   }
 }
 
@@ -1277,6 +1299,21 @@
 }
 
 /* ---------- Responsive: small phones ---------- */
+@media (max-width: 639px) {
+  /* Keep account menu fully on-screen (was overflowing past the right edge). */
+  .site-account-wrap.is-open .site-popover.site-user-menu {
+    position: fixed;
+    top: calc(var(--am-header-h, 58px) + 6px);
+    right: max(8px, env(safe-area-inset-right));
+    left: auto;
+    width: min(280px, calc(100vw - 16px));
+    max-height: min(420px, calc(100dvh - var(--am-header-h, 58px) - 24px));
+    overflow-x: hidden;
+    overflow-y: auto;
+    z-index: calc(var(--am-z-header, 50) + 20);
+  }
+}
+
 @media (max-width: 430px) {
   .site-header-inner { gap: 2px; padding-inline: max(var(--am-gutter), env(safe-area-inset-left)) max(var(--am-gutter), env(safe-area-inset-right)); }
   .site-brand { min-width: 0; flex-shrink: 1; max-width: 42%; }

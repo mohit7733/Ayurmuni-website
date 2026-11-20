@@ -104,6 +104,19 @@
   line-height: 1.4;
   color: var(--am-text-muted);
 }
+
+/* Phones: hide “The full range…” under All products; keep title + View all. */
+@media (max-width: 639px) {
+  .st-page--products .st-section:has(#st-all-title) .am-section-header__desc {
+    display: none;
+  }
+
+  .st-page--products .st-section:has(#st-all-title) .am-section-header {
+    align-items: center;
+    row-gap: 0;
+  }
+}
+
 @media (min-width: 768px) {
   .st-page--products .am-section-header { align-items: center; }
   .st-page--products .am-section-header__copy {

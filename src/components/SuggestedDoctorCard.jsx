@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, BadgeCheck, Briefcase, MapPin, Star } from 'lucide-react';
+import { ArrowRight, BadgeCheck, Star } from 'lucide-react';
 import { formatDoctorDisplayName } from '../consult/appointmentUtils';
 import {
   doctorDisplayName,
@@ -22,6 +22,43 @@ import FavButton from './ui/FavButton';
 import DietitianBadge from './DietitianBadge';
 import { nameInitial } from '../utils/initials';
 
+/** Scrolls long doctor names when they don't fit. */
+function MarqueeName({ children }) {
+  const wrapRef = useRef(null);
+  const textRef = useRef(null);
+  const [shift, setShift] = useState(0);
+
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    const text = textRef.current;
+    if (!wrap || !text) return undefined;
+
+    const measure = () => {
+      const delta = Math.ceil(text.scrollWidth - wrap.clientWidth);
+      setShift(delta > 2 ? delta : 0);
+    };
+
+    measure();
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
+    ro?.observe(wrap);
+    window.addEventListener('resize', measure);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, [children]);
+
+  return (
+    <span
+      ref={wrapRef}
+      className={`am-flip-doc__name-scroll${shift ? ' is-marquee' : ''}`}
+      style={shift ? { '--am-flip-name-shift': `-${shift}px` } : undefined}
+    >
+      <span ref={textRef}>{children}</span>
+    </span>
+  );
+}
+
 export default function SuggestedDoctorCard({ item, fallbackSpeciality = 'Ayurveda' }) {
   const navigate = useNavigate();
   const id = getDoctorId(item);
@@ -34,7 +71,12 @@ export default function SuggestedDoctorCard({ item, fallbackSpeciality = 'Ayurve
   const location = doctorLocation(item);
   const reviewCount = Number(item?.total_reviews || item?.review_count || 0);
   const verified = Boolean(item?.is_verified);
+  const bios = Array.isArray(item?.specialized_bio)
+    ? item.specialized_bio.map((bio) => String(bio || '').trim()).filter(Boolean).slice(0, 2)
+    : [];
   const [fav, setFav] = useState(() => doctorFavorite(item));
+  const [imgFailed, setImgFailed] = useState(false);
+  const showPhoto = Boolean(image) && !imgFailed;
 
   const openProfile = () => {
     if (id) navigate(`/consult/doctors/${id}`);
@@ -65,8 +107,14 @@ export default function SuggestedDoctorCard({ item, fallbackSpeciality = 'Ayurve
   return (
     <article className="am-flip-doc">
       <div className="am-flip-doc__media">
-        {image ? (
-          <img src={image} alt="" loading="lazy" decoding="async" />
+        {showPhoto ? (
+          <img
+            src={image}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            onError={() => setImgFailed(true)}
+          />
         ) : (
           <span className="am-flip-doc__fallback" aria-hidden>
             {nameInitial(name)}
@@ -105,30 +153,17 @@ export default function SuggestedDoctorCard({ item, fallbackSpeciality = 'Ayurve
       <div className="am-flip-doc__body">
         <h3 className="am-flip-doc__name">
           <button type="button" className="am-stretched" onClick={openProfile}>
-            {name}
+            <MarqueeName>{name}</MarqueeName>
           </button>
         </h3>
         {credential ? <p className="am-flip-doc__spec">{credential}</p> : null}
-        {experience || location ? (
+        {bios.length || experience || location ? (
           <ul className="hm-doc-card__specialized-bio" aria-label="Specialized Bio">
-            {item.specialized_bio.length ?
-            item.specialized_bio.map((bio) => (
+            {bios.map((bio) => (
               <li key={bio} className="hm-doc-card__specialized-bio-item">
                 <span>{bio}</span>
               </li>
-            )) : null}
-            {/* {experience ? (
-              <li>
-                <Briefcase size={13} aria-hidden />
-                {experience}
-              </li>
-            ) : null}
-            {location ? (
-              <li>
-                <MapPin size={13} aria-hidden />
-                {location}
-              </li>
-            ) : null} */}
+            ))}
           </ul>
         ) : null}
         <div className="am-flip-doc__cta">

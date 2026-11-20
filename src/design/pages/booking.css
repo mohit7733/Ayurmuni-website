@@ -1005,20 +1005,17 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .bk-slots-sticky,
-  .bk-pay-sticky {
+  .bk-slots-sticky {
     flex-wrap: wrap;
     gap: 8px;
     padding: 10px;
   }
 
-  .bk-slots-sticky .bk-sticky__meta,
-  .bk-pay-sticky .bk-sticky__meta {
+  .bk-slots-sticky .bk-sticky__meta {
     flex: 1 1 100%;
   }
 
-  .bk-slots-sticky .am-btn,
-  .bk-pay-sticky .am-btn {
+  .bk-slots-sticky .am-btn {
     flex: 1 1 100%;
     justify-content: center;
   }
@@ -1274,7 +1271,7 @@
   .bk-pay-page {
     gap: var(--am-space-4);
     padding: var(--am-space-4) var(--am-gutter)
-      calc(var(--am-tabbar-h, 0px) + 112px + env(safe-area-inset-bottom));
+      calc(var(--am-tabbar-h) + var(--am-space-2) + var(--am-space-8) + env(safe-area-inset-bottom));
   }
 
   .bk-pay-page .bk-layout {
@@ -1296,43 +1293,13 @@
     padding: var(--am-space-4);
   }
 
+  /* Keep Pay in the bill column on phones — fixed sticky collides with the floating tab bar. */
   .bk-pay-page .bk-aside__cta {
-    display: none;
+    display: block;
   }
 
   .bk-pay-sticky {
-    position: fixed;
-    z-index: var(--am-z-header, 100);
-    right: var(--am-gutter);
-    bottom: calc(var(--am-tabbar-h, 0px) + var(--am-space-3) + env(safe-area-inset-bottom));
-    left: var(--am-gutter);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--am-space-3);
-    padding: var(--am-space-3);
-    border: 1px solid var(--am-line);
-    border-radius: var(--am-radius-lg);
-  }
-
-  .bk-pay-sticky .bk-sticky__meta {
-    display: grid;
-    min-width: 0;
-    gap: var(--am-space-1);
-  }
-
-  .bk-pay-sticky .bk-sticky__meta strong {
-    color: var(--am-text);
-    font-size: var(--am-text-base);
-  }
-
-  .bk-pay-sticky .bk-sticky__meta small {
-    color: var(--am-text-muted);
-    font-size: var(--am-text-xs);
-  }
-
-  .bk-pay-sticky .am-btn {
-    flex: 0 0 auto;
+    display: none;
   }
 }
 

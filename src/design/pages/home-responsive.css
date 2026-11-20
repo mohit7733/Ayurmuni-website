@@ -194,35 +194,39 @@
   }
 }
 
-/* Hide the Yoga for Mind & Body section description on phones only.
-   Scoped to the yoga well (.hm-well--move) so Diet and other section
-   descriptions stay visible. Title + View all sit on one row. */
+/* Hide Diet / Yoga section descriptions on phones only.
+   Title + View all sit on one row. */
 @media (max-width: 639px) {
   .hm-page:not(.svc-page) .hm-wellness .hm-well--move .hm-well__text,
-  .hm-page:not(.svc-page) .hm-well--move .hm-well__text {
+  .hm-page:not(.svc-page) .hm-well--move .hm-well__text,
+  .hm-page:not(.svc-page) .hm-wellness .hm-well--nourish .hm-well__text,
+  .hm-page:not(.svc-page) .hm-well--nourish .hm-well__text {
     display: none;
   }
 
   .hm-page:not(.svc-page) .hm-wellness .hm-well--move .hm-well__head,
-  .hm-page:not(.svc-page) .hm-well--move .hm-well__head {
+  .hm-page:not(.svc-page) .hm-well--move .hm-well__head,
+  .hm-page:not(.svc-page) .hm-wellness .hm-well--nourish .hm-well__head,
+  .hm-page:not(.svc-page) .hm-well--nourish .hm-well__head {
     align-items: center;
   }
 
   .hm-page:not(.svc-page) .hm-wellness .hm-well--move .hm-well__lead,
-  .hm-page:not(.svc-page) .hm-well--move .hm-well__lead {
+  .hm-page:not(.svc-page) .hm-well--move .hm-well__lead,
+  .hm-page:not(.svc-page) .hm-wellness .hm-well--nourish .hm-well__lead,
+  .hm-page:not(.svc-page) .hm-well--nourish .hm-well__lead {
     gap: 0;
   }
 }
 
-/* Service category tiles: on phones show at least 5 per view.
-   Fewer than 5 grow to fill the row (no scroll). More than 5 stay 20%
-   wide so five are visible, with snap scrolling. Autoplay lives in
-   CategoryRow. Tablet/desktop (>=640) is unchanged. */
-@media (max-width: 639px) {
+/* Service category tiles: phones + tablets carousel (desktop ≥1024 stays spread).
+   ~4–5 tiles in view so 6+ items overflow; autoplay lives in CategoryRow. */
+@media (max-width: 1023px) {
   .hm-page:not(.svc-page) .hm-services .hm-services__grid,
   .hm-page:not(.svc-page) .hm-services__grid {
     justify-content: flex-start;
     gap: 0;
+    overflow-x: auto;
     scroll-snap-type: x mandatory;
     scroll-padding-inline: 0;
     -webkit-mask-image: none;
@@ -231,10 +235,18 @@
 
   .hm-page:not(.svc-page) .hm-services .hm-services__grid > li,
   .hm-page:not(.svc-page) .hm-services__grid > li {
-    flex: 1 0 20%;
-    min-width: 20%;
+    flex: 0 0 25%;
+    min-width: 25%;
     scroll-snap-align: start;
     scroll-snap-stop: always;
+  }
+}
+
+@media (max-width: 639px) {
+  .hm-page:not(.svc-page) .hm-services .hm-services__grid > li,
+  .hm-page:not(.svc-page) .hm-services__grid > li {
+    flex: 1 0 20%;
+    min-width: 20%;
   }
 
   .hm-page:not(.svc-page) .hm-services .hm-service {
@@ -293,28 +305,6 @@
     line-height: 1.25;
   }
 
-  /* Keep View appointment on the right of the name (same as View plan). */
-  .hm-page:not(.svc-page) .hm-pair .am-diet-active.hm-appt {
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    grid-template-areas: 'media body cta' 'foot foot foot';
-  }
-
-  .hm-page:not(.svc-page) .hm-pair .hm-appt__actions {
-    grid-area: cta;
-    justify-self: end;
-    align-self: start;
-    width: auto;
-  }
-
-  .hm-page:not(.svc-page) .hm-pair .hm-appt__cta,
-  .hm-page:not(.svc-page) .hm-pair .am-diet-active.hm-appt .am-diet-active__cta {
-    flex: 0 0 auto;
-    width: auto;
-    min-height: 36px;
-    padding: 0 12px;
-    font-size: 12.5px;
-    justify-content: center;
-  }
 }
 
 /* Hide the Health concerns section description on phones only.
@@ -332,6 +322,7 @@
     row-gap: 0;
     align-items: center;
   }
+
 }
 
 /* Hide the homepage Our Doctors description at all breakpoints.

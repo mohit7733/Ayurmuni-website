@@ -20,16 +20,29 @@ export function ViewAll({ onClick, label }) {
 }
 
 export function SectionHead({ id, eyebrow, title, description, action }) {
+  const descIsPlain =
+    description == null ||
+    typeof description === 'string' ||
+    typeof description === 'number';
+
   return (
     <div className="hm-doctor-head">
-      {eyebrow ? <p className="am-eyebrow">{eyebrow}</p> : null}
       <div className="hm-doctor-head__row">
-        <h2 id={id} className="hm-doctor-head__title">
-          {title}
-        </h2>
+        <div className="hm-doctor-head__lead">
+          {eyebrow ? <p className="am-eyebrow">{eyebrow}</p> : null}
+          <h2 id={id} className="hm-doctor-head__title">
+            {title}
+          </h2>
+        </div>
         {action}
       </div>
-      {description ? <p className="hm-doctor-head__desc">{description}</p> : null}
+      {description ? (
+        descIsPlain ? (
+          <p className="hm-doctor-head__desc">{description}</p>
+        ) : (
+          <div className="hm-doctor-head__desc">{description}</div>
+        )
+      ) : null}
     </div>
   );
 }

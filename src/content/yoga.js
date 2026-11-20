@@ -7,8 +7,19 @@ export const YOGA_COPY = {
   listTitleFor: (scope) => `Yoga for ${scope}`,
   listText:
     'Guided sessions crafted by Ayurvedic experts to build strength, ease stress and restore balance - at your own pace, from home.',
+  listTextSlides: [
+    'Guided sessions crafted by Ayurvedic experts',
+    'Build strength, ease stress and restore balance',
+    'Practice at your own pace, from home',
+    'Breath, movement and calm — a few minutes a day',
+  ],
   listTextFor: (scope) =>
     `Hand-picked practices that gently support ${scope}. Follow along at your own pace, wherever you are.`,
+  listTextSlidesFor: (scope) => [
+    `Hand-picked practices that gently support ${scope}`,
+    'Follow along at your own pace, wherever you are',
+    'Breath, movement and calm — a few minutes a day',
+  ],
   searchPlaceholder: 'Search poses, sessions or levels',
   searchLabel: 'Search yoga sessions',
   filterLevel: 'Level',

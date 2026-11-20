@@ -2,8 +2,7 @@
  * Diet plan helpers — list / details / plan_json meals + frontend nutrition.
  */
 
-
-
+import { BaseUrl } from '../config/key';
 
 /** True when avg_rating > 0 (plan already has a rating). */
 export const isDietPlanReviewed = (plan) => {
@@ -280,25 +279,36 @@ const galleryItemUrl = (g) =>
     g?.image_url || g?.media_url || g?.url || g?.image || '',
   ).trim();
 
-/** Prefer cover from diet_plan_gallery / diet_gallery, else legacy fields. */
-export const getDietPlanCoverUrl = (item) => {
-  const gallery = getPlanGalleryArray(item);
-
-  const cover =
-    gallery.find((g) => g?.is_cover && galleryItemUrl(g)) ||
-    gallery.find((g) => galleryItemUrl(g));
-
-  const uri =
-    galleryItemUrl(cover) ||
-    item?.thumbnail_url ||
-    item?.image_url ||
-    item?.cover_image ||
-    item?.banner_url ||
-    (typeof item?.image === 'string' ? item.image : null) ||
-    '';
-
-  return String(uri || '').trim();
+const absolutizeDietMediaUrl = (value) => {
+  const uri = String(value || '').trim();
+  if (!uri || /^(null|undefined)$/i.test(uri) || /example\.com|placeholder/i.test(uri)) {
+    return '';
+  }
+  if (/^https?:\/\//i.test(uri) || uri.startsWith('data:')) return uri;
+  if (uri.startsWith('//')) return `https:${uri}`;
+  const base = String(BaseUrl?.base_url || '').replace(/\/$/, '');
+  if (!base) return uri;
+  return uri.startsWith('/') ? `${base}${uri}` : `${base}/${uri}`;
 };
+
+/** Ordered unique cover candidates (cover first, then gallery, then legacy fields). */
+export const getDietPlanCoverCandidates = (item) => {
+  const gallery = getPlanGalleryArray(item);
+  const coverMarked = gallery.find((g) => g?.is_cover && galleryItemUrl(g));
+  const ordered = [
+    absolutizeDietMediaUrl(galleryItemUrl(coverMarked)),
+    ...gallery.map((g) => absolutizeDietMediaUrl(galleryItemUrl(g))),
+    absolutizeDietMediaUrl(item?.thumbnail_url),
+    absolutizeDietMediaUrl(item?.image_url),
+    absolutizeDietMediaUrl(item?.cover_image),
+    absolutizeDietMediaUrl(item?.banner_url),
+    absolutizeDietMediaUrl(typeof item?.image === 'string' ? item.image : ''),
+  ].filter(Boolean);
+  return [...new Set(ordered)];
+};
+
+/** Prefer cover from diet_plan_gallery / diet_gallery, else legacy fields. */
+export const getDietPlanCoverUrl = (item) => getDietPlanCoverCandidates(item)[0] || '';
 
 /** Full plan gallery for detail carousel (Detailimages-compatible). */
 export const getDietPlanGallery = (item) => {

@@ -7,6 +7,7 @@ import { getYogaSession } from '../services/yogaService';
 import { itemMatchesHealthConcern, matchesYogaSearch, normalizeYogaSessionList } from '../yoga/utils';
 import { DURATION_BUCKETS, levelLabel, yogaMinutes } from '../yoga/present';
 import { Button, Chip, EmptyState, SearchField, searchSuggestions } from '../components/ui';
+import LedeCarousel from '../components/ui/LedeCarousel';
 import PageBar from '../components/ui/PageBar';
 import { SectionHead } from '../components/ServiceHome';
 import { YOGA_COPY as Y } from '../content/yoga';
@@ -122,11 +123,12 @@ export default function Yoga() {
               id="yg-list-title"
               title={title}
               description={
-                loading && sessions.length === 0
-                  ? categoryName
-                    ? Y.listTextFor(categoryName)
-                    : Y.listText
-                  : `${categoryName ? Y.listTextFor(categoryName) : Y.listText} ${Y.resultCount(filtered.length)}.`
+                <LedeCarousel
+                  aria-label="Yoga highlights"
+                  items={
+                    categoryName ? Y.listTextSlidesFor(categoryName) : Y.listTextSlides
+                  }
+                />
               }
               action={
                 <div className="am-head-tools">

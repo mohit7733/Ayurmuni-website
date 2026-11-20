@@ -773,7 +773,15 @@
 /* ── Responsive ── */
 @media (max-width: 859px) {
   .pd-page--brand .pd-layout { grid-template-columns: minmax(0, 1fr); }
-  .pd-page--brand .pd-gallery { max-width: min(100%, 560px); }
+  .pd-page--brand .pd-gallery {
+    width: 100%;
+    max-width: min(100%, 560px);
+    justify-self: center;
+    margin-inline: auto;
+  }
+  .pd-page--brand .pd-thumbs {
+    justify-content: center;
+  }
 }
 @media (max-width: 639px) {
   .pd-page--brand { gap: var(--am-space-5); }

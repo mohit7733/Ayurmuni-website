@@ -245,6 +245,11 @@
 }
 
 .diet-page .diet-card-media img {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  object-position: center;
   transition: transform var(--am-dur-slow) var(--am-ease-out);
 }
 

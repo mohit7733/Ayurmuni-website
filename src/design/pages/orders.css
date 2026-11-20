@@ -490,6 +490,43 @@
 .or-page--history .am-page-header__subtitle { margin-top: 2px; font-size: var(--am-text-sm); }
 .or-page--history .or-toolbar { gap: var(--am-space-2); }
 .or-page--history .or-filters { gap: 6px; }
+
+/* Phones + tablets: full-width search above chips so the field never clips into All/Pending. */
+@media (max-width: 899px) {
+  .or-page--history .or-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--am-space-3);
+  }
+
+  .or-page--history .or-toolbar > .pm-search {
+    flex: none;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+  }
+
+  .or-page--history .or-filters {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 6px;
+    min-width: 0;
+    margin-inline: calc(-1 * var(--am-gutter, 16px));
+    padding-inline: var(--am-gutter, 16px);
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .or-page--history .or-filters::-webkit-scrollbar {
+    display: none;
+  }
+
+  .or-page--history .or-filters .am-chip {
+    flex: none;
+  }
+}
+
 @media (min-width: 900px) {
   .or-page--history .or-toolbar {
     flex-direction: row-reverse;

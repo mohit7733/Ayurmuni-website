@@ -124,15 +124,17 @@ export const useQuestionnaireFlow = (mode) => {
       const key = getStepKey(currentStep);
       const isMulti = currentStep?.answer_type === 'multi_choice';
       setAnswers((prev) => toggleAnswer(prev, key, choice?.index, isMulti));
+      // Auto-advance mid-quest only. On the last question, wait for Complete Quest.
       if (
         !isMulti &&
+        !isLastStep &&
         currentStep?.key !== 'knowPrakriti' &&
         currentStep?.answer_type !== 'text'
       ) {
         pendingAdvanceRef.current = true;
       }
     },
-    [currentStep, handleKnowPrakriti, isPrakriti, submitting],
+    [currentStep, handleKnowPrakriti, isLastStep, isPrakriti, submitting],
   );
 
   const submitAnswers = useCallback(async () => {

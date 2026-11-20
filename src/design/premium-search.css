@@ -127,13 +127,17 @@
 .pm-search__clear:hover { color: #fff; background: var(--pm-green); }
 
 .pm-search__submit {
+  display: inline-flex;
   flex: none;
+  align-items: center;
+  justify-content: center;
   height: 36px;
   padding: 0 16px;
   border: 0;
   border-radius: 999px;
   color: #fff;
   font: 600 0.84rem/1 var(--am-font-body, "Gilroy", sans-serif);
+  white-space: nowrap;
   background: linear-gradient(180deg, #17684f, var(--pm-green));
   box-shadow: 0 4px 10px -4px rgba(16, 83, 67, 0.5);
   cursor: pointer;
@@ -473,6 +477,32 @@
   box-shadow: none;
 }
 
+/* Phone + tablet: full-width search needs a taller bar and an inset Search CTA
+   so the green button never looks clipped against the pill edge. */
+@media (max-width: 1023px) {
+  .am-page-bar--slot > .pm-search {
+    height: 48px;
+    gap: 6px;
+    padding: 0 5px 0 6px;
+  }
+  .am-page-bar--slot .pm-search__icon {
+    width: 34px;
+    height: 34px;
+  }
+  .am-page-bar--slot .pm-search__field {
+    height: 100%;
+  }
+  .am-page-bar--slot .pm-search__clear {
+    width: 32px;
+    height: 32px;
+  }
+  .am-page-bar--slot .pm-search__submit {
+    height: 38px;
+    padding: 0 14px;
+    font-size: 0.84rem;
+  }
+}
+
 /* Toolbar with search: count | search | sort + filters, one line. */
 .st-controls:has(> .am-page-bar--slot) { flex-wrap: nowrap; gap: 12px; }
 .st-controls--search-only { justify-content: flex-start; }
@@ -502,14 +532,50 @@
   .hm-page .hm-doctor-head__row > .am-head-tools { grid-column: 1 / -1; order: 4; justify-self: stretch; margin-top: 4px; }
 }
 
+/* Tablet: search on its own row; count/clear + sort/filters stay one clean line
+   (avoids Sort stacking over Filters when the catalog column is narrow). */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .st-page--products .st-controls:has(> .am-page-bar--slot),
+  .st-controls:has(> .am-page-bar--slot) {
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 12px;
+    row-gap: 10px;
+  }
+
+  .st-page--products .st-controls:has(> .am-page-bar--slot) > .am-page-bar--slot,
+  .st-controls:has(> .am-page-bar--slot) > .am-page-bar--slot {
+    flex: 1 1 100%;
+    order: -1;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+  }
+
+  .st-page--products .st-controls:has(> .am-page-bar--slot) > .st-controls__info,
+  .st-controls:has(> .am-page-bar--slot) > .st-controls__info {
+    flex: 1 1 auto;
+    flex-wrap: nowrap;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .st-page--products .st-controls:has(> .am-page-bar--slot) > .st-controls__actions,
+  .st-controls:has(> .am-page-bar--slot) > .st-controls__actions {
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+  }
+
+  .st-page--products .st-controls .st-sort-select {
+    max-width: 180px;
+  }
+}
+
 @media (max-width: 767px) {
   .am-page-bar.am-page-bar--slot { flex: 1 1 100%; max-width: none; width: 100%; order: -1; }
-  .am-page-bar--slot > .pm-search { height: 48px; padding: 0 4px; }
-  .am-page-bar--slot .pm-search__icon,
-  .am-page-bar--slot .pm-search__field,
-  .am-page-bar--slot .pm-search__submit { height: 40px; }
-  .am-page-bar--slot .pm-search__icon { width: 40px; }
-  .am-page-bar--slot .pm-search__clear { width: 36px; height: 36px; }
   .st-controls:has(> .am-page-bar--slot) { flex-wrap: wrap; flex-direction: row; }
   .st-controls:has(> .am-page-bar--slot) > .st-controls__info,
   .st-controls:has(> .am-page-bar--slot) > .st-controls__actions { width: auto; flex: 1 1 auto; }

@@ -298,6 +298,19 @@
   }
 }
 
+/* Phones: hide section descriptions; keep title + content. */
+@media (max-width: 639px) {
+  .hm-page.svc-page .hm-concerns-panel:has(#cs-concerns-title) .hm-doctor-head__desc,
+  .hm-page.svc-page .hm-section:has(#cs-suggested-doctors-title) .hm-doctor-head__desc {
+    display: none;
+  }
+
+  .hm-page.svc-page .hm-concerns-panel:has(#cs-concerns-title) .hm-doctor-head,
+  .hm-page.svc-page .hm-section:has(#cs-suggested-doctors-title) .hm-doctor-head {
+    margin-bottom: 8px;
+  }
+}
+
 /* ---------- Doctors list: filters + results ---------- */
 .cs-browse {
   display: grid;
