@@ -144,6 +144,7 @@
 .cp-empty h2 { margin: 6px 0 0; font-family: var(--am-font-display); font-size: 1.05rem; color: var(--cp-ink); }
 .cp-empty p { margin: 0; max-width: 340px; font-size: 13px; color: #5d6b66; }
 .cp-empty__actions { display: flex; gap: 8px; margin-top: 8px; }
+.cp-browse-more { display: flex; justify-content: center; margin-top: 12px; padding: 4px 14px 14px; }
 .cp-skel { display: flex; flex-direction: column; gap: 10px; }
 
 /* phone checkout bar */

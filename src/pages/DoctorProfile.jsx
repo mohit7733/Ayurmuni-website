@@ -180,7 +180,7 @@ export default function DoctorProfile() {
     .replace(/\r\n/g, '\n')
     .trim();
   const shouldTruncate = about.length > 560;
-  const aboutText = shouldTruncate && !showFullAbout ? `${about.slice(0, 150)}` : about;
+  const aboutText = shouldTruncate && !showFullAbout ? `${about.slice(0, 550)}` : about;
   const languages = useMemo(() => resolveLanguages(doctor), [doctor]);
   const specializations = useMemo(() => resolveDoctorSpecializations(doctor), [doctor]);
   const healthDiseases = useMemo(() => resolveDoctorHealthDiseases(doctor), [doctor]);
@@ -188,8 +188,8 @@ export default function DoctorProfile() {
   const socialAccounts = useMemo(() => resolveSocialAccounts(doctor), [doctor]);
   const conditionKeys = new Set(healthDiseases.map((item) => item.toLowerCase()));
   const extraSpecializations = specializations.filter((item) => !conditionKeys.has(item.toLowerCase()));
-  const visibleConditions = showAllConditions ? healthDiseases : healthDiseases.slice(0, 6);
-  const hiddenConditions = Math.max(0, healthDiseases.length - 6);
+  const visibleConditions = showAllConditions ? healthDiseases : healthDiseases.slice(0, 18);
+  const hiddenConditions = Math.max(0, healthDiseases.length - 18);
   const qualification = doctorQualification(doctor);
   const locationLabel = doctorLocation(doctor);
 
@@ -439,14 +439,23 @@ export default function DoctorProfile() {
           ) : null}
 
           {healthDiseases.length > 0 ? (
-            <DetailCard id="dp-treats" title={T.treats} icon={HeartPulse} meta={String(healthDiseases.length)}>
-              <ChipRow items={visibleConditions} />
+            <DetailCard
+              id="dp-treats"
+              className="dp-treats"
+              title={T.treats}
+              icon={HeartPulse}
+              meta={String(healthDiseases.length)}
+            >
+              <ChipRow items={visibleConditions} tone="treat" />
               {hiddenConditions > 0 ? (
-                <div className="dp-more">
-                  <Button variant="link" size="sm" onClick={() => setShowAllConditions((open) => !open)}>
-                    {showAllConditions ? T.showLess : T.moreConditions(hiddenConditions)}
-                  </Button>
-                </div>
+                <button
+                  type="button"
+                  className="dp-treats__more"
+                  onClick={() => setShowAllConditions((open) => !open)}
+                  aria-expanded={showAllConditions}
+                >
+                  {showAllConditions ? T.showLess : T.moreConditions(hiddenConditions)}
+                </button>
               ) : null}
             </DetailCard>
           ) : null}
