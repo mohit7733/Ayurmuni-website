@@ -4050,7 +4050,8 @@ button.hm-pose {
   transition-delay: 300ms;
 }
 
-@media (max-width: 639px) {
+/* Phones + tablets: 4 tiles in view so the row overflows and CategoryRow can carousel. */
+@media (max-width: 1023px) {
   .hm-page .hm-services__grid {
     justify-content: flex-start;
     gap: 0;
@@ -4066,7 +4067,9 @@ button.hm-pose {
     min-width: 0;
     scroll-snap-align: start;
   }
+}
 
+@media (max-width: 639px) {
   .hm-page .hm-service {
     gap: 7px;
     padding: 10px 4px 7px;
@@ -4173,8 +4176,8 @@ button.hm-pose {
   }
 }
 
-/* Spread: first item on the content's left edge, last on the right edge */
-@media (min-width: 640px) {
+/* Desktop: spread first→last across the row. Tablets use the carousel layout above. */
+@media (min-width: 1024px) {
   .hm-page .hm-services__grid {
     justify-content: space-between;
     padding-inline: 0;

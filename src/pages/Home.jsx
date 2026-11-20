@@ -208,13 +208,13 @@ function CategoryRow({ items, renderItem }) {
     return () => io.disconnect();
   }, [items, revealed]);
 
-  // Phones only: when the row overflows, auto-advance one tile every 3s.
+  // Phones + tablets: when the row overflows, auto-advance one tile every 3s.
   // Pause on hover, touch, or user scroll; resume after a short idle.
   useEffect(() => {
     const list = listRef.current;
     if (!list || !carousel || typeof window === 'undefined') return undefined;
 
-    const phoneMq = window.matchMedia('(max-width: 639px)');
+    const narrowMq = window.matchMedia('(max-width: 1023px)');
     const reduceMq = window.matchMedia('(prefers-reduced-motion: reduce)');
     const hoverMq = window.matchMedia('(hover: hover)');
     const hold = {
@@ -255,7 +255,7 @@ function CategoryRow({ items, renderItem }) {
       hold.intervalId = 0;
     };
     const startInterval = () => {
-      if (hold.intervalId || !phoneMq.matches || reduceMq.matches || !hold.visible) return;
+      if (hold.intervalId || !narrowMq.matches || reduceMq.matches || !hold.visible) return;
       hold.intervalId = window.setInterval(tick, 3000);
     };
     const scheduleResume = () => {
@@ -312,7 +312,7 @@ function CategoryRow({ items, renderItem }) {
     list.addEventListener('touchend', onPointerUp, { passive: true });
     list.addEventListener('scroll', onScroll, { passive: true });
     document.addEventListener('visibilitychange', onVisibility);
-    const unPhone = listenMq(phoneMq, syncMode);
+    const unNarrow = listenMq(narrowMq, syncMode);
     const unReduce = listenMq(reduceMq, syncMode);
 
     const io = new IntersectionObserver(
@@ -341,7 +341,7 @@ function CategoryRow({ items, renderItem }) {
       list.removeEventListener('touchend', onPointerUp);
       list.removeEventListener('scroll', onScroll);
       document.removeEventListener('visibilitychange', onVisibility);
-      unPhone();
+      unNarrow();
       unReduce();
     };
   }, [carousel, items]);
