@@ -875,7 +875,6 @@
   font-weight: var(--am-weight-semibold);
   line-height: 1.35;
   text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .hm-doc-card__facts {

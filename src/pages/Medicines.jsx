@@ -725,7 +725,7 @@ export default function Medicines() {
             </div>
           </section>
 
-          <section className="st-filter-stock">
+          {/* <section className="st-filter-stock">
             <label className="st-filter-stock__label">
               <input
                 type="checkbox"
@@ -755,7 +755,7 @@ export default function Medicines() {
                 ) : null}
               </div>
             </div>
-          ) : null}
+          ) : null} */}
         </div>
       </Modal>
     </AppShell>
