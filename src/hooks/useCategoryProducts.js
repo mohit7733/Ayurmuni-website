@@ -22,15 +22,9 @@ export const toQuery = (filter, page, pageSize) => {
     "health_disease_id",
     "brand_name_id",
     "service_category_id",
-    "category_id",
   ].forEach((key) => {
     if (filter[key]) query[key] = filter[key];
   });
-  // Backend filters health concerns with `category_id`. Keep sending
-  // `health_category_id` too for APIs that still read the older name.
-  if (filter.health_category_id && !query.category_id) {
-    query.category_id = filter.health_category_id;
-  }
   return query;
 };
 
@@ -61,7 +55,6 @@ export default function useCategoryProducts(
         health_disease_id: filter.health_disease_id ?? "",
         brand_name_id: filter.brand_name_id ?? "",
         service_category_id: filter.service_category_id ?? "",
-        category_id: filter.category_id ?? "",
         search: filter.search ?? "",
         min_price: filter.min_price ?? null,
         max_price: filter.max_price ?? null,
@@ -77,7 +70,6 @@ export default function useCategoryProducts(
       filter.health_disease_id,
       filter.brand_name_id,
       filter.service_category_id,
-      filter.category_id,
       filter.search,
       filter.min_price,
       filter.max_price,
@@ -116,8 +108,7 @@ export default function useCategoryProducts(
           parsed.health_category_id ||
           parsed.health_disease_id ||
           parsed.brand_name_id ||
-          parsed.service_category_id ||
-          parsed.category_id,
+          parsed.service_category_id,
         );
 
         const response = await getProducts(toQuery(parsed, pageNumber, size));
@@ -156,8 +147,7 @@ export default function useCategoryProducts(
             !parsed.product_subcategory_id &&
             !parsed.health_category_id &&
             !parsed.health_disease_id &&
-            !parsed.brand_name_id &&
-            !parsed.category_id;
+            !parsed.brand_name_id;
           if (!hasFilter || (serviceOnly && fallback.length > 0)) {
             setProducts(fallback);
           } else {

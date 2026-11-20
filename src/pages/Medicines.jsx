@@ -9,7 +9,6 @@ import CartAddButton from '../components/CartAddButton';
 import { DietPlanCard, SectionHead, ViewAll } from '../components/ServiceHome';
 import { DoctorRailHeader } from '../components/HomeSections';
 import {
-  mapCatalogProductItem,
   mapProductCategory,
   normalizeApiList,
   resolveImageUrl,
@@ -17,13 +16,7 @@ import {
 import { getServiceCategoryId } from '../home/serviceCategories';
 import useDashboardCategories from '../hooks/useDashboardCategories';
 import useCategoryProducts from '../hooks/useCategoryProducts';
-import {
-  getHealthCategories,
-  getHealthDiseases,
-  getProductByVariant,
-  getProducts,
-  PRODUCT_PAGE_SIZE,
-} from '../services/productService';
+import { getHealthCategories, getProductByVariant } from '../services/productService';
 import { getBrands, listBrands, mapBrandItem } from '../services/medicineService';
 import { getOrders, normalizeOrdersList } from '../services/orderService';
 import { catalogCardFromProduct, mapOrdersToRecentProducts } from '../profile/map';
@@ -58,6 +51,7 @@ export default function Medicines() {
   const [params, setParams] = useSearchParams();
   const concernId = params.get('concern') || '';
   const concernName = params.get('name') || '';
+  // Same URL shape as /medicines/category?mode=health&category=<health_category_id>
   const categoryId = params.get('category') || '';
   const categoryName = params.get('name') || '';
   const { categories: dashboardCategories, loading: homeLoading } = useDashboardCategories();
@@ -65,8 +59,6 @@ export default function Medicines() {
     () => getServiceCategoryId(dashboardCategories, 'medicine'),
     [dashboardCategories],
   );
-  const [concerns, setConcerns] = useState([]);
-  const [concernsLoading, setConcernsLoading] = useState(true);
   const [sortBy, setSortBy] = useState('relevance');
   const [priceRange, setPriceRange] = useState([0, 10000]);
   const [minRating, setMinRating] = useState(0);
@@ -77,10 +69,12 @@ export default function Medicines() {
     const timer = setTimeout(() => setQuery(search.trim()), 300);
     return () => clearTimeout(timer);
   }, [search]);
-
-  const sharedFilter = useMemo(() => {
+  // Same filter as /medicines/category health mode: one products call with
+  // service_category_id + health_category_id (not per-disease requests).
+  const productFilter = useMemo(() => {
     const next = {};
     if (medicineCategoryId) next.service_category_id = medicineCategoryId;
+    if (categoryId) next.health_category_id = categoryId;
     if (query) next.search = query;
     if (priceRange[0] > 0) next.min_price = priceRange[0];
     if (priceRange[1] < 10000) next.max_price = priceRange[1];
@@ -88,83 +82,15 @@ export default function Medicines() {
     const sort = toProductApiSort(sortBy);
     if (sort) next.sort = sort;
     return next;
-  }, [medicineCategoryId, query, priceRange, minRating, sortBy]);
+  }, [medicineCategoryId, categoryId, query, priceRange, minRating, sortBy]);
+  const { products, loading, loadingMore, hasMore, loadMore } = useCategoryProducts(
+    productFilter,
+    [],
+    { enabled: Boolean(medicineCategoryId) || !homeLoading },
+  );
 
-  // Unfiltered / search catalog (no health concern selected).
-  const catalogQuery = useCategoryProducts(sharedFilter, [], {
-    enabled: !categoryId && (Boolean(medicineCategoryId) || !homeLoading),
-  });
-
-  // Medicines are linked through health diseases. `health_category_id` alone
-  // returns an empty list for the medicine service, so expand the concern.
-  const [concernProducts, setConcernProducts] = useState([]);
-  const [concernLoading, setConcernLoading] = useState(false);
-  useEffect(() => {
-    if (!categoryId) {
-      setConcernProducts([]);
-      setConcernLoading(false);
-      return undefined;
-    }
-    let alive = true;
-    setConcernLoading(true);
-    setConcernProducts([]);
-    (async () => {
-      try {
-        const diseaseRes = await getHealthDiseases({ category_id: categoryId });
-        if (!alive) return;
-        const diseaseIds = [
-          ...new Set(
-            normalizeApiList(diseaseRes)
-              .map((item) => String(item?.id ?? item?.health_disease_id ?? '').trim())
-              .filter(Boolean),
-          ),
-        ];
-        if (!diseaseIds.length) {
-          setConcernProducts([]);
-          return;
-        }
-        const pages = await Promise.all(
-          diseaseIds.map((diseaseId) =>
-            getProducts({
-              ...sharedFilter,
-              health_disease_id: diseaseId,
-              page: 1,
-              page_size: PRODUCT_PAGE_SIZE,
-            }).catch(() => null),
-          ),
-        );
-        if (!alive) return;
-        const seen = new Set();
-        const merged = [];
-        pages.forEach((response) => {
-          normalizeApiList(response)
-            .map(mapCatalogProductItem)
-            .filter(Boolean)
-            .forEach((item) => {
-              const key = String(item.variant_id ?? item.id ?? '');
-              if (!key || seen.has(key)) return;
-              seen.add(key);
-              merged.push(item);
-            });
-        });
-        setConcernProducts(merged);
-      } catch {
-        if (alive) setConcernProducts([]);
-      } finally {
-        if (alive) setConcernLoading(false);
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [categoryId, sharedFilter]);
-
-  const products = categoryId ? concernProducts : catalogQuery.products;
-  const loading = categoryId ? concernLoading : catalogQuery.loading;
-  const loadingMore = categoryId ? false : catalogQuery.loadingMore;
-  const hasMore = categoryId ? false : catalogQuery.hasMore;
-  const loadMore = catalogQuery.loadMore;
-
+  const [concerns, setConcerns] = useState([]);
+  const [concernsLoading, setConcernsLoading] = useState(true);
   const [brands, setBrands] = useState([]);
   const [recent, setRecent] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
@@ -325,7 +251,7 @@ export default function Medicines() {
   const showSkeleton = !catalogReady && loading && products.length === 0;
   const catalogLoading = loading && products.length === 0;
 
-  const selectCategory = (id, name) => {
+  const selectConcern = (id, name) => {
     const next = new URLSearchParams(params);
     next.delete('concern');
     if (!id) {
@@ -343,12 +269,12 @@ export default function Medicines() {
     document.getElementById('med-all')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const selectConcern = (item) => selectCategory(item?.id, item?.name);
-
-  const showAllMedicines = () => selectCategory('', '');
+  const showAllMedicines = () => selectConcern('', '');
 
   const openCategoryBrowse = (extra = {}) => {
-    const query = new URLSearchParams({ mode: extra.category ? 'health' : 'medicine' });
+    const query = new URLSearchParams({
+      mode: extra.category ? 'health' : 'medicine',
+    });
     if (medicineCategoryId) query.set('service', medicineCategoryId);
     if (extra.category) query.set('category', extra.category);
     if (extra.name) query.set('name', extra.name);
@@ -365,13 +291,13 @@ export default function Medicines() {
     setParams(next, { replace: true });
   }, [concernId, concernName]);
 
-  const activeCategoryName =
+  const activeConcernName =
     categoryName ||
     concerns.find((item) => String(item.id) === String(categoryId))?.name ||
     '';
-  const catalogTitle = categoryId ? activeCategoryName || 'Medicines' : T.allMedicines;
+  const catalogTitle = categoryId ? activeConcernName || 'Medicines' : T.allMedicines;
   const catalogText = categoryId
-    ? `Medicines for ${activeCategoryName || 'this concern'}.`
+    ? `Medicines for ${activeConcernName || 'this concern'}.`
     : T.allMedicinesText;
 
   const placeBar = showSkeleton ? 'top' : 'all';
@@ -436,7 +362,7 @@ export default function Medicines() {
                           </button>
                         </li>
                         {concerns.map((item) => {
-                          const image = resolveImageUrl(item);
+                          const image = resolveImageUrl(item) || item.image_url;
                           const on = String(categoryId) === String(item.id);
                           const initial = String(item.name || '?').trim().charAt(0).toUpperCase();
                           return (
@@ -445,7 +371,7 @@ export default function Medicines() {
                                 type="button"
                                 className={on ? 'is-on' : ''}
                                 aria-pressed={on}
-                                onClick={() => selectCategory(item.id, item.name)}
+                                onClick={() => selectConcern(item.id, item.name)}
                               >
                                 <span className="st-cat-filter__mark" aria-hidden>
                                   {image ? <img src={image} alt="" /> : initial}
@@ -637,7 +563,7 @@ export default function Medicines() {
                         image={item.image_url}
                         icon={Pill}
                         label={item.name}
-                        onClick={() => selectConcern(item)}
+                        onClick={() => selectConcern(item.id, item.name)}
                       />
                     ))}
                   </ConcernCarousel>
