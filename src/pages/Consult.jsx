@@ -289,7 +289,7 @@ export default function Consult() {
                   <SectionHead
                     id="cs-doctors-title"
                     title={T.topDoctorsTitle}
-                    description={T.doctorsText}
+                    // description={T.doctorsText}
                     action={
                       <div className="am-head-tools">
                         {headActions}

@@ -44,9 +44,9 @@ const normalizeBrand = (value) =>
 const itemServiceId = (item) =>
   String(
     item?.service_category_id ??
-      item?.service_category?.id ??
-      item?.serviceCategoryId ??
-      '',
+    item?.service_category?.id ??
+    item?.serviceCategoryId ??
+    '',
   );
 
 export default function CategoryProducts() {
@@ -54,13 +54,15 @@ export default function CategoryProducts() {
   const location = useLocation();
   const [params, setSearchParams] = useSearchParams();
   const brandId = params.get('brand') || '';
-  // Featured brands (View all and a brand tile) open mode=both: products and medicines together.
+  // Only mode=both mixes products + medicines (featured brands / View all brands).
+  // A brand filter alone stays inside the current catalog (medicines OR products).
   const isBothMode = params.get('mode') === 'both';
-  const isBrandMix = isBothMode || Boolean(brandId);
+  const isBrandMix = isBothMode;
   const isMedicine = !isBrandMix && location.pathname.startsWith('/medicines');
   const shellTab = isMedicine ? 'medicines' : 'products';
   const detailBase = isMedicine ? '/medicines' : '/products';
   // On the mixed brands page, category vs concern lives in `facet` so `mode` stays `both`.
+  // mode=medicine means "shop medicines by category" (same facet as product categories).
   const mode = isBothMode
     ? params.get('facet') === 'health'
       ? 'health'
@@ -68,8 +70,8 @@ export default function CategoryProducts() {
     : params.get('mode') === 'health'
       ? 'health'
       : 'product';
-  // Brand browse is always mixed — ignore service so products + medicines both load.
-  // The medicines route always uses the live Medicine service, even if the link carries a stale id.
+  // Medicines route always uses the live Medicine service. Products use the URL service.
+  // Mixed brand browse ignores service so both catalogs can load.
   const urlService = params.get('service') || null;
   const initialCategory = params.get('category') || 'all';
   const title =
@@ -110,6 +112,16 @@ export default function CategoryProducts() {
     next.set('mode', 'both');
     setSearchParams(next, { replace: true });
   }, [params, setSearchParams]);
+
+  // Keep /medicines URLs on mode=medicine (category facet), not mode=product.
+  useEffect(() => {
+    if (!isMedicine) return;
+    const current = params.get('mode');
+    if (current === 'medicine' || current === 'health') return;
+    const next = new URLSearchParams(params);
+    next.set('mode', 'medicine');
+    setSearchParams(next, { replace: true });
+  }, [isMedicine, params, setSearchParams]);
 
   const brandReady = isBrandMix && !dashboardLoading;
   const canSplitBrand =
@@ -206,11 +218,14 @@ export default function CategoryProducts() {
     if (brandId) setBrandNames([]);
   }, [brandId]);
 
+  // Category chips must match the active catalog: medicines → medicine categories only.
   const productCategoryServiceId = isBrandMix
     ? productsCategoryId
-    : mode === 'product'
-      ? serviceCategoryId
-      : productsCategoryId;
+    : isMedicine
+      ? serviceCategoryId || medicineCategoryId
+      : mode === 'product'
+        ? serviceCategoryId
+        : productsCategoryId;
 
   const categoryCatalog =
     isBrandMix && params.get('catalog') === 'medicine' ? 'medicine' : 'product';
@@ -257,19 +272,20 @@ export default function CategoryProducts() {
   }, [isBrandMix, serviceCategoryId]);
 
   const productFilter = useMemo(() => {
-    if (brandId) {
-      return { brand_name_id: brandId };
-    }
+    // Brand is a filter inside the current catalog — never drop service / category scope.
+    const brandScope = brandId ? { brand_name_id: brandId } : {};
     // `service` is the catalog (medicines vs products). Keep it on "All", not only after a category is picked.
     const serviceScope = serviceCategoryId ? { service_category_id: serviceCategoryId } : {};
     if (mode === 'health') {
       return {
+        ...brandScope,
         ...(activeCategoryId ? { health_category_id: activeCategoryId } : {}),
         ...(selectedSubcategoryId ? { health_disease_id: selectedSubcategoryId } : {}),
         ...serviceScope,
       };
     }
     return {
+      ...brandScope,
       ...(activeCategoryId ? { id: activeCategoryId } : {}),
       ...(selectedSubcategoryId ? { product_subcategory_id: selectedSubcategoryId } : {}),
       ...serviceScope,
@@ -422,9 +438,9 @@ export default function CategoryProducts() {
 
   const loading = isBrandMix
     ? dashboardLoading ||
-      (canSplitBrand
-        ? brandProductCatalog.loading || brandMedicineCatalog.loading
-        : brandUnscopedCatalog.loading)
+    (canSplitBrand
+      ? brandProductCatalog.loading || brandMedicineCatalog.loading
+      : brandUnscopedCatalog.loading)
     : regularCatalog.loading;
   const loadingMore = isBrandMix
     ? canSplitBrand
@@ -475,22 +491,22 @@ export default function CategoryProducts() {
     };
     const brandMatched = brandId
       ? products.filter((product) => {
-          const ids = [
-            product?.brand_name_id,
-            product?.brand_id,
-            product?.brand?.id,
-            typeof product?.brand_name === 'object' ? product?.brand_name?.id : null,
-          ]
-            .filter((v) => v !== undefined && v !== null && v !== '')
-            .map(String);
-          if (ids.includes(String(brandId))) return true;
-          const name = normalizeBrand(
-            typeof product?.brand_name === 'object'
-              ? product?.brand_name?.name || product?.brand_name?.brand_name
-              : product?.brand_name || product?.brand?.name,
-          );
-          return Boolean(brandTitleKey) && name === brandTitleKey;
-        })
+        const ids = [
+          product?.brand_name_id,
+          product?.brand_id,
+          product?.brand?.id,
+          typeof product?.brand_name === 'object' ? product?.brand_name?.id : null,
+        ]
+          .filter((v) => v !== undefined && v !== null && v !== '')
+          .map(String);
+        if (ids.includes(String(brandId))) return true;
+        const name = normalizeBrand(
+          typeof product?.brand_name === 'object'
+            ? product?.brand_name?.name || product?.brand_name?.brand_name
+            : product?.brand_name || product?.brand?.name,
+        );
+        return Boolean(brandTitleKey) && name === brandTitleKey;
+      })
       : products;
     const scoped = brandMatched.filter(inService);
     let filtered = applyProductFilters({
@@ -544,14 +560,15 @@ export default function CategoryProducts() {
     productsCategoryId,
   ]);
 
+  const defaultCatalog = isMedicine ? 'medicine' : 'product';
   const categoryList = [
-    { id: 'all', name: T.all, image_url: '', catalog: 'product' },
+    { id: 'all', name: T.all, image_url: '', catalog: defaultCatalog },
     ...(isBrandMix
       ? [
-          ...topCategories.map((item) => ({ ...item, catalog: 'product' })),
-          ...medicineCategories.map((item) => ({ ...item, catalog: 'medicine' })),
-        ]
-      : topCategories.map((item) => ({ ...item, catalog: 'product' }))),
+        ...topCategories.map((item) => ({ ...item, catalog: 'product' })),
+        ...medicineCategories.map((item) => ({ ...item, catalog: 'medicine' })),
+      ]
+      : topCategories.map((item) => ({ ...item, catalog: defaultCatalog }))),
   ];
   const concernList = [
     { id: 'all', name: T.all, image_url: '' },
@@ -574,6 +591,12 @@ export default function CategoryProducts() {
     Boolean(activeCategoryId) ||
     Boolean(query);
 
+  const scopedBrowseMode = () => {
+    if (isBothMode) return 'both';
+    if (isMedicine) return 'medicine';
+    return 'product';
+  };
+
   const clearFilters = () => {
     setPriceRange([0, 10000]);
     setMinRating(0);
@@ -590,11 +613,11 @@ export default function CategoryProducts() {
         category: null,
         facet: null,
         catalog: null,
-        mode: isBothMode ? 'both' : brandId || isMedicine ? mode : 'product',
+        mode: scopedBrowseMode(),
         name: brandId
           ? brandOptions.find((b) => String(b.id) === String(brandId))?.name ||
-            params.get('name') ||
-            null
+          params.get('name') ||
+          null
           : isBothMode
             ? params.get('name') || 'Brands'
             : null,
@@ -632,21 +655,36 @@ export default function CategoryProducts() {
       patchParams({
         brand: null,
         name: isBothMode ? mixedPageName : keepName || null,
-        mode: isBothMode ? 'both' : keepCategory ? mode : params.get('mode') || 'product',
+        mode: isBothMode
+          ? 'both'
+          : keepCategory
+            ? mode === 'health'
+              ? 'health'
+              : isMedicine
+                ? 'medicine'
+                : 'product'
+            : scopedBrowseMode(),
         facet: isBothMode && keepCategory && mode === 'health' ? 'health' : null,
       });
       return;
     }
     if (String(brand.id) === String(brandId)) return;
+    // Brand filter stays in the current catalog unless this is already mode=both.
     patchParams({
       brand: brand.id,
       name: brand.name,
-      mode: isBothMode ? 'both' : params.get('mode') || 'product',
+      mode: isBothMode
+        ? 'both'
+        : mode === 'health'
+          ? 'health'
+          : isMedicine
+            ? 'medicine'
+            : 'product',
     });
     setCatalogKind('all');
   };
 
-  const selectCategory = (id, name, catalog = 'product') => {
+  const selectCategory = (id, name, catalog = defaultCatalog) => {
     setSelectedSubcategoryId(null);
     const medicinePick = isBothMode && catalog === 'medicine' && id && id !== 'all';
     if (!id || id === 'all') {
@@ -654,7 +692,7 @@ export default function CategoryProducts() {
         category: null,
         catalog: null,
         facet: null,
-        mode: isBothMode ? 'both' : 'product',
+        mode: scopedBrowseMode(),
         name: brandId ? currentBrandName || null : isBothMode ? mixedPageName : null,
       });
       setSelectedCategoryId('all');
@@ -664,7 +702,8 @@ export default function CategoryProducts() {
       category: id,
       catalog: medicinePick ? 'medicine' : null,
       facet: null,
-      mode: isBothMode ? 'both' : 'product',
+      // Category facet: keep medicines on medicine mode so concerns stay medicine-scoped in URL.
+      mode: isBothMode ? 'both' : isMedicine ? 'medicine' : 'product',
       name: brandId ? currentBrandName || name || null : isBothMode ? mixedPageName : name || null,
     });
     setSelectedCategoryId(id);
@@ -677,7 +716,7 @@ export default function CategoryProducts() {
         category: null,
         catalog: null,
         facet: null,
-        mode: isBothMode ? 'both' : 'product',
+        mode: scopedBrowseMode(),
         name: brandId ? currentBrandName || null : isBothMode ? mixedPageName : null,
       });
       setSelectedCategoryId('all');
@@ -693,7 +732,8 @@ export default function CategoryProducts() {
     setSelectedCategoryId(id);
   };
 
-  const isCategoryChipSelected = (id, catalog = 'product') => {
+  const isCategoryChipSelected = (id, catalog = defaultCatalog) => {
+    // Internal `mode` is "product" for both product and medicine category facets.
     if (id === 'all') return mode !== 'product' || !activeCategoryId;
     if (mode !== 'product' || String(selectedCategoryId) !== String(id)) return false;
     if (!isBrandMix) return true;
@@ -820,7 +860,7 @@ export default function CategoryProducts() {
                 </div>
               ) : null}
 
-              {isBrandMix ? (
+              {isBrandMix && params.get('mode') == 'both' ? (
                 <div className={`cp-aside-group${openFilterPanel === 'type' ? ' is-open' : ''}`}>
                   <button
                     type="button"
@@ -892,8 +932,8 @@ export default function CategoryProducts() {
                       <em>
                         {mode === 'product' && activeCategoryId
                           ? [...topCategories, ...medicineCategories].find(
-                              (c) => String(c.id) === String(activeCategoryId),
-                            )?.name || 'Selected'
+                            (c) => String(c.id) === String(activeCategoryId),
+                          )?.name || 'Selected'
                           : 'All categories'}
                       </em>
                     </span>
@@ -914,7 +954,7 @@ export default function CategoryProducts() {
                           isBrandMix && item.catalog === 'product' && item.id !== 'all' &&
                           categoryList[index - 1]?.id === 'all';
                         const showMedicineHead =
-                          isBrandMix && item.catalog === 'medicine' &&
+                          isBrandMix && item.catalog === 'medicine' && params.get('mode') == 'both' &&
                           categoryList[index - 1]?.catalog !== 'medicine';
                         return (
                           <li key={`${item.catalog}-${item.id}`}>
@@ -931,7 +971,8 @@ export default function CategoryProducts() {
                               </span>
                               <span className="st-cat-filter__copy">
                                 <strong>{item.id === 'all' ? 'All categories' : item.name}</strong>
-                                {item.id === 'all' ? (
+                                
+                                {item.id === 'all' && params.get('mode') == 'both' ? (
                                   <em>{isBrandMix ? 'Products and medicines' : 'Any category'}</em>
                                 ) : null}
                               </span>
@@ -944,7 +985,8 @@ export default function CategoryProducts() {
                 </div>
               ) : null}
 
-              {concernList.length > 1 ? (
+              {concernList.length > 1 &&
+              (isBrandMix || isMedicine || params.get('mode') === 'health') ? (
                 <div className={`cp-aside-group${openFilterPanel === 'concern' ? ' is-open' : ''}`}>
                   <button
                     type="button"
@@ -959,7 +1001,7 @@ export default function CategoryProducts() {
                       <em>
                         {mode === 'health' && activeCategoryId
                           ? healthCategories.find((c) => c.id === activeCategoryId)?.name ||
-                            'Selected'
+                          'Selected'
                           : 'All concerns'}
                       </em>
                     </span>
@@ -1159,7 +1201,7 @@ export default function CategoryProducts() {
             <FilterRatingChoices value={minRating} onChange={setMinRating} />
           </section>
 
-          <section className="st-filter-section" aria-labelledby="st-filter-dosha-title">
+          {/* <section className="st-filter-section" aria-labelledby="st-filter-dosha-title">
             <div className="st-filter-section__heading">
               <h3 id="st-filter-dosha-title">Dosha type</h3>
               <span>Ayurvedic constitution</span>
@@ -1177,7 +1219,7 @@ export default function CategoryProducts() {
                 </button>
               ))}
             </div>
-          </section>
+          </section> */}
 
           <section
             className="st-filter-section st-filter-section--brands"
@@ -1252,7 +1294,7 @@ export default function CategoryProducts() {
             </div>
           </section>
 
-          <section className="st-filter-stock">
+          {/* <section className="st-filter-stock">
             <label className="st-filter-stock__label">
               <input
                 type="checkbox"
@@ -1260,13 +1302,19 @@ export default function CategoryProducts() {
                 onChange={(e) => setInStockOnly(e.target.checked)}
               />
               <span>
-                <strong>{isBrandMix ? 'In-stock items only' : 'In-stock products only'}</strong>
+                <strong>
+                  {isBrandMix
+                    ? 'In-stock items only'
+                    : isMedicine
+                      ? 'In-stock medicines only'
+                      : 'In-stock products only'}
+                </strong>
                 <small>Hide items that are currently unavailable</small>
               </span>
             </label>
-          </section>
+          </section> */}
 
-          {hasActiveFilters ? (
+          {/* {hasActiveFilters ? (
             <div className="st-filter-summary" aria-live="polite">
               <strong>Active filters</strong>
               <div className="st-filter-summary__items">
@@ -1299,7 +1347,7 @@ export default function CategoryProducts() {
                 ) : null}
               </div>
             </div>
-          ) : null}
+          ) : null} */}
         </div>
       </Modal>
     </AppShell>

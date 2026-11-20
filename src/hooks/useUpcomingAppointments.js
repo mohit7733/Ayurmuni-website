@@ -8,38 +8,33 @@ import {
   sortAppointmentsByDateTime,
 } from '../consult/appointmentUtils';
 
-/** Statuses home + appointments "upcoming" load — `timeframe=upcoming` alone misses many of these. */
-const UPCOMING_FETCH_STATUSES = ['confirmed', 'pending', 'reschedule', 'rescheduled', 'completed'];
-
 /**
  * Same list Home uses for the join banner / "+N more" count.
- * Fetches by status (not timeframe=upcoming) and keeps active + still-open slots.
+ * Uses API `timeframe=upcoming` (optional `status`) per consultation-history docs.
  */
-export async function fetchUpcomingAppointmentList(pageSize = 50) {
-  const responses = await Promise.all(
-    UPCOMING_FETCH_STATUSES.map((status) =>
-      getConsultHistory({
-        page: 1,
-        page_size: pageSize,
-        status,
-      }).catch(() => null),
-    ),
-  );
-  const listOf = (res) => {
-    const results = res?.data?.results || res?.results || [];
-    return Array.isArray(results) ? results : [];
-  };
+export async function fetchUpcomingAppointmentList(pageSize = 50, { status } = {}) {
+  const statusFilter = String(status || '').trim().toLowerCase();
+  const res = await getConsultHistory({
+    page: 1,
+    page_size: pageSize,
+    timeframe: 'upcoming',
+    ...(statusFilter && statusFilter !== 'all' ? { status: statusFilter } : {}),
+  }).catch(() => null);
+
+  const results = res?.data?.results || res?.results || [];
+  const list = Array.isArray(results) ? results : [];
   const seen = new Set();
-  const active = responses.flatMap(listOf).filter((item) => {
+  const active = list.filter((item) => {
     const key = String(item?.appointment_id || item?.consultation_id || '');
     if (key && seen.has(key)) return false;
     if (key) seen.add(key);
     const callLive =
-      String(item?.call_status || item?.appointment?.call_status || '').toLowerCase() === 'in_progress';
+      String(item?.call_status || item?.appointment?.call_status || '').toLowerCase() ===
+      'in_progress';
     if (!callLive && isAppointmentInPast(item)) return false;
-    const status = String(item?.status || item?.appointment_status || '').toLowerCase();
-    if (status === 'completed') return true;
-    return callLive || isActiveAppointmentStatus(status);
+    const rowStatus = String(item?.status || item?.appointment_status || '').toLowerCase();
+    if (rowStatus === 'completed') return true;
+    return callLive || isActiveAppointmentStatus(rowStatus);
   });
   return sortAppointmentsByDateTime(active.map(mapAppointment));
 }

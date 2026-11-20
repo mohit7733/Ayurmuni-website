@@ -134,6 +134,7 @@ import AppShell from "./components/AppShell";
 import NetworkGuard from "./components/NetworkGuard";
 import RedirectIfSignedIn from "./components/RedirectIfSignedIn";
 import RequireAuth from "./components/RequireAuth";
+import ComingSoonGate from "./components/ComingSoonGate";
 import "./design/tokens.css";
 import "./index.css";
 import "./styles.css";
@@ -279,6 +280,7 @@ export default function App() {
             <NavBinder />
             <ScrollToTop />
             <MetaPixelPageView />
+            <ComingSoonGate />
             <ToastHost />
             <GlobalLoadBar />
             <PushSessionSync />

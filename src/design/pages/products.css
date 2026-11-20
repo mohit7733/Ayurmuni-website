@@ -1016,8 +1016,8 @@
     position: sticky;
     top: calc(var(--am-header-h, 64px) + 16px);
     align-self: start;
-    max-height: calc(100vh - var(--am-header-h, 64px) - 32px);
-    max-height: calc(100dvh - var(--am-header-h, 64px) - 32px);
+    max-height: calc(100vh - var(--am-header-h, 64px) - 82px);
+    max-height: calc(100dvh - var(--am-header-h, 64px) - 150px);
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-width: thin;

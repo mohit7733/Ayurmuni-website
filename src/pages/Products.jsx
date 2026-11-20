@@ -507,10 +507,10 @@ export default function Products() {
             max={priceRange[1]}
             onChange={setPriceRange}
             headingId="st-filter-price-title"
-            className="st-filter-section--wide"
+            // className="st-filter-section--wide"
           />
 
-          <section className="st-filter-section st-filter-section--wide" aria-labelledby="st-filter-rating-title">
+          <section className="st-filter-section " aria-labelledby="st-filter-rating-title">
             <div className="st-filter-section__heading">
               <h3 id="st-filter-rating-title">Customer rating</h3>
               <span>Minimum rating</span>
@@ -518,7 +518,7 @@ export default function Products() {
             <FilterRatingChoices value={minRating} onChange={setMinRating} />
           </section>
 
-          <section className="st-filter-stock">
+          {/* <section className="st-filter-stock">
             <label className="st-filter-stock__label">
               <input
                 type="checkbox"
@@ -545,7 +545,7 @@ export default function Products() {
                 {inStockOnly ? <span>In stock only</span> : null}
               </div>
             </div>
-          ) : null}
+          ) : null} */}
         </div>
       </Modal>
     </AppShell>

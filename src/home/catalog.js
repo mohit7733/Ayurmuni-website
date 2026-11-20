@@ -80,6 +80,23 @@ export const resolveImageUrl = (item) => {
       return absolutizeMediaUrl(uri);
     }
   }
+  // Wishlist / catalog often only send images in `media: [{ media_url, media_type }]`.
+  const mediaList = Array.isArray(item?.media)
+    ? item.media
+    : Array.isArray(item?.images)
+      ? item.images
+      : [];
+  if (mediaList.length) {
+    const preferred =
+      mediaList.find((entry) => {
+        const type = String(entry?.media_type || entry?.type || '').toLowerCase();
+        return !type || type.startsWith('image');
+      }) || mediaList[0];
+    const uri = mediaUri(preferred);
+    if (uri && !/example\.com|placeholder/i.test(uri)) {
+      return absolutizeMediaUrl(uri);
+    }
+  }
   return '';
 };
 

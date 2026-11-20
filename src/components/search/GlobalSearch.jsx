@@ -180,7 +180,7 @@ export default function GlobalSearch() {
         }
         case 'brand': {
           const id = String(raw.brand_id ?? raw.brand_name_id ?? raw.id ?? hit.id);
-          navigate(`/products/category?mode=product&brand=${encodeURIComponent(id)}&name=${encodeURIComponent(hit.title)}`);
+          navigate(`/products/category?mode=both&brand=${encodeURIComponent(id)}&name=${encodeURIComponent(hit.title)}`);
           break;
         }
         case 'category': {

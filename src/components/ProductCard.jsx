@@ -180,7 +180,7 @@ export default function ProductCard({
           <CartAddButton item={item} compact={app} className={app ? "am-cart-btn--sm" : ""} />
         ) : out ? (
           <button type="button" className="am-product-card__add" disabled>
-            Unavailable
+            Out of stock
           </button>
         ) : cartQty > 0 ? (
           <div
