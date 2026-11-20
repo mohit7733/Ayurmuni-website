@@ -219,6 +219,7 @@ export default function DietPlan() {
 
   const renderMeal = (meal, index) => {
     const done = isStarted && meal.status === 'done';
+    const src = meal.image || cover;
     return (
       <li key={meal.id} style={{ '--i': index }}>
         <button
@@ -231,7 +232,16 @@ export default function DietPlan() {
           }
         >
           <span className="dt-meal__img">
-            <img src={meal.image || cover} alt="" loading="lazy" />
+            {src ? (
+              <img
+                src={src}
+                alt=""
+                loading="lazy"
+                onError={(event) => {
+                  event.currentTarget.style.visibility = 'hidden';
+                }}
+              />
+            ) : null}
           </span>
           <span className="dt-meal__body">
             <small className="dt-meal__type">
@@ -250,6 +260,17 @@ export default function DietPlan() {
       </li>
     );
   };
+
+  const guidanceCard = (
+    <DetailCard id="dt-guide" title="Need personal guidance?" icon={Stethoscope} tone="accent">
+      <p className="dx-prose">
+        An Ayurveda doctor can tailor this plan to your prakriti, routine and health goals.
+      </p>
+      <Button variant="secondary" onClick={() => navigate('/consult')}>
+        Consult a doctor
+      </Button>
+    </DetailCard>
+  );
 
   const payment = useDietStartPayment({
     plan,
@@ -518,6 +539,7 @@ export default function DietPlan() {
             </DetailHero>
 
             <DetailLayout
+              className="dt-plan-layout"
               aside={
                 <>
                   <DetailCard id="dt-glance" title="At a glance" icon={Salad}>
@@ -543,14 +565,7 @@ export default function DietPlan() {
                       ]}
                     />
                   </DetailCard>
-                  <DetailCard id="dt-guide" title="Need personal guidance?" icon={Stethoscope} tone="accent">
-                    <p className="dx-prose">
-                      An Ayurveda doctor can tailor this plan to your prakriti, routine and health goals.
-                    </p>
-                    <Button variant="secondary" onClick={() => navigate('/consult')}>
-                      Consult a doctor
-                    </Button>
-                  </DetailCard>
+                  {isStarted ? guidanceCard : null}
                 </>
               }
             >
@@ -758,7 +773,9 @@ export default function DietPlan() {
                     {isStarted ? (
                       <p className="dt-plan__hint">Open a meal to see what to eat and mark it done.</p>
                     ) : null}
-                    <ul className="dt-meals">{previewMeals.map(renderMeal)}</ul>
+                    <ul className={`dt-meals${!isStarted ? ' dt-meals--preview' : ''}`}>
+                      {previewMeals.map(renderMeal)}
+                    </ul>
                   </>
                 ) : (
                   <DetailEmpty
@@ -768,6 +785,8 @@ export default function DietPlan() {
                   />
                 )}
               </DetailCard>
+
+              {!isStarted ? guidanceCard : null}
 
               {isStarted && isPlanFullyComplete ? (
                 <div className="dt-banner" role="status">

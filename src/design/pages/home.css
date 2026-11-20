@@ -3499,6 +3499,14 @@ button.hm-pose {
     radial-gradient(80% 80% at 50% 30%, #fff, #f3eee4);
 }
 
+.hm-page .hm-diet-card .hm-meal__media img {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  object-position: center;
+}
+
 .hm-page .hm-diet-card__badge {
   position: absolute;
   top: 8px;

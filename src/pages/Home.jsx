@@ -78,7 +78,7 @@ import '../design/pages/dummy-offers.css';
 import '../design/pages/plan-cards.css';
 import { isCarePlan, planDiscount, railThemeTones } from '../packages/planTheme';
 import '../design/pages/orange-lab.css';
-import { getDietPlanCoverUrl, getDietPlanRatingLabel } from '../diet/utils';
+import { getDietPlanCoverCandidates, getDietPlanRatingLabel } from '../diet/utils';
 
 let prakritiModalShownThisSession = false;
 let diseaseModalShownThisSession = false;
@@ -465,7 +465,14 @@ function dietCaloriesLabel(plan) {
 }
 
 function DietPlanCard({ item, onClick }) {
-  const cover = getDietPlanCoverUrl(item);
+  const covers = useMemo(() => {
+    const list = getDietPlanCoverCandidates(item);
+    const extra = resolveImageUrl(item);
+    if (extra && !list.includes(extra)) list.push(extra);
+    return list;
+  }, [item]);
+  const [coverIndex, setCoverIndex] = useState(0);
+  const cover = covers[coverIndex] || '';
   const season = shortLabel(item.season);
   const prakriti = shortLabel(item.prakriti);
   const duration = dietDurationLabel(item);
@@ -483,7 +490,13 @@ function DietPlanCard({ item, onClick }) {
     <article className="hm-meal hm-diet-card">
       <div className="hm-meal__media">
         {cover ? (
-          <img src={cover} alt="" loading="lazy" decoding="async" />
+          <img
+            src={cover}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            onError={() => setCoverIndex((i) => i + 1)}
+          />
         ) : (
           <Salad size={28} aria-hidden />
         )}

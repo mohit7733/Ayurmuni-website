@@ -167,7 +167,9 @@ export const mapDietPlanForHome = (item) => ({
   title: String(item?.name ?? 'Diet Plan'),
   name: String(item?.name ?? 'Diet Plan'),
   short_description: String(item?.season || item?.subtitle || item?.short_description || '').trim(),
-  thumbnail_url: getDietPlanCoverUrl(item) || item?.thumbnail_url || item?.image_url || '',
+  thumbnail_url:
+    getDietPlanCoverUrl(item) ||
+    absolutizeMediaUrl(item?.thumbnail_url || item?.image_url || ''),
   type: 'diet',
 });
 
