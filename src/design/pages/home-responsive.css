@@ -194,22 +194,27 @@
   }
 }
 
-/* Hide the Yoga for Mind & Body section description on phones only.
-   Scoped to the yoga well (.hm-well--move) so Diet and other section
-   descriptions stay visible. Title + View all sit on one row. */
+/* Hide Diet / Yoga section descriptions on phones only.
+   Title + View all sit on one row. */
 @media (max-width: 639px) {
   .hm-page:not(.svc-page) .hm-wellness .hm-well--move .hm-well__text,
-  .hm-page:not(.svc-page) .hm-well--move .hm-well__text {
+  .hm-page:not(.svc-page) .hm-well--move .hm-well__text,
+  .hm-page:not(.svc-page) .hm-wellness .hm-well--nourish .hm-well__text,
+  .hm-page:not(.svc-page) .hm-well--nourish .hm-well__text {
     display: none;
   }
 
   .hm-page:not(.svc-page) .hm-wellness .hm-well--move .hm-well__head,
-  .hm-page:not(.svc-page) .hm-well--move .hm-well__head {
+  .hm-page:not(.svc-page) .hm-well--move .hm-well__head,
+  .hm-page:not(.svc-page) .hm-wellness .hm-well--nourish .hm-well__head,
+  .hm-page:not(.svc-page) .hm-well--nourish .hm-well__head {
     align-items: center;
   }
 
   .hm-page:not(.svc-page) .hm-wellness .hm-well--move .hm-well__lead,
-  .hm-page:not(.svc-page) .hm-well--move .hm-well__lead {
+  .hm-page:not(.svc-page) .hm-well--move .hm-well__lead,
+  .hm-page:not(.svc-page) .hm-wellness .hm-well--nourish .hm-well__lead,
+  .hm-page:not(.svc-page) .hm-well--nourish .hm-well__lead {
     gap: 0;
   }
 }
