@@ -130,7 +130,7 @@ export default function AssessmentType() {
                 <span><Check size={14} aria-hidden /> Better care context</span>
               </span>
               <span className="assess-card__action">
-                Start health assessment <ArrowRight size={17} aria-hidden />
+                Start Health Assessment <ArrowRight size={18} aria-hidden />
               </span>
             </button>
           ) : null}

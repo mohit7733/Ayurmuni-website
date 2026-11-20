@@ -405,22 +405,23 @@
   position: relative;
   overflow: hidden;
   width: 100%;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 16 / 9;
   background:
     radial-gradient(78% 70% at var(--plan-glow-x, 100%) var(--plan-glow-y, 0%), rgba(255, 255, 255, 0.32), transparent 52%),
-    linear-gradient(152deg, var(--plan-a, #4c1d95) 0%, var(--plan-b, #6d28d9) 48%, var(--plan-c, #7c3aed) 100%);
+    linear-gradient(152deg, var(--plan-a, #0d614e) 0%, var(--plan-b, #17684f) 48%, var(--plan-c, #0b4136) 100%);
 }
 
 .pp-card__banner img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
   display: block;
-  transition: transform 450ms var(--pp-ease);
+  background: #0d614e;
 }
 
-.pp-card:hover .pp-card__banner img {
-  transform: scale(1.04);
+.pp-card__banner:has(img)::after {
+  display: none;
 }
 
 .pp-card__fall {
@@ -854,19 +855,26 @@
   position: relative;
   overflow: hidden;
   width: 100%;
-  height: 142px;
+  height: auto;
+  aspect-ratio: 16 / 9;
   flex: none;
   background:
     radial-gradient(78% 70% at var(--plan-glow-x, 100%) var(--plan-glow-y, 0%), rgba(255, 255, 255, 0.32), transparent 52%),
-    linear-gradient(152deg, var(--plan-a, #4c1d95) 0%, var(--plan-b, #6d28d9) 48%, var(--plan-c, #7c3aed) 100%);
+    linear-gradient(152deg, var(--plan-a, #0d614e) 0%, var(--plan-b, #17684f) 48%, var(--plan-c, #0b4136) 100%);
 }
 
 .pp-rail__banner img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
   display: block;
-  transition: transform 450ms var(--pp-ease);
+  background: #0d614e;
+}
+
+/* Photo banners keep the creative readable — no colour wash over the artwork. */
+.pp-rail__banner:has(img)::after {
+  display: none;
 }
 
 .pp-rail__banner::after,
@@ -876,15 +884,11 @@
   inset: 0;
   background: linear-gradient(
     160deg,
-    color-mix(in srgb, var(--plan-a, #4c1d95) 74%, transparent),
-    color-mix(in srgb, var(--plan-c, #7c3aed) 38%, transparent)
+    color-mix(in srgb, var(--plan-a, #0d614e) 74%, transparent),
+    color-mix(in srgb, var(--plan-c, #0b4136) 38%, transparent)
   );
   pointer-events: none;
-  opacity: 0.3;
-}
-
-.pp-rail:hover .pp-rail__banner img {
-  transform: scale(1.05);
+  opacity: 0.22;
 }
 
 .pp-rail__fall {
@@ -1444,8 +1448,8 @@
     transform: none;
   }
 
-  .pp-card:hover .pp-card__banner img,
-  .pp-rail:hover .pp-rail__banner img {
+  .pp-card:hover,
+  .pp-rail:hover {
     transform: none;
   }
 

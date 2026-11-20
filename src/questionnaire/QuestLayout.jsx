@@ -229,7 +229,9 @@ export default function QuestLayout({ flow, onExit }) {
     ? 'Please wait…'
     : basicInfoStep || !isLastStep
       ? 'Continue'
-      : 'Complete Quest';
+      : isMedical
+        ? 'Complete Health Question'
+        : 'Complete Prakriti Question';
 
   return (
     <section className={`quest ${isMedical ? 'medical' : 'prakriti'}`}>

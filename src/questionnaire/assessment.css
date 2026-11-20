@@ -358,6 +358,12 @@
   font-weight: var(--am-weight-bold);
 }
 
+.assess-card.medical .assess-card__action {
+  font-size: var(--am-text-base);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
 .assess-card__action svg {
   transition: transform var(--am-dur-fast) var(--am-ease-out);
 }
@@ -677,6 +683,7 @@
     padding-top: var(--am-space-3);
   }
 
+
   .auth-shell--assessment .assess-tip {
     padding: var(--am-space-3);
   }
@@ -790,7 +797,8 @@
 
   .auth-shell--assessment .assess-card__action {
     padding-top: var(--am-space-2);
-    font-size: var(--am-text-xs);
+    font-size: var(--am-text-xl);
+
   }
 
   .auth-shell--assessment .assess-tip {
