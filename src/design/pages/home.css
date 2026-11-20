@@ -2726,9 +2726,9 @@
 }
 
 .hm-page .am-concerns .am-tile {
-  gap: 6px;
+  gap: 8px;
   min-height: 0;
-  padding: 4px 6px;
+  padding: 4px 6px 6px;
 }
 
 .hm-page .am-concerns .am-tile--cutout .am-tile__img {
@@ -2737,6 +2737,7 @@
 }
 
 .hm-page .am-concerns .am-tile__label {
+  margin-top: 2px;
   font-size: 13px;
   line-height: 1.25;
   overflow-wrap: normal;
@@ -2745,7 +2746,7 @@
 
 @media (max-width: 639px) {
   .hm-page .am-concerns .am-concerns__track {
-    gap: 2px;
+    gap: 4px;
   }
 
   .hm-page .am-concerns .am-concerns__track>li {
@@ -2753,8 +2754,8 @@
   }
 
   .hm-page .am-concerns .am-tile {
-    gap: 4px;
-    padding: 2px;
+    gap: 10px;
+    padding: 2px 2px 6px;
   }
 
   .hm-page .am-concerns .am-tile--cutout .am-tile__img {
@@ -2763,6 +2764,7 @@
   }
 
   .hm-page .am-concerns .am-tile__label {
+    margin-top: 4px;
     font-size: 11px;
     min-height: 2.4em;
   }
@@ -2930,7 +2932,23 @@
 
 /* Health concerns keeps compact inner padding; section gap comes from .hm-body. */
 .hm-page .hm-concerns-panel {
-  padding-block: 10px;
+  padding-top: 10px;
+  padding-bottom: 14px;
+}
+
+@media (max-width: 639px) {
+  .hm-page .hm-concerns-panel {
+    padding-bottom: 16px;
+  }
+
+  .hm-page .hm-concerns-panel .am-tile,
+  .hm-page .hm-concerns-panel .am-tile.am-tile--cutout {
+    gap: 10px;
+  }
+
+  .hm-page .hm-concerns-panel .am-tile__label {
+    margin-top: 4px;
+  }
 }
 
 /* ===== Featured brands: square cards + circular logo discs ===== */

@@ -358,11 +358,40 @@
 .hm-page .hm-pair .am-diet-active__next-meal::before { content: '— '; color: #c9a55a; }
 
 @media (max-width: 639px) {
-  .hm-page .hm-pair .am-diet-active.hm-appt { grid-template-areas: 'media body cta' 'foot foot foot'; }
-  .hm-page .hm-pair .hm-appt__foot { flex-wrap: wrap; }
-  .hm-page .hm-pair .hm-appt__cta { flex: 0 0 auto; }
-  .hm-page .hm-pair .am-diet-active:not(.hm-appt) { grid-template-columns: auto minmax(0, 1fr) auto; }
+  /* Narrow phones: keep name readable; put CTA under identity instead of squeezing it beside. */
+  .hm-page .hm-pair .am-diet-active.hm-appt {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      'media body'
+      'cta cta'
+      'foot foot';
+    gap: 10px 12px;
+  }
+  .hm-page .hm-pair .hm-appt__actions {
+    justify-content: stretch;
+    width: 100%;
+  }
+  .hm-page .hm-pair .hm-appt__cta,
+  .hm-page .hm-pair .am-diet-active__cta.hm-appt__cta {
+    width: 100%;
+    min-height: 40px;
+    flex: 1 1 auto;
+  }
+  .hm-page .hm-pair .hm-appt__foot { flex-wrap: wrap; gap: 8px; }
+  .hm-page .hm-pair .am-diet-active:not(.hm-appt) {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      'media body'
+      'cta cta'
+      'prog prog';
+  }
+  .hm-page .hm-pair .am-diet-active:not(.hm-appt) .am-diet-active__cta {
+    width: 100%;
+    justify-self: stretch;
+  }
 }
 @media (max-width: 360px) {
-  .hm-page .hm-pair .am-diet-active:not(.hm-appt) { grid-template-areas: 'media body body' 'prog prog prog' 'next next next' 'cta cta cta'; }
+  .hm-page .hm-pair .am-diet-active:not(.hm-appt) {
+    grid-template-areas: 'media body' 'cta cta' 'prog prog' 'next next';
+  }
 }

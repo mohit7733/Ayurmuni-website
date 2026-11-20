@@ -1277,6 +1277,21 @@
 }
 
 /* ---------- Responsive: small phones ---------- */
+@media (max-width: 639px) {
+  /* Keep account menu fully on-screen (was overflowing past the right edge). */
+  .site-account-wrap.is-open .site-popover.site-user-menu {
+    position: fixed;
+    top: calc(var(--am-header-h, 58px) + 6px);
+    right: max(8px, env(safe-area-inset-right));
+    left: auto;
+    width: min(280px, calc(100vw - 16px));
+    max-height: min(420px, calc(100dvh - var(--am-header-h, 58px) - 24px));
+    overflow-x: hidden;
+    overflow-y: auto;
+    z-index: calc(var(--am-z-header, 50) + 20);
+  }
+}
+
 @media (max-width: 430px) {
   .site-header-inner { gap: 2px; padding-inline: max(var(--am-gutter), env(safe-area-inset-left)) max(var(--am-gutter), env(safe-area-inset-right)); }
   .site-brand { min-width: 0; flex-shrink: 1; max-width: 42%; }

@@ -293,28 +293,6 @@
     line-height: 1.25;
   }
 
-  /* Keep View appointment on the right of the name (same as View plan). */
-  .hm-page:not(.svc-page) .hm-pair .am-diet-active.hm-appt {
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    grid-template-areas: 'media body cta' 'foot foot foot';
-  }
-
-  .hm-page:not(.svc-page) .hm-pair .hm-appt__actions {
-    grid-area: cta;
-    justify-self: end;
-    align-self: start;
-    width: auto;
-  }
-
-  .hm-page:not(.svc-page) .hm-pair .hm-appt__cta,
-  .hm-page:not(.svc-page) .hm-pair .am-diet-active.hm-appt .am-diet-active__cta {
-    flex: 0 0 auto;
-    width: auto;
-    min-height: 36px;
-    padding: 0 12px;
-    font-size: 12.5px;
-    justify-content: center;
-  }
 }
 
 /* Hide the Health concerns section description on phones only.
