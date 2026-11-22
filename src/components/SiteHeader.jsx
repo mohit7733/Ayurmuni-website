@@ -420,7 +420,6 @@ export default function SiteHeader({ minimal = false }) {
                   }}
                 >
                   {item.label}
-                  {soon ? <span className="site-nav-soon">Soon</span> : null}
                 </NavLink>
               );
             })}
@@ -611,7 +610,6 @@ export default function SiteHeader({ minimal = false }) {
                     >
                       <ShoppingBag size={16} aria-hidden />
                       My Orders
-                      {isFeatureComingSoon('orders') ? ' · Soon' : ''}
                     </Link>
                     <Link className="site-menu-row" to="/profile/appointments" onClick={() => setUserOpen(false)}>
                       <Stethoscope size={16} aria-hidden />
@@ -691,7 +689,6 @@ export default function SiteHeader({ minimal = false }) {
                 }}
               >
                 {item.label}
-                {soon ? ' · Soon' : ''}
               </NavLink>
             );
           })}

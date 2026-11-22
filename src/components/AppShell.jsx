@@ -53,7 +53,7 @@ export default function AppShell({ children, tab = 'home', hideFooter = false })
                 <Icon size={22} strokeWidth={active ? 2.2 : 1.8} />
                 {showBadge ? <i className="tab-badge">{itemCount > 99 ? '99+' : itemCount}</i> : null}
               </span>
-              <span className="tab-label">{soon ? 'Soon' : item.label}</span>
+              <span className="tab-label">{item.label}</span>
             </NavLink>
           );
         })}

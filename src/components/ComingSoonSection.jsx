@@ -1,12 +1,25 @@
 import { openComingSoonModal } from '../launch/comingSoonMode';
 
-/** Home / rail placeholder when a feature flag is on. */
-export default function ComingSoonSection({ title, description }) {
+/**
+ * Keeps section content visible; when active, puts a Coming soon layer on top
+ * and opens the modal on click.
+ */
+export default function ComingSoonLayer({ active = false, label = 'Coming soon', children }) {
+  if (!active) return children;
+
   return (
-    <button type="button" className="hm-soon hm-soon--block" onClick={openComingSoonModal}>
-      <span className="hm-soon__eyebrow">Coming soon</span>
-      <strong className="hm-soon__title">{title}</strong>
-      {description ? <p className="hm-soon__text">{description}</p> : null}
-    </button>
+    <div className="hm-soon-layer">
+      <div className="hm-soon-layer__content" aria-hidden="true">
+        {children}
+      </div>
+      <button
+        type="button"
+        className="hm-soon-layer__veil"
+        onClick={openComingSoonModal}
+        aria-label={label}
+      >
+        <span className="hm-soon-layer__badge">{label}</span>
+      </button>
+    </div>
   );
 }

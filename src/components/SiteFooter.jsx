@@ -107,7 +107,6 @@ export default function SiteFooter() {
                 <li key={item.to}>
                   <Link to={item.to} onClick={(event) => onFooterLinkClick(event, item)}>
                     {item.label}
-                    {item.feature && isFeatureComingSoon(item.feature) ? ' · Soon' : ''}
                   </Link>
                 </li>
               ))}

@@ -2122,52 +2122,11 @@
   background: var(--am-surface-muted);
 }
 
-.hm-soon--block {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  width: 100%;
-  min-height: 112px;
-  padding: var(--am-space-4);
-  text-align: left;
-  cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease;
-}
-
-.hm-soon--block:hover,
-.hm-soon--block:focus-visible {
-  border-color: var(--am-primary);
-  background: color-mix(in srgb, var(--am-primary) 6%, var(--am-surface-muted));
-  outline: none;
-}
-
-.hm-soon__eyebrow {
-  margin: 0;
-  color: var(--am-primary);
-  font-size: var(--am-text-xs);
-  font-weight: var(--am-weight-semibold);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
 .hm-soon__title {
   margin: 0 0 var(--am-space-2);
   font-size: var(--am-text-base);
   font-weight: var(--am-weight-semibold);
   letter-spacing: -0.01em;
-}
-
-.hm-soon--block .hm-soon__title {
-  margin: 0;
-  color: var(--am-text);
-}
-
-.hm-soon__text {
-  margin: 0;
-  color: var(--am-text-muted);
-  font-size: var(--am-text-sm);
-  line-height: 1.45;
 }
 
 .hm-soon__list {
@@ -2195,6 +2154,55 @@
 
 .hm-soon__list svg {
   color: var(--am-primary);
+}
+
+/* Content stays visible; veil sits on top and opens the modal */
+.hm-soon-layer {
+  position: relative;
+  isolation: isolate;
+  border-radius: 16px;
+}
+
+.hm-soon-layer__content {
+  pointer-events: none;
+  user-select: none;
+}
+
+.hm-soon-layer__veil {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: var(--am-space-4);
+  border: 0;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--am-surface, #fff) 48%, transparent);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  cursor: pointer;
+}
+
+.hm-soon-layer__veil:focus-visible {
+  outline: 2px solid var(--am-primary);
+  outline-offset: 2px;
+}
+
+.hm-soon-layer__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--am-primary);
+  color: #fff;
+  font-size: var(--am-text-sm);
+  font-weight: var(--am-weight-semibold);
+  letter-spacing: 0.02em;
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--am-primary) 28%, transparent);
 }
 
 .hm-service.is-soon .hm-service__tile {
