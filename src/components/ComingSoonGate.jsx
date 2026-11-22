@@ -34,7 +34,7 @@ export default function ComingSoonGate() {
       open={open}
       onClose={() => setOpen(false)}
       title="Coming soon"
-      description="Doctor consult is available now. Products, medicines, diet, yoga, and more will unlock shortly."
+      description="Doctor consultations are live. Medicines, products, diet, yoga, and more wellness features are on the way — thank you for your patience."
       size="sm"
       footer={
         <Button type="button" variant="primary" block onClick={() => setOpen(false)}>

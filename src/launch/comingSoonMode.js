@@ -19,6 +19,7 @@ const BLOCKED_PREFIXES = [
   '/medicines',
   '/cart',
   '/checkout',
+  '/payment/return',
   '/order-confirmation',
   '/search',
   '/reviews',
