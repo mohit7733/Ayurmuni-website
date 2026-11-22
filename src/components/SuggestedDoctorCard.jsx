@@ -68,7 +68,7 @@ export default function SuggestedDoctorCard({ item, fallbackSpeciality = 'Ayurve
   const reviewCount = Number(item?.total_reviews || item?.review_count || 0);
   const verified = Boolean(item?.is_verified);
   const bios = Array.isArray(item?.specialized_bio)
-    ? item.specialized_bio.map((bio) => String(bio || '').trim()).filter(Boolean).slice(0, 2)
+    ? item.specialized_bio.map((bio) => String(bio || '').trim()).filter(Boolean).slice(0, 5)
     : [];
   const [fav, setFav] = useState(() => doctorFavorite(item));
   const [imgFailed, setImgFailed] = useState(false);
