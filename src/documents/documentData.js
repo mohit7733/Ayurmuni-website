@@ -54,7 +54,11 @@ export const pick = (...values) => {
 export const money = (value) => {
   if (value == null || value === '') return '-';
   const num = Number(value);
-  return Number.isFinite(num) ? num.toFixed(2) : '-';
+  if (!Number.isFinite(num)) return '-';
+  if (Math.round(Math.abs(num) * 100) === 0) return '';
+  return Number.isInteger(num) || Math.round(Math.abs(num) * 100) % 100 === 0
+    ? String(Math.round(num))
+    : String(Number(num.toFixed(2)));
 };
 
 const joinAddress = (address) => {
