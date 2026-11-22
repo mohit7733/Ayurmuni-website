@@ -5,6 +5,7 @@ import logoImg from '/greenlogo.png';
 import { COPY } from '../content/copy';
 import useLoggedIn from '../hooks/useLoggedIn';
 import { navigateToLogin } from '../services/guestAuth';
+import { COPYRIGHT_LINE } from '../site/support';
 import { FOOTER_COLUMNS, FOOTER_LEGAL } from '../site/nav';
 
 const TRUST_ICONS = {
@@ -15,7 +16,17 @@ const TRUST_ICONS = {
 };
 
 /** Open without login. Everything else still shows, but click asks to log in. */
-const PUBLIC_FOOTER_LINKS = new Set(['/about', '/contact', '/terms', '/home', '/profile/faq', '/profile/privacy', '/profile/help-center', '/profile/legal-policies']);
+const PUBLIC_FOOTER_LINKS = new Set([
+  '/about',
+  '/contact',
+  '/terms',
+  '/home',
+  '/profile/faq',
+  '/profile/privacy',
+  '/profile/help-center',
+  '/profile/legal-policies',
+  '/policy-detail',
+]);
 
 export default function SiteFooter() {
   const loggedIn = useLoggedIn();
@@ -111,12 +122,13 @@ export default function SiteFooter() {
 
       <div className="site-footer-bar site-footer-bar-legal">
         <div className="site-footer-legal">
-          <span>© {new Date().getFullYear()} Ayurmuni. All rights reserved.</span>
+          <span>{COPYRIGHT_LINE()}</span>
           <nav aria-label="Legal">
             {FOOTER_LEGAL.map((item) => (
               <Link
-                key={item.to}
+                key={item.id || item.to}
                 to={item.to}
+                state={item.state}
                 onClick={(event) => onFooterLinkClick(event, item.to)}
               >
                 {item.label}

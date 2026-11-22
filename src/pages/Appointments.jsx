@@ -177,7 +177,7 @@ const visitFacts = (item) => {
   const type = String(item.consultationType || "")
     .replace(/_/g, " ")
     .trim();
-  return [item.experience, item.city, type]
+  return [item.experience, item.country, type]
     .map((part) => String(part || "").trim())
     .filter(Boolean);
 };

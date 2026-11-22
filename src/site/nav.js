@@ -11,10 +11,12 @@ export const FOOTER_COLUMNS = [
   {
     title: 'Shop',
     links: [
+      { to: '/medicines', label: 'Ayurvedic Medicines' },
       { to: '/products', label: 'Products' },
-      { to: '/medicines', label: 'Medicines' },
-      { to: '/cart', label: 'Cart' },
-      { to: '/search', label: 'Search' },
+      {to:'/consult',label:'Shop by Health Concern'},
+      {to:'/products/category?mode=both&name=Brands',label:'Featured Brands'},
+      { to: '/cart', label: 'My Cart' },
+      // { to: '/search', label: 'Search' },
       // { to: '/panchakarma', label: 'Panchakarma' },
       // { to: '/mentor', label: 'Mentor' },
     ],
@@ -23,31 +25,32 @@ export const FOOTER_COLUMNS = [
     title: 'Care',
     links: [
       { to: '/consult', label: 'Consult a doctor' },
-      { to: '/consult/doctors', label: 'All doctors' },
-      { to: '/yoga', label: 'Yoga' },
+      { to: '/consult/doctors', label: 'Meet Our Doctors' },
+      { to: '/assessment-prakriti', label: 'Know Your Prakriti' },
       { to: '/diet', label: 'Diet plans' },
-      { to: '/packages', label: 'Packages' },
+      { to: '/packages', label: 'Care Plans & Packages' },
+      { to: '/yoga', label: 'Yoga' },
       // { to: '/labs', label: 'Lab tests' }, // Health Lab disabled per Rohit
     ],
   },
   {
     title: 'Account',
     links: [
-      { to: '/profile', label: 'Profile' },
-      { to: '/profile/orders', label: 'Orders' },
-      { to: '/profile/appointments', label: 'Appointments' },
-      { to: '/profile/wishlist', label: 'Wishlist' },
-      { to: '/profile/rewards', label: 'Rewards' },
+      { to: '/profile', label: 'My Profile' },
+      { to: '/profile/orders', label: 'My Orders' },
+      { to: '/profile/appointments', label: 'My Appointments' },
+      { to: '/profile/wishlist', label: 'My Wishlist' },
+      { to: '/profile/rewards', label: 'My Rewards' },
     ],
   },
   {
     title: 'Help',
     links: [
-      { to: '/about', label: 'About' },
-      { to: '/contact', label: 'Contact' },
-      { to: '/profile/faq', label: 'FAQ' },
+      { to: '/about', label: 'About Us' },
+      { to: '/contact', label: 'Contact Us' },
+      { to: '/profile/faq', label: 'FAQs' },
       // { to: '/profile/privacy', label: 'Privacy Center' },
-      { to: '/profile/legal-policies', label: 'Legal policies' },
+      { to: '/profile/legal-policies', label: 'Legal Policies' },
       // { to: '/terms', label: 'Terms & Conditions' },
       // { to: '/profile/feedback', label: 'Feedback' },
     ],
@@ -63,9 +66,10 @@ export const TAB_ITEMS = [
 ];
 
 export const FOOTER_LEGAL = [
-  { to: '/about', label: 'About' },
-  { to: '/contact', label: 'Contact' },
-  { to: '/profile/privacy', label: 'Privacy' },
-  { to: '/terms', label: 'Terms' },
-  { to: '/profile/faq', label: 'Help' },
+  // { to: '/about', label: 'About' },
+  // { to: '/contact', label: 'Contact' },
+  // // { to: '/profile/privacy', label: 'Privacy' },
+  // // { to: '/terms', label: 'Terms' },
+  // { to: '/profile/faq', label: 'Help' },
+  // { to: '/profile/legal-policies', label: 'Legal policies' },
 ];

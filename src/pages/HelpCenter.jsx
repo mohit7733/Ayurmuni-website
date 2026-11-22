@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronDown, HelpCircle, Mail } from 'lucide-react';
+import { ChevronDown, HelpCircle, Mail, MessageCircle, PhoneCall } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import PageHeader from '../components/PageHeader';
 import {
@@ -195,11 +195,28 @@ export default function HelpCenter() {
             <div>
               <h2>{T.faqHelpTitle}</h2>
               <p>{T.faqHelpText}</p>
+              <p>
+                <a href={T.contactPhoneHref}>{T.contactPhone}</a>
+              </p>
             </div>
           </div>
-          <Button variant="primary" href={T.faqSupportMailto} leadingIcon={<Mail size={18} aria-hidden />}>
-            {T.faqEmail}
-          </Button>
+          <div className="sx-help-card__actions">
+            <Button variant="primary" href={T.contactPhoneHref} leadingIcon={<PhoneCall size={18} aria-hidden />}>
+              {T.faqCall}
+            </Button>
+            <Button
+              variant="secondary"
+              href={T.contactWhatsAppHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              leadingIcon={<MessageCircle size={18} aria-hidden />}
+            >
+              {T.faqWhatsApp}
+            </Button>
+            <Button variant="ghost" href={T.faqSupportMailto} leadingIcon={<Mail size={18} aria-hidden />}>
+              {T.faqEmail}
+            </Button>
+          </div>
         </div>
       </section>
     </AppShell>

@@ -231,7 +231,7 @@ export const getDoctorRoleLabel = (item) => (isDietitian(item) ? 'Dietitian' : '
 export const doctorExperience = (item) => {
   const raw = item?.experience_display || item?.experience_years || item?.experience || '';
   const match = String(raw).match(/(\d+)/);
-  return match ? `${match[1]} yrs exp` : String(raw || '').trim();
+  return match ? `${match[1]}+ yrs exp` : String(raw || '').trim();
 };
 
 /** Published global fee when set, otherwise the doctor's own consultation fee. Never a slot amount. */
@@ -253,12 +253,8 @@ export const doctorConsultFee = (item) => {
 export const doctorQualification = (item) =>
   String(item?.qualification || item?.designation || item?.degree || '').trim();
 
-export const doctorLocation = (item) => {
-  const city = String(item?.city || '').trim();
-  const state = String(item?.state || '').trim();
-  if (city && state) return `${city}, ${state}`;
-  return city || state;
-};
+/** Always show India — city/state are not displayed for doctors. */
+export const doctorLocation = () => 'India';
 
 export const toLabelList = (value) => {
   if (value == null || value === '') return [];

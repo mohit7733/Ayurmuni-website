@@ -19,6 +19,29 @@ export const CONSULT_COPY = {
     { id: 'follow', label: 'Free follow up for 3 days' },
     { id: 'rx', label: 'Get a valid prescription' },
   ],
+  trustLabel: 'Why consult with Ayurmuni',
+  trustFeatures: [
+    {
+      id: 'confidential',
+      title: '100% Confidential',
+      text: 'All advice & consultations are completely confidential. You can also delete chats whenever you want.',
+    },
+    {
+      id: 'certified',
+      title: 'Certified Doctors',
+      text: 'We offer quality healthcare through our network of certified and experienced doctors.',
+    },
+    {
+      id: 'convenience',
+      title: 'Convenience',
+      text: 'Forget the hassle of long queues and rush hour. Seek expert opinion anytime, anywhere.',
+    },
+    {
+      id: 'cost',
+      title: 'Cost Effective',
+      text: 'We provide medical assistance on non urgent queries for free. Fee starting at ₹50 for faster response to queries.',
+    },
+  ],
   recentTitle: 'Recent Consultation',
   viewHistory: 'View history',
   concernsEyebrow: 'Find care',

@@ -329,6 +329,13 @@
   line-height: var(--am-leading-normal);
 }
 
+.sx-help-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--am-space-2);
+}
+
 .sx-help-page .sx-help-card .am-btn {
   flex: 0 0 auto;
 }
@@ -385,6 +392,10 @@
     align-items: stretch;
     flex-direction: column;
     gap: var(--am-space-4);
+  }
+
+  .sx-help-card__actions {
+    justify-content: stretch;
   }
 
   .sx-help-page .sx-help-card .am-btn {

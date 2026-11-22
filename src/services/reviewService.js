@@ -51,6 +51,59 @@ export const createReview = async ({
   });
 };
 
+/**
+ * Unauthenticated management reviews for doctors / products.
+ * POST review/management/?entity_type=doctor|product
+ */
+export const createManagementReview = async ({ entityType, reviewData = {} }) => {
+  const normalizedType = String(entityType || '').toLowerCase();
+  if (normalizedType !== 'doctor' && normalizedType !== 'product') {
+    throw new Error('Unsupported management review entity type');
+  }
+
+  const rating = Number(reviewData.rating);
+  if (!Number.isFinite(rating) || rating < 1) {
+    throw new Error('rating is required');
+  }
+
+  const payload = { rating };
+  const review = String(reviewData.review || '').trim();
+  const reviewerName = String(reviewData.reviewer_name || '').trim();
+  const imageUrls = (reviewData.image_urls || []).filter(Boolean);
+  if (review) payload.review = review;
+  if (reviewerName) payload.reviewer_name = reviewerName;
+  if (imageUrls.length) payload.image_urls = imageUrls;
+
+  if (normalizedType === 'doctor') {
+    const doctorId = String(reviewData.doctor_id || '').trim();
+    const doctorName = String(reviewData.doctor_name || '').trim();
+    if (!doctorId && !doctorName) {
+      throw new Error('doctor_id or doctor_name is required');
+    }
+    if (doctorId) payload.doctor_id = doctorId;
+    if (doctorName) payload.doctor_name = doctorName;
+  } else {
+    const variantId = String(reviewData.variant_id || '').trim();
+    const productId = String(reviewData.product_id || '').trim();
+    const productName = String(reviewData.product_name || '').trim();
+    if (!variantId && !productId && !productName) {
+      throw new Error('variant_id, product_id, or product_name is required');
+    }
+    if (variantId) payload.variant_id = variantId;
+    if (productId) payload.product_id = productId;
+    if (productName) payload.product_name = productName;
+  }
+
+  return apiClient(
+    `review/management/?entity_type=${normalizedType}`,
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+    false,
+  );
+};
+
 const REVIEWABLE_ORDER_STATUSES = ['delivered', 'completed'];
 
 /**

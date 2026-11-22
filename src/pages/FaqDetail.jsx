@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { BookOpen, CalendarClock, HelpCircle, ListChecks, Mail, MessageCircle } from 'lucide-react';
+import { BookOpen, CalendarClock, HelpCircle, ListChecks, Mail, MessageCircle, PhoneCall } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import { formatFaqUpdatedLabel, getFaqDetail } from '../services/faqService';
 import { Button } from '../components/ui';
@@ -100,11 +100,20 @@ export default function FaqDetail() {
                 <DetailCard id="faq-help" title={T.faqHelpTitle} icon={MessageCircle} tone="accent">
                   <p className="dx-prose">{T.faqHelpText}</p>
                   <ActionStack>
-                    <Button href={T.faqSupportMailto} leadingIcon={<Mail size={16} aria-hidden />}>
-                      {T.faqEmail}
+                    <Button href={T.contactPhoneHref} leadingIcon={<PhoneCall size={16} aria-hidden />}>
+                      {T.faqCall}
                     </Button>
-                    <Button variant="secondary" onClick={() => navigate('/contact')}>
-                      Contact us
+                    <Button
+                      variant="secondary"
+                      href={T.contactWhatsAppHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      leadingIcon={<MessageCircle size={16} aria-hidden />}
+                    >
+                      {T.faqWhatsApp}
+                    </Button>
+                    <Button variant="ghost" href={T.faqSupportMailto} leadingIcon={<Mail size={16} aria-hidden />}>
+                      {T.faqEmail}
                     </Button>
                     <Button variant="ghost" onClick={() => navigate('/profile/faq')}>
                       All questions

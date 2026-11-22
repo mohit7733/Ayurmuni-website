@@ -105,12 +105,8 @@ export const hasPrescribedData = (consultation) => {
   });
 };
 
-export const getDoctorLocationLine = (doctor) => {
-  if (!doctor) return '';
-  return [doctor.address_line, doctor.city, doctor.state, doctor.pincode]
-    .filter(Boolean)
-    .join(', ');
-};
+/** Always show India — city/state are not displayed for doctors. */
+export const getDoctorLocationLine = () => 'India';
 
 export const asAdviceList = (value) => {
   if (value == null) return [];

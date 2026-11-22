@@ -339,7 +339,11 @@ export default function App() {
                     <Route path="/profile/faq" element={<HelpCenter />} />
                     <Route path="/profile/faq/:faqId" element={<FaqDetail />} />
                     <Route path="/profile/privacy" element={<PrivacyCenter />} />
-                    
+                    <Route
+                      path="/profile/legal-policies"
+                      element={<LegalPoliciesHub />}
+                    />
+
                     <Route element={<RequireAuth />}>
                       <Route path="/notifications" element={<Notifications />} />
                       <Route path="/products" element={<Products />} />
@@ -444,6 +448,11 @@ export default function App() {
                         path="/rate-doctor"
                         element={<DirectDoctorReview />}
                       />
+                      <Route path="/rate" element={<DirectDoctorReview />} />
+                      <Route
+                        path="/share-review"
+                        element={<DirectDoctorReview />}
+                      />
                       <Route
                         path="/profile/receipts/:consultationId"
                         element={<MedicalReceipt />}
@@ -472,10 +481,6 @@ export default function App() {
                       <Route
                         path="/profile/feedback"
                         element={<FeedbackInformation />}
-                      />
-                      <Route
-                        path="/profile/legal-policies"
-                        element={<LegalPoliciesHub />}
                       />
                       <Route path="/profile/patients" element={<Patients />} />
                       <Route
