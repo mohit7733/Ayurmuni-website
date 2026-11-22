@@ -343,6 +343,16 @@ export default function App() {
                       path="/profile/legal-policies"
                       element={<LegalPoliciesHub />}
                     />
+                    {/* Management reviews — no login required */}
+                    <Route
+                      path="/rate-doctor"
+                      element={<DirectDoctorReview />}
+                    />
+                    <Route path="/rate" element={<DirectDoctorReview />} />
+                    <Route
+                      path="/share-review"
+                      element={<DirectDoctorReview />}
+                    />
 
                     <Route element={<RequireAuth />}>
                       <Route path="/notifications" element={<Notifications />} />
@@ -443,15 +453,6 @@ export default function App() {
                       <Route
                         path="/share-experience"
                         element={<ShareExperience />}
-                      />
-                      <Route
-                        path="/rate-doctor"
-                        element={<DirectDoctorReview />}
-                      />
-                      <Route path="/rate" element={<DirectDoctorReview />} />
-                      <Route
-                        path="/share-review"
-                        element={<DirectDoctorReview />}
                       />
                       <Route
                         path="/profile/receipts/:consultationId"
