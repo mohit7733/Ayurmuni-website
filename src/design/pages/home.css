@@ -2122,11 +2122,52 @@
   background: var(--am-surface-muted);
 }
 
+.hm-soon--block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  min-height: 112px;
+  padding: var(--am-space-4);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.hm-soon--block:hover,
+.hm-soon--block:focus-visible {
+  border-color: var(--am-primary);
+  background: color-mix(in srgb, var(--am-primary) 6%, var(--am-surface-muted));
+  outline: none;
+}
+
+.hm-soon__eyebrow {
+  margin: 0;
+  color: var(--am-primary);
+  font-size: var(--am-text-xs);
+  font-weight: var(--am-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .hm-soon__title {
   margin: 0 0 var(--am-space-2);
   font-size: var(--am-text-base);
   font-weight: var(--am-weight-semibold);
   letter-spacing: -0.01em;
+}
+
+.hm-soon--block .hm-soon__title {
+  margin: 0;
+  color: var(--am-text);
+}
+
+.hm-soon__text {
+  margin: 0;
+  color: var(--am-text-muted);
+  font-size: var(--am-text-sm);
+  line-height: 1.45;
 }
 
 .hm-soon__list {
@@ -2154,6 +2195,26 @@
 
 .hm-soon__list svg {
   color: var(--am-primary);
+}
+
+.hm-service.is-soon .hm-service__tile {
+  position: relative;
+  opacity: 0.72;
+}
+
+.hm-service__soon {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--am-primary);
+  color: #fff;
+  font-size: 9px;
+  font-weight: var(--am-weight-semibold);
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  text-transform: uppercase;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -2499,6 +2560,7 @@
   grid-template-columns: minmax(0, 1fr);
   gap: 0;
   margin-block: 0;
+  padding-block: 12px 6px;
 }
 
 .hm-dash__main {

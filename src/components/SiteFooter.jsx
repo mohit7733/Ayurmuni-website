@@ -6,6 +6,7 @@ import { COPY } from '../content/copy';
 import useLoggedIn from '../hooks/useLoggedIn';
 import { navigateToLogin } from '../services/guestAuth';
 import { COPYRIGHT_LINE } from '../site/support';
+import { isFeatureComingSoon, openComingSoonModal } from '../launch/comingSoonMode';
 import { FOOTER_COLUMNS, FOOTER_LEGAL } from '../site/nav';
 
 const TRUST_ICONS = {
@@ -32,7 +33,13 @@ export default function SiteFooter() {
   const loggedIn = useLoggedIn();
   const footerRef = useRef(null);
 
-  const onFooterLinkClick = (event, to) => {
+  const onFooterLinkClick = (event, item) => {
+    if (item?.feature && isFeatureComingSoon(item.feature)) {
+      event.preventDefault();
+      openComingSoonModal();
+      return;
+    }
+    const to = typeof item === 'string' ? item : item?.to;
     if (loggedIn || PUBLIC_FOOTER_LINKS.has(to)) return;
     event.preventDefault();
     navigateToLogin('Please login to continue');
@@ -98,8 +105,9 @@ export default function SiteFooter() {
             <ul>
               {column.links.map((item) => (
                 <li key={item.to}>
-                  <Link to={item.to} onClick={(event) => onFooterLinkClick(event, item.to)}>
+                  <Link to={item.to} onClick={(event) => onFooterLinkClick(event, item)}>
                     {item.label}
+                    {item.feature && isFeatureComingSoon(item.feature) ? ' · Soon' : ''}
                   </Link>
                 </li>
               ))}

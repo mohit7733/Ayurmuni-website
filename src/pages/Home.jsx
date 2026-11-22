@@ -43,10 +43,16 @@ import {
 import DoctorTable from '../components/DoctorTable';
 import VisitedDoctorList from '../components/VisitedDoctorList';
 import '../components/visited-doctors.css';
+import ComingSoonSection from '../components/ComingSoonSection';
 import DummyOfferCard from '../components/DummyOfferCard';
 import ProductCard from '../components/ProductCard';
 import OurDoctorCard from '../components/OurDoctorCard';
 import { DoctorRailHeader, ViewAll } from '../components/HomeSections';
+import {
+  featureForServiceKey,
+  isFeatureComingSoon,
+  openComingSoonModal,
+} from '../launch/comingSoonMode';
 import { HomeDoctorsSkeleton, HomeProductsSkeleton } from '../components/skeletons';
 import Skeleton from '../components/skeletons/Block';
 import HomeJoinAppointments from '../components/HomeJoinAppointments';
@@ -734,6 +740,19 @@ export default function Home() {
 
   const handleCategoryPress = (item) => {
     const nameKey = item?.name?.trim().toLowerCase() ?? '';
+    const serviceKey = resolveServiceCategoryKey(item) ?? nameKey;
+    const soonFeature =
+      featureForServiceKey(serviceKey) ||
+      (/panchakarma|panchkarma/i.test(`${nameKey} ${item?.redirect_url || item?.app_screen || item?.screen || ''}`)
+        ? 'panchakarma'
+        : null) ||
+      (/lab/i.test(`${nameKey} ${item?.redirect_url || item?.app_screen || item?.screen || ''}`)
+        ? 'labs'
+        : null);
+    if (soonFeature && isFeatureComingSoon(soonFeature)) {
+      openComingSoonModal();
+      return;
+    }
     // Health Lab disabled per Rohit
     // if (/lab/i.test(`${nameKey} ${item?.redirect_url || item?.app_screen || item?.screen || ''}`)) {
     //   navigate('/labs');
@@ -750,24 +769,26 @@ export default function Home() {
       navigate(fromRedirect.path);
       return;
     }
-    const serviceKey = resolveServiceCategoryKey(item) ?? nameKey;
     const path = mapAppScreenToPath(serviceKey);
     navigate(path && path !== '/home' ? path : '/products');
   };
 
   const renderServiceItem = (item) => {
     const key = resolveServiceCategoryKey(item) || String(item.name || '').toLowerCase();
+    const soonFeature = featureForServiceKey(key);
+    const soon = soonFeature ? isFeatureComingSoon(soonFeature) : false;
     const image = item.image_url || item.image || item.icon_url;
     const Icon = SERVICE_ICONS[key] || Leaf;
     return (
       <li key={item.id}>
         <button
           type="button"
-          className="hm-service"
+          className={`hm-service${soon ? ' is-soon' : ''}`}
           onClick={() => handleCategoryPress(item)}
         >
           <span className="hm-service__tile" aria-hidden>
             {image ? <img src={image} alt="" /> : <Icon size={28} />}
+            {soon ? <span className="hm-service__soon">Soon</span> : null}
           </span>
           <span className="hm-service__label">{item.name}</span>
         </button>
@@ -834,14 +855,29 @@ export default function Home() {
   const featuredProducts = sections.featured || [];
   const recentProducts = sections.recently_viewed || [];
 
+  const medicinesSoon = isFeatureComingSoon('medicines');
+  const productsSoon = isFeatureComingSoon('products');
+  const brandsSoon = isFeatureComingSoon('brands') || productsSoon;
+  const packagesSoon = isFeatureComingSoon('packages');
+  const dietSoon = isFeatureComingSoon('diet');
+  const yogaSoon = isFeatureComingSoon('yoga');
+
   // Product-type panels pack two per row; an odd last panel spans the row.
   const productPanels = [
-    { key: 'medicines', title: T.medicinesTitle, items: medicineProducts, to: '/medicines' },
-    { key: 'products', title: T.productsTitle, items: storeProducts, to: '/products' },
+    { key: 'medicines', title: T.medicinesTitle, items: medicineProducts, to: '/medicines', feature: 'medicines' },
+    { key: 'products', title: T.productsTitle, items: storeProducts, to: '/products', feature: 'products' },
     // { key: 'recently_viewed', title: sectionLabels.recently_viewed, items: recentProducts, to: '/products' },
-    { key: 'trending', title: sectionLabels.trending, description: T.trendingText, items: sections.trending || [], to: '/products' },
-    { key: 'featured', title: sectionLabels.featured, description: T.featuredText, items: featuredProducts, to: '/products' },
-  ].filter((panel) => panel.items?.length > 0);
+    { key: 'trending', title: sectionLabels.trending, description: T.trendingText, items: sections.trending || [], to: '/products', feature: 'products' },
+    { key: 'featured', title: sectionLabels.featured, description: T.featuredText, items: featuredProducts, to: '/products', feature: 'products' },
+  ].filter((panel) => {
+    if (panel.feature && isFeatureComingSoon(panel.feature)) return false;
+    return panel.items?.length > 0;
+  });
+
+  const soonProductPanels = [
+    medicinesSoon ? { key: 'medicines', title: T.medicinesTitle, description: T.featuredText } : null,
+    productsSoon ? { key: 'products', title: T.productsTitle, description: T.trendingText } : null,
+  ].filter(Boolean);
 
   const renderProductRail = (items, label, auto = false) => (
     <Rail label={label} auto={auto}>
@@ -979,9 +1015,9 @@ export default function Home() {
           {/* Upcoming appointment + active diet plan share one row (stacks on mobile). */}
           <div className="hm-pair">
             <HomeJoinAppointments appointments={upcomingAppointments} loading={loadingAppointments} />
-            <ActiveDietCard plan={activeDiet} />
+            {dietSoon ? null : <ActiveDietCard plan={activeDiet} />}
           </div>
-          <ActiveDietToast plan={activeDiet} />
+          {dietSoon ? null : <ActiveDietToast plan={activeDiet} />}
 
           {/* {bannersLoading || bannerItems.length ? (
             <div className="hm-dash">
@@ -1058,8 +1094,18 @@ export default function Home() {
             ) : null}
           </LazyBlock>
 
-          <LazyBlock blockRef={brandsRef} done={brandsSeen && !brandsLoading} minHeight={120} skeleton={<SectionHold label={T.brandsTitle} minHeight={120} variant="chips" />}>
-            {brands.length > 0 ? (
+          <LazyBlock
+            blockRef={brandsRef}
+            done={brandsSoon || (brandsSeen && !brandsLoading)}
+            minHeight={120}
+            skeleton={<SectionHold label={T.brandsTitle} minHeight={120} variant="chips" />}
+          >
+            {brandsSoon ? (
+              <Reveal as="section" className="hm-section hm-panel hm-brands-panel" aria-labelledby="hm-brands-title">
+                <DoctorRailHeader id="hm-brands-title" title={T.brandsTitle} description={T.brandsText} />
+                <ComingSoonSection title={T.brandsTitle} description={T.brandsText} />
+              </Reveal>
+            ) : brands.length > 0 ? (
               <Reveal as="section" className="hm-section hm-panel hm-brands-panel " aria-labelledby="hm-brands-title">
                 <DoctorRailHeader
                   id="hm-brands-title"
@@ -1147,7 +1193,12 @@ export default function Home() {
             ) : null}
           </LazyBlock>
 
-          {consultPackages.length ? (
+          {packagesSoon ? (
+            <Reveal as="section" className="hm-section hm-panel hm-packages" aria-labelledby="hm-packages-title">
+              <SectionHeader id="hm-packages-title" className="hm-doctor-head" title={T.packagesTitle} />
+              <ComingSoonSection title={T.packagesTitle} description="Guided Ayurvedic care plans will unlock shortly." />
+            </Reveal>
+          ) : consultPackages.length ? (
             <Reveal as="section" className="hm-section hm-panel hm-packages" aria-labelledby="hm-packages-title">
               <SectionHeader
                 id="hm-packages-title"
@@ -1176,9 +1227,29 @@ export default function Home() {
             </Reveal>
           ) : null}
 
-          <LazyBlock blockRef={productsRef} done={isSectionDone('products')} minHeight={140} skeleton={<HomeProductsSkeleton label={T.productsTitle} />}>
-            {productPanels.length ? (
+          <LazyBlock
+            blockRef={productsRef}
+            done={Boolean(soonProductPanels.length) || isSectionDone('products')}
+            minHeight={140}
+            skeleton={<HomeProductsSkeleton label={T.productsTitle} />}
+          >
+            {soonProductPanels.length || productPanels.length ? (
               <div className="hm-product-row hm-product-grid">
+                {soonProductPanels.map((panel) => (
+                  <Reveal
+                    as="section"
+                    key={`soon-${panel.key}`}
+                    className="hm-section hm-products"
+                    aria-labelledby={`hm-panel-${panel.key}`}
+                  >
+                    <DoctorRailHeader
+                      id={`hm-panel-${panel.key}`}
+                      title={panel.title}
+                      description={panel.description}
+                    />
+                    <ComingSoonSection title={panel.title} description={panel.description} />
+                  </Reveal>
+                ))}
                 {productPanels.map((panel) => (
                   <Reveal
                     as="section"
@@ -1199,13 +1270,33 @@ export default function Home() {
             ) : null}
           </LazyBlock>
 
-          <LazyBlock blockRef={wellnessRef} done={isSectionDone('yoga') && isSectionDone('diet')} minHeight={140} skeleton={<YogaPoseRailSkeleton label={T.yogaTitle} count={4} />}>
-
-            {yogaSessions.length > 0 || dietProducts.length > 0 ? (
+          <LazyBlock
+            blockRef={wellnessRef}
+            done={dietSoon && yogaSoon ? true : isSectionDone('yoga') && isSectionDone('diet')}
+            minHeight={140}
+            skeleton={<YogaPoseRailSkeleton label={T.yogaTitle} count={4} />}
+          >
+            {dietSoon || yogaSoon || yogaSessions.length > 0 || dietProducts.length > 0 ? (
               <div
-                className={`hm-wellness${yogaSessions.length > 0 && dietProducts.length > 0 ? ' hm-wellness--pair' : ''}`}
+                className={`hm-wellness${
+                  (dietSoon || dietProducts.length > 0) && (yogaSoon || yogaSessions.length > 0)
+                    ? ' hm-wellness--pair'
+                    : ''
+                }`}
               >
-                {dietProducts.length > 0 ? (
+                {dietSoon ? (
+                  <Reveal as="section" className="hm-well hm-well--nourish" aria-labelledby="hm-diet-title">
+                    <div className="hm-well__head">
+                      <div className="hm-well__lead">
+                        <h2 id="hm-diet-title" className="hm-well__title">
+                          {T.dietTitle}
+                        </h2>
+                        <p className="hm-well__text">{T.dietText}</p>
+                      </div>
+                    </div>
+                    <ComingSoonSection title={T.dietTitle} description={T.dietText} />
+                  </Reveal>
+                ) : dietProducts.length > 0 ? (
                   <Reveal as="section" className="hm-well hm-well--nourish" aria-labelledby="hm-diet-title">
                     <div className="hm-well__head">
                       <div className="hm-well__lead">
@@ -1228,7 +1319,19 @@ export default function Home() {
                     </Rail>
                   </Reveal>
                 ) : null}
-                {yogaSessions.length > 0 ? (
+                {yogaSoon ? (
+                  <Reveal as="section" className="hm-well hm-well--move" aria-labelledby="hm-yoga-title">
+                    <div className="hm-well__head">
+                      <div className="hm-well__lead">
+                        <h2 id="hm-yoga-title" className="hm-well__title">
+                          {T.yogaTitle}
+                        </h2>
+                        <p className="hm-well__text">{T.yogaText}</p>
+                      </div>
+                    </div>
+                    <ComingSoonSection title={T.yogaTitle} description={T.yogaText} />
+                  </Reveal>
+                ) : yogaSessions.length > 0 ? (
                   <Reveal as="section" className="hm-well hm-well--move" aria-labelledby="hm-yoga-title">
                     <div className="hm-well__head">
                       <div className="hm-well__lead">
@@ -1253,8 +1356,6 @@ export default function Home() {
                     </Rail>
                   </Reveal>
                 ) : null}
-
-
               </div>
             ) : null}
           </LazyBlock>

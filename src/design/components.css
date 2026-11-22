@@ -2030,11 +2030,12 @@
 /* ---------- Banner carousel (layered center-mode, home design tokens) ---------- */
 .am-banner {
   container-type: inline-size;
-  --am-banner-w: 92cqw;
+  --am-banner-w: 96cqw;
   --am-banner-tilt: 22deg;
   /* centre-to-centre shift that parks a side card's outer edge ~14px inside the section */
   --am-banner-shift: calc(50cqw - 14px - var(--am-banner-w) * 0.43);
-  --am-banner-ratio: 2.5;
+  /* Wider default = taller stage; image median can override but stays clamped in JS. */
+  --am-banner-ratio: 2.15;
   --am-banner-radius: 20px; /* matches .hm-services__grid */
   --am-banner-scale: 0.82;
   --am-banner-ease: var(--am-ease-out, cubic-bezier(0.22, 1, 0.36, 1));
@@ -2044,7 +2045,7 @@
   overflow: hidden;
   overflow-x: clip;
   overflow-y: visible;
-  padding-block: 8px 40px;
+  padding-block: 12px 44px;
   touch-action: pan-y;
 }
 
@@ -2325,7 +2326,7 @@
 }
 @media (max-width: 1023px) {
   .am-banner {
-    --am-banner-w: 92cqw;
+    --am-banner-w: 96cqw;
     --am-banner-tilt: 8deg;
     --am-banner-shift: 72%;
     --am-banner-scale: 0.86;
@@ -2336,12 +2337,12 @@
   .am-banner__slide.is-next {
     pointer-events: none;
   }
-  .am-banner__nav--prev { left: 12px; }
-  .am-banner__nav--next { right: 12px; }
+  .am-banner__nav--prev { left: 8px; }
+  .am-banner__nav--next { right: 8px; }
 }
 @media (max-width: 639px) {
   .am-banner {
-    --am-banner-w: 92cqw;
+    --am-banner-w: 96cqw;
     --am-banner-tilt: 10deg;
     --am-banner-shift: 78%;
     --am-banner-scale: 0.8;

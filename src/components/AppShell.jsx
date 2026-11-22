@@ -3,6 +3,7 @@ import { House, LayoutGrid, Pill, ShoppingBag, Stethoscope } from 'lucide-react'
 import { COPY } from '../content/copy';
 import { useCart } from '../hooks/useCart';
 import useLoggedIn from '../hooks/useLoggedIn';
+import { isFeatureComingSoon, openComingSoonModal } from '../launch/comingSoonMode';
 import { TAB_ITEMS } from '../site/nav';
 import SiteFooter from './SiteFooter';
 import SiteHeader from './SiteHeader';
@@ -34,19 +35,25 @@ export default function AppShell({ children, tab = 'home', hideFooter = false })
           const Icon = TAB_ICONS[item.id];
           const active = tab === item.id;
           const showBadge = item.id === 'cart' && itemCount > 0;
+          const soon = item.feature && isFeatureComingSoon(item.feature);
           return (
             <NavLink
               key={item.id}
               to={item.to}
-              className={`tab-item ${active ? 'active' : ''}`}
+              className={`tab-item ${active ? 'active' : ''}${soon ? ' is-soon' : ''}`}
               aria-current={active ? 'page' : undefined}
               aria-label={showBadge ? `${item.label} (${itemCount})` : undefined}
+              onClick={(event) => {
+                if (!soon) return;
+                event.preventDefault();
+                openComingSoonModal();
+              }}
             >
               <span className="tab-icon" aria-hidden>
                 <Icon size={22} strokeWidth={active ? 2.2 : 1.8} />
                 {showBadge ? <i className="tab-badge">{itemCount > 99 ? '99+' : itemCount}</i> : null}
               </span>
-              <span className="tab-label">{item.label}</span>
+              <span className="tab-label">{soon ? 'Soon' : item.label}</span>
             </NavLink>
           );
         })}

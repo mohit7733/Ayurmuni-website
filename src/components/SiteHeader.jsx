@@ -30,6 +30,11 @@ import RecentSearchList from './search/RecentSearchList';
 import LiveSearchResults from './search/LiveSearchResults';
 import { savedAddressToParsed } from '../services/locationService';
 import { getAddresses, listAddresses, updateAddress } from '../services/profileService';
+import {
+  guardComingSoonPath,
+  isFeatureComingSoon,
+  openComingSoonModal,
+} from '../launch/comingSoonMode';
 import { PRIMARY_NAV } from '../site/nav';
 import Button from './ui/Button';
 import IconButton from './ui/IconButton';
@@ -251,6 +256,12 @@ export default function SiteHeader({ minimal = false }) {
 
   const submitSearch = (event) => {
     event.preventDefault();
+    if (isFeatureComingSoon('search')) {
+      setSearchOpen(false);
+      setMenuOpen(false);
+      openComingSoonModal();
+      return;
+    }
     const next = query.trim();
     setSearchOpen(false);
     setMenuOpen(false);
@@ -394,11 +405,25 @@ export default function SiteHeader({ minimal = false }) {
 
         <div className="site-header-center">
           <nav className="site-nav" aria-label="Primary">
-            {PRIMARY_NAV.map((item) => (
-              <NavLink key={item.to} to={item.to} end={item.to === '/home'} className={navClass}>
-                {item.label}
-              </NavLink>
-            ))}
+            {PRIMARY_NAV.map((item) => {
+              const soon = item.feature && isFeatureComingSoon(item.feature);
+              return (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.to === '/home'}
+                  className={navClass}
+                  onClick={(event) => {
+                    if (!soon) return;
+                    event.preventDefault();
+                    openComingSoonModal();
+                  }}
+                >
+                  {item.label}
+                  {soon ? <span className="site-nav-soon">Soon</span> : null}
+                </NavLink>
+              );
+            })}
           </nav>
 
           <form className="site-search site-search--bar" role="search" onSubmit={submitSearch}>
@@ -519,8 +544,14 @@ export default function SiteHeader({ minimal = false }) {
                 label="Cart"
                 variant="ghost"
                 className="site-cart-btn"
-                badge={itemCount}
-                onClick={() => navigate('/cart')}
+                badge={isFeatureComingSoon('cart') ? undefined : itemCount}
+                onClick={() => {
+                  if (isFeatureComingSoon('cart')) {
+                    openComingSoonModal();
+                    return;
+                  }
+                  navigate('/cart');
+                }}
               >
                 <ShoppingBag size={20} aria-hidden />
               </IconButton>
@@ -570,9 +601,17 @@ export default function SiteHeader({ minimal = false }) {
                         <Edit size={16} aria-hidden />
                       </span>
                     </Link>
-                    <Link className="site-menu-row" to="/profile/orders" onClick={() => setUserOpen(false)}>
+                    <Link
+                      className="site-menu-row"
+                      to="/profile/orders"
+                      onClick={(event) => {
+                        setUserOpen(false);
+                        guardComingSoonPath(event, '/profile/orders');
+                      }}
+                    >
                       <ShoppingBag size={16} aria-hidden />
                       My Orders
+                      {isFeatureComingSoon('orders') ? ' · Soon' : ''}
                     </Link>
                     <Link className="site-menu-row" to="/profile/appointments" onClick={() => setUserOpen(false)}>
                       <Stethoscope size={16} aria-hidden />
@@ -636,11 +675,26 @@ export default function SiteHeader({ minimal = false }) {
           </button>
         </div>
         <nav className="site-nav-mobile" aria-label="Mobile">
-          {PRIMARY_NAV.map((item) => (
-            <NavLink key={item.to} to={item.to} end={item.to === '/home'} className={navClass}>
-              {item.label}
-            </NavLink>
-          ))}
+          {PRIMARY_NAV.map((item) => {
+            const soon = item.feature && isFeatureComingSoon(item.feature);
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.to === '/home'}
+                className={navClass}
+                onClick={(event) => {
+                  setMenuOpen(false);
+                  if (!soon) return;
+                  event.preventDefault();
+                  openComingSoonModal();
+                }}
+              >
+                {item.label}
+                {soon ? ' · Soon' : ''}
+              </NavLink>
+            );
+          })}
           {loggedIn ? null : (
             <NavLink to="/login" className={navClass}>
               Sign in
