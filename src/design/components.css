@@ -2030,7 +2030,7 @@
 /* ---------- Banner carousel (layered center-mode, home design tokens) ---------- */
 .am-banner {
   container-type: inline-size;
-  --am-banner-w: 96cqw;
+  --am-banner-w: 80cqw;
   --am-banner-tilt: 22deg;
   /* centre-to-centre shift that parks a side card's outer edge ~14px inside the section */
   --am-banner-shift: calc(50cqw - 14px - var(--am-banner-w) * 0.43);
@@ -2326,7 +2326,7 @@
 }
 @media (max-width: 1023px) {
   .am-banner {
-    --am-banner-w: 96cqw;
+    --am-banner-w: 80cqw;
     --am-banner-tilt: 8deg;
     --am-banner-shift: 72%;
     --am-banner-scale: 0.86;
@@ -2342,7 +2342,7 @@
 }
 @media (max-width: 639px) {
   .am-banner {
-    --am-banner-w: 96cqw;
+    --am-banner-w: 80cqw;
     --am-banner-tilt: 10deg;
     --am-banner-shift: 78%;
     --am-banner-scale: 0.8;
