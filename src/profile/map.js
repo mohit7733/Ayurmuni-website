@@ -1,6 +1,6 @@
 import { formatRupee, mapCatalogProductItem, resolveImageUrl } from '../home/catalog';
 import { getAppointmentIds } from '../consult/appointmentUtils';
-import { doctorDisplayName, doctorImage, getDoctorId } from '../consult/doctors';
+import { doctorDisplayName, doctorExperience, doctorImage, getDoctorId } from '../consult/doctors';
 
 export const mapOrderToListItem = (order) => {
   const items = Array.isArray(order?.items) ? order.items : [];
@@ -167,9 +167,9 @@ export const mapAppointment = (item) => {
     doctorName: doctorDisplayName(doctor),
     image: doctorImage(doctor) || doctorImage(item),
     specialty,
-    experience: String(doctor?.experience_display || '').trim()
-      || (doctor?.experience_years ? `${doctor.experience_years} yrs` : ''),
-    city: String(doctor?.city || '').trim(),
+    experience: doctorExperience(doctor),
+    city: '',
+    country: 'India',
     consultationType: String(
       appointment?.consultation_type || item?.consultation_type || '',
     ).trim(),

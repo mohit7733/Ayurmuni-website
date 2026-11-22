@@ -1,5 +1,15 @@
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, CircleHelp, FileText, Mail, MessageSquare, Scale, Shield } from 'lucide-react';
+import {
+  ChevronRight,
+  CircleHelp,
+  FileText,
+  Mail,
+  MessageCircle,
+  MessageSquare,
+  PhoneCall,
+  Scale,
+  Shield,
+} from 'lucide-react';
 import AppShell from '../components/AppShell';
 import PageHeader from '../components/PageHeader';
 import { STATIC_COPY as T } from '../content/static';
@@ -13,6 +23,8 @@ const ICONS = {
   legal: Scale,
   mail: Mail,
   contact: MessageSquare,
+  phone: PhoneCall,
+  whatsapp: MessageCircle,
 };
 
 export default function FeedbackInformation() {
@@ -26,6 +38,18 @@ export default function FeedbackInformation() {
       subtitle: T.contactSubtitle,
       to: '/contact',
       icon: 'contact',
+    },
+    {
+      title: T.contactPhoneLabel,
+      subtitle: T.contactPhone,
+      href: T.contactPhoneHref,
+      icon: 'phone',
+    },
+    {
+      title: T.contactWhatsAppLabel,
+      subtitle: T.contactWhatsApp,
+      href: T.contactWhatsAppHref,
+      icon: 'whatsapp',
     },
     {
       title: T.contactEmailLabel,
@@ -50,8 +74,14 @@ export default function FeedbackInformation() {
       </>
     );
     if (item.href) {
+      const external = item.href.startsWith('http');
       return (
-        <a key={item.title} className="sx-feedback-card" href={item.href}>
+        <a
+          key={item.title}
+          className="sx-feedback-card"
+          href={item.href}
+          {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : undefined)}
+        >
           {body}
         </a>
       );

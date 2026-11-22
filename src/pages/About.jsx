@@ -7,10 +7,15 @@ function mailHref(value) {
   return isEmailAddress(value) ? `mailto:${value.trim()}` : null;
 }
 
-function ContactValue({ value }) {
-  const href = mailHref(value);
-  if (!href) return value;
-  return <a href={href}>{value}</a>;
+function ContactValue({ value, href }) {
+  const link = href || mailHref(value);
+  if (!link) return value;
+  const external = link.startsWith('http');
+  return (
+    <a href={link} {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : undefined)}>
+      {value}
+    </a>
+  );
 }
 
 function HeroCast() {
@@ -228,7 +233,9 @@ export default function About() {
               <ul className="ab-reach__list">
                 {T.contacts.map((item) => (
                   <li key={item.id}>
-                    <span>{item.label}:</span> <ContactValue value={item.value} />
+                    <span>{item.label}:</span>{' '}
+                    <ContactValue value={item.value} href={item.href} />
+                    {item.timing ? <em> ({item.timing})</em> : null}
                   </li>
                 ))}
               </ul>

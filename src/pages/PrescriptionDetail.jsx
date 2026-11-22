@@ -35,7 +35,7 @@ import {
   formatAppointmentTimeLabel,
   formatDoctorDisplayName,
 } from '../consult/appointmentUtils';
-import { doctorDisplayName, doctorImage, getDoctorId } from '../consult/doctors';
+import { doctorDisplayName, doctorExperience, doctorImage, getDoctorId } from '../consult/doctors';
 import { formatConsultationAmount } from '../home/catalog';
 import { showSuccessToast } from '../config/key';
 import { requireAuth } from '../services/guestAuth';
@@ -403,11 +403,7 @@ export default function PrescriptionDetail() {
   const doctorName = formatDoctorDisplayName(doctorDisplayName(doctor) || doctor?.doctor_name);
   const doctorPhoto = doctorImage(doctor);
   const doctorMeta = [
-    doctor?.experience_display
-      ? `${doctor.experience_display} yrs exp`
-      : doctor?.experience_years
-        ? `${doctor.experience_years} yrs exp`
-        : '',
+    doctorExperience(doctor),
     doctorLocation,
   ]
     .filter(Boolean)

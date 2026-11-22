@@ -16,6 +16,7 @@ export default function PolicyHubPage({
   eyebrow,
   listHeading,
   listDescription,
+  listNote,
 }) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -74,6 +75,7 @@ export default function PolicyHubPage({
             onOpen={openPolicy}
             heading={listHeading}
             description={listDescription}
+            note={listNote}
           />
         )}
       </section>

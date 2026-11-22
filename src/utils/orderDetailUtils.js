@@ -44,7 +44,7 @@ export const CANCELLATION_REASONS = [
   'Other',
 ];
 
-export const SUPPORT_EMAIL = 'support@ayurmuni.com';
+export { SUPPORT_EMAIL, SUPPORT_PHONE_DISPLAY as SUPPORT_PHONE } from '../site/support';
 
 const normalizeStatus = (status) => String(status ?? 'pending').toLowerCase().replace(/\s+/g, '_');
 

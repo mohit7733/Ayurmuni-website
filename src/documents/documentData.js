@@ -3,6 +3,7 @@
 // (utils/prescriptionPdfBuilder.ts buildPrescriptionPdfFromData). They return the structured input
 // that documentHtml.renderDocumentHtml turns into a print-ready page.
 import { formatConsultationAmount, formatRupee } from '../home/catalog';
+import { SUPPORT_PHONE_DISPLAY } from '../site/support';
 import { getConsultationPaymentSource } from '../utils/doctorSlipUtils';
 import {
   buildConsultationReceiptBillRows,
@@ -84,7 +85,7 @@ export const INVOICE_SELLER_FALLBACK = {
   company_name: 'TruIndyaWellness Private Limited',
   seller_address:
     'C-158,Amar Gyan Industrial Estate, Khopat, Thane Maharashtra - 400601, Maharashtra (27), India',
-  seller_phone: '+91 94180 12698',
+  seller_phone: SUPPORT_PHONE_DISPLAY,
   gstin: 'GSTIN',
   company_email: 'https://ayurmuni.com/',
 };

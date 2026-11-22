@@ -85,6 +85,103 @@ const PROMISE_ICONS = {
   ),
 };
 
+const TrustIcon = ({ children }) => (
+  <svg viewBox="0 0 72 72" fill="none" aria-hidden="true" focusable="false">
+    {children}
+  </svg>
+);
+
+const TRUST_ICONS = {
+  confidential: (
+    <TrustIcon>
+      <path
+        d="M36 8.5 56 16.2v18.4c0 14.2-8.6 23.8-20 27.9-11.4-4.1-20-13.7-20-27.9V16.2L36 8.5Z"
+        fill="var(--am-green-100)"
+        stroke="var(--am-green-600)"
+        strokeWidth="2.2"
+        strokeLinejoin="round"
+      />
+      <rect x="28.5" y="30" width="15" height="13.5" rx="2.5" fill="var(--am-green-600)" />
+      <path
+        d="M32 30.2v-4.2a4 4 0 0 1 8 0v4.2"
+        stroke="var(--am-accent)"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+      />
+      <circle cx="36" cy="36.8" r="1.8" fill="var(--am-accent)" />
+    </TrustIcon>
+  ),
+  certified: (
+    <TrustIcon>
+      <path
+        d="M36 10.5c2.4 3.2 5.8 4.8 9.6 5.1 1.1 3.7 3.4 6.7 6.6 8.7-.4 4 1 7.9 3.7 10.7-2.7 2.8-4.1 6.7-3.7 10.7-3.2 2-5.5 5-6.6 8.7-3.8.3-7.2 1.9-9.6 5.1-2.4-3.2-5.8-4.8-9.6-5.1-1.1-3.7-3.4-6.7-6.6-8.7.4-4-1-7.9-3.7-10.7 2.7-2.8 4.1-6.7 3.7-10.7 3.2-2 5.5-5 6.6-8.7 3.8-.3 7.2-1.9 9.6-5.1Z"
+        fill="var(--am-green-100)"
+        stroke="var(--am-green-600)"
+        strokeWidth="2.2"
+        strokeLinejoin="round"
+      />
+      <circle cx="36" cy="36" r="11" fill="var(--am-accent)" />
+      <path
+        d="m31.6 36.2 2.8 2.8 6.2-6.4"
+        stroke="var(--am-green-800)"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </TrustIcon>
+  ),
+  convenience: (
+    <TrustIcon>
+      <path
+        d="M18.5 46.5c2.4-7.2 6.8-11.8 12.4-14.2 1.6 4.8 5.2 8.2 10.1 9.6-1.5 5.8-5.6 9.8-11.2 12.2-4.3-1.8-8.2-4.6-11.3-7.6Z"
+        fill="var(--am-green-100)"
+        stroke="var(--am-green-600)"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <rect
+        x="34"
+        y="12"
+        width="22"
+        height="36"
+        rx="4.5"
+        fill="var(--am-green-50)"
+        stroke="var(--am-green-600)"
+        strokeWidth="2.2"
+      />
+      <rect x="38.5" y="17.5" width="13" height="22" rx="2" fill="var(--am-green-600)" />
+      <path
+        d="M45 24.5v8M41 28.5h8"
+        stroke="var(--am-accent)"
+        strokeWidth="2.6"
+        strokeLinecap="round"
+      />
+      <circle cx="45" cy="43.5" r="1.6" fill="var(--am-green-600)" />
+    </TrustIcon>
+  ),
+  cost: (
+    <TrustIcon>
+      <path
+        d="M18 28.5h36a4 4 0 0 1 4 4V52a4 4 0 0 1-4 4H18a4 4 0 0 1-4-4V32.5a4 4 0 0 1 4-4Z"
+        fill="var(--am-green-100)"
+        stroke="var(--am-green-600)"
+        strokeWidth="2.2"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M14 35.5h44"
+        stroke="var(--am-green-600)"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
+      <rect x="24" y="14" width="24" height="10" rx="2" fill="var(--am-accent)" />
+      <rect x="27.5" y="11" width="17" height="8" rx="1.5" fill="var(--am-accent)" opacity="0.75" />
+      <circle cx="36" cy="45" r="5.5" fill="var(--am-green-600)" />
+      <path d="M36 42.2v5.6M33.6 45h4.8" stroke="var(--am-accent)" strokeWidth="1.8" strokeLinecap="round" />
+    </TrustIcon>
+  ),
+};
+
 const matchesSearch = (q, ...values) => {
   const needle = String(q || '').trim().toLowerCase();
   if (!needle) return true;
@@ -293,7 +390,7 @@ export default function Consult() {
                     action={
                       <div className="am-head-tools">
                         {headActions}
-                        <ViewAll label={T.topDoctorsTitle} onClick={() => navigate('/consult/doctors')} />
+                        {/* <ViewAll label={T.topDoctorsTitle} onClick={() => navigate('/consult/doctors')} /> */}
                       </div>
                     }
                   />
@@ -328,7 +425,7 @@ export default function Consult() {
                   )}
                 </Reveal>
               ) : null}
-              <section className="hm-section hm-panel cs-promises" aria-label={T.promisesLabel}>
+              {/* <section className="hm-section hm-panel cs-promises" aria-label={T.promisesLabel}>
                 <ul className="cs-promises__list">
                   {T.promises.map((item) => (
                     <li key={item.id} className="cs-promises__item">
@@ -337,7 +434,25 @@ export default function Consult() {
                     </li>
                   ))}
                 </ul>
-              </section>
+              </section> */}
+              <Reveal as="section" className="hm-section hm-panel cs-trust" aria-labelledby="cs-trust-title">
+                <h2 id="cs-trust-title" className="am-sr-only">
+                  {T.trustLabel}
+                </h2>
+                <ul className="cs-trust__list">
+                  {T.trustFeatures.map((item) => (
+                    <li key={item.id} className="cs-trust__item">
+                      <span className="cs-trust__icon" aria-hidden="true">
+                        {TRUST_ICONS[item.id]}
+                      </span>
+                      <div className="cs-trust__copy">
+                        <h3 className="cs-trust__title">{item.title}</h3>
+                        <p className="cs-trust__text">{item.text}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </Reveal>
               {filteredHistory.length > 0 ? (
                 <div className="hm-product-row">
                   <section className="hm-section hm-panel svc-rail-section" aria-labelledby="cs-recent-title">
@@ -419,6 +534,8 @@ export default function Consult() {
                   </section>
                 </div>
               ) : null}
+
+
 
               {/* Health Lab disabled per Rohit
               <Reveal as="section" className="hm-section hm-panel hm-lab" aria-labelledby="cs-lab-title">

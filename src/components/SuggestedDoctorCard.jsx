@@ -4,11 +4,9 @@ import { ArrowRight, BadgeCheck, Star } from 'lucide-react';
 import { formatDoctorDisplayName } from '../consult/appointmentUtils';
 import {
   doctorDisplayName,
-  doctorExperience,
   doctorFavorite,
   doctorFeeLabel,
   doctorImage,
-  doctorLocation,
   doctorQualification,
   doctorRating,
   doctorSpeciality,
@@ -67,8 +65,6 @@ export default function SuggestedDoctorCard({ item, fallbackSpeciality = 'Ayurve
   const rating = doctorRating(item);
   const fee = doctorFeeLabel(item);
   const credential = doctorQualification(item) || doctorSpeciality(item) || fallbackSpeciality;
-  const experience = doctorExperience(item);
-  const location = doctorLocation(item);
   const reviewCount = Number(item?.total_reviews || item?.review_count || 0);
   const verified = Boolean(item?.is_verified);
   const bios = Array.isArray(item?.specialized_bio)
@@ -157,7 +153,7 @@ export default function SuggestedDoctorCard({ item, fallbackSpeciality = 'Ayurve
           </button>
         </h3>
         {credential ? <p className="am-flip-doc__spec">{credential}</p> : null}
-        {bios.length || experience || location ? (
+        {bios.length ? (
           <ul className="hm-doc-card__specialized-bio" aria-label="Specialized Bio">
             {bios.map((bio) => (
               <li key={bio} className="hm-doc-card__specialized-bio-item">

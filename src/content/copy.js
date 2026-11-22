@@ -1,8 +1,8 @@
 // Shared UI copy. Keep user-facing strings here so they can be swapped for Hindi later.
 export const COPY = {
-  brandTagline: 'Your Ayurveda. Prescribed for you, not everyone.',
+  brandTagline: 'Think Ayurveda. Think Ayurmuni.',
   brandMission:
-    'Consult verified Ayurvedic doctors, shop authentic remedies, and follow diet and yoga plans made for your prakriti.',
+    'Ayurvedic care personalised to your Prakriti, guided by qualified Ayurveda doctors. Consultations, authentic medicines, diet plans and yoga in one place.',
   skipToContent: 'Skip to main content',
   trust: [
     { id: 'doctors', title: 'MD Ayurveda Doctors', text: 'Postgraduate Ayurveda specialists, on video from anywhere in India' },

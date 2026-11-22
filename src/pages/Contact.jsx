@@ -1,81 +1,142 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, CircleHelp, Mail, PhoneCall } from 'lucide-react';
+import {
+  Building2,
+  ChevronRight,
+  CircleHelp,
+  Clock3,
+  Mail,
+  MapPin,
+  MessageCircle,
+  PhoneCall,
+  ShieldAlert,
+} from 'lucide-react';
 import AppShell from '../components/AppShell';
 import PageHeader from '../components/PageHeader';
-import { Button } from '../components/ui';
 import { STATIC_COPY as T } from '../content/static';
 import '../design/pages/static.css';
 
 export default function Contact() {
   const navigate = useNavigate();
 
+  const channels = [
+    {
+      id: 'phone',
+      label: T.contactPhoneLabel,
+      value: T.contactPhone,
+      hint: 'Call for orders & inquiries',
+      href: T.contactPhoneHref,
+      icon: PhoneCall,
+    },
+    {
+      id: 'whatsapp',
+      label: T.contactWhatsAppLabel,
+      value: T.contactWhatsApp,
+      hint: 'Chat with support',
+      href: T.contactWhatsAppHref,
+      external: true,
+      icon: MessageCircle,
+    },
+    {
+      id: 'email',
+      label: T.contactEmailLabel,
+      value: T.contactEmail,
+      hint: 'Orders, appointments & account help',
+      href: T.contactEmailHref,
+      icon: Mail,
+    },
+    {
+      id: 'faq',
+      label: 'Help center',
+      value: T.contactFaq,
+      hint: 'Quick answers for common questions',
+      to: '/profile/faq',
+      icon: CircleHelp,
+    },
+  ];
+
   return (
     <AppShell tab="profile">
       <section className="sx-page sx-contact-page">
         <PageHeader
           className="sx-contact-page__header"
-          eyebrow="SUPPORT"
+          eyebrow="Support"
           title={T.contactTitle}
-          subtitle={T.contactSubtitle}
+          subtitle={T.contactLead}
           onBack={() => navigate(-1)}
         />
 
-        <div className="sx-contact-page__layout">
-          <div className="sx-contact-page__intro">
-            <span className="sx-contact-page__eyebrow">HOW CAN WE HELP?</span>
-            <h2>We’re just a message away.</h2>
-            <p>{T.contactLead}</p>
+        <p className="sx-contact-page__meta">
+          <Clock3 size={14} aria-hidden />
+          <span>
+            {T.contactHoursLabel}: {T.contactHours}
+          </span>
+        </p>
 
-            <aside className="sx-contact-page__emergency">
-              <span className="sx-contact-page__emergency-icon" aria-hidden="true">
-                <PhoneCall size={19} />
-              </span>
-              <div>
-                <strong>Need emergency care?</strong>
-                <p>{T.contactNote}</p>
-                <a href="tel:112">Call 112</a>
-              </div>
-            </aside>
-          </div>
+        <section className="sx-contact-page__channels" aria-label="Ways to reach us">
+          {channels.map((item) => {
+            const Icon = item.icon;
+            const body = (
+              <>
+                <span className="sx-contact-page__channel-icon" aria-hidden>
+                  <Icon size={18} />
+                </span>
+                <span className="sx-contact-page__channel-copy">
+                  <small>{item.label}</small>
+                  <strong>{item.value}</strong>
+                  {item.hint ? <em>{item.hint}</em> : null}
+                </span>
+                <ChevronRight className="sx-contact-page__channel-arrow" size={16} aria-hidden />
+              </>
+            );
 
-          <div className="sx-contact-page__options">
-            <article className="sx-contact-page__card sx-contact-page__card--email">
-              <span className="sx-contact-page__icon" aria-hidden="true">
-                <Mail size={21} />
-              </span>
-              <span className="sx-contact-page__card-label">EMAIL SUPPORT</span>
-              <h2>Talk to our team</h2>
-              <p>For help with orders, appointments, or your account, send us an email.</p>
-              <a className="sx-contact-page__email" href={T.contactEmailHref}>
-                {T.contactEmail}
+            if (item.to) {
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  className="sx-contact-page__channel"
+                  onClick={() => navigate(item.to)}
+                >
+                  {body}
+                </button>
+              );
+            }
+
+            return (
+              <a
+                key={item.id}
+                className="sx-contact-page__channel"
+                href={item.href}
+                {...(item.external ? { target: '_blank', rel: 'noopener noreferrer' } : undefined)}
+              >
+                {body}
               </a>
-              <Button
-                variant="primary"
-                href={T.contactEmailHref}
-                trailingIcon={<ArrowRight size={17} aria-hidden="true" />}
-              >
-                {T.faqEmail}
-              </Button>
-            </article>
+            );
+          })}
+        </section>
 
-            <article className="sx-contact-page__card sx-contact-page__card--faq">
-              <span className="sx-contact-page__icon" aria-hidden="true">
-                <CircleHelp size={21} />
-              </span>
-              <span className="sx-contact-page__card-label">HELP CENTER</span>
-              <h2>Looking for an answer?</h2>
-              <p>Browse frequently asked questions for quick guidance and helpful information.</p>
-              <Button
-                variant="secondary"
-                onClick={() => navigate('/profile/faq')}
-                trailingIcon={<ArrowRight size={17} aria-hidden="true" />}
-              >
-                {T.contactFaq}
-              </Button>
-            </article>
+        <section className="sx-contact-page__office" aria-labelledby="sx-contact-office-title">
+          <span className="sx-contact-page__office-icon" aria-hidden>
+            <Building2 size={18} />
+          </span>
+          <div>
+            <h2 id="sx-contact-office-title">{T.contactOfficeLabel}</h2>
+            <p>
+              <MapPin size={14} aria-hidden />
+              <span>{T.contactOffice}</span>
+            </p>
           </div>
-        </div>
+        </section>
 
+        <aside className="sx-contact-page__disclaimer" role="note">
+          <span className="sx-contact-page__disclaimer-icon" aria-hidden>
+            <ShieldAlert size={16} />
+          </span>
+          <p>
+            Online consultations are not a substitute for emergency care. In an emergency,{' '}
+            <a href="tel:112">call 112</a>.
+          </p>
+        </aside>
       </section>
     </AppShell>
   );

@@ -1,3 +1,14 @@
+import {
+  EMERGENCY_DISCLAIMER,
+  REGISTERED_OFFICE,
+  SUPPORT_EMAIL,
+  SUPPORT_EMAIL_HREF,
+  SUPPORT_HOURS,
+  SUPPORT_PHONE_DISPLAY,
+  SUPPORT_PHONE_TEL,
+  SUPPORT_WHATSAPP_URL,
+} from '../site/support';
+
 export const STATIC_COPY = {
   splashKicker: 'Ayurveda care, made personal',
   splashBrand: 'AYURMUNI',
@@ -45,7 +56,9 @@ export const STATIC_COPY = {
   faqHelpTitle: 'Still need help?',
   faqHelpText: 'Our support team can assist with healthcare-related inquiries.',
   faqEmail: 'Email support',
-  faqSupportMailto: 'mailto:support@ayurmuni.com',
+  faqCall: 'Call support',
+  faqWhatsApp: 'WhatsApp support',
+  faqSupportMailto: SUPPORT_EMAIL_HREF,
   faqArticle: 'Help article',
   faqArticleLoading: 'Loading article…',
   faqArticleError: 'Unable to load this article',
@@ -83,10 +96,21 @@ export const STATIC_COPY = {
 
   contactTitle: 'Contact us',
   contactSubtitle: 'We’re here to help',
-  contactLead: 'Reach Ayurmuni support for order, appointment, or account questions.',
+  contactLead:
+    'Reach Ayurmuni support for orders, appointments, account help, or general inquiries.',
   contactEmailLabel: 'Email',
-  contactEmail: 'support@ayurmuni.com',
-  contactEmailHref: 'mailto:support@ayurmuni.com',
+  contactEmail: SUPPORT_EMAIL,
+  contactEmailHref: SUPPORT_EMAIL_HREF,
+  contactPhoneLabel: 'Phone / Inquiry',
+  contactPhone: SUPPORT_PHONE_DISPLAY,
+  contactPhoneHref: SUPPORT_PHONE_TEL,
+  contactWhatsAppLabel: 'WhatsApp',
+  contactWhatsApp: SUPPORT_PHONE_DISPLAY,
+  contactWhatsAppHref: SUPPORT_WHATSAPP_URL,
+  contactHours: SUPPORT_HOURS,
+  contactHoursLabel: 'Support hours',
   contactFaq: 'Browse FAQs',
-  contactNote: 'For medical emergencies, call 112. Ayurmuni is not a substitute for emergency care.',
+  contactOfficeLabel: 'Registered office',
+  contactOffice: REGISTERED_OFFICE,
+  contactNote: EMERGENCY_DISCLAIMER,
 };
