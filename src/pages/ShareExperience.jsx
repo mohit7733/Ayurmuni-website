@@ -1,5 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import {
+  ImagePlus,
+  Leaf,
+  ShieldCheck,
+  Star,
+  Stethoscope,
+  X,
+} from 'lucide-react';
 import AppShell from '../components/AppShell';
 import { showSuccessToast } from '../config/key';
 import { requireAuth } from '../services/guestAuth';
@@ -20,6 +28,36 @@ import {
 import '../design/pages/share-experience.css';
 
 const MAX_MEDIA = 5;
+const MAX_REVIEW = 800;
+
+const RATING_LABELS = {
+  1: 'Poor',
+  2: 'Fair',
+  3: 'Good',
+  4: 'Very Good',
+  5: 'Excellent',
+};
+
+const ENTITY_COPY = {
+  doctor: {
+    eyebrow: 'Consultation review',
+    placeholder:
+      'How was the consultation? Share what helped, what could improve, and how the doctor made you feel.',
+    emptyThumb: Stethoscope,
+  },
+  product: {
+    eyebrow: 'Product review',
+    placeholder:
+      'What did you notice about quality, taste, packaging, or results? Specific details help others decide.',
+    emptyThumb: Leaf,
+  },
+  diet_plan: {
+    eyebrow: 'Diet plan review',
+    placeholder:
+      'Was the plan easy to follow? Tell us about meals, energy, and anything you would change.',
+    emptyThumb: Leaf,
+  },
+};
 
 export default function ShareExperience() {
   const navigate = useNavigate();
@@ -27,15 +65,22 @@ export default function ShareExperience() {
   const entityType = params.entityType || 'doctor';
   const entityName = params.entityName || '';
   const entitySubtitle = params.entitySubtitle || '';
+  const entityImage = params.entityImage || '';
   const appointmentId = params.appointmentId || '';
   const variantId = params.variantId || '';
   const orderId = params.orderId || '';
   const patientDietPlanId = params.patientDietPlanId || '';
   const dietPlanId = params.dietPlanId || '';
   const [rating, setRating] = useState(Math.max(0, Math.min(5, Number(params.initialRating) || 0)));
+  const [hoverRating, setHoverRating] = useState(0);
   const [review, setReview] = useState('');
   const [mediaItems, setMediaItems] = useState([]);
   const [busy, setBusy] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
+
+  const copy = ENTITY_COPY[entityType] || ENTITY_COPY.doctor;
+  const EmptyIcon = copy.emptyThumb;
+  const activeRating = hoverRating || rating;
 
   const canSubmitRefs =
     entityType === 'doctor'
@@ -66,6 +111,10 @@ export default function ShareExperience() {
       }
     })();
   }, [entityType, patientDietPlanId, navigate]);
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [entityImage]);
 
   useEffect(
     () => () => {
@@ -196,6 +245,9 @@ export default function ShareExperience() {
     }
   };
 
+  const countClass =
+    review.length >= MAX_REVIEW ? 'is-max' : review.length >= MAX_REVIEW * 0.9 ? 'is-near' : '';
+
   return (
     <AppShell tab="profile">
       <section className="catalog-page review-page">
@@ -205,78 +257,162 @@ export default function ShareExperience() {
           </button>
           <div>
             <h1>{headerTitle}</h1>
-            <p>Share your experience</p>
+            <p>Your feedback helps others choose with confidence</p>
           </div>
         </header>
 
-        <div className="review-hero">
-          <small>Share Your Experience</small>
-          <strong>{entityName}</strong>
-          {entitySubtitle ? <p>{entitySubtitle}</p> : null}
-        </div>
+        <div className="sx-shell">
+          <article className="sx-entity">
+            <div className="sx-entity__thumb" aria-hidden={!entityImage || imageFailed}>
+              {entityImage && !imageFailed ? (
+                <img
+                  src={entityImage}
+                  alt=""
+                  onError={() => setImageFailed(true)}
+                />
+              ) : (
+                <span className="sx-entity__fallback">
+                  <EmptyIcon size={22} strokeWidth={1.75} />
+                </span>
+              )}
+            </div>
+            <div className="sx-entity__copy">
+              <span className="sx-eyebrow">{copy.eyebrow}</span>
+              <strong>{entityName || 'Your experience'}</strong>
+              {entitySubtitle ? <p>{entitySubtitle}</p> : null}
+            </div>
+          </article>
 
-        <div className="checkout-card review-section review-section--rating">
-          <h3>Your rating</h3>
-          <div className="review-stars">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <button
-                key={star}
-                type="button"
-                className={star <= rating ? 'on' : ''}
-                onClick={() => setRating(star)}
-                aria-label={`${star} star`}
-              >
-                ★
-              </button>
-            ))}
-          </div>
-          <p className="muted">
-            {rating ? `You rated ${rating} out of 5` : 'Tap a star to rate'}
-          </p>
-        </div>
-
-        <div className="checkout-card review-section review-section--text">
-          <h3>Tell us more</h3>
-          <textarea
-            className="review-text"
-            value={review}
-            maxLength={800}
-            placeholder="What did you like? How was the quality, service, or consultation experience?"
-            onChange={(event) => setReview(event.target.value)}
-          />
-          <small className="muted">{review.length}/800</small>
-        </div>
-
-        <div className="checkout-card review-section review-section--media">
-          <div className="review-media-head">
-            <h3>Photos & videos</h3>
-            <small>Optional • up to {MAX_MEDIA}</small>
-          </div>
-          <div className="review-media-grid">
-            {mediaItems.map((item) => (
-              <div key={item.id} className="review-media-tile">
-                {item.type === 'video' ? (
-                  <span>Video</span>
-                ) : (
-                  <img src={item.previewUrl} alt="" />
-                )}
-                <button type="button" onClick={() => removeMedia(item.id)} aria-label="Remove">
-                  ×
+          <section className="sx-card sx-rating">
+            <div className="sx-card__head">
+              <h3>
+                Your rating <span className="sx-req">*</span>
+              </h3>
+              {activeRating > 0 ? (
+                <span key={activeRating} className="sx-rating__tag">
+                  {activeRating}/5 · {RATING_LABELS[activeRating]}
+                </span>
+              ) : (
+                <span className="sx-rating__hint">Tap a star to rate</span>
+              )}
+            </div>
+            <div
+              className="sx-stars"
+              role="radiogroup"
+              aria-label="Your rating"
+              onMouseLeave={() => setHoverRating(0)}
+            >
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  role="radio"
+                  aria-checked={rating === star}
+                  aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
+                  className={`sx-star${star <= activeRating ? ' is-on' : ''}${
+                    star === rating ? ' is-picked' : ''
+                  }`}
+                  onClick={() => setRating(star)}
+                  onMouseEnter={() => setHoverRating(star)}
+                  onFocus={() => setHoverRating(star)}
+                  onBlur={() => setHoverRating(0)}
+                >
+                  <Star size={34} strokeWidth={1.75} />
                 </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="sx-card sx-text">
+            <div className="sx-card__head">
+              <h3>Tell us more</h3>
+              <span className="sx-opt">Optional</span>
+            </div>
+            <textarea
+              className="sx-textarea"
+              value={review}
+              maxLength={MAX_REVIEW}
+              placeholder={copy.placeholder}
+              onChange={(event) => setReview(event.target.value)}
+            />
+            <p className={`sx-count ${countClass}`}>
+              {review.length}/{MAX_REVIEW}
+            </p>
+          </section>
+
+          <section className="sx-card sx-media">
+            <div className="sx-card__head">
+              <h3>
+                Photos & videos <span className="sx-opt">Optional</span>
+              </h3>
+              <span className="sx-badge">
+                {mediaItems.length}/{MAX_MEDIA}
+              </span>
+            </div>
+
+            {mediaItems.length > 0 ? (
+              <div className="sx-thumbs">
+                {mediaItems.map((item) => (
+                  <div key={item.id} className="sx-thumb">
+                    {item.type === 'video' ? (
+                      <span className="sx-thumb__video">Video</span>
+                    ) : (
+                      <img src={item.previewUrl} alt="" />
+                    )}
+                    <button
+                      type="button"
+                      className="sx-thumb__remove"
+                      onClick={() => removeMedia(item.id)}
+                      aria-label="Remove media"
+                    >
+                      <X size={13} strokeWidth={2.5} />
+                    </button>
+                  </div>
+                ))}
               </div>
-            ))}
+            ) : null}
+
             {mediaItems.length < MAX_MEDIA ? (
-              <label className="review-add-tile">
-                <input type="file" accept="image/*,video/*" hidden multiple onChange={pickMedia} />
-                + Add
+              <label className="sx-drop">
+                <input
+                  type="file"
+                  accept="image/*,video/*"
+                  hidden
+                  multiple
+                  onChange={pickMedia}
+                />
+                <span className="sx-drop__icon" aria-hidden>
+                  <ImagePlus size={18} />
+                </span>
+                <span className="sx-drop__text">
+                  <strong>Add photos or videos</strong>
+                  <small>Up to {MAX_MEDIA} files · helps others see real results</small>
+                </span>
               </label>
             ) : null}
-          </div>
-        </div>
+          </section>
 
-        <button type="button" className="cta review-submit" disabled={busy} onClick={handleSubmit}>
-          {busy ? 'Submitting…' : 'Submit Review'}
-        </button>
+          <aside className="sx-guide">
+            <strong className="sx-guide__title">
+              <ShieldCheck size={15} aria-hidden /> Review guidelines
+            </strong>
+            <ul>
+              <li>Be honest and specific about what stood out</li>
+              <li>Focus on quality, results, and overall experience</li>
+              <li>Skip promotional links or personal contact details</li>
+              <li>Keep language respectful for the community</li>
+            </ul>
+          </aside>
+
+          <button
+            type="button"
+            className="cta sx-submit"
+            disabled={busy}
+            onClick={handleSubmit}
+          >
+            {busy ? 'Submitting…' : 'Submit Review'}
+          </button>
+        </div>
       </section>
     </AppShell>
   );

@@ -32,10 +32,12 @@ describe('document html', () => {
 
   it('renders a bordered receipt with line items, totals and signature', () => {
     const html = renderDocumentHtml(buildReceiptDocument(receipt), 'Receipt');
-    expect(html).toContain('CONSULTATION RECEIPT');
+    expect(html).toContain('Sender:');
     expect(html).toContain('Online Consultation - Ayurveda, Panchakarma');
     expect(html).toContain('Administrative charges');
     expect(html).toContain('<th>S.No</th>');
+    expect(html).toContain('Amount (INR)');
+    expect(html).toContain('This is a computer generated Invoice');
     expect(html).toContain('For Dr. Rao');
     expect(html).toContain('@page { size: A4');
   });
@@ -45,11 +47,29 @@ describe('document html', () => {
     expect(input.documentHeading).toBe('PRESCRIPTION');
     expect(input.lineItems[0].description).toContain('Avipattikar');
     expect(input.lineItems[0].qty).toBe('2');
+    expect(input.lineItems[0].rate).toBeUndefined();
     const titles = input.sections.map((s) => s.title);
     expect(titles).toContain('Prescribing Physician');
+    expect(titles).not.toContain('Medicine Price Summary');
     const html = renderDocumentHtml(input);
+    expect(html).toContain('Prescribed Medicine');
     expect(html).toContain('Avipattikar');
     expect(html).toContain('Prescribing Physician');
+    expect(html).not.toContain('Taxable Value');
+    expect(html).not.toContain('100.00');
+  });
+
+  it('prints the consultation fee at the end, not on a medicine row', () => {
+    const input = buildPrescriptionDocument({
+      ...rx,
+      payment: { consultation_fee: 499, payment_method: 'upi', payment_status: 'success' },
+    });
+    expect(input.lineItems[0].description).toBe('Avipattikar');
+    expect(JSON.stringify(input.lineItems)).not.toContain('499');
+    const html = renderDocumentHtml(input);
+    expect(html).toContain('Consultation amount');
+    expect(html).toContain('499.00');
+    expect(html.indexOf('Avipattikar')).toBeLessThan(html.indexOf('Consultation amount'));
   });
 
   it('shows a placeholder row when there are no medicines', () => {

@@ -3,8 +3,11 @@
 import { formatDisplayId } from '../utils/formatDisplayId';
 import {
   buildBillToBlock,
-  buildWellnessFromBlock,
+  formatInvoiceDate,
+  INVOICE_DECLARATION,
+  INVOICE_FOOTER,
   INVOICE_SELLER_FALLBACK,
+  invoiceSellerBlock,
   money,
 } from './documentData';
 
@@ -213,12 +216,8 @@ const buyerFrom = (profile, patients) => {
   };
 };
 
-const issuedOn = (plan) => {
-  const raw = plan?.started_at || plan?.purchased_at || plan?.paid_at;
-  const date = raw ? new Date(raw) : new Date();
-  if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-};
+const issuedOn = (plan) =>
+  formatInvoiceDate(plan?.started_at || plan?.purchased_at || plan?.paid_at || new Date());
 
 const feeLine = (sno, description, amount, tax) => ({
   sno,
@@ -255,13 +254,19 @@ export const buildDietInvoiceDocument = ({ quote, plan, profile, patients } = {}
   });
   breakup.push(`Total payable: ${money(grand)}`);
 
+  const billTo = buildBillToBlock(buyerFrom(profile, patients));
+  const shipLines = billTo.lines.filter((line) => line && line !== '-');
+
   return {
+    variant: 'invoice',
     documentHeading: 'TAX INVOICE',
-    from: buildWellnessFromBlock({}),
-    billTo: buildBillToBlock(buyerFrom(profile, patients)),
+    from: invoiceSellerBlock({}),
+    billTo,
+    shipTo: shipLines.length ? { title: 'Ship To', lines: shipLines } : null,
+    leftMetaTitle: 'Invoice Details-',
     leftMeta: [
       { label: 'Invoice Date', value: issuedOn(plan) || '-' },
-      { label: 'Reference', value: formatDisplayId('DIT', data.diet_plan_id || plan?.id) },
+      { label: 'Invoice Code', value: formatDisplayId('DIT', data.diet_plan_id || plan?.id) },
       { label: 'Plan', value: planName },
     ],
     rightMeta: [
@@ -282,6 +287,7 @@ export const buildDietInvoiceDocument = ({ quote, plan, profile, patients } = {}
     sections: [{ title: 'Price breakup', lines: breakup }],
     signatoryFor: INVOICE_SELLER_FALLBACK.wellness_name,
     showSignature: true,
-    footerNote: 'THIS IS A COMPUTER GENERATED INVOICE. NO PHYSICAL SIGNATURE REQUIRED.',
+    declaration: INVOICE_DECLARATION,
+    footerNote: INVOICE_FOOTER,
   };
 };

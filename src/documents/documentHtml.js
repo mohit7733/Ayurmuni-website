@@ -17,14 +17,24 @@ const cell = (value) => {
 
 const addressBlock = (block) => {
   if (!block) return '';
-  const lines = (block.lines || []).filter(Boolean).map((line) => `<div>${escapeHtml(line)}</div>`);
+  const lines = (block.lines || []).filter(Boolean).map(
+    (line, index) => `<div>${index === 0 ? `<b>${escapeHtml(line)}</b>` : escapeHtml(line)}</div>`,
+  );
   return `<div class="doc-box doc-party"><h3>${escapeHtml(block.title)}</h3>${lines.join('')}</div>`;
 };
 
-const metaColumn = (fields = []) =>
-  `<div class="doc-box doc-meta">${fields
+const metaColumn = (fields = [], heading = '') =>
+  `<div class="doc-box doc-meta">${heading ? `<h3>${escapeHtml(heading)}</h3>` : ''}${fields
     .map((field) => `<p><b>${escapeHtml(field.label)}: </b>${cell(field.value)}</p>`)
     .join('')}</div>`;
+
+const partyBlock = (block, invoice) => {
+  if (!block) return '';
+  if (!invoice) return addressBlock(block);
+  const title = String(block.title || '').trim();
+  const next = /^from$/i.test(title) ? 'Sender:' : title.endsWith(':') ? title : `${title}:`;
+  return addressBlock({ ...block, title: next });
+};
 
 const section = (item) => {
   const lines = (item?.lines || []).map((line) => String(line ?? '').trim()).filter(Boolean);
@@ -72,17 +82,33 @@ body { font-family: Helvetica, Arial, sans-serif; font-size: 9pt; line-height: 1
 .doc-sign b { font-size: 9pt; }
 .doc-sign span { font-size: 8pt; }
 .doc-footer { margin: 12px 0 0; font-size: 8pt; }
+.doc-invoice .doc-table th, .doc-invoice .doc-table td { white-space: pre-line; }
+.doc-invoice .doc-eoe { margin: 6px 2px 0; text-align: right; font-size: 8pt; line-height: 1.45; }
+.doc-invoice .doc-closing { margin-top: 8px; align-items: stretch; }
+.doc-invoice .doc-closing .doc-section { margin-top: 0; flex: 1.6 1 0; }
+.doc-invoice .doc-closing .doc-sign { width: auto; flex: 1 1 0; margin: 0; min-height: 78px; }
+.doc-invoice .doc-footer { margin: 0; padding: 6px; border: 0.8pt solid #000; text-align: center; }
 `;
 
 const COLUMN_WIDTHS = [6, 31, 7, 10, 16, 14, 16];
 
 /** @param {import('./documentData').StructuredDocumentInput} input */
 export const renderDocumentHtml = (input, title = 'Document') => {
+  const invoice = input.variant === 'invoice';
   const hasShip = Boolean(input.shipTo && (input.shipTo.title || (input.shipTo.lines || []).some(Boolean)));
   const items = input.lineItems?.length
     ? input.lineItems
     : [{ sno: 1, description: '-', qty: '-', rate: '-', taxableValue: '-', tax: '-', total: '-' }];
-  const totalCells = DOCUMENT_COLUMNS.slice(2).map((_, index) => {
+  const customColumns = Array.isArray(input.columns) && input.columns.length ? input.columns : null;
+  const columns = customColumns
+    ? customColumns.map((column) => column.label)
+    : invoice
+      ? DOCUMENT_COLUMNS.map((head, index) => (index === DOCUMENT_COLUMNS.length - 1 ? 'Amount (INR)' : head))
+      : DOCUMENT_COLUMNS;
+  const widths = customColumns
+    ? customColumns.map((column) => column.width || Math.floor(100 / customColumns.length))
+    : COLUMN_WIDTHS;
+  const totalCells = columns.slice(2).map((_, index) => {
     const value = input.totals?.[index]?.value ?? '-';
     return `<td class="num">${cell(value)}</td>`;
   });
@@ -101,24 +127,49 @@ export const renderDocumentHtml = (input, title = 'Document') => {
     input.showSignature && signatory
       ? `<div class="doc-box doc-sign"><b>For ${escapeHtml(signatory)}</b><span>Authorized Signatory</span></div>`
       : '';
+  const eoe = invoice
+    ? `<div class="doc-eoe"><div>E. &amp; OE.</div><div><b>Tax Payable on reverse charge basis:</b> ${escapeHtml(
+        input.reverseCharge || 'No',
+      )}</div></div>`
+    : '';
+  const closing = invoice ? `<div class="doc-row doc-closing">${declaration}${signature}</div>` : `${signature}${declaration}`;
+  const metaRow = `${metaColumn(input.leftMeta, invoice ? input.leftMetaTitle || 'Invoice Details-' : '')}${metaColumn(
+    input.rightMeta,
+  )}${hasShip ? '<div class="doc-box doc-meta"></div>' : ''}`;
 
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${escapeHtml(title)}</title><style>${STYLES}</style></head><body><main class="doc">
-${input.documentHeading ? `<h1 class="doc-heading">${escapeHtml(input.documentHeading)}</h1>` : ''}
-<div class="doc-row">${addressBlock(input.from)}${addressBlock(input.billTo)}${hasShip ? addressBlock(input.shipTo) : ''}</div>
-<div class="doc-row">${metaColumn(input.leftMeta)}${metaColumn(input.rightMeta)}</div>
-<table class="doc-table"><colgroup>${COLUMN_WIDTHS.map((w) => `<col style="width:${w}%">`).join('')}</colgroup>
-<thead><tr>${DOCUMENT_COLUMNS.map((head, index) => `<th${index >= 2 ? ' class="num"' : ''}>${escapeHtml(head)}</th>`).join('')}</tr></thead>
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${escapeHtml(title)}</title><style>${STYLES}</style></head><body><main class="doc${invoice ? ' doc-invoice' : ''}">
+${input.documentHeading && !invoice ? `<h1 class="doc-heading">${escapeHtml(input.documentHeading)}</h1>` : ''}
+<div class="doc-row">${partyBlock(input.from, invoice)}${partyBlock(input.billTo, invoice)}${hasShip ? partyBlock(input.shipTo, invoice) : ''}</div>
+<div class="doc-row">${metaRow}</div>
+<table class="doc-table"><colgroup>${widths.map((w) => `<col style="width:${w}%">`).join('')}</colgroup>
+<thead><tr>${columns
+    .map((head, index) => {
+      const numeric = customColumns ? Boolean(customColumns[index]?.numeric) : index >= 2;
+      return `<th${numeric ? ' class="num"' : ''}>${escapeHtml(head)}</th>`;
+    })
+    .join('')}</tr></thead>
 <tbody>${items
-    .map(
-      (item) =>
-        `<tr><td>${cell(item.sno)}</td><td>${cell(item.description)}</td><td class="num">${cell(item.qty)}</td><td class="num">${cell(item.rate)}</td><td class="num">${cell(item.taxableValue)}</td><td class="num">${cell(item.tax)}</td><td class="num">${cell(item.total)}</td></tr>`,
-    )
+    .map((item) => {
+      const values = customColumns
+        ? customColumns.map((column) => item[column.key])
+        : [item.sno, item.description, item.qty, item.rate, item.taxableValue, item.tax, item.total];
+      return `<tr>${values
+        .map((value, index) => {
+          const numeric = customColumns ? Boolean(customColumns[index]?.numeric) : index >= 2;
+          return `<td${numeric ? ' class="num"' : ''}>${cell(value)}</td>`;
+        })
+        .join('')}</tr>`;
+    })
     .join('')}</tbody>
-<tfoot><tr><td colspan="2">Total</td>${totalCells.join('')}</tr></tfoot></table>
+${
+  input.hideTotals
+    ? ''
+    : `<tfoot><tr><td colspan="2">${invoice ? 'Total:' : 'Total'}</td>${totalCells.join('')}</tr></tfoot>`
+}</table>
 ${(input.sections || []).map(section).join('')}
-${signature}
-${declaration}
-<p class="doc-footer">${escapeHtml(input.footerNote || 'This is a computer generated document.')}</p>
+${eoe}
+${closing}
+<p class="doc-footer">${escapeHtml(input.footerNote || (invoice ? 'This is a computer generated Invoice' : 'This is a computer generated document.'))}</p>
 </main></body></html>`;
 };
 

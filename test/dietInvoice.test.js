@@ -61,6 +61,8 @@ describe('diet invoice breakup', () => {
       patients: [],
     });
     expect(doc.documentHeading).toBe('TAX INVOICE');
+    expect(doc.variant).toBe('invoice');
+    expect(doc.from.title).toBe('Sender:');
     expect(doc.billTo.lines[0]).toBe('Mohit Beniwal');
     expect(doc.lineItems.map((row) => row.description)).toEqual([
       'Gut-Brain Harmony & Anxiety Calming Diet Plan — Diet plan price',
