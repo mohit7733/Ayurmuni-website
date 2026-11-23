@@ -13,6 +13,7 @@ import {
   getRecentSearchResults,
 } from '../../services/globalSearchService';
 import { invalidateRecentSearchQueries } from '../../hooks/useRecentSearchQueries';
+import { trackMetaSearch } from '../../services/metaPixel';
 import '../../design/global-search.css';
 
 /** Same sections and order as the app's ProductSearchScreen SECTION_META. */
@@ -58,6 +59,12 @@ export default function GlobalSearch() {
     else next.delete('q');
     if (next.toString() !== params.toString()) setParams(next, { replace: true });
   }, [query]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const q = query.trim();
+    if (!q || source !== 'live') return;
+    trackMetaSearch(q);
+  }, [query, source]);
 
   const live = useGlobalSearch(query, source === 'live' && !!query);
   const recent = useRecentSearches(true);

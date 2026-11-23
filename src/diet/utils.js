@@ -1382,6 +1382,7 @@ export const buildDietReviewState = ({ plan, assignmentId, catalogPlanId }) => (
   entityType: 'diet_plan',
   entityName: plan?.name || plan?.title || 'Diet Plan',
   entitySubtitle: 'How was this diet plan?',
+  entityImage: getDietPlanCoverUrl(plan) || '',
   patientDietPlanId: String(assignmentId),
   dietPlanId: catalogPlanId ? String(catalogPlanId) : undefined,
 });

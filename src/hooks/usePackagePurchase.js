@@ -4,6 +4,7 @@ import { payPackagePurchase, requestPackagePurchase } from '../payment/packageCh
 import { packageGatewayChoices, resolvePackageGateway } from '../payment/packagePurchase';
 import { requireAuth } from '../services/guestAuth';
 import usePaymentGateways from './usePaymentGateways';
+import { trackMetaPurchase, trackMetaSubscribe } from '../services/metaPixel';
 
 /**
  * Package buy flow shared by the packages list and detail page.
@@ -53,6 +54,33 @@ export default function usePackagePurchase({ onPurchased } = {}) {
       if (outcome === 'redirect') return;
       if (outcome === 'verified') {
         setReview(null);
+        const purchaseId = purchase?.id || current.quote?.purchaseId || current.item?.id;
+        const gatewayPaymentId =
+          purchase?.gateway_payment_id ||
+          purchase?.razorpay_payment_id ||
+          purchase?.payment_id ||
+          '';
+        const value =
+          Number(
+            purchase?.paid_price ??
+              current.quote?.totalPayable ??
+              current.item?.price,
+          ) || undefined;
+        trackMetaPurchase({
+          eventId: `package_${purchaseId}_${gatewayPaymentId || 'web'}`,
+          contentIds: [String(current.item?.id || purchaseId)],
+          contentName: current.item?.name || current.item?.title,
+          value,
+          currency: 'INR',
+          orderId: String(purchaseId),
+        });
+        trackMetaSubscribe({
+          eventId: `subscribe_package_${purchaseId}_${gatewayPaymentId || 'web'}`,
+          contentIds: [String(current.item?.id || purchaseId)],
+          contentName: current.item?.name || current.item?.title,
+          value,
+          currency: 'INR',
+        });
         await onPurchased?.(current.item, purchase);
         navigate('/profile/plans', { state: { highlightId: purchase?.id } });
         return;

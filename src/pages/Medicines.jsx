@@ -83,11 +83,10 @@ export default function Medicines() {
     if (sort) next.sort = sort;
     return next;
   }, [medicineCategoryId, categoryId, query, priceRange, minRating, sortBy]);
-  const { products, loading, loadingMore, hasMore, loadMore } = useCategoryProducts(
-    productFilter,
-    [],
-    { enabled: Boolean(medicineCategoryId) || !homeLoading },
-  );
+  const { products, totalCount, loading, loadingMore, hasMore, loadMore } =
+    useCategoryProducts(productFilter, [], {
+      enabled: Boolean(medicineCategoryId) || !homeLoading,
+    });
 
   const [concerns, setConcerns] = useState([]);
   const [concernsLoading, setConcernsLoading] = useState(true);
@@ -393,8 +392,10 @@ export default function Medicines() {
                         <div className="st-controls">
                           <div className="st-controls__info">
                             <span>
-                              {filteredProducts.length}{' '}
-                              {filteredProducts.length === 1 ? 'medicine' : 'medicines'}
+                              {(() => {
+                                const n = totalCount ?? filteredProducts.length;
+                                return `${n} ${n === 1 ? 'medicine' : 'medicines'}`;
+                              })()}
                             </span>
                             {hasActiveFilters ? (
                               <Button

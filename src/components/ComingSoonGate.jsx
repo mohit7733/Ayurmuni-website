@@ -1,7 +1,11 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button, Modal } from './ui';
-import { isComingSoonMode, isComingSoonPath } from '../launch/comingSoonMode';
+import {
+  COMING_SOON_EVENT,
+  isComingSoonMode,
+  isComingSoonPath,
+} from '../launch/comingSoonMode';
 
 /**
  * Temporary: when VITE_COMING_SOON is on, intercept non-consult feature routes
@@ -13,6 +17,13 @@ export default function ComingSoonGate() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const lastAllowedRef = useRef('/home');
+
+  useEffect(() => {
+    if (!enabled) return undefined;
+    const onOpen = () => setOpen(true);
+    window.addEventListener(COMING_SOON_EVENT, onOpen);
+    return () => window.removeEventListener(COMING_SOON_EVENT, onOpen);
+  }, [enabled]);
 
   useLayoutEffect(() => {
     if (!enabled) return;

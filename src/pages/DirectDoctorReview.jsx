@@ -9,9 +9,8 @@ import {
   normalizeApiList,
   resolveImageUrl,
 } from '../home/catalog';
-import { getDoctors } from '../services/consultService';
+import { apiClient } from '../services/apiClient';
 import { isAuthenticated } from '../services/guestAuth';
-import { getProducts } from '../services/productService';
 import { createManagementReview } from '../services/reviewService';
 import { uploadReviewAsset } from '../utils/reviewUtils';
 import '../design/pages/management-review.css';
@@ -134,7 +133,11 @@ export default function DirectDoctorReview() {
       try {
         setListLoading(true);
         setListError('');
-        const res = await getDoctors({ page: 1, page_size: LIST_PAGE_SIZE });
+        const res = await apiClient(
+          `customers/doctors/?page=1&page_size=${LIST_PAGE_SIZE}`,
+          { method: 'GET' },
+          false,
+        );
         if (!alive) return;
         if (!res || res.success === false) {
           setListError(res?.message || 'Unable to load doctors');
@@ -182,11 +185,12 @@ export default function DirectDoctorReview() {
       try {
         setListLoading(true);
         setListError('');
-        const res = await getProducts({
-          page: 1,
-          page_size: LIST_PAGE_SIZE,
-          ...(debouncedQuery ? { search: debouncedQuery } : {}),
+        const query = new URLSearchParams({
+          page: '1',
+          page_size: String(LIST_PAGE_SIZE),
         });
+        if (debouncedQuery) query.set('search', debouncedQuery);
+        const res = await apiClient(`customers/products/?${query}`, { method: 'GET' }, false);
         if (!alive) return;
         if (!res || res.success === false) {
           setListError(res?.message || 'Unable to load products');

@@ -182,10 +182,13 @@ export const formatRupee = (value, options) => {
   if (value == null || value === '') return '';
   const n = Number(value);
   if (!Number.isFinite(n)) return String(value);
+  // Zero amounts stay blank — callers that need a visible ₹0 can pass { showZero: true }.
+  if (Math.round(Math.abs(n) * 100) === 0 && !options?.showZero) return '';
   const decimals = options?.decimals;
   if (typeof decimals === 'number') {
+    // Never pad .00: ₹999, or ₹999.5 when paise exist.
     return `₹${n.toLocaleString('en-IN', {
-      minimumFractionDigits: decimals,
+      minimumFractionDigits: 0,
       maximumFractionDigits: decimals,
     })}`;
   }
@@ -194,19 +197,20 @@ export const formatRupee = (value, options) => {
 
 /**
  * Plan and paid amounts. Paise stay paise: 0.99 is ₹0.99, never a second figure of ₹1.
- * A whole rupee ("10.00") stays ₹10. Product prices keep using formatRupee.
+ * A whole rupee ("10.00") stays ₹10. Zero returns blank.
  */
 export const formatExactRupee = (value) => {
   if (value == null || value === '') return '';
   const n = Number(String(value).trim().replace(/,/g, '').replace(/^₹/, ''));
   if (!Number.isFinite(n)) return '';
   const cents = Math.round(Math.abs(n) * 100);
+  if (cents === 0) return '';
   if (cents % 100 === 0) return formatRupee(n);
   return formatRupee(n, { decimals: 2 });
 };
 
-/** Consultation amounts. Two decimal places, unlike product prices from formatRupee. */
-export const formatConsultationAmount = (value) => formatRupee(value, { decimals: 2 });
+/** Consultation amounts. Whole rupees as ₹999; paise only when needed; blank for 0. */
+export const formatConsultationAmount = (value) => formatExactRupee(value);
 
 export const doctorDisplayName = (item) =>
   String(

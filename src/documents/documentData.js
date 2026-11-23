@@ -2,7 +2,7 @@
 // (utils/buildConsultationDocumentPdf.ts createMedicalReceiptPdfBytes) and prescription
 // (utils/prescriptionPdfBuilder.ts buildPrescriptionPdfFromData). They return the structured input
 // that documentHtml.renderDocumentHtml turns into a print-ready page.
-import { formatConsultationAmount, formatRupee } from '../home/catalog';
+import { formatConsultationAmount } from '../home/catalog';
 import { SUPPORT_PHONE_DISPLAY } from '../site/support';
 import { getConsultationPaymentSource } from '../utils/doctorSlipUtils';
 import {
@@ -25,10 +25,8 @@ import {
   getFollowUpInfo,
   getGynaecologicalLines,
   getMedicineItems,
-  getMedicineMrp,
   getMedicineQuantity,
   getMedicineScheduleChips,
-  getMedicineUnitPrice,
   getPastIllnessText,
   getPaymentAmount,
   getPersonalHistoryLines,
@@ -54,7 +52,11 @@ export const pick = (...values) => {
 export const money = (value) => {
   if (value == null || value === '') return '-';
   const num = Number(value);
-  return Number.isFinite(num) ? num.toFixed(2) : '-';
+  if (!Number.isFinite(num)) return '-';
+  if (Math.round(Math.abs(num) * 100) === 0) return '';
+  return Number.isInteger(num) || Math.round(Math.abs(num) * 100) % 100 === 0
+    ? String(Math.round(num))
+    : String(Number(num.toFixed(2)));
 };
 
 const joinAddress = (address) => {
@@ -84,7 +86,7 @@ export const INVOICE_SELLER_FALLBACK = {
   wellness_name: 'TruIndyaWellness Private Limited',
   company_name: 'TruIndyaWellness Private Limited',
   seller_address:
-    'C-158,Amar Gyan Industrial Estate, Khopat, Thane Maharashtra - 400601, Maharashtra (27), India',
+    'C-158, Amar Gyan Industrial Estate, Khopat, Thane Maharashtra - 400601, Maharashtra (27), India',
   seller_phone: SUPPORT_PHONE_DISPLAY,
   gstin: 'GSTIN',
   company_email: 'https://ayurmuni.com/',
@@ -105,7 +107,26 @@ export const mergeWithInvoiceSellerDefaults = (source) => ({
     },
 });
 
-export const buildWellnessFromBlock = (source) => {
+export const INVOICE_DECLARATION = [
+  '1. All claims, if any, for shortages or damages must be reported to customer service on the day of delivery through the contact us page on the web store.',
+  '2. All Disputes are subject to Maharashtra (27) jurisdiction only.',
+];
+
+export const INVOICE_FOOTER = 'This is a computer generated Invoice';
+
+const INVOICE_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+/** 23-Nov-2026. Strings that are already in that shape are kept. */
+export const formatInvoiceDate = (value) => {
+  if (value == null || value === '') return '';
+  const raw = value instanceof Date ? '' : String(value).trim();
+  if (/^\d{1,2}-[A-Za-z]{3}-\d{4}$/.test(raw)) return raw;
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return raw;
+  return `${String(date.getDate()).padStart(2, '0')}-${INVOICE_MONTHS[date.getMonth()]}-${date.getFullYear()}`;
+};
+
+export const buildWellnessFromBlock = (source, options = {}) => {
   const merged = mergeWithInvoiceSellerDefaults(source);
   const wellness =
     merged.wellness ?? merged.wellness_info ?? merged.seller ?? merged.vendor ?? merged.company ?? merged.clinic ?? {};
@@ -138,13 +159,19 @@ export const buildWellnessFromBlock = (source) => {
     INVOICE_SELLER_FALLBACK.gstin,
   );
   const email = pick(wellness?.email, merged?.seller_email, merged?.company_email, INVOICE_SELLER_FALLBACK.company_email);
+  const gstinText = gstin && !/^gstin$/i.test(gstin) ? gstin : '';
   const lines = [name];
   if (address) lines.push(address);
-  if (phone) lines.push(`Tel: ${phone}`);
-  if (gstin) lines.push(`GSTIN: ${gstin}`);
-  if (email) lines.push(email);
-  return { title: 'From', lines };
+  if (phone) lines.push(`${options.phoneLabel || 'Tel'}: ${phone}`);
+  if (gstinText) lines.push(`GSTIN: ${gstinText}`);
+  else if (options.showEmptyGstin) lines.push('GSTIN:');
+  if (email && !/^https?:\/\//i.test(email)) lines.push(email);
+  return { title: options.title || 'From', lines };
 };
+
+/** Seller block used by every tax invoice (product, diet, consultation). */
+export const invoiceSellerBlock = (source) =>
+  buildWellnessFromBlock(source, { title: 'Sender:', phoneLabel: 'T', showEmptyGstin: true });
 
 export const buildBillToBlock = (source) => {
   const patient = source?.patient ?? source?.billing_address ?? source?.customer ?? source?.user ?? {};
@@ -237,14 +264,28 @@ export const buildReceiptDocument = (receipt) => {
     ? breakdown.paymentStatus.charAt(0).toUpperCase() + breakdown.paymentStatus.slice(1)
     : '';
 
+  const billTo = buildBillToBlock({
+    ...receipt,
+    patient_name: receipt?.patient_name || receipt?.patient?.name,
+    patient,
+  });
+  const shipTo = buildShipToBlock(receipt) ?? buildPatientShipTo(patient) ?? {
+    title: 'Ship To',
+    lines: billTo.lines.filter((line) => line && line !== '-'),
+  };
+
   return {
+    variant: 'invoice',
     documentHeading: 'CONSULTATION RECEIPT',
-    from: buildWellnessFromBlock(mergeWithInvoiceSellerDefaults(receipt)),
-    billTo: buildBillToBlock({ ...receipt, patient_name: receipt?.patient_name || receipt?.patient?.name, patient }),
-    shipTo: buildShipToBlock(receipt) ?? buildPatientShipTo(patient),
+    from: invoiceSellerBlock(mergeWithInvoiceSellerDefaults(receipt)),
+    billTo,
+    shipTo,
     leftMeta: [
-      { label: 'Receipt Date', value: pick(receipt?.date, receipt?.paid_at, breakdown.paidAt) || '-' },
-      { label: 'Receipt Code', value: formatReceiptId(paymentId) },
+      {
+        label: 'Invoice Date',
+        value: formatInvoiceDate(pick(receipt?.date, receipt?.paid_at, breakdown.paidAt)) || '-',
+      },
+      { label: 'Invoice Code', value: formatReceiptId(paymentId) },
       ...(breakdown.paymentId ? [{ label: 'Payment ID', value: breakdown.paymentId }] : []),
       ...(breakdown.orderId ? [{ label: 'Order ID', value: breakdown.orderId }] : []),
     ],
@@ -269,10 +310,18 @@ export const buildReceiptDocument = (receipt) => {
     ],
     signatoryFor: doctorName || INVOICE_SELLER_FALLBACK.wellness_name,
     showSignature: true,
-    hideDeclaration: true,
-    footerNote: 'THIS IS A COMPUTER GENERATED RECEIPT. NO PHYSICAL SIGNATURE REQUIRED.',
+    declaration: INVOICE_DECLARATION,
+    leftMetaTitle: 'Invoice Details-',
+    footerNote: INVOICE_FOOTER,
   };
 };
+
+const PRESCRIPTION_COLUMNS = [
+  { key: 'sno', label: 'S.No', width: 8 },
+  { key: 'description', label: 'Prescribed Medicine', width: 46 },
+  { key: 'qty', label: 'Qty', width: 10, numeric: true },
+  { key: 'directions', label: 'Directions', width: 36 },
+];
 
 const buildMedicineRow = (med, index) => {
   const name = pick(med?.medicine_name, med?.name, med?.product_name, med?.title) || `Medicine ${index + 1}`;
@@ -280,23 +329,12 @@ const buildMedicineRow = (med, index) => {
   const subtitleLine = subtitle && subtitle.toLowerCase() !== name.toLowerCase() ? ` (${subtitle})` : '';
   const schedule = (getMedicineScheduleChips(med) || []).map((chip) => `${chip.caption}: ${chip.label}`).join(', ');
   const instruction = pick(med?.instruction, med?.instructions, med?.notes, med?.advice);
-  const unitPrice = getMedicineUnitPrice(med);
-  const unitMrp = getMedicineMrp(med);
   const qty = getMedicineQuantity(med);
-  const lineTotal = unitPrice != null ? unitPrice * qty : null;
-  const lineMrp = (unitMrp ?? unitPrice ?? 0) * qty;
-  const mrpNote = unitMrp != null && unitPrice != null && unitMrp > unitPrice ? `MRP ${money(unitMrp)}` : '';
   return {
     sno: index + 1,
-    description: [name + subtitleLine, schedule, instruction, mrpNote].filter(Boolean).join(' | '),
+    description: `${name}${subtitleLine}`,
     qty: String(qty),
-    rate: unitPrice != null ? money(unitPrice) : '-',
-    taxableValue: lineTotal != null ? money(lineTotal) : '-',
-    tax: '0.00',
-    total: lineTotal != null ? money(lineTotal) : '-',
-    qtyNum: qty,
-    lineTotalNum: lineTotal ?? 0,
-    lineMrpNum: lineTotal != null ? lineMrp : 0,
+    directions: [schedule, instruction].filter(Boolean).join(' | ') || '-',
   };
 };
 
@@ -306,14 +344,9 @@ const pushSection = (sections, title, lines, bullet = false) => {
 };
 
 const buildPaymentMeta = (data, appointment) => {
-  const amount = getPaymentAmount(data);
   const method = pick(data?.payment?.payment_method, data?.payment?.mode, appointment?.payment?.payment_method);
   const status = pick(data?.payment?.payment_status, data?.payment?.status, appointment?.payment?.payment_status);
-  const parts = [
-    amount != null ? `Amount: ${formatConsultationAmount(amount)}` : '',
-    method ? `Method: ${method}` : '',
-    status ? `Status: ${status}` : '',
-  ].filter(Boolean);
+  const parts = [method ? `Method: ${method}` : '', status ? `Status: ${status}` : ''].filter(Boolean);
   return parts.join(' - ') || '-';
 };
 
@@ -331,13 +364,9 @@ export const buildPrescriptionDocument = (data) => {
     : pick(doctor?.doctor_specialization, doctor?.specialization);
 
   const rows = getMedicineItems(prescription).map(buildMedicineRow);
-  const totalSum = rows.reduce((sum, row) => sum + row.lineTotalNum, 0);
-  const mrpSum = rows.reduce((sum, row) => sum + row.lineMrpNum, 0);
-  const totalQty = rows.reduce((sum, row) => sum + row.qtyNum, 0);
-
   const lineItems = rows.length
-    ? rows.map(({ lineTotalNum, lineMrpNum, qtyNum, ...row }) => row) // eslint-disable-line no-unused-vars
-    : [{ sno: 1, description: 'No medicines prescribed', qty: '-', rate: '-', taxableValue: '-', tax: '-', total: '-' }];
+    ? rows
+    : [{ sno: 1, description: 'No medicines prescribed', qty: '-', directions: '-' }];
 
   const concernText = getConcernText(data);
   const diagnosisText = getDiagnosisText(prescription);
@@ -400,16 +429,6 @@ export const buildPrescriptionDocument = (data) => {
   const advisory = getClinicalAdvisory(prescription);
   if (advisory) pushSection(sections, 'Clinical Observations', [advisory]);
 
-  if (totalSum > 0) {
-    const discount = mrpSum - totalSum;
-    pushSection(sections, 'Medicine Price Summary', [
-      `Total quantity: ${totalQty}`,
-      `Total MRP: ${formatRupee(mrpSum, { decimals: 2 })}`,
-      discount > 0 ? `Discount: - ${formatRupee(discount, { decimals: 2 })}` : '',
-      `Total amount: ${formatRupee(totalSum, { decimals: 2 })}`,
-    ]);
-  }
-
   const phone = pick(doctor?.phone, doctor?.mobile, doctor?.contact_number);
   pushSection(
     sections,
@@ -424,7 +443,9 @@ export const buildPrescriptionDocument = (data) => {
   );
 
   const paymentAmount = parseAmount(getPaymentAmount(data));
-  const grandTotal = totalSum > 0 ? money(totalSum) : paymentAmount != null ? money(paymentAmount) : '-';
+  if (paymentAmount != null) {
+    pushSection(sections, 'Consultation amount', [formatConsultationAmount(paymentAmount)]);
+  }
 
   const billTo = buildBillToBlock({
     ...data,
@@ -475,14 +496,9 @@ export const buildPrescriptionDocument = (data) => {
       { label: 'Doctor', value: doctorName || '-' },
       { label: 'Specialization', value: specialization || '-' },
     ],
+    columns: PRESCRIPTION_COLUMNS,
+    hideTotals: true,
     lineItems,
-    totals: [
-      { label: 'Qty', value: rows.length ? String(totalQty) : '-' },
-      { label: 'Rate', value: '-' },
-      { label: 'Taxable', value: grandTotal },
-      { label: 'IGST', value: '0.00' },
-      { label: 'Grand Total', value: grandTotal },
-    ],
     sections,
     signatoryFor: doctorName || 'Doctor',
     showSignature: true,

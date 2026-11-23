@@ -625,15 +625,50 @@ export default function CategoryProducts() {
     }
   };
 
-  const countLabel = (() => {
-    const n = filteredAndSortedProducts.length;
+  const productApiCount = isBrandMix
+    ? canSplitBrand
+      ? brandProductCatalog.totalCount
+      : brandUnscopedCatalog.totalCount
+    : regularCatalog.totalCount;
+  const medicineApiCount =
+    isBrandMix && canSplitBrand ? brandMedicineCatalog.totalCount : null;
+
+  const resultsCountText = (() => {
+    if (loading && products.length === 0) return T.refreshing;
+
+    const unit = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+    const fallback = filteredAndSortedProducts.length;
+
     if (isBrandMix) {
-      if (catalogKind === 'medicine') return n === 1 ? 'medicine' : 'medicines';
-      if (catalogKind === 'product') return n === 1 ? 'product' : 'products';
-      return n === 1 ? 'item' : 'items';
+      if (catalogKind === 'medicine' || medicineCategoryLocksProducts) {
+        const n = medicineApiCount ?? fallback;
+        return unit(n, 'medicine', 'medicines');
+      }
+      if (catalogKind === 'product' || productCategoryLocksMedicines) {
+        const n = productApiCount ?? fallback;
+        return unit(n, 'product', 'products');
+      }
+      if (canSplitBrand) {
+        if (
+          typeof productApiCount !== 'number' ||
+          typeof medicineApiCount !== 'number'
+        ) {
+          return loading ? T.refreshing : unit(fallback, 'item', 'items');
+        }
+        return `${unit(productApiCount, 'product', 'products')} and ${unit(
+          medicineApiCount,
+          'medicine',
+          'medicines',
+        )}`;
+      }
+      const n = productApiCount ?? fallback;
+      return unit(n, 'item', 'items');
     }
-    if (isMedicine) return n === 1 ? 'medicine' : 'medicines';
-    return n === 1 ? 'product' : 'products';
+
+    if (isMedicine) {
+      return unit(regularCatalog.totalCount ?? fallback, 'medicine', 'medicines');
+    }
+    return unit(regularCatalog.totalCount ?? fallback, 'product', 'products');
   })();
 
   const goSearch = (value) => setQuery(String(value ?? search).trim());
@@ -860,7 +895,7 @@ export default function CategoryProducts() {
                 </div>
               ) : null}
 
-              {isBrandMix && params.get('mode') == 'both' ? (
+              {/* {isBrandMix && params.get('mode') == 'both' ? (
                 <div className={`cp-aside-group${openFilterPanel === 'type' ? ' is-open' : ''}`}>
                   <button
                     type="button"
@@ -915,7 +950,7 @@ export default function CategoryProducts() {
                     </ul>
                   </div>
                 </div>
-              ) : null}
+              ) : null} */}
 
               {categoryList.length > 1 ? (
                 <div className={`cp-aside-group${openFilterPanel === 'category' ? ' is-open' : ''}`}>
@@ -1046,11 +1081,7 @@ export default function CategoryProducts() {
             <div className="st-catalog__main">
               <div className="st-controls">
                 <div className="st-controls__info">
-                  <span>
-                    {loading && products.length === 0
-                      ? T.refreshing
-                      : `${filteredAndSortedProducts.length} ${countLabel}`}
-                  </span>
+                  <span>{resultsCountText}</span>
                   {hasActiveFilters ? (
                     <Button
                       variant="ghost"

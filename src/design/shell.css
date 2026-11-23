@@ -131,6 +131,23 @@
   background: var(--am-green-800);
 }
 
+.site-nav-soon {
+  margin-left: 2px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--am-primary) 14%, transparent);
+  color: var(--am-primary);
+  font-size: 10px;
+  font-weight: var(--am-weight-semibold);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.site-nav-link.active .site-nav-soon {
+  background: color-mix(in srgb, #fff 22%, transparent);
+  color: #f6f1e6;
+}
+
 .site-search {
   display: none;
   align-items: center;

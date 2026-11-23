@@ -51,6 +51,8 @@ import {
   normalizeReturnList,
   sortReturnsNewestFirst,
 } from '../services/returnService';
+import { buildOrderInvoiceDocument } from '../documents/orderInvoice';
+import { printDocumentHtml, renderDocumentHtml } from '../documents/documentHtml';
 import { formatOrderId } from '../utils/formatDisplayId';
 import { consumePendingProductReview } from '../utils/pendingReviews';
 import { isOrderItemRated, resolveOrderItemVariantId } from '../utils/reviewUtils';
@@ -192,6 +194,7 @@ export default function OrderDetails() {
         entityType: 'product',
         entityName: item?.variant?.variant_title || item?.product_name || item?.name || 'Product',
         entitySubtitle: `Order ${formatOrderId(order?.order_code ?? order?.id)}`,
+        entityImage: resolveImageUrl(item?.variant || item) || '',
         variantId,
         orderId: String(order.id),
         initialRating: 0,
@@ -224,6 +227,14 @@ export default function OrderDetails() {
     if (!order?.id || invoiceLoading) return;
     setInvoiceLoading(true);
     try {
+      const html = renderDocumentHtml(
+        buildOrderInvoiceDocument(order),
+        `Invoice ${formatOrderId(order?.order_code ?? order.id)}`,
+      );
+      if (await printDocumentHtml(html)) {
+        showSuccessToast('Invoice downloaded', 'success');
+        return;
+      }
       const response = await downloadInvoiceFile(order.id);
       if (!response?.success || !response.data) throw new Error('Invoice PDF data not found');
       const fileName = `Invoice_${formatOrderId(order?.order_code ?? order.id).replace(/[^a-zA-Z0-9._-]/g, '_')}.pdf`;

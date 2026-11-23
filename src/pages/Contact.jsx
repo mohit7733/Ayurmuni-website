@@ -13,6 +13,7 @@ import {
 import AppShell from '../components/AppShell';
 import PageHeader from '../components/PageHeader';
 import { STATIC_COPY as T } from '../content/static';
+import { trackMetaContact } from '../services/metaPixel';
 import '../design/pages/static.css';
 
 export default function Contact() {

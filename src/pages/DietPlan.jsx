@@ -66,6 +66,7 @@ import {
   hydrateReviewedDietPlans,
   isDietPlanAssignmentReviewed,
 } from '../utils/reviewedDietPlans';
+import { trackMetaViewContent } from '../services/metaPixel';
 import '../design/pages/diet-plan.css';
 import '../design/brand.css';
 import '../design/pages/diet-brand.css';
@@ -150,6 +151,19 @@ export default function DietPlan() {
       );
     })();
   }, [patientDietPlanId, plan?.patient_diet_plan_id, location.key]);
+
+  useEffect(() => {
+    const id = plan?.id || planId;
+    if (!id || loadingDetail) return;
+    const paid = plan?.is_paid === false || Number(plan?.price) === 0 ? 0 : Number(plan?.price);
+    trackMetaViewContent({
+      contentIds: [String(id)],
+      contentType: 'product',
+      contentName: plan?.title || plan?.name,
+      value: Number.isFinite(paid) ? paid : undefined,
+      currency: 'INR',
+    });
+  }, [plan?.id, planId, loadingDetail]); // eslint-disable-line react-hooks/exhaustive-deps -- once per plan load
 
   const canRateDiet =
     status === 'completed' && canShowDietPlanRateButton(plan) && !dietReviewed;

@@ -427,6 +427,7 @@ export default function AppointmentDetails() {
         entityType: 'doctor',
         entityName: doctor?.doctor_name || doctorDisplayName(doctor) || 'Doctor',
         entitySubtitle: specialization,
+        entityImage: doctorImage(doctor) || '',
         appointmentId: lookup,
         initialRating: rating,
       },

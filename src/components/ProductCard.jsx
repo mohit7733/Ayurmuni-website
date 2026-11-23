@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FileText, Leaf, Minus, Plus, Star } from "lucide-react";
 import { formatRupee, resolveImageUrl } from "../home/catalog";
 import { useCart } from "../hooks/useCart";
+import { isCatalogItemComingSoon } from "../launch/comingSoonMode";
 import {
   getAddQtyBlockMessage,
   getProductStockQty,
@@ -14,6 +15,7 @@ import { requireAuth } from "../services/guestAuth";
 import { showPrescriptionRequired } from "../services/prescriptionGate";
 import { showSuccessToast } from "../config/key";
 import { toggleWishlistItem, useWishlistFlag } from "../product/wishlistSync";
+import ComingSoonLayer from "./ComingSoonSection";
 import Badge from "./ui/Badge";
 import FavButton from "./ui/FavButton";
 import CartAddButton from "./CartAddButton";
@@ -94,129 +96,133 @@ export default function ProductCard({
     }
   };
 
+  const soon = isCatalogItemComingSoon(item, detailBase);
+
   return (
-    <article className={`am-product-card ${app ? "am-product-card--app" : ""} ${out ? "is-out" : ""}`}>
-      <div className="am-product-card__media">
-        {image ? (
-          <img
-            src={image}
-            alt={item.name || ""}
-            loading="lazy"
-            decoding="async"
-          />
-        ) : (
-          <span className="am-product-card__placeholder" aria-hidden>
-            <Leaf size={32} />
-          </span>
-        )}
-        {app && out ? (
-          <span className="am-product-card__corner is-oos">Out of Stock</span>
-        ) : app && discount > 0 ? (
-          <span className="am-product-card__corner">{discount}% OFF</span>
-        ) : (
-          <div className="am-product-card__badges">
-            {discount > 0 ? <Badge tone="accent">{discount}% off</Badge> : null}
-            {rx ? (
-              <Badge tone="info" icon={<FileText size={12} aria-hidden />}>
-                Rx
-                <span className="am-sr-only"> — prescription required</span>
-              </Badge>
-            ) : null}
-          </div>
-        )}
-        {!app && out ? (
-          <span className="am-product-card__oos">Out of stock</span>
-        ) : null}
-        <FavButton
-          corner
-          on={wish}
-          onClick={toggleWish}
-          label={
-            wish
-              ? `Remove ${item.name || "item"} from wishlist`
-              : `Add ${item.name || "item"} to wishlist`
-          }
-        />
-      </div>
-
-      <div className="am-product-card__body">
-        <h3 className="am-product-card__name">
-          <button
-            type="button"
-            className="am-stretched"
-            onClick={() => variantId && navigate(`${detailBase}/${variantId}`)}
-          >
-            {item.name}
-          </button>
-        </h3>
-        {app ? (
-          <p className={`am-product-card__sub ${lowStockNote ? "is-low" : ""}`}>
-            {subtitle || "\u00a0"}
-          </p>
-        ) : null}
-        <p className="am-product-card__price">
-          <strong>{price}</strong>
-          {mrp ? (
-            <s>
-              {app ? null : <span className="am-sr-only">MRP </span>}
-              {app ? "MRP " : null}
-              {mrp}
-            </s>
-          ) : null}
-          {!app && discount > 0 ? (
-            <span className="am-product-card__off">{discount}% off</span>
-          ) : null}
-          {app ? (
-            <span className="am-product-card__rate">
-              <Star size={11} aria-hidden />
-              {rating || "0"}
+    <ComingSoonLayer active={soon} className="hm-soon-layer--card">
+      <article className={`am-product-card ${app ? "am-product-card--app" : ""} ${out ? "is-out" : ""}`}>
+        <div className="am-product-card__media">
+          {image ? (
+            <img
+              src={image}
+              alt={item.name || ""}
+              loading="lazy"
+              decoding="async"
+            />
+          ) : (
+            <span className="am-product-card__placeholder" aria-hidden>
+              <Leaf size={32} />
             </span>
+          )}
+          {app && out ? (
+            <span className="am-product-card__corner is-oos">Out of Stock</span>
+          ) : app && discount > 0 ? (
+            <span className="am-product-card__corner">{discount}% OFF</span>
+          ) : (
+            <div className="am-product-card__badges">
+              {discount > 0 ? <Badge tone="accent">{discount}% off</Badge> : null}
+              {rx ? (
+                <Badge tone="info" icon={<FileText size={12} aria-hidden />}>
+                  Rx
+                  <span className="am-sr-only"> — prescription required</span>
+                </Badge>
+              ) : null}
+            </div>
+          )}
+          {!app && out ? (
+            <span className="am-product-card__oos">Out of stock</span>
           ) : null}
-        </p>
-      </div>
+          <FavButton
+            corner
+            on={wish}
+            onClick={toggleWish}
+            label={
+              wish
+                ? `Remove ${item.name || "item"} from wishlist`
+                : `Add ${item.name || "item"} to wishlist`
+            }
+          />
+        </div>
 
-      <div className={`am-product-card__action ${app ? "is-overlay" : ""}`}>
-        {cartButton || app ? (
-          <CartAddButton item={item} compact={app} className={app ? "am-cart-btn--sm" : ""} />
-        ) : out ? (
-          <button type="button" className="am-product-card__add" disabled>
-            Out of stock
-          </button>
-        ) : cartQty > 0 ? (
-          <div
-            className="am-stepper"
-            role="group"
-            aria-label={`Quantity of ${item.name || "item"}`}
-          >
+        <div className="am-product-card__body">
+          <h3 className="am-product-card__name">
             <button
               type="button"
-              onClick={() => updateQty(Math.max(0, cartQty - 1))}
-              disabled={adding}
-              aria-label="Decrease quantity"
+              className="am-stretched"
+              onClick={() => variantId && navigate(`${detailBase}/${variantId}`)}
             >
-              <Minus size={16} aria-hidden />
+              {item.name}
             </button>
-            <span aria-live="polite">{adding ? "…" : cartQty}</span>
+          </h3>
+          {app ? (
+            <p className={`am-product-card__sub ${lowStockNote ? "is-low" : ""}`}>
+              {subtitle || "\u00a0"}
+            </p>
+          ) : null}
+          <p className="am-product-card__price">
+            <strong>{price}</strong>
+            {mrp ? (
+              <s>
+                {app ? null : <span className="am-sr-only">MRP </span>}
+                {app ? "MRP " : null}
+                {mrp}
+              </s>
+            ) : null}
+            {!app && discount > 0 ? (
+              <span className="am-product-card__off">{discount}% off</span>
+            ) : null}
+            {app ? (
+              <span className="am-product-card__rate">
+                <Star size={11} aria-hidden />
+                {rating || "0"}
+              </span>
+            ) : null}
+          </p>
+        </div>
+
+        <div className={`am-product-card__action ${app ? "is-overlay" : ""}`}>
+          {cartButton || app ? (
+            <CartAddButton item={item} compact={app} className={app ? "am-cart-btn--sm" : ""} />
+          ) : out ? (
+            <button type="button" className="am-product-card__add" disabled>
+              Out of stock
+            </button>
+          ) : cartQty > 0 ? (
+            <div
+              className="am-stepper"
+              role="group"
+              aria-label={`Quantity of ${item.name || "item"}`}
+            >
+              <button
+                type="button"
+                onClick={() => updateQty(Math.max(0, cartQty - 1))}
+                disabled={adding}
+                aria-label="Decrease quantity"
+              >
+                <Minus size={16} aria-hidden />
+              </button>
+              <span aria-live="polite">{adding ? "…" : cartQty}</span>
+              <button
+                type="button"
+                onClick={() => updateQty(cartQty + 1)}
+                disabled={adding}
+                aria-label="Increase quantity"
+              >
+                <Plus size={16} aria-hidden />
+              </button>
+            </div>
+          ) : (
             <button
               type="button"
-              onClick={() => updateQty(cartQty + 1)}
+              className="am-product-card__add"
               disabled={adding}
-              aria-label="Increase quantity"
+              onClick={() => updateQty(1)}
             >
-              <Plus size={16} aria-hidden />
+              {adding ? "Adding…" : rx ? "Add (Rx)" : "Add to cart"}
             </button>
-          </div>
-        ) : (
-          <button
-            type="button"
-            className="am-product-card__add"
-            disabled={adding}
-            onClick={() => updateQty(1)}
-          >
-            {adding ? "Adding…" : rx ? "Add (Rx)" : "Add to cart"}
-          </button>
-        )}
-      </div>
-    </article>
+          )}
+        </div>
+      </article>
+    </ComingSoonLayer>
   );
 }

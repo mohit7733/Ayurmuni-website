@@ -446,7 +446,26 @@ const isCashfreeOrigin = (origin) => {
 };
 
 /** Opens hosted checkout in a modal. Resolves with { error, redirect, paymentDetails, gateway }. */
-export const openCashfreeCheckout = async ({ sessionId, mode, paymentId }) => {
+export const openCashfreeCheckout = async ({ sessionId, mode, paymentId, meta } = {}) => {
+  try {
+    const { trackMetaAddPaymentInfo, trackMetaInitiateCheckout } = await import(
+      '../services/metaPixel'
+    );
+    const commerce = {
+      contentIds: meta?.contentIds,
+      contentType: meta?.contentType || 'product',
+      contentName: meta?.contentName,
+      value: meta?.value,
+      currency: meta?.currency || 'INR',
+      numItems: meta?.numItems,
+      orderId: meta?.orderId || paymentId,
+    };
+    trackMetaInitiateCheckout(commerce);
+    // Cashfree hosted checkout is where payment details are entered.
+    trackMetaAddPaymentInfo(commerce);
+  } catch {
+    /* Pixel must never block payment */
+  }
   const captured = { gateway_order_id: '', gateway_payment_id: '', gateway_signature: '' };
   const messages = [];
   const onMessage = (event) => {

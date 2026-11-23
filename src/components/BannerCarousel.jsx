@@ -202,6 +202,7 @@ export default function BannerCarousel({
 
   // One card ratio for every slide: the median of all loaded banner ratios (images then cover it),
   // so mixed-ratio banners never letterbox and the carousel height never jumps between slides.
+  // Clamp so ultra-wide assets don't flatten the stage into a thin strip.
   const onImageLoad = (event) => {
     const img = event.currentTarget;
     const { naturalWidth: w, naturalHeight: h } = img;
@@ -210,7 +211,7 @@ export default function BannerCarousel({
     const list = Object.values(ratios.current).sort((a, b) => a - b);
     const mid = list.length >> 1;
     const median = list.length % 2 ? list[mid] : (list[mid - 1] + list[mid]) / 2;
-    const next = Math.round(median * 100) / 100;
+    const next = Math.round(Math.min(2.35, Math.max(1.9, median)) * 100) / 100;
     if (next !== ratio) setRatio(next);
   };
 
