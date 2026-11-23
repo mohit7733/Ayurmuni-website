@@ -2163,9 +2163,26 @@
   border-radius: 16px;
 }
 
+.hm-soon-layer--page {
+  border-radius: 0;
+  min-height: 60vh;
+}
+
+.hm-soon-layer--card {
+  border-radius: 14px;
+  height: 100%;
+}
+
+.hm-soon-layer--card .hm-soon-layer__badge {
+  min-height: 28px;
+  padding: 0 10px;
+  font-size: 11px;
+}
+
 .hm-soon-layer__content {
   pointer-events: none;
   user-select: none;
+  height: 100%;
 }
 
 .hm-soon-layer__veil {

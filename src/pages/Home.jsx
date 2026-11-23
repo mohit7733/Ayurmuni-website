@@ -1210,24 +1210,20 @@ export default function Home() {
             {productPanels.length ? (
               <div className="hm-product-row hm-product-grid">
                 {productPanels.map((panel) => (
-                  <ComingSoonLayer
+                  <Reveal
+                    as="section"
                     key={panel.key}
-                    active={panel.feature ? isFeatureComingSoon(panel.feature) : false}
+                    className="hm-section hm-products"
+                    aria-labelledby={`hm-panel-${panel.key}`}
                   >
-                    <Reveal
-                      as="section"
-                      className="hm-section hm-products"
-                      aria-labelledby={`hm-panel-${panel.key}`}
-                    >
-                      <DoctorRailHeader
-                        id={`hm-panel-${panel.key}`}
-                        title={panel.title}
-                        description={panel.description}
-                        onViewAll={() => navigate(panel.to)}
-                      />
-                      {renderProductRail(panel.items, panel.title, true)}
-                    </Reveal>
-                  </ComingSoonLayer>
+                    <DoctorRailHeader
+                      id={`hm-panel-${panel.key}`}
+                      title={panel.title}
+                      description={panel.description}
+                      onViewAll={() => navigate(panel.to)}
+                    />
+                    {renderProductRail(panel.items, panel.title, true)}
+                  </Reveal>
                 ))}
               </div>
             ) : null}

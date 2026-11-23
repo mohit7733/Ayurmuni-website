@@ -38,9 +38,11 @@ export const COMING_SOON_FEATURES = {
   payments: true,
 };
 
+/**
+ * Paths that redirect away (modal only). Products/medicines stay viewable under a
+ * Coming soon layer on the page itself — see ComingSoonLayer usages.
+ */
 const PATH_FEATURES = [
-  { feature: 'products', prefixes: ['/products'] },
-  { feature: 'medicines', prefixes: ['/medicines'] },
   { feature: 'cart', prefixes: ['/cart', '/checkout', '/payment/return', '/order-confirmation'] },
   { feature: 'search', prefixes: ['/search'] },
   { feature: 'reviews', prefixes: ['/reviews'] },
@@ -58,6 +60,20 @@ const PATH_FEATURES = [
   { feature: 'rewards', prefixes: ['/profile/rewards'] },
   { feature: 'payments', prefixes: ['/profile/payments'] },
 ];
+
+/** True when this catalog item should sit under a Coming soon layer. */
+export function isCatalogItemComingSoon(item, detailBase = '') {
+  const kind = String(item?.catalog_kind || item?.kind || '').toLowerCase();
+  const base = String(detailBase || '').toLowerCase();
+  if (kind === 'medicine' || base.includes('medicine')) {
+    return isFeatureComingSoon('medicines');
+  }
+  if (kind === 'product' || base.includes('product')) {
+    return isFeatureComingSoon('products');
+  }
+  // Default shop cards: block if either shop feature is in coming-soon mode.
+  return isFeatureComingSoon('products') || isFeatureComingSoon('medicines');
+}
 
 const SERVICE_FEATURES = {
   medicine: 'medicines',

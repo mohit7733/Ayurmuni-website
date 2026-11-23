@@ -23,6 +23,7 @@ import {
   Zap,
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
+import ComingSoonLayer from '../components/ComingSoonSection';
 import ImageMagnifier from '../components/ui/ImageMagnifier';
 import AutoScrollRail from '../components/AutoScrollRail';
 import ProductDiscoveryRails from '../components/ProductDiscoveryRails';
@@ -30,6 +31,7 @@ import ReviewSubmitModal from '../components/ReviewSubmitModal';
 import ShareButton from '../components/ShareButton';
 import { formatRupee, resolveImageUrl } from '../home/catalog';
 import { useCart } from '../hooks/useCart';
+import { isFeatureComingSoon } from '../launch/comingSoonMode';
 import { trackMetaViewContent } from '../services/metaPixel';
 import {
   getAddQtyBlockMessage,
@@ -523,8 +525,13 @@ export default function ProductDetails({ medicine = false } = {}) {
     );
   }
 
+  const shopSoon = medicine
+    ? isFeatureComingSoon('medicines')
+    : isFeatureComingSoon('products');
+
   return (
     <AppShell tab={shellTab}>
+      <ComingSoonLayer active={shopSoon} className="hm-soon-layer--page">
       <section className="pd-page pd-page--brand">
         <div className="pd-topbar">
           <button type="button" className="am-back" onClick={goBack}>
@@ -982,6 +989,7 @@ export default function ProductDetails({ medicine = false } = {}) {
           {renderBuyActions()}
         </div>
       </section>
+      </ComingSoonLayer>
 
       <Modal
         open={zoomOpen}
