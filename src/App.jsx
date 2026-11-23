@@ -14,6 +14,7 @@ import { Utils } from "./common/utils";
 import { getAccessLevel } from "./services/guestAuth";
 import { syncPushForSession } from "./services/pushNotificationService";
 import { trackMetaPageView } from "./services/metaPixel";
+import { trackGoogleAdsPageView } from "./services/googleAds";
 import { runWhenIdle } from "./hooks/useLazySection";
 import Splash from "./pages/Splash";
 import Welcome from "./pages/Welcome";
@@ -263,11 +264,12 @@ function ScrollToTop() {
   return null;
 }
 
-/** Meta Pixel PageView on first load and every SPA route change. */
-function MetaPixelPageView() {
+/** Meta Pixel + Google Ads tags on first load and every SPA route change. */
+function TrackingPageView() {
   const { pathname, search } = useLocation();
   useEffect(() => {
     trackMetaPageView();
+    trackGoogleAdsPageView();
   }, [pathname, search]);
   return null;
 }
@@ -280,7 +282,7 @@ export default function App() {
           <CartProvider>
             <NavBinder />
             <ScrollToTop />
-            <MetaPixelPageView />
+            <TrackingPageView />
             <ComingSoonGate />
             <ToastHost />
             <GlobalLoadBar />
@@ -340,6 +342,16 @@ export default function App() {
                     <Route
                       path="/profile/legal-policies"
                       element={<LegalPoliciesHub />}
+                    />
+                    {/* Management reviews — no login required */}
+                    <Route
+                      path="/rate-doctor"
+                      element={<DirectDoctorReview />}
+                    />
+                    <Route path="/rate" element={<DirectDoctorReview />} />
+                    <Route
+                      path="/share-review"
+                      element={<DirectDoctorReview />}
                     />
 
                     <Route element={<RequireAuth />}>
@@ -441,15 +453,6 @@ export default function App() {
                       <Route
                         path="/share-experience"
                         element={<ShareExperience />}
-                      />
-                      <Route
-                        path="/rate-doctor"
-                        element={<DirectDoctorReview />}
-                      />
-                      <Route path="/rate" element={<DirectDoctorReview />} />
-                      <Route
-                        path="/share-review"
-                        element={<DirectDoctorReview />}
                       />
                       <Route
                         path="/profile/receipts/:consultationId"

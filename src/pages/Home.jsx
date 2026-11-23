@@ -43,10 +43,16 @@ import {
 import DoctorTable from '../components/DoctorTable';
 import VisitedDoctorList from '../components/VisitedDoctorList';
 import '../components/visited-doctors.css';
+import ComingSoonLayer from '../components/ComingSoonSection';
 import DummyOfferCard from '../components/DummyOfferCard';
 import ProductCard from '../components/ProductCard';
 import OurDoctorCard from '../components/OurDoctorCard';
 import { DoctorRailHeader, ViewAll } from '../components/HomeSections';
+import {
+  featureForServiceKey,
+  isFeatureComingSoon,
+  openComingSoonModal,
+} from '../launch/comingSoonMode';
 import { HomeDoctorsSkeleton, HomeProductsSkeleton } from '../components/skeletons';
 import Skeleton from '../components/skeletons/Block';
 import HomeJoinAppointments from '../components/HomeJoinAppointments';
@@ -734,6 +740,19 @@ export default function Home() {
 
   const handleCategoryPress = (item) => {
     const nameKey = item?.name?.trim().toLowerCase() ?? '';
+    const serviceKey = resolveServiceCategoryKey(item) ?? nameKey;
+    const soonFeature =
+      featureForServiceKey(serviceKey) ||
+      (/panchakarma|panchkarma/i.test(`${nameKey} ${item?.redirect_url || item?.app_screen || item?.screen || ''}`)
+        ? 'panchakarma'
+        : null) ||
+      (/lab/i.test(`${nameKey} ${item?.redirect_url || item?.app_screen || item?.screen || ''}`)
+        ? 'labs'
+        : null);
+    if (soonFeature && isFeatureComingSoon(soonFeature)) {
+      openComingSoonModal();
+      return;
+    }
     // Health Lab disabled per Rohit
     // if (/lab/i.test(`${nameKey} ${item?.redirect_url || item?.app_screen || item?.screen || ''}`)) {
     //   navigate('/labs');
@@ -750,24 +769,26 @@ export default function Home() {
       navigate(fromRedirect.path);
       return;
     }
-    const serviceKey = resolveServiceCategoryKey(item) ?? nameKey;
     const path = mapAppScreenToPath(serviceKey);
     navigate(path && path !== '/home' ? path : '/products');
   };
 
   const renderServiceItem = (item) => {
     const key = resolveServiceCategoryKey(item) || String(item.name || '').toLowerCase();
+    const soonFeature = featureForServiceKey(key);
+    const soon = soonFeature ? isFeatureComingSoon(soonFeature) : false;
     const image = item.image_url || item.image || item.icon_url;
     const Icon = SERVICE_ICONS[key] || Leaf;
     return (
       <li key={item.id}>
         <button
           type="button"
-          className="hm-service"
+          className={`hm-service${soon ? ' is-soon' : ''}`}
           onClick={() => handleCategoryPress(item)}
         >
           <span className="hm-service__tile" aria-hidden>
             {image ? <img src={image} alt="" /> : <Icon size={28} />}
+            {soon ? <span className="hm-service__soon">Soon</span> : null}
           </span>
           <span className="hm-service__label">{item.name}</span>
         </button>
@@ -834,13 +855,18 @@ export default function Home() {
   const featuredProducts = sections.featured || [];
   const recentProducts = sections.recently_viewed || [];
 
+  const brandsSoon = isFeatureComingSoon('brands') || isFeatureComingSoon('products');
+  const packagesSoon = isFeatureComingSoon('packages');
+  const dietSoon = isFeatureComingSoon('diet');
+  const yogaSoon = isFeatureComingSoon('yoga');
+
   // Product-type panels pack two per row; an odd last panel spans the row.
   const productPanels = [
-    { key: 'medicines', title: T.medicinesTitle, items: medicineProducts, to: '/medicines' },
-    { key: 'products', title: T.productsTitle, items: storeProducts, to: '/products' },
+    { key: 'medicines', title: T.medicinesTitle, items: medicineProducts, to: '/medicines', feature: 'medicines' },
+    { key: 'products', title: T.productsTitle, items: storeProducts, to: '/products', feature: 'products' },
     // { key: 'recently_viewed', title: sectionLabels.recently_viewed, items: recentProducts, to: '/products' },
-    { key: 'trending', title: sectionLabels.trending, description: T.trendingText, items: sections.trending || [], to: '/products' },
-    { key: 'featured', title: sectionLabels.featured, description: T.featuredText, items: featuredProducts, to: '/products' },
+    { key: 'trending', title: sectionLabels.trending, description: T.trendingText, items: sections.trending || [], to: '/products', feature: 'products' },
+    { key: 'featured', title: sectionLabels.featured, description: T.featuredText, items: featuredProducts, to: '/products', feature: 'products' },
   ].filter((panel) => panel.items?.length > 0);
 
   const renderProductRail = (items, label, auto = false) => (
@@ -1060,32 +1086,34 @@ export default function Home() {
 
           <LazyBlock blockRef={brandsRef} done={brandsSeen && !brandsLoading} minHeight={120} skeleton={<SectionHold label={T.brandsTitle} minHeight={120} variant="chips" />}>
             {brands.length > 0 ? (
-              <Reveal as="section" className="hm-section hm-panel hm-brands-panel " aria-labelledby="hm-brands-title">
-                <DoctorRailHeader
-                  id="hm-brands-title"
-                  title={T.brandsTitle}
-                  description={T.brandsText}
-                  onViewAll={() => navigate('/products/category?mode=both&name=Brands')}
-                />
-                <ConcernCarousel label={T.brandsTitle}>
-                  {brands.map((item) => (
-                    <Tile
-                      key={item.id}
-                      className="hm-brand-tile"
-                      image={item.image_url || resolveImageUrl(item)}
-                      icon={Pill}
-                      label={item.name}
-                      onClick={() =>
-                        navigate(
-                          `/products/category?mode=both&brand=${item.id}&name=${encodeURIComponent(
-                            item.name,
-                          )}`,
-                        )
-                      }
-                    />
-                  ))}
-                </ConcernCarousel>
-              </Reveal>
+              <ComingSoonLayer active={brandsSoon}>
+                <Reveal as="section" className="hm-section hm-panel hm-brands-panel " aria-labelledby="hm-brands-title">
+                  <DoctorRailHeader
+                    id="hm-brands-title"
+                    title={T.brandsTitle}
+                    description={T.brandsText}
+                    onViewAll={() => navigate('/products/category?mode=both&name=Brands')}
+                  />
+                  <ConcernCarousel label={T.brandsTitle}>
+                    {brands.map((item) => (
+                      <Tile
+                        key={item.id}
+                        className="hm-brand-tile"
+                        image={item.image_url || resolveImageUrl(item)}
+                        icon={Pill}
+                        label={item.name}
+                        onClick={() =>
+                          navigate(
+                            `/products/category?mode=both&brand=${item.id}&name=${encodeURIComponent(
+                              item.name,
+                            )}`,
+                          )
+                        }
+                      />
+                    ))}
+                  </ConcernCarousel>
+                </Reveal>
+              </ComingSoonLayer>
             ) : null}
           </LazyBlock>
 
@@ -1148,32 +1176,34 @@ export default function Home() {
           </LazyBlock>
 
           {consultPackages.length ? (
-            <Reveal as="section" className="hm-section hm-panel hm-packages" aria-labelledby="hm-packages-title">
-              <SectionHeader
-                id="hm-packages-title"
-                className="hm-doctor-head"
-                title={T.packagesTitle}
-                action={<ViewAll plain label={T.packagesTitle} onClick={() => navigate('/packages')} />}
-              />
-              <div className="hm-plan-band">
-                <p className="hm-plan-band__tag">
-                  <span className="hm-plan-band__dot" aria-hidden />
-                  Save more with guided Ayurvedic care plans
-                </p>
-                <Rail label={T.packagesTitle} className="hm-package-rail" auto interval={3200}>
-                  {homePackageCards(consultPackages).map(({ item, tone }) => (
-                    <RailItem key={item.id}>
-                      <DummyOfferCard
-                        item={item}
-                        kind="package"
-                        tone={tone}
-                        onClick={() => navigate(`/packages/${encodeURIComponent(item.id)}`)}
-                      />
-                    </RailItem>
-                  ))}
-                </Rail>
-              </div>
-            </Reveal>
+            <ComingSoonLayer active={packagesSoon}>
+              <Reveal as="section" className="hm-section hm-panel hm-packages" aria-labelledby="hm-packages-title">
+                <SectionHeader
+                  id="hm-packages-title"
+                  className="hm-doctor-head"
+                  title={T.packagesTitle}
+                  action={<ViewAll plain label={T.packagesTitle} onClick={() => navigate('/packages')} />}
+                />
+                <div className="hm-plan-band">
+                  <p className="hm-plan-band__tag">
+                    <span className="hm-plan-band__dot" aria-hidden />
+                    Save more with guided Ayurvedic care plans
+                  </p>
+                  <Rail label={T.packagesTitle} className="hm-package-rail" auto interval={3200}>
+                    {homePackageCards(consultPackages).map(({ item, tone }) => (
+                      <RailItem key={item.id}>
+                        <DummyOfferCard
+                          item={item}
+                          kind="package"
+                          tone={tone}
+                          onClick={() => navigate(`/packages/${encodeURIComponent(item.id)}`)}
+                        />
+                      </RailItem>
+                    ))}
+                  </Rail>
+                </div>
+              </Reveal>
+            </ComingSoonLayer>
           ) : null}
 
           <LazyBlock blockRef={productsRef} done={isSectionDone('products')} minHeight={140} skeleton={<HomeProductsSkeleton label={T.productsTitle} />}>
@@ -1200,61 +1230,62 @@ export default function Home() {
           </LazyBlock>
 
           <LazyBlock blockRef={wellnessRef} done={isSectionDone('yoga') && isSectionDone('diet')} minHeight={140} skeleton={<YogaPoseRailSkeleton label={T.yogaTitle} count={4} />}>
-
             {yogaSessions.length > 0 || dietProducts.length > 0 ? (
               <div
                 className={`hm-wellness${yogaSessions.length > 0 && dietProducts.length > 0 ? ' hm-wellness--pair' : ''}`}
               >
                 {dietProducts.length > 0 ? (
-                  <Reveal as="section" className="hm-well hm-well--nourish" aria-labelledby="hm-diet-title">
-                    <div className="hm-well__head">
-                      <div className="hm-well__lead">
-                        <h2 id="hm-diet-title" className="hm-well__title">
-                          {T.dietTitle}
-                        </h2>
-                        <p className="hm-well__text">{T.dietText}</p>
+                  <ComingSoonLayer active={dietSoon}>
+                    <Reveal as="section" className="hm-well hm-well--nourish" aria-labelledby="hm-diet-title">
+                      <div className="hm-well__head">
+                        <div className="hm-well__lead">
+                          <h2 id="hm-diet-title" className="hm-well__title">
+                            {T.dietTitle}
+                          </h2>
+                          <p className="hm-well__text">{T.dietText}</p>
+                        </div>
+                        <ViewAll label={T.dietTitle} onClick={() => navigate('/diet?view=all')} />
                       </div>
-                      <ViewAll label={T.dietTitle} onClick={() => navigate('/diet?view=all')} />
-                    </div>
-                    <Rail label={T.dietTitle} auto controls className="hm-diet-rail">
-                      {dietProducts.filter((d, i, all) => all.findIndex((x) => x.id === d.id) === i).map((item) => (
-                        <RailItem key={item.id}>
-                          <DietPlanCard
-                            item={item}
-                            onClick={() => navigate(`/diet/${item.id}`, { state: { item } })}
-                          />
-                        </RailItem>
-                      ))}
-                    </Rail>
-                  </Reveal>
+                      <Rail label={T.dietTitle} auto controls className="hm-diet-rail">
+                        {dietProducts.filter((d, i, all) => all.findIndex((x) => x.id === d.id) === i).map((item) => (
+                          <RailItem key={item.id}>
+                            <DietPlanCard
+                              item={item}
+                              onClick={() => navigate(`/diet/${item.id}`, { state: { item } })}
+                            />
+                          </RailItem>
+                        ))}
+                      </Rail>
+                    </Reveal>
+                  </ComingSoonLayer>
                 ) : null}
                 {yogaSessions.length > 0 ? (
-                  <Reveal as="section" className="hm-well hm-well--move" aria-labelledby="hm-yoga-title">
-                    <div className="hm-well__head">
-                      <div className="hm-well__lead">
-                        <h2 id="hm-yoga-title" className="hm-well__title">
-                          {T.yogaTitle}
-                        </h2>
-                        <p className="hm-well__text">{T.yogaText}</p>
+                  <ComingSoonLayer active={yogaSoon}>
+                    <Reveal as="section" className="hm-well hm-well--move" aria-labelledby="hm-yoga-title">
+                      <div className="hm-well__head">
+                        <div className="hm-well__lead">
+                          <h2 id="hm-yoga-title" className="hm-well__title">
+                            {T.yogaTitle}
+                          </h2>
+                          <p className="hm-well__text">{T.yogaText}</p>
+                        </div>
+                        {yogaSessions.length > 1 ? (
+                          <ViewAll label={T.yogaTitle} onClick={() => navigate('/yoga')} />
+                        ) : null}
                       </div>
-                      {yogaSessions.length > 1 ? (
-                        <ViewAll label={T.yogaTitle} onClick={() => navigate('/yoga')} />
-                      ) : null}
-                    </div>
-                    <Rail label={T.yogaTitle} auto interval={3000} motionOverride controls className="hm-yoga-rail">
-                      {yogaSessions.map((item) => (
-                        <RailItem key={item.id}>
-                          <YogaSessionCard
-                            item={item}
-                            onClick={() => navigate(`/yoga/${item.id}`, { state: { item } })}
-                          />
-                        </RailItem>
-                      ))}
-                    </Rail>
-                  </Reveal>
+                      <Rail label={T.yogaTitle} auto interval={3000} motionOverride controls className="hm-yoga-rail">
+                        {yogaSessions.map((item) => (
+                          <RailItem key={item.id}>
+                            <YogaSessionCard
+                              item={item}
+                              onClick={() => navigate(`/yoga/${item.id}`, { state: { item } })}
+                            />
+                          </RailItem>
+                        ))}
+                      </Rail>
+                    </Reveal>
+                  </ComingSoonLayer>
                 ) : null}
-
-
               </div>
             ) : null}
           </LazyBlock>

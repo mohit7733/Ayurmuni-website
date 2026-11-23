@@ -5,6 +5,7 @@ import { buildCartSections } from '../cart/mapCart';
 import { formatRupee } from '../home/catalog';
 import { useCart } from '../hooks/useCart';
 import useLoggedIn from '../hooks/useLoggedIn';
+import { isFeatureComingSoon } from '../launch/comingSoonMode';
 import '../design/components/cart-float.css';
 
 const HIDDEN_EXACT = ['/'];
@@ -48,6 +49,7 @@ export default function CartFloat() {
   if (
     !loggedIn ||
     itemCount <= 0 ||
+    isFeatureComingSoon('cart') ||
     HIDDEN_EXACT.includes(pathname) ||
     matchesPrefix(pathname, HIDDEN_PREFIXES)
   ) {

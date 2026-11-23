@@ -1,5 +1,15 @@
 const DEFAULT_RX_VALIDITY_DAYS = 30;
 
+/** Whole rupees without .00; blank when 0. */
+const plainMoney = (value) => {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return '';
+  const cents = Math.round(Math.abs(n) * 100);
+  if (cents === 0) return '';
+  if (cents % 100 === 0) return String(Math.round(n));
+  return String(Number(n.toFixed(2)));
+};
+
 const parseDurationDays = (value) => {
   if (value == null) return 0;
   const raw = String(value).trim().toLowerCase();
@@ -589,10 +599,13 @@ const medicineLine = (medicine, index) => {
   const unit = getMedicineUnitPrice(medicine);
   const mrp = getMedicineMrp(medicine);
   const qty = getMedicineQuantity(medicine);
+  const unitLabel = unit != null ? plainMoney(unit) : '';
+  const lineTotal = unit != null ? plainMoney(unit * qty) : '';
+  const mrpLabel = mrp != null && mrp > unit ? plainMoney(mrp) : '';
   const priceLine =
-    unit != null
-      ? `     Price: Rs ${unit.toFixed(2)} x ${qty} = Rs ${(unit * qty).toFixed(2)}${
-          mrp != null && mrp > unit ? ` (MRP Rs ${mrp.toFixed(2)})` : ''
+    unitLabel && lineTotal
+      ? `     Price: Rs ${unitLabel} x ${qty} = Rs ${lineTotal}${
+          mrpLabel ? ` (MRP Rs ${mrpLabel})` : ''
         }`
       : '';
   return [
@@ -665,7 +678,8 @@ export const buildPrescriptionDownloadText = (data) => {
       const unit = getMedicineUnitPrice(med);
       return unit != null ? sum + unit * getMedicineQuantity(med) : sum;
     }, 0);
-    if (total > 0) sections.push(`  Total amount: Rs ${total.toFixed(2)}`);
+    const totalLabel = plainMoney(total);
+    if (totalLabel) sections.push(`  Total amount: Rs ${totalLabel}`);
     sections.push('');
   }
   sections.push(...lineList("Do's", dos));

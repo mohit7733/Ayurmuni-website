@@ -2156,6 +2156,92 @@
   color: var(--am-primary);
 }
 
+/* Content stays visible; veil sits on top and opens the modal */
+.hm-soon-layer {
+  position: relative;
+  isolation: isolate;
+  border-radius: 16px;
+}
+
+.hm-soon-layer--page {
+  border-radius: 0;
+  min-height: 60vh;
+}
+
+.hm-soon-layer--card {
+  border-radius: 14px;
+  height: 100%;
+}
+
+.hm-soon-layer--card .hm-soon-layer__badge {
+  min-height: 28px;
+  padding: 0 10px;
+  font-size: 11px;
+}
+
+.hm-soon-layer__content {
+  pointer-events: none;
+  user-select: none;
+  height: 100%;
+}
+
+.hm-soon-layer__veil {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: var(--am-space-4);
+  border: 0;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--am-surface, #fff) 48%, transparent);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  cursor: pointer;
+}
+
+.hm-soon-layer__veil:focus-visible {
+  outline: 2px solid var(--am-primary);
+  outline-offset: 2px;
+}
+
+.hm-soon-layer__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--am-primary);
+  color: #fff;
+  font-size: var(--am-text-sm);
+  font-weight: var(--am-weight-semibold);
+  letter-spacing: 0.02em;
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--am-primary) 28%, transparent);
+}
+
+.hm-service.is-soon .hm-service__tile {
+  position: relative;
+  opacity: 0.72;
+}
+
+.hm-service__soon {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--am-primary);
+  color: #fff;
+  font-size: 9px;
+  font-weight: var(--am-weight-semibold);
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
 /* ═══════════════════════════════════════════════════════════
    FOOTER STRIP
 ═══════════════════════════════════════════════════════════ */
@@ -2499,6 +2585,7 @@
   grid-template-columns: minmax(0, 1fr);
   gap: 0;
   margin-block: 0;
+  padding-block: 12px 6px;
 }
 
 .hm-dash__main {

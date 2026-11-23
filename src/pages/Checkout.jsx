@@ -45,6 +45,7 @@ import {
 import { pickPaymentData as pickRazorpayPayment, pickRazorpayKey, pickRazorpayOrderId } from '../payment/razorpay';
 import { openRazorpayCheckout, toRazorpayPaise } from '../payment/razorpayCheckout';
 import { buildRazorpayOrderVerifyPayload, isPrepaidVerifyAcceptable } from '../payment/orderVerify';
+import { trackMetaInitiateCheckout, trackMetaPurchase } from '../services/metaPixel';
 
 const pickPaymentData = (orderResponse) => {
   const data = orderResponse?.data && typeof orderResponse.data === 'object' ? orderResponse.data : {};
@@ -282,13 +283,24 @@ export default function Checkout() {
 
   const finishOrder = async (result, orderedItems = items) => {
     sessionStorage.removeItem(CHECKOUT_KEY);
+    const order = result?.data?.order ?? result?.data ?? result;
     sessionStorage.setItem(
       ORDER_RESULT_KEY,
       JSON.stringify({
-        order: result?.data?.order ?? result?.data ?? result,
+        order,
         items: orderedItems,
       }),
     );
+    const orderCode = order?.order_code || order?.id || '';
+    trackMetaPurchase({
+      eventId: `order_${orderCode || Date.now()}`,
+      contentIds: (orderedItems || []).map((line) => line?.variant_id || line?.id).filter(Boolean),
+      contentType: 'product',
+      value: Number(order?.total_amount ?? total) || undefined,
+      currency: 'INR',
+      numItems: itemUnits || orderedItems?.length,
+      orderId: String(orderCode || ''),
+    });
     // Order is confirmed (COD placed / payment verified): empty the ordered lines everywhere.
     await clearOrderedItems(orderedItems);
     navigate('/order-confirmation', { replace: true });
@@ -315,6 +327,13 @@ export default function Checkout() {
       showSuccessToast('Please select a delivery address', 'error');
       return;
     }
+    trackMetaInitiateCheckout({
+      contentIds: (items || []).map((line) => line?.variant_id || line?.id).filter(Boolean),
+      contentType: 'product',
+      value: total,
+      currency: 'INR',
+      numItems: itemUnits || items?.length,
+    });
     setPlacing(true);
     setOrderError('');
     try {

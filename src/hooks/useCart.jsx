@@ -4,6 +4,7 @@ import { isAuthenticated, requireAuth } from '../services/guestAuth';
 import { showSuccessToast } from '../config/key';
 import { invalidateApiCache, subscribeApiSession } from '../services/apiClient';
 import { pickOrderedCartLines } from '../cart/clearOrdered';
+import { trackMetaAddToCart } from '../services/metaPixel';
 
 const CartContext = createContext(null);
 const apiFreshCart = () => getAllCart({ cache: false });
@@ -16,6 +17,11 @@ export function CartProvider({ children }) {
   const [loading, setLoading] = useState(false);
   // Only the newest cart read may write state: rapid qty changes each call fetchCart.
   const cartRequestRef = useRef(0);
+  const quantitiesRef = useRef({});
+
+  useEffect(() => {
+    quantitiesRef.current = variantQuantities;
+  }, [variantQuantities]);
 
   const applyMetrics = useCallback((response) => {
     const metrics = cartMetrics(response);
@@ -60,11 +66,13 @@ export function CartProvider({ children }) {
       if (!(await requireAuth('Please login to add items to cart'))) return false;
       const variantId = String(item?.variant_id || item?.id || '').trim();
       if (!variantId) return false;
+      const previousQty = Number(quantitiesRef.current[variantId]) || 0;
+      const nextQty = Math.max(0, Number(newQty) || 0);
       setAddingVariantId(variantId);
       try {
         const response = await addUpdateCart({
           variant_id: variantId,
-          quantity: Math.max(0, Number(newQty) || 0),
+          quantity: nextQty,
           cart_item_id: item?.cart_item_id || item?.id,
           ...(item?.source === 'prescribed' ? { source: 'prescribed' } : {}),
         });
@@ -74,11 +82,23 @@ export function CartProvider({ children }) {
         }
         setVariantQuantities((prev) => {
           const next = { ...prev };
-          if (newQty <= 0) delete next[variantId];
-          else next[variantId] = Number(newQty) || 0;
+          if (nextQty <= 0) delete next[variantId];
+          else next[variantId] = nextQty;
           return next;
         });
         await fetchCart();
+        if (nextQty > previousQty) {
+          const added = nextQty - previousQty;
+          const unit = Number(item?.selling_price ?? item?.price) || 0;
+          trackMetaAddToCart({
+            contentIds: [variantId],
+            contentType: 'product',
+            contentName: item?.name || item?.title || undefined,
+            value: unit > 0 ? unit * added : undefined,
+            currency: 'INR',
+            numItems: added,
+          });
+        }
         return true;
       } catch (error) {
         showSuccessToast(error?.message || 'Failed to update cart', 'error');

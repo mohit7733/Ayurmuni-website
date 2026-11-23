@@ -11,6 +11,7 @@ import { useChat } from '../../hooks/useChat';
 import { findRelatedAppointmentIds } from '../../hooks/useChatInbox';
 import { requireAuth } from '../../services/guestAuth';
 import { chatService } from '../../services/chatService';
+import { trackMetaContact } from '../../services/metaPixel';
 import { getAppointmentDetail } from '../../services/consultService';
 
 let globalInputSendLock = false;
@@ -247,6 +248,7 @@ export default function ChatConversation({
           },
         ]);
       }
+      trackMetaContact({ method: 'chat', contentName: 'doctor_chat' });
     } catch {
       setText(toSend);
       if (asset) {

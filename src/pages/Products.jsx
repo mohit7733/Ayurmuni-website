@@ -63,7 +63,7 @@ export default function Products() {
       ...(productsCategoryId ? { service_category_id: productsCategoryId } : {}),
     };
   }, [productsCategoryId, selectedCategoryId, query]);
-  const { products, loading, loadingMore, refreshing, hasMore, loadMore } =
+  const { products, totalCount, loading, loadingMore, refreshing, hasMore, loadMore } =
     useCategoryProducts(productFilter, [], {
       enabled: Boolean(productsCategoryId) || !homeLoading,
     });
@@ -77,6 +77,7 @@ export default function Products() {
     products.length === 0;
   const catalogFallback = useCategoryProducts({}, [], { enabled: serviceEmpty });
   const listProducts = serviceEmpty ? catalogFallback.products : products;
+  const listTotalCount = serviceEmpty ? catalogFallback.totalCount : totalCount;
   const listLoading = serviceEmpty ? catalogFallback.loading : loading;
   const listHasMore = serviceEmpty ? catalogFallback.hasMore : hasMore;
   const listLoadingMore = serviceEmpty ? catalogFallback.loadingMore : loadingMore;
@@ -317,10 +318,10 @@ export default function Products() {
                   <div className="st-controls">
                     <div className="st-controls__info">
                       <span>
-                        {filteredAndSortedProducts.length}{" "}
-                        {filteredAndSortedProducts.length === 1
-                          ? "product"
-                          : "products"}
+                        {(() => {
+                          const n = listTotalCount ?? filteredAndSortedProducts.length;
+                          return `${n} ${n === 1 ? "product" : "products"}`;
+                        })()}
                       </span>
                       {hasActiveFilters && (
                         <Button

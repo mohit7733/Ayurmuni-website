@@ -36,6 +36,7 @@ export default function useCategoryProducts(
   const enabled = options.enabled !== false;
   const pageSize = options.pageSize ?? PRODUCT_PAGE_SIZE;
   const [products, setProducts] = useState([]);
+  const [totalCount, setTotalCount] = useState(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -121,7 +122,23 @@ export default function useCategoryProducts(
         setHasMore(more);
         setPage(pageNumber);
 
+        const apiCount = (() => {
+          const data = response?.data;
+          if (data && typeof data === "object" && typeof data.count === "number") {
+            return data.count;
+          }
+          if (typeof response?.count === "number") return response.count;
+          return null;
+        })();
+
         if (apiResults.length > 0) {
+          if (!append) {
+            setTotalCount(
+              typeof apiCount === "number" ? apiCount : apiResults.length,
+            );
+          } else if (typeof apiCount === "number") {
+            setTotalCount(apiCount);
+          }
           setProducts((prev) => {
             if (!append) return apiResults;
             const seen = new Set(
@@ -150,11 +167,16 @@ export default function useCategoryProducts(
             !parsed.brand_name_id;
           if (!hasFilter || (serviceOnly && fallback.length > 0)) {
             setProducts(fallback);
+            setTotalCount(
+              typeof apiCount === "number" ? apiCount : fallback.length,
+            );
           } else {
             setProducts([]);
+            setTotalCount(typeof apiCount === "number" ? apiCount : 0);
           }
           setHasMore(false);
         } else {
+          if (typeof apiCount === "number") setTotalCount(apiCount);
           setHasMore(false);
         }
       } catch {
@@ -171,6 +193,7 @@ export default function useCategoryProducts(
           // Never show unfiltered fallback items for a failed search.
           setProducts(isSearching ? [] : fallback);
           productsLengthRef.current = isSearching ? 0 : fallback.length;
+          setTotalCount(isSearching ? 0 : fallback.length);
         }
 
         setHasMore(false);
@@ -198,6 +221,7 @@ export default function useCategoryProducts(
     // Reset results and pagination for every new filter/query.
     setProducts([]);
     productsLengthRef.current = 0;
+    setTotalCount(null);
     setPage(1);
     setHasMore(true);
     setLoading(true);
@@ -238,6 +262,7 @@ export default function useCategoryProducts(
   return {
     products,
     setProducts,
+    totalCount,
     loading: loading || !enabled,
     loadingMore,
     refreshing,
