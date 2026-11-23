@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { BadgeCheck, Leaf, LockKeyhole, ShieldCheck } from 'lucide-react';
 import logoImg from '/greenlogo.png';
+import { Images } from '../common/images';
 import { COPY } from '../content/copy';
 import useLoggedIn from '../hooks/useLoggedIn';
 import { navigateToLogin } from '../services/guestAuth';
@@ -116,7 +117,7 @@ export default function SiteFooter() {
 
       {/* Original footer mark, now a background layer (adds no height). */}
       <div className="site-footer-mark" aria-hidden="true">
-        <img alt="" src="https://ayurmuni.com/assets/logoround-CDmnakog.png" />
+        <img alt="" src={Images.FinalLogo} />
         <span>AYURMUNI</span>
       </div>
 
