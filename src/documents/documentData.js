@@ -83,10 +83,10 @@ const joinAddress = (address) => {
 
 /** Same seller block as the order invoice (used when the API omits wellness fields). */
 export const INVOICE_SELLER_FALLBACK = {
-  wellness_name: 'TruIndyaWellness Private Limited',
-  company_name: 'TruIndyaWellness Private Limited',
+  wellness_name: 'TruIndya Wellness Private Limited',
+  company_name: 'TruIndya Wellness Private Limited',
   seller_address:
-    'C-158, Amar Gyan Industrial Estate, Khopat, Thane Maharashtra - 400601, Maharashtra (27), India',
+    '3rd Floor, Tower 3A, DLF Corporate Greens, Sector 74A, Gurugram 122004, Haryana, India.',
   seller_phone: SUPPORT_PHONE_DISPLAY,
   gstin: 'GSTIN',
   company_email: 'https://ayurmuni.com/',
@@ -443,9 +443,9 @@ export const buildPrescriptionDocument = (data) => {
   );
 
   const paymentAmount = parseAmount(getPaymentAmount(data));
-  if (paymentAmount != null) {
-    pushSection(sections, 'Consultation amount', [formatConsultationAmount(paymentAmount)]);
-  }
+  // if (paymentAmount != null) {
+  //   pushSection(sections, 'Consultation amount', [formatConsultationAmount(paymentAmount)]);
+  // }
 
   const billTo = buildBillToBlock({
     ...data,

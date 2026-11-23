@@ -17,7 +17,7 @@ export async function fetchUpcomingAppointmentList(pageSize = 50, { status } = {
   const res = await getConsultHistory({
     page: 1,
     page_size: pageSize,
-    timeframe: 'today',
+    timeframe: 'upcoming',
     ...(statusFilter && statusFilter !== 'all' ? { status: statusFilter } : {}),
   }).catch(() => null);
 

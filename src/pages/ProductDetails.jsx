@@ -95,6 +95,12 @@ const formatReviewDate = (value) => {
   return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
+const formatExpiryMonthYear = (value) => {
+  if (!value) return '';
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+};
+
 export default function ProductDetails({ medicine = false } = {}) {
   const { variantId } = useParams();
   const navigate = useNavigate();
@@ -279,6 +285,10 @@ export default function ProductDetails({ medicine = false } = {}) {
     { label: 'Pack size', value: [active?.size || active?.title, active?.weightage].filter(Boolean).join(' ') },
     { label: 'Manufacturer', value: textOf(product?.manufacturer) },
     { label: 'Origin', value: textOf(product?.origin) },
+    {
+      label: 'Expires at',
+      value: formatExpiryMonthYear(active?.expire_at || product?.expire_at) || textOf(active?.expire_at || product?.expire_at),
+    },
     { label: 'Treatment', value: textOf(product?.treatment_type) },
     { label: 'Dosage', value: textOf(product?.dosages) },
   ].filter((item) => item.value);
