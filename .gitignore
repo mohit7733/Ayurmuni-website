@@ -6,3 +6,8 @@ dist
 .vercel
 # .env*
 # !.env.example
+
+# Keep local / avoid committing these
+.env.example
+index.html
+src/services/metaPixel.js
