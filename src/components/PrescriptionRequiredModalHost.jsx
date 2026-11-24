@@ -1,8 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Stethoscope, Upload } from 'lucide-react';
-import { Button, Modal } from './ui';
-import { PRODUCT_DETAIL_COPY as copy } from '../content/productDetail';
 import { subscribePrescriptionRequired } from '../services/prescriptionGate';
 import { Button, Modal } from './ui';
 import '../design/components/prescription-gate.css';
