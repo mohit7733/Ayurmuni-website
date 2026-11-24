@@ -4,15 +4,14 @@ import { FileText, Stethoscope, Upload } from 'lucide-react';
 import { Button, Modal } from './ui';
 import { PRODUCT_DETAIL_COPY as copy } from '../content/productDetail';
 import { subscribePrescriptionRequired } from '../services/prescriptionGate';
-import '../design/components/rx-gate-modal.css';
+import { Button, Modal } from './ui';
+import '../design/components/prescription-gate.css';
 
 export default function PrescriptionRequiredModalHost() {
   const navigate = useNavigate();
   const [state, setState] = useState(null);
 
   useEffect(() => subscribePrescriptionRequired(setState), []);
-
-  if (!state) return null;
 
   const close = () => setState(null);
 
@@ -22,8 +21,8 @@ export default function PrescriptionRequiredModalHost() {
   };
 
   const openUpload = () => {
-    const variantId = state.variantId;
-    const productName = state.productName;
+    const variantId = state?.variantId;
+    const productName = state?.productName;
     setState(null);
     const params = new URLSearchParams();
     if (variantId) params.set('variant', variantId);
@@ -38,50 +37,32 @@ export default function PrescriptionRequiredModalHost() {
     });
   };
 
+  const message =
+    state?.message ||
+    'This medicine needs a valid prescription before it can be added to cart.';
+
   return (
     <Modal
-      open
+      open={Boolean(state)}
       onClose={close}
-      size="sm"
-      title={copy.prescriptionRequired}
+      title="Prescription required"
+      description={state?.productName || undefined}
       className="rx-gate-modal"
       footer={
-        <div className="rx-gate__actions">
-          <Button
-            variant="primary"
-            block
-            leadingIcon={<Stethoscope size={18} aria-hidden />}
-            onClick={openConsult}
-          >
-            {copy.consultDoctor}
+        <div className="rx-gate-actions">
+          <Button variant="primary" onClick={openConsult}>
+            Consult a doctor
           </Button>
-          <Button
-            variant="secondary"
-            block
-            leadingIcon={<Upload size={18} aria-hidden />}
-            onClick={openUpload}
-          >
-            {copy.uploadRx}
+          <Button variant="secondary" onClick={openUpload}>
+            Upload prescription
           </Button>
-          <Button variant="ghost" block onClick={close}>
-            {copy.notNow}
+          <Button variant="ghost" onClick={close}>
+            Not now
           </Button>
         </div>
       }
     >
-      <div className="rx-gate">
-        <div className="rx-gate__mark" aria-hidden>
-          <FileText size={22} strokeWidth={1.85} />
-        </div>
-        {state.productName ? (
-          <p className="rx-gate__product">
-            <span className="rx-gate__product-label">{copy.prescriptionProduct}</span>
-            <strong>{state.productName}</strong>
-          </p>
-        ) : null}
-        <p className="rx-gate__message">{state.message}</p>
-        <p className="rx-gate__hint">{copy.prescriptionHint}</p>
-      </div>
+      <p className="rx-gate-message">{message}</p>
     </Modal>
   );
 }

@@ -57,23 +57,27 @@ export default function OrderConfirmation() {
         {orderNo ? <p className="or-confirm__code">#{orderNo}</p> : null}
 
         {items.length ? (
-          <div className="or-card">
+          <div className="or-card or-confirm__items">
             <h2>{T.orderItems}</h2>
-            {items.map((item) => (
-              <div key={item.id || item.variant_id} className="or-item or-item--no-price">
-                <span className="or-item__thumb">
-                  {item.image ? (
-                    <img src={item.image} alt="" loading="lazy" decoding="async" />
-                  ) : (
-                    <Leaf size={20} aria-hidden />
-                  )}
-                </span>
-                <p className="or-item__name">
-                  {item.name}
-                  <small>{T.qtyPrice(item.quantity, formatRupee(item.price))}</small>
-                </p>
-              </div>
-            ))}
+            <ul className="or-confirm__item-list">
+              {items.map((item) => (
+                <li key={item.id || item.variant_id} className="or-confirm__item">
+                  <span className="or-item__thumb">
+                    {item.image ? (
+                      <img src={item.image} alt="" loading="lazy" decoding="async" />
+                    ) : (
+                      <Leaf size={20} aria-hidden />
+                    )}
+                  </span>
+                  <div className="or-confirm__item-body">
+                    <p className="or-item__name">{item.name}</p>
+                    <p className="or-confirm__item-meta">
+                      {T.qtyPrice(item.quantity, formatRupee(item.price))}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
           </div>
         ) : null}
 

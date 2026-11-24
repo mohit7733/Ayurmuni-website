@@ -14,6 +14,7 @@ import {
   ShoppingBag,
   Star,
   Truck,
+  X,
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import {
@@ -68,6 +69,7 @@ import {
   getDeliveryAgent,
   getRefundInfo,
   INVOICE_ALLOWED,
+  resolveOrderItems,
   RETURN_ALLOWED,
   RETURN_LIST_STATUSES,
   SUPPORT_EMAIL,
@@ -121,10 +123,11 @@ export default function OrderDetails() {
     }));
   }, [order?.id, orderId, location.key]);
 
-  const items = Array.isArray(order?.items) ? order.items : [];
+  const items = resolveOrderItems(order);
   const addressObj = order?.delivery_address || order?.address || order?.shipping_address;
   const address = formatDeliveryAddress(addressObj) || formatAddress(addressObj);
   const status = String(order?.order_status || order?.status || '').toLowerCase();
+  const isCancelledOrder = status === 'cancelled' || status === 'canceled';
   const canReview = status === 'delivered' || status === 'completed';
   const canCancel = CANCEL_ALLOWED.includes(status);
   const canInvoice = INVOICE_ALLOWED.includes(status);
@@ -212,11 +215,18 @@ export default function OrderDetails() {
       return;
     }
     const updated = res?.data?.data ?? res?.data ?? null;
-    setOrder((prev) => ({
-      ...prev,
-      ...(updated && typeof updated === 'object' && !Array.isArray(updated) ? updated : {}),
-      order_status: updated?.order_status || 'cancelled',
-    }));
+    setOrder((prev) => {
+      const patch =
+        updated && typeof updated === 'object' && !Array.isArray(updated) ? updated : {};
+      const nextItems = resolveOrderItems({ ...prev, ...patch });
+      const keptItems = nextItems.length ? nextItems : resolveOrderItems(prev);
+      return {
+        ...prev,
+        ...patch,
+        items: keptItems,
+        order_status: patch?.order_status || 'cancelled',
+      };
+    });
     setCancelOpen(false);
     setCancelReason('');
     setCustomReason('');
@@ -305,8 +315,16 @@ export default function OrderDetails() {
             : 'pending',
   }));
   const itemCount = items.reduce((sum, item) => sum + (Number(item?.quantity) || 1), 0);
-  const words = (value) => (value ? String(value).replace(/_/g, ' ') : '');
-  const method = (value) => (/^(upi|cod|emi|nb)$/i.test(String(value || '')) ? String(value).toUpperCase() : words(value));
+  const words = (value) =>
+    value
+      ? String(value)
+          .replace(/_/g, ' ')
+          .replace(/\b\w/g, (c) => c.toUpperCase())
+      : '';
+  const method = (value) =>
+    /^(upi|cod|emi|nb)$/i.test(String(value || ''))
+      ? String(value).toUpperCase()
+      : words(value);
   const paymentMethod = method(order?.payment_method || order?.payment_type);
 
   return (
@@ -478,60 +496,91 @@ export default function OrderDetails() {
                 </>
               }
             >
+              {isCancelledOrder ? (
+                <DetailCard id="order-track" title={T.trackOrder} icon={Truck}>
+                  <Timeline items={trackingTimeline} />
+                </DetailCard>
+              ) : null}
+
               <DetailCard
                 id="order-items"
-                title={T.itemsTitle}
+                title={isCancelledOrder ? T.cancelledItemsTitle : T.itemsTitle}
                 icon={ShoppingBag}
                 meta={`${itemCount} ${itemCount === 1 ? 'item' : 'items'}`}
               >
-                <ul className="dx-items">
-                  {items.map((item) => {
-                    const variantId = resolveOrderItemVariantId(item);
-                    const local = localReviews[variantId];
-                    const rated = isOrderItemRated(item) || Boolean(local);
-                    const image = resolveImageUrl(item?.variant || item);
-                    const name = item?.variant?.variant_title || item?.product_name || item?.name;
-                    const unit = Number(item.selling_price ?? item.price ?? item.unit_price) || 0;
-                    const qty = Number(item.quantity) || 1;
-                    const lineTotal = Number(item.total_price ?? item.subtotal) || unit * qty;
-                    const rating = local?.rating || item?.review?.rating;
-                    return (
-                      <li key={item.id || item.variant_id} className="dx-item">
-                        <span className="dx-item__media">
-                          {image ? (
-                            <img src={image} alt="" loading="lazy" decoding="async" />
-                          ) : (
-                            <Leaf size={20} aria-hidden />
-                          )}
-                        </span>
-                        <span className="dx-item__copy">
-                          <strong>{name}</strong>
-                          <small>{T.qty(qty)}</small>
-                          {rated ? (
-                            <small className="dx-item__rated">
-                              <Star size={12} aria-hidden />
-                              {rating ? T.youRated(rating) : T.reviewSubmitted}
-                            </small>
-                          ) : null}
-                        </span>
-                        <span className="dx-item__end">
-                          <strong>{formatRupee(lineTotal)}</strong>
-                          {unit * qty > lineTotal ? <s className="dx-item__was">{formatRupee(unit * qty)}</s> : null}
-                          {!rated && variantId && canReview ? (
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              leadingIcon={<Star size={14} aria-hidden />}
-                              onClick={() => openProductReview(item)}
-                            >
-                              {T.rate}
-                            </Button>
-                          ) : null}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
+                {items.length ? (
+                  <ul className="dx-items">
+                    {items.map((item) => {
+                      const variantId = resolveOrderItemVariantId(item);
+                      const local = localReviews[variantId];
+                      const rated = isOrderItemRated(item) || Boolean(local);
+                      const image = resolveImageUrl(item?.variant || item);
+                      const name =
+                        item?.variant?.variant_title ||
+                        item?.product_name ||
+                        item?.name ||
+                        item?.title ||
+                        'Product';
+                      const unit = Number(item.selling_price ?? item.price ?? item.unit_price) || 0;
+                      const qty = Number(item.quantity) || 1;
+                      const lineTotal = Number(item.total_price ?? item.subtotal) || unit * qty;
+                      const rating = local?.rating || item?.review?.rating;
+                      const lineCancelled =
+                        isCancelledOrder ||
+                        /cancel/i.test(String(item?.status || item?.item_status || ''));
+                      return (
+                        <li
+                          key={item.id || item.variant_id || variantId || name}
+                          className={`dx-item${lineCancelled ? ' is-cancelled' : ''}`}
+                        >
+                          <span className={`dx-item__media${lineCancelled ? ' is-cancelled' : ''}`}>
+                            {image ? (
+                              <img src={image} alt="" loading="lazy" decoding="async" />
+                            ) : (
+                              <Leaf size={20} aria-hidden />
+                            )}
+                            {lineCancelled ? (
+                              <span className="dx-item__cancel-mark" aria-hidden>
+                                <X size={14} strokeWidth={3} />
+                              </span>
+                            ) : null}
+                          </span>
+                          <span className="dx-item__copy">
+                            <strong>{name}</strong>
+                            <small>{T.qty(qty)}</small>
+                            {lineCancelled ? (
+                              <small className="dx-item__cancelled-label">{T.cancelledItem}</small>
+                            ) : null}
+                            {rated ? (
+                              <small className="dx-item__rated">
+                                <Star size={12} aria-hidden />
+                                {rating ? T.youRated(rating) : T.reviewSubmitted}
+                              </small>
+                            ) : null}
+                          </span>
+                          <span className="dx-item__end">
+                            <strong>{formatRupee(lineTotal)}</strong>
+                            {unit * qty > lineTotal ? (
+                              <s className="dx-item__was">{formatRupee(unit * qty)}</s>
+                            ) : null}
+                            {!rated && variantId && canReview ? (
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                leadingIcon={<Star size={14} aria-hidden />}
+                                onClick={() => openProductReview(item)}
+                              >
+                                {T.rate}
+                              </Button>
+                            ) : null}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : (
+                  <p className="dx-note">{T.noItems}</p>
+                )}
               </DetailCard>
 
               {orderReturns.length > 0 ? (
@@ -565,64 +614,66 @@ export default function OrderDetails() {
                 </DetailCard>
               ) : null}
 
-              <DetailCard
-                id="order-track"
-                title={T.trackOrder}
-                icon={Truck}
-                action={
-                  canTrackLive ? (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      loading={trackingLoading}
-                      leadingIcon={<RefreshCw size={14} />}
-                      onClick={refreshTracking}
-                    >
-                      {T.refresh}
-                    </Button>
-                  ) : null
-                }
-              >
-                {eta || currentLocation ? (
-                  <div className="dx-link dx-link--static">
-                    <span className="dx-link__icon" aria-hidden>
-                      <MapPin size={18} />
-                    </span>
-                    <span className="dx-link__copy">
-                      {eta ? <strong>{T.arrivingBy(eta)}</strong> : <strong>{currentLocation}</strong>}
-                      {eta && currentLocation ? <span>{currentLocation}</span> : null}
-                    </span>
-                  </div>
-                ) : null}
-                <Timeline items={trackingTimeline} />
-                {liveTracking?.trackingNumber ? (
-                  <p className="dx-note">
-                    {liveTracking.carrier ? `${liveTracking.carrier} · ` : ''}
-                    AWB {liveTracking.trackingNumber}
-                    {liveTracking.lastUpdated ? ` · Updated ${liveTracking.lastUpdated}` : ''}
-                  </p>
-                ) : null}
-                {agent ? (
-                  <PersonCard
-                    fallback={<Truck size={18} />}
-                    name={agent.name}
-                    role="Delivery partner"
-                    meta={agent.phone}
-                    action={
-                      agent.phone ? (
-                        <Button
-                          href={`tel:${agent.phone}`}
-                          variant="secondary"
-                          size="sm"
-                          leadingIcon={<Phone size={14} />}
-                        >
-                          {T.call}
-                        </Button>
-                      ) : null
-                    }
-                  />
-                ) : null}
-              </DetailCard>
+              {!isCancelledOrder ? (
+                <DetailCard
+                  id="order-track"
+                  title={T.trackOrder}
+                  icon={Truck}
+                  action={
+                    canTrackLive ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        loading={trackingLoading}
+                        leadingIcon={<RefreshCw size={14} />}
+                        onClick={refreshTracking}
+                      >
+                        {T.refresh}
+                      </Button>
+                    ) : null
+                  }
+                >
+                  {eta || currentLocation ? (
+                    <div className="dx-link dx-link--static">
+                      <span className="dx-link__icon" aria-hidden>
+                        <MapPin size={18} />
+                      </span>
+                      <span className="dx-link__copy">
+                        {eta ? <strong>{T.arrivingBy(eta)}</strong> : <strong>{currentLocation}</strong>}
+                        {eta && currentLocation ? <span>{currentLocation}</span> : null}
+                      </span>
+                    </div>
+                  ) : null}
+                  <Timeline items={trackingTimeline} />
+                  {liveTracking?.trackingNumber ? (
+                    <p className="dx-note">
+                      {liveTracking.carrier ? `${liveTracking.carrier} · ` : ''}
+                      AWB {liveTracking.trackingNumber}
+                      {liveTracking.lastUpdated ? ` · Updated ${liveTracking.lastUpdated}` : ''}
+                    </p>
+                  ) : null}
+                  {agent ? (
+                    <PersonCard
+                      fallback={<Truck size={18} />}
+                      name={agent.name}
+                      role="Delivery partner"
+                      meta={agent.phone}
+                      action={
+                        agent.phone ? (
+                          <Button
+                            href={`tel:${agent.phone}`}
+                            variant="secondary"
+                            size="sm"
+                            leadingIcon={<Phone size={14} />}
+                          >
+                            {T.call}
+                          </Button>
+                        ) : null
+                      }
+                    />
+                  ) : null}
+                </DetailCard>
+              ) : null}
             </DetailLayout>
           </>
         )}

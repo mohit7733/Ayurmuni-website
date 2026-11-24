@@ -397,9 +397,11 @@
   color: var(--bkp-gold-strong);
 }
 
-.bkp .bk-slot.is-on {
+.bkp .bk-slot.is-on,
+.bkp .bk-slot.is-on:hover:not(:disabled) {
   border-color: transparent;
   background: linear-gradient(160deg, #17634f, var(--bkp-deeper));
+  color: var(--am-on-primary, #fff);
   box-shadow:
     0 0 0 2px var(--bkp-gold),
     0 10px 20px -8px rgba(7, 42, 34, 0.5);

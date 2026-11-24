@@ -5,17 +5,15 @@ import { formatDoctorDisplayName } from '../consult/appointmentUtils';
 import {
   doctorDisplayName,
   doctorExperience,
-  doctorFavorite,
   doctorImage,
   doctorQualification,
   doctorRating,
   doctorSpeciality,
-  favoriteFromToggle,
   getDoctorId,
 } from '../consult/doctors';
+import { toggleDoctorFavourite, useDoctorFavFlag } from '../consult/doctorFavSync';
 import { showSuccessToast } from '../config/key';
 import { requireAuth } from '../services/guestAuth';
-import { toggleFavDoctor } from '../services/consultService';
 import FavButton from './ui/FavButton';
 import DietitianBadge from './DietitianBadge';
 import { nameInitial } from '../utils/initials';
@@ -75,7 +73,7 @@ function VisitedDoctorCard({ item, fallbackSpeciality }) {
   const verified = Boolean(item?.is_verified);
   const available = item?.has_availability === true;
   const visits = Number(item?.consultation_count || 0);
-  const [fav, setFav] = useState(() => doctorFavorite(item));
+  const fav = useDoctorFavFlag(item);
 
   const openProfile = () => {
     if (id) navigate(`/consult/doctors/${id}`);
@@ -86,21 +84,15 @@ function VisitedDoctorCard({ item, fallbackSpeciality }) {
     event.stopPropagation();
     if (!(await requireAuth('Please login to save favourite doctors'))) return;
     if (!id) return;
-    const prev = fav;
-    setFav(!prev);
-    try {
-      const res = await toggleFavDoctor(id);
-      if (res?.success === false) {
-        setFav(prev);
-        showSuccessToast(res?.message || 'Failed to update favourite', 'error');
-        return;
-      }
-      const next = favoriteFromToggle(res);
-      if (next !== undefined) setFav(next);
-    } catch {
-      setFav(prev);
-      showSuccessToast('Failed to update favourite status', 'error');
+    const result = await toggleDoctorFavourite(item);
+    if (!result.ok) {
+      showSuccessToast(result.message || 'Failed to update favourite', 'error');
+      return;
     }
+    showSuccessToast(
+      result.message || (result.saved ? 'Added to favourites' : 'Removed from favourites'),
+      'success',
+    );
   };
 
   return (

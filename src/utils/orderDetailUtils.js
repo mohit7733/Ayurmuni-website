@@ -201,6 +201,36 @@ export const formatDeliveryAddress = (address) => {
     .join(', ');
 };
 
+const ORDER_ITEM_KEYS = [
+  'items',
+  'order_items',
+  'line_items',
+  'order_lines',
+  'products',
+  'cart_items',
+  'orderItems',
+];
+
+/** Prefer non-empty item lists; APIs vary the key (esp. after cancel). */
+export const resolveOrderItems = (order) => {
+  if (!order || typeof order !== 'object') return [];
+  for (const key of ORDER_ITEM_KEYS) {
+    const list = order[key];
+    if (Array.isArray(list) && list.length) return list;
+  }
+  const nested = order.data && typeof order.data === 'object' ? order.data : null;
+  if (nested) {
+    for (const key of ORDER_ITEM_KEYS) {
+      const list = nested[key];
+      if (Array.isArray(list) && list.length) return list;
+    }
+  }
+  for (const key of ORDER_ITEM_KEYS) {
+    if (Array.isArray(order[key])) return order[key];
+  }
+  return [];
+};
+
 export const resolveOrderItemsTotal = (order) => {
   const candidates = [
     order?.items_total,
@@ -215,7 +245,7 @@ export const resolveOrderItemsTotal = (order) => {
     const n = Number(c);
     if (Number.isFinite(n) && n > 0) return n;
   }
-  const items = Array.isArray(order?.items) ? order.items : [];
+  const items = resolveOrderItems(order);
   const sum = items.reduce((acc, item) => {
     const qty = Number(item?.quantity ?? 1) || 1;
     const unit = Number(

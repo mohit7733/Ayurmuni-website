@@ -1,14 +1,51 @@
-/* Pay-using gateway chips (pgw-*). Reuses ui Chip; only layout lives here. */
+/* Pay-using gateway row (pgw-*). */
 .pgw {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   margin: 8px 0 0;
 }
+
 .pgw__label {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--am-ink-2, #475569);
+  color: var(--am-text, #17302a);
   margin-right: 2px;
+}
+
+/* Single-gateway: plain text, not a chip/button. */
+.pgw--readonly {
+  margin-top: 0;
+}
+
+.pgw__value {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--am-text-soft, #3d5c52);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+  cursor: default;
+  user-select: none;
+  pointer-events: none;
+}
+
+.pgw__value svg {
+  color: var(--am-primary, #0d614e);
+  flex-shrink: 0;
+}
+
+/* Multi-gateway chips: selected = outlined mark, not a raised primary button. */
+.pgw .am-chip.is-selected {
+  background: var(--am-primary-soft, #e7f3ef);
+  border-color: var(--am-primary, #0d614e);
+  color: var(--am-primary-strong, #0a4d3e);
+  box-shadow: none;
+}
+
+.pgw .am-chip.is-selected:hover {
+  transform: none;
+  box-shadow: none;
 }

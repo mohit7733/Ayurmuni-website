@@ -5,21 +5,19 @@ import { formatDoctorDisplayName } from '../consult/appointmentUtils';
 import {
   doctorDisplayName,
   doctorExperience,
-  doctorFavorite,
   doctorFeeLabel,
   doctorImage,
   doctorLocation,
   doctorQualification,
   doctorRating,
   doctorSpeciality,
-  favoriteFromToggle,
   getDoctorAvailabilityLabel,
   getDoctorId,
 } from '../consult/doctors';
+import { toggleDoctorFavourite, useDoctorFavFlag } from '../consult/doctorFavSync';
 import '../design/components/doctor-availability.css';
 import { showSuccessToast } from '../config/key';
 import { requireAuth } from '../services/guestAuth';
-import { toggleFavDoctor } from '../services/consultService';
 import FavButton from './ui/FavButton';
 import DietitianBadge from './DietitianBadge';
 import { nameInitial } from '../utils/initials';
@@ -39,7 +37,7 @@ export default function DoctorListCard({ item, fallbackSpeciality = 'Ayurveda' }
   const verified = Boolean(item?.is_verified);
   const availability = getDoctorAvailabilityLabel(item);
   const initial = nameInitial(name);
-  const [fav, setFav] = useState(() => doctorFavorite(item));
+  const fav = useDoctorFavFlag(item);
   const [imgFailed, setImgFailed] = useState(false);
   const showPhoto = Boolean(image) && !imgFailed;
 
@@ -52,21 +50,15 @@ export default function DoctorListCard({ item, fallbackSpeciality = 'Ayurveda' }
     event.stopPropagation();
     if (!(await requireAuth('Please login to save favourite doctors'))) return;
     if (!id) return;
-    const prev = fav;
-    setFav(!prev);
-    try {
-      const res = await toggleFavDoctor(id);
-      if (res?.success === false) {
-        setFav(prev);
-        showSuccessToast(res?.message || 'Failed to update favourite', 'error');
-        return;
-      }
-      const next = favoriteFromToggle(res);
-      if (next !== undefined) setFav(next);
-    } catch {
-      setFav(prev);
-      showSuccessToast('Failed to update favourite status', 'error');
+    const result = await toggleDoctorFavourite(item);
+    if (!result.ok) {
+      showSuccessToast(result.message || 'Failed to update favourite', 'error');
+      return;
     }
+    showSuccessToast(
+      result.message || (result.saved ? 'Added to favourites' : 'Removed from favourites'),
+      'success',
+    );
   };
 
   return (

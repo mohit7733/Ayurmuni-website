@@ -1,9 +1,10 @@
 import { formatRupee, mapCatalogProductItem, resolveImageUrl } from '../home/catalog';
 import { getAppointmentIds } from '../consult/appointmentUtils';
 import { doctorDisplayName, doctorExperience, doctorImage, getDoctorId } from '../consult/doctors';
+import { resolveOrderItems } from '../utils/orderDetailUtils';
 
 export const mapOrderToListItem = (order) => {
-  const items = Array.isArray(order?.items) ? order.items : [];
+  const items = resolveOrderItems(order);
   const first = items[0];
   const firstTitle =
     first?.variant?.variant_title || first?.product_name || first?.name || 'Order';
@@ -72,7 +73,7 @@ export const mapOrdersToRecentProducts = (orders = [], limit = 8) => {
 
   for (const order of sorted) {
     const orderDate = formatOrderDate(order?.created_at);
-    const items = Array.isArray(order?.items) ? order.items : [];
+    const items = resolveOrderItems(order);
     for (const item of items) {
       if (recentItems.length >= limit) break;
       recentItems.push({

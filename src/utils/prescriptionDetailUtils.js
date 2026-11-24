@@ -257,6 +257,51 @@ export const formatMedicineDuration = (value) => {
   return raw;
 };
 
+/** Display label for prescribed quantity (supports common API aliases + unit). */
+export const resolveMedicineQuantityLabel = (medicine) => {
+  if (!medicine || typeof medicine !== 'object') return '';
+  const unit = String(
+    medicine.quantity_unit ||
+      medicine.qty_unit ||
+      medicine.unit ||
+      medicine.form ||
+      medicine.variant?.unit ||
+      '',
+  ).trim();
+  const candidates = [
+    medicine.quantity,
+    medicine.qty,
+    medicine.prescribed_quantity,
+    medicine.doctor_quantity,
+    medicine.prescription_quantity,
+    medicine.total_quantity,
+    medicine.medicine_quantity,
+    medicine.no_of_units,
+    medicine.units,
+    medicine.variant?.quantity,
+    medicine.variant?.prescribed_quantity,
+    medicine.product?.quantity,
+  ];
+  for (const value of candidates) {
+    if (value == null) continue;
+    if (typeof value === 'object') {
+      const n = value.value ?? value.qty ?? value.quantity;
+      const u = String(value.unit ?? value.units ?? unit).trim();
+      if (n == null || String(n).trim() === '') continue;
+      const text = String(n).trim();
+      if (u && !text.toLowerCase().includes(u.toLowerCase())) return `${text} ${u}`;
+      return text;
+    }
+    const text = String(value).trim();
+    if (!text) continue;
+    if (unit && isBareNumber(text) && !text.toLowerCase().includes(unit.toLowerCase())) {
+      return `${text} ${unit}`;
+    }
+    return text;
+  }
+  return '';
+};
+
 export const getMedicineScheduleChips = (medicine) => {
   if (!medicine || typeof medicine !== 'object') return [];
   const chips = [];
@@ -266,9 +311,10 @@ export const getMedicineScheduleChips = (medicine) => {
   if (frequency) chips.push({ key: 'freq', caption: 'Frequency', label: frequency });
   const duration = formatMedicineDuration(medicine.duration);
   if (duration) chips.push({ key: 'dur', caption: 'Duration', label: duration });
-  if (medicine.quantity != null && String(medicine.quantity).trim() !== '') {
-    chips.push({ key: 'qty', caption: 'Qty', label: String(medicine.quantity) });
-  }
+  const quantity =
+    resolveMedicineQuantityLabel(medicine) ||
+    (chips.length ? String(getMedicineQuantity(medicine)) : '');
+  if (quantity) chips.push({ key: 'qty', caption: 'Quantity', label: quantity });
   return chips;
 };
 
@@ -318,7 +364,20 @@ export const getMedicineUnitPrice = (medicine) => findAmount(medicine, SELLING_K
 
 /** "10 tablets" / "2" / 2 becomes 2; missing becomes 1. */
 export const getMedicineQuantity = (medicine) => {
-  const raw = medicine?.quantity ?? medicine?.qty;
+  const label = resolveMedicineQuantityLabel(medicine);
+  const raw =
+    label ||
+    medicine?.quantity ||
+    medicine?.qty ||
+    medicine?.prescribed_quantity ||
+    medicine?.doctor_quantity ||
+    medicine?.prescription_quantity;
+  if (raw != null && typeof raw === 'object') {
+    const nested = raw.value ?? raw.qty ?? raw.quantity;
+    const match = String(nested ?? '').match(/\d+(\.\d+)?/);
+    const num = match ? Number(match[0]) : NaN;
+    return Number.isFinite(num) && num > 0 ? num : 1;
+  }
   const match = String(raw ?? '').match(/\d+(\.\d+)?/);
   const num = match ? Number(match[0]) : NaN;
   return Number.isFinite(num) && num > 0 ? num : 1;

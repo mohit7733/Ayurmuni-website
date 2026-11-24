@@ -40,13 +40,14 @@ export default function CartAddButton({ item, className = "", compact = false })
   const updateQty = async (nextQty) => {
     if (!variantId) return false;
     if (!(await requireAuth("Please login to add items to cart"))) return false;
+    // Same order as View Cart: Rx gate first on increase, then stock.
+    if (nextQty > cartQty && rx) {
+      showPrescriptionRequired({ variantId, productName: item?.name });
+      return false;
+    }
     const block = getAddQtyBlockMessage(item, nextQty);
     if (block) {
       showSuccessToast(block, "error");
-      return false;
-    }
-    if (nextQty > cartQty && rx) {
-      showPrescriptionRequired({ variantId, productName: item?.name });
       return false;
     }
     setBusy(true);
