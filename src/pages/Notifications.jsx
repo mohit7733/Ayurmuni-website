@@ -25,7 +25,8 @@ const TYPE_FILTERS = [
   { key: "all", label: "All types" },
   { key: "order", label: "Orders" },
   { key: "appointment", label: "Appointments" },
-  { key: "prescription", label: "Follow-ups" },
+  { key: "prescription", label: "Prescription Requests" },
+  { key: "follow_up", label: "Follow-up" },
 ];
 
 const SECTIONS = [
