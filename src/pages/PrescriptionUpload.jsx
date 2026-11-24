@@ -4,7 +4,6 @@ import {
   Aperture,
   Camera,
   ChevronLeft,
-  ChevronRight,
   FileText,
   Images,
   ScanLine,
@@ -17,20 +16,19 @@ import { requireAuth } from '../services/guestAuth';
 import { showSuccessToast } from '../config/key';
 import PrescriptionFilePreview, {
   PrescriptionPreviewModal,
-  isImageFile,
-  isPdfFile,
 } from '../components/PrescriptionFilePreview';
 import {
   createPrescriptionRequest,
   extractPrescriptionRequest,
-  formatPrescriptionDate,
-  getPrescriptionFiles,
-  getPrescriptionRequests,
-  getStatusLabel,
   isPrescriptionApproved,
-  isPrescriptionRejected,
-  normalizePrescriptionRequestList,
 } from '../services/prescriptionService';
+import {
+  formatRecordDate,
+  formatRecordType,
+  getMedicalRecords,
+  isImageRecord,
+  listMedicalRecords,
+} from '../services/patientService';
 import '../design/pages/rx-upload.css';
 
 const TIPS = [
@@ -51,11 +49,16 @@ const TIPS = [
   },
 ];
 
-const requestTone = (item) => {
-  if (isPrescriptionApproved(item)) return 'success';
-  if (isPrescriptionRejected(item)) return 'danger';
-  return 'warning';
+const getRecordFile = (item) => {
+  const uri = String(item?.file_url || item?.thumbnail_url || '').trim();
+  if (!uri) return null;
+  const rawType = String(item?.file_type || '').toLowerCase();
+  const fileType = rawType.includes('pdf') || /\.pdf(\?|$)/i.test(uri) ? 'pdf' : rawType || 'image';
+  return { uri, fileType };
 };
+
+const recordTitle = (item) =>
+  String(item?.title || item?.description || item?.file_name || 'Prescription document').trim();
 
 export default function PrescriptionUpload() {
   const navigate = useNavigate();
@@ -78,42 +81,37 @@ export default function PrescriptionUpload() {
 
   const [files, setFiles] = useState([]);
   const [previews, setPreviews] = useState([]);
-  const [recent, setRecent] = useState([]);
-  const [recentLoading, setRecentLoading] = useState(true);
-  const [selectedPastId, setSelectedPastId] = useState('');
+  const [documents, setDocuments] = useState([]);
+  const [docsLoading, setDocsLoading] = useState(true);
+  const [selectedDocId, setSelectedDocId] = useState('');
   const [reusing, setReusing] = useState(false);
-  const [recentPreview, setRecentPreview] = useState(null);
+  const [docPreview, setDocPreview] = useState(null);
 
   useEffect(() => {
     (async () => {
-      setRecentLoading(true);
+      setDocsLoading(true);
       try {
         if (!(await requireAuth('Please login to upload a prescription'))) return;
-        const res = await getPrescriptionRequests();
-        setRecent(normalizePrescriptionRequestList(res).slice(0, 8));
+        const res = await getMedicalRecords();
+        const list = listMedicalRecords(res)
+          .filter((item) => getRecordFile(item))
+          .filter((item) => {
+            const type = String(item?.medical_record_type || '').toLowerCase();
+            return !type || type === 'prescription';
+          })
+          .slice(0, 8);
+        setDocuments(list);
       } catch {
-        setRecent([]);
+        setDocuments([]);
       } finally {
-        setRecentLoading(false);
+        setDocsLoading(false);
       }
     })();
   }, []);
 
-  const selectedPast = useMemo(
-    () => recent.find((item) => String(item.id) === String(selectedPastId)) || null,
-    [recent, selectedPastId],
-  );
-
-  const previousUploads = useMemo(
-    () =>
-      recent
-        .map((item) => {
-          const itemFiles = getPrescriptionFiles(item);
-          if (!itemFiles.length) return null;
-          return { item, files: itemFiles };
-        })
-        .filter(Boolean),
-    [recent],
+  const selectedDoc = useMemo(
+    () => documents.find((item) => String(item.id) === String(selectedDocId)) || null,
+    [documents, selectedDocId],
   );
 
   useEffect(
@@ -140,7 +138,7 @@ export default function PrescriptionUpload() {
       if (incoming.length) showSuccessToast('Please choose a PDF or image file', 'error');
       return;
     }
-    setSelectedPastId('');
+    setSelectedDocId('');
     setFiles((prev) => {
       const merged = [...prev, ...next].slice(0, 4);
       setPreviews((old) => {
@@ -151,10 +149,10 @@ export default function PrescriptionUpload() {
     });
   };
 
-  const selectPrevious = (item) => {
-    const itemFiles = getPrescriptionFiles(item);
-    if (!itemFiles.length) {
-      showSuccessToast('No uploaded file found for this request', 'error');
+  const selectDocument = (item) => {
+    const file = getRecordFile(item);
+    if (!file) {
+      showSuccessToast('No file found for this document', 'error');
       return;
     }
     setFiles([]);
@@ -162,7 +160,7 @@ export default function PrescriptionUpload() {
       old.forEach((url) => URL.revokeObjectURL(url));
       return [];
     });
-    setSelectedPastId(String(item.id));
+    setSelectedDocId(String(item.id));
   };
 
   const removeFile = (index) => {
@@ -174,22 +172,6 @@ export default function PrescriptionUpload() {
     setFiles((prev) => prev.filter((_, itemIndex) => itemIndex !== index));
   };
 
-  const openRequest = (item) => {
-    if (isPrescriptionApproved(item)) {
-      navigate('/medicines/checkout', {
-        state: {
-          request: item,
-          notes: item?.notes,
-          approved: true,
-        },
-      });
-      return;
-    }
-    navigate('/medicines/order-status', {
-      state: { request: item, notes: item?.notes },
-    });
-  };
-
   const proceed = async () => {
     if (!(await requireAuth('Please login to upload prescription'))) return;
     if (files.length) {
@@ -198,25 +180,24 @@ export default function PrescriptionUpload() {
       });
       return;
     }
-    if (!selectedPast) {
-      showSuccessToast('Please upload a prescription or choose a previous one', 'error');
+    if (!selectedDoc) {
+      showSuccessToast('Please upload a prescription or choose a previous document', 'error');
       return;
     }
-    const pastFiles = getPrescriptionFiles(selectedPast);
-    if (!pastFiles.length) {
-      showSuccessToast('No uploaded file found for this request', 'error');
+    const pastFile = getRecordFile(selectedDoc);
+    if (!pastFile) {
+      showSuccessToast('No file found for this document', 'error');
       return;
     }
     setReusing(true);
     try {
-      const fileUrls = pastFiles.map((file) => file.uri);
       const payload = {
-        file_url: fileUrls[0],
-        file_urls: fileUrls,
-        file_type: pastFiles.some((file) => file.fileType === 'pdf') ? 'pdf' : 'image',
+        file_url: pastFile.uri,
+        file_urls: [pastFile.uri],
+        file_type: pastFile.fileType === 'pdf' ? 'pdf' : 'image',
         variant_ids: variantIds,
-        notes: selectedPast?.notes || undefined,
-        save_to_medical_records: true,
+        notes: selectedDoc?.description || selectedDoc?.title || undefined,
+        save_to_medical_records: false,
       };
       const res = await createPrescriptionRequest(payload);
       if (res?.success === false) {
@@ -251,259 +232,229 @@ export default function PrescriptionUpload() {
   return (
     <AppShell tab="medicines">
       <section className="rxu">
-        <header className="rxu-head">
-          <button type="button" className="am-back" onClick={() => navigate(-1)} aria-label="Back">
-            <ChevronLeft size={20} aria-hidden />
-          </button>
-          <div className="rxu-head__copy">
-            <p className="rxu-eyebrow">Medicines</p>
-            <h1>Prescription</h1>
-            <p>{productName || 'Upload documents for review'}</p>
-          </div>
-        </header>
-
-        {productName ? (
-          <aside className="rxu-notice">
-            <div className="rxu-notice__mark" aria-hidden>
-              <ShieldCheck size={22} strokeWidth={1.85} />
+        <div className="rxu-shell">
+          <header className="rxu-head">
+            <button type="button" className="am-back" onClick={() => navigate(-1)} aria-label="Back">
+              <ChevronLeft size={20} aria-hidden />
+            </button>
+            <div className="rxu-head__copy">
+              <p className="rxu-eyebrow">Medicines</p>
+              <h1>Prescription</h1>
+              <p>{productName || 'Upload documents for review'}</p>
             </div>
-            <div>
-              <strong>Approval needed for this product</strong>
-              <p>
-                Upload your Rx to get “{productName}” approved.
+          </header>
+
+          {productName ? (
+            <aside className="rxu-notice">
+              <div className="rxu-notice__mark" aria-hidden>
+                <ShieldCheck size={16} strokeWidth={1.85} />
+              </div>
+              <div>
+                <strong>Approval needed</strong>
+                <p>Upload your Rx to get “{productName}” approved.</p>
+              </div>
+            </aside>
+          ) : null}
+
+          <div className="rxu-picks">
+            <label className="rxu-pick">
+              <span className="rxu-pick__icon" aria-hidden>
+                <Camera size={20} strokeWidth={1.85} />
+              </span>
+              <span className="rxu-pick__copy">
+                <strong>Camera</strong>
+                <small>Take a photo</small>
+              </span>
+              <span className="rxu-pick__hint">Open</span>
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                hidden
+                onChange={(e) => {
+                  addFiles(e.target.files);
+                  e.target.value = '';
+                }}
+              />
+            </label>
+            <label className="rxu-pick">
+              <span className="rxu-pick__icon" aria-hidden>
+                <Images size={20} strokeWidth={1.85} />
+              </span>
+              <span className="rxu-pick__copy">
+                <strong>Gallery or PDF</strong>
+                <small>JPG, PNG or PDF · up to 4</small>
+              </span>
+              <span className="rxu-pick__hint">Browse</span>
+              <input
+                type="file"
+                accept="image/*,application/pdf"
+                multiple
+                hidden
+                onChange={(e) => {
+                  addFiles(e.target.files);
+                  e.target.value = '';
+                }}
+              />
+            </label>
+          </div>
+
+          {files.length > 0 ? (
+            <>
+              <p className="rxu-meta">
+                <span>
+                  {files.length} of 4 file{files.length === 1 ? '' : 's'} selected
+                </span>
+              </p>
+              <div className="rxu-files">
+                {files.map((file, index) => (
+                  <div key={`${file.name}-${index}`} className="rxu-file">
+                    <PrescriptionFilePreview
+                      uri={previews[index]}
+                      fileType={file.type}
+                      label={file.name}
+                    />
+                    <Button variant="ghost" size="sm" onClick={() => removeFile(index)}>
+                      Remove
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : null}
+
+          {selectedDoc ? (
+            <p className="rxu-meta">
+              <span>Using “{recordTitle(selectedDoc)}”</span>
+              <button type="button" className="rxu-meta__clear" onClick={() => setSelectedDocId('')}>
+                Clear
+              </button>
+            </p>
+          ) : null}
+
+          <section className="rxu-recent">
+            <div className="rxu-recent__head">
+              <h2 className="rxu-panel__title">Previously uploaded</h2>
+              <p className="rxu-recent__desc">
+                Your saved prescription documents. Tap one to reuse.
               </p>
             </div>
-          </aside>
-        ) : null}
 
-        <div className="rxu-picks">
-          <label className="rxu-pick">
-            <span className="rxu-pick__icon" aria-hidden>
-              <Camera size={22} strokeWidth={1.85} />
-            </span>
-            <strong>Camera</strong>
-            <small>Take a photo</small>
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              hidden
-              onChange={(e) => {
-                addFiles(e.target.files);
-                e.target.value = '';
-              }}
-            />
-          </label>
-          <label className="rxu-pick">
-            <span className="rxu-pick__icon" aria-hidden>
-              <Images size={22} strokeWidth={1.85} />
-            </span>
-            <strong>Gallery or PDF</strong>
-            <small>JPG, PNG or PDF · up to 4 files</small>
-            <input
-              type="file"
-              accept="image/*,application/pdf"
-              multiple
-              hidden
-              onChange={(e) => {
-                addFiles(e.target.files);
-                e.target.value = '';
-              }}
-            />
-          </label>
-        </div>
-
-        {files.length > 0 ? (
-          <>
-            <p className="rxu-meta">
-              <span>
-                {files.length} of 4 file{files.length === 1 ? '' : 's'} selected
-              </span>
-            </p>
-            <div className="rxu-files">
-              {files.map((file, index) => (
-                <div key={`${file.name}-${index}`} className="rxu-file">
-                  <PrescriptionFilePreview
-                    uri={previews[index]}
-                    fileType={file.type}
-                    label={file.name}
-                  />
-                  <Button variant="ghost" size="sm" onClick={() => removeFile(index)}>
-                    Remove
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </>
-        ) : null}
-
-        {selectedPast ? (
-          <p className="rxu-meta">
-            <span>
-              Using previous upload · Request #{selectedPast.id}
-            </span>
-            <button type="button" className="rxu-meta__clear" onClick={() => setSelectedPastId('')}>
-              Clear
-            </button>
-          </p>
-        ) : null}
-
-        <section className="rxu-recent">
-          <div className="rxu-recent__head">
-            <h2 className="rxu-panel__title">Previously uploaded</h2>
-            <p className="rxu-recent__desc">
-              Choose an earlier Rx for this product, or upload a new one above.
-            </p>
-          </div>
-
-          {recentLoading ? (
-            <div className="rxu-recent__list" role="status" aria-busy="true" aria-label="Loading previous uploads">
-              {Array.from({ length: 3 }, (_, index) => (
-                <div key={index} className="rxu-row rxu-row--skel" aria-hidden />
-              ))}
-            </div>
-          ) : recent.length > 0 ? (
-            <>
-              {previousUploads.length > 0 ? (
-                <div className="rxu-past">
-                  {previousUploads.map(({ item, files: itemFiles }) => {
-                    const selected = String(item.id) === String(selectedPastId);
-                    const primary = itemFiles[0];
-                    const image = primary && isImageFile(primary.fileType, primary.uri);
-                    const pdf = primary && isPdfFile(primary.fileType, primary.uri);
-                    return (
-                      <button
-                        key={`past-${item.id}`}
-                        type="button"
-                        className={`rxu-past__card${selected ? ' is-selected' : ''}`}
-                        onClick={() => selectPrevious(item)}
-                        aria-pressed={selected}
-                      >
-                        <span className="rxu-past__thumb" aria-hidden>
-                          {image ? (
-                            <img src={primary.uri} alt="" loading="lazy" decoding="async" />
-                          ) : (
-                            <FileText size={22} strokeWidth={1.85} />
-                          )}
-                          {itemFiles.length > 1 ? (
-                            <em className="rxu-past__count">+{itemFiles.length - 1}</em>
-                          ) : null}
-                        </span>
-                        <span className="rxu-past__copy">
-                          <strong>Request #{item.id}</strong>
-                          <small>
-                            {pdf ? 'PDF' : image ? 'Image' : 'File'}
-                            {item.created_at ? ` · ${formatPrescriptionDate(item.created_at)}` : ''}
-                          </small>
-                          <Badge tone={requestTone(item)}>{getStatusLabel(item)}</Badge>
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : null}
-
+            {docsLoading ? (
+              <div
+                className="rxu-recent__list"
+                role="status"
+                aria-busy="true"
+                aria-label="Loading previous documents"
+              >
+                {Array.from({ length: 2 }, (_, index) => (
+                  <div key={index} className="rxu-row rxu-row--skel" aria-hidden />
+                ))}
+              </div>
+            ) : documents.length > 0 ? (
               <div className="rxu-recent__list">
-                {recent.map((item) => {
-                  const itemFiles = getPrescriptionFiles(item);
-                  const file = itemFiles[0];
-                  const selected = String(item.id) === String(selectedPastId);
-                  const image = file && isImageFile(file.fileType, file.uri);
+                {documents.map((item) => {
+                  const file = getRecordFile(item);
+                  const selected = String(item.id) === String(selectedDocId);
+                  const image = isImageRecord(item);
+                  const thumb = file?.uri || '';
+                  const dateLabel = formatRecordDate(
+                    item?.created_at || item?.uploaded_at || item?.updated_at,
+                  );
+                  const typeLabel = formatRecordType(item?.medical_record_type || 'prescription');
                   return (
-                    <div
+                    <article
                       key={item.id}
                       className={`rxu-row${selected ? ' is-selected' : ''}`}
                     >
                       <button
                         type="button"
-                        className="rxu-row__main"
-                        onClick={() => (itemFiles.length ? selectPrevious(item) : openRequest(item))}
+                        className="rxu-row__select"
+                        aria-pressed={selected}
+                        onClick={() => selectDocument(item)}
                       >
-                        <span className="rxu-row__mark rxu-row__mark--media" aria-hidden>
-                          {image ? (
-                            <img src={file.uri} alt="" loading="lazy" decoding="async" />
+                        <span className="rxu-row__mark" aria-hidden>
+                          {image && thumb ? (
+                            <img src={thumb} alt="" loading="lazy" decoding="async" />
                           ) : (
                             <FileText size={18} strokeWidth={1.85} />
                           )}
                         </span>
-                        <span className="rxu-row__copy">
-                          <strong>Request #{item.id}</strong>
-                          <small>
-                            {itemFiles.length
-                              ? `${itemFiles.length} file${itemFiles.length === 1 ? '' : 's'}`
-                              : 'No file'}
-                            {item.created_at ? ` · ${formatPrescriptionDate(item.created_at)}` : ''}
-                          </small>
-                          <Badge tone={requestTone(item)}>{getStatusLabel(item)}</Badge>
+                        <span className="rxu-row__body">
+                          <span className="rxu-row__top">
+                            <span className="rxu-row__copy">
+                              <strong>{recordTitle(item)}</strong>
+                              <small>
+                                {String(item.file_type || file?.fileType || 'File').toUpperCase()}
+                                {dateLabel ? ` · ${dateLabel}` : ''}
+                              </small>
+                            </span>
+                            <Badge tone="success">{typeLabel}</Badge>
+                          </span>
                         </span>
-                        <ChevronRight className="rxu-row__chev" size={18} aria-hidden />
                       </button>
                       <div className="rxu-row__actions">
                         {file?.uri ? (
                           <Button
                             variant="secondary"
                             size="sm"
-                            onClick={() => setRecentPreview(file)}
+                            onClick={() => setDocPreview(file)}
                           >
                             Preview
                           </Button>
                         ) : null}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => openRequest(item)}
-                        >
-                          Details
+                        <Button variant="ghost" size="sm" onClick={() => selectDocument(item)}>
+                          Use
                         </Button>
                       </div>
-                    </div>
+                    </article>
                   );
                 })}
               </div>
-            </>
-          ) : (
-            <div className="rxu-empty">
-              <FileText size={22} aria-hidden />
-              <p>No previous uploads yet. Add a photo or PDF above to get started.</p>
-            </div>
-          )}
-        </section>
+            ) : (
+              <div className="rxu-empty">
+                <FileText size={18} aria-hidden />
+                <p>No saved prescription documents yet. Take a photo or upload a PDF above.</p>
+              </div>
+            )}
+          </section>
 
-        <section className="rxu-panel">
-          <h2 className="rxu-panel__title">Photo tips</h2>
-          <ul className="rxu-tips">
-            {TIPS.map(({ title, desc, Icon }) => (
-              <li key={title} className="rxu-tip">
-                <span className="rxu-tip__icon" aria-hidden>
-                  <Icon size={18} strokeWidth={1.85} />
-                </span>
-                <div>
-                  <strong>{title}</strong>
-                  <span>{desc}</span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
+          <section className="rxu-panel">
+            <h2 className="rxu-panel__title">Photo tips</h2>
+            <ul className="rxu-tips">
+              {TIPS.map(({ title, desc, Icon }) => (
+                <li key={title} className="rxu-tip">
+                  <span className="rxu-tip__icon" aria-hidden>
+                    <Icon size={14} strokeWidth={1.85} />
+                  </span>
+                  <div>
+                    <strong>{title}</strong>
+                    <span>{desc}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
 
-        <div className="rxu-foot">
-          <Button
-            variant="primary"
-            block
-            loading={reusing}
-            leadingIcon={<ShieldCheck size={18} aria-hidden />}
-            onClick={proceed}
-          >
-            {selectedPast && !files.length ? 'Use previous upload' : 'Continue'}
-          </Button>
+          <div className="rxu-foot">
+            <Button
+              variant="primary"
+              block
+              loading={reusing}
+              leadingIcon={<ShieldCheck size={18} aria-hidden />}
+              onClick={proceed}
+            >
+              {selectedDoc && !files.length ? 'Use previous document' : 'Continue'}
+            </Button>
+          </div>
         </div>
       </section>
 
-      {recentPreview ? (
+      {docPreview ? (
         <PrescriptionPreviewModal
-          uri={recentPreview.uri}
-          fileType={recentPreview.fileType}
-          onClose={() => setRecentPreview(null)}
+          uri={docPreview.uri}
+          fileType={docPreview.fileType}
+          onClose={() => setDocPreview(null)}
         />
       ) : null}
     </AppShell>

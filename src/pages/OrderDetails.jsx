@@ -528,12 +528,28 @@ export default function OrderDetails() {
                       const lineCancelled =
                         isCancelledOrder ||
                         /cancel/i.test(String(item?.status || item?.item_status || ''));
+                      const goToProduct = () => {
+                        if (!variantId) return;
+                        navigate(`/products/${variantId}`);
+                      };
+                      const MediaTag = variantId ? 'button' : 'span';
                       return (
                         <li
                           key={item.id || item.variant_id || variantId || name}
                           className={`dx-item${lineCancelled ? ' is-cancelled' : ''}`}
                         >
-                          <span className={`dx-item__media${lineCancelled ? ' is-cancelled' : ''}`}>
+                          <MediaTag
+                            {...(variantId
+                              ? {
+                                  type: 'button',
+                                  onClick: goToProduct,
+                                  'aria-label': `View ${name}`,
+                                }
+                              : {})}
+                            className={`dx-item__media${lineCancelled ? ' is-cancelled' : ''}${
+                              variantId ? ' is-link' : ''
+                            }`}
+                          >
                             {image ? (
                               <img src={image} alt="" loading="lazy" decoding="async" />
                             ) : (
@@ -544,9 +560,15 @@ export default function OrderDetails() {
                                 <X size={14} strokeWidth={3} />
                               </span>
                             ) : null}
-                          </span>
+                          </MediaTag>
                           <span className="dx-item__copy">
-                            <strong>{name}</strong>
+                            {variantId ? (
+                              <button type="button" className="dx-item__name" onClick={goToProduct}>
+                                {name}
+                              </button>
+                            ) : (
+                              <strong>{name}</strong>
+                            )}
                             <small>{T.qty(qty)}</small>
                             {lineCancelled ? (
                               <small className="dx-item__cancelled-label">{T.cancelledItem}</small>

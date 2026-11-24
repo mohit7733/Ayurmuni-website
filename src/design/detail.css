@@ -858,12 +858,46 @@ button.dx-person__main:hover strong {
   background: #f6f4ee;
   color: var(--dx-green);
 }
+button.dx-item__media {
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.dx-item__media.is-link:hover,
+.dx-item__media.is-link:focus-visible {
+  border-color: var(--dx-green);
+  outline: none;
+}
 .dx-item__media img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-.dx-item.is-cancelled .dx-item__copy strong {
+.dx-item__name {
+  display: block;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: none;
+  color: var(--am-text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: var(--am-weight-semibold, 600);
+  line-height: 1.35;
+  text-align: left;
+  cursor: pointer;
+}
+.dx-item__name:hover,
+.dx-item__name:focus-visible {
+  color: var(--dx-green);
+  text-decoration: underline;
+  outline: none;
+}
+.dx-item.is-cancelled .dx-item__copy strong,
+.dx-item.is-cancelled .dx-item__name {
   color: var(--am-text-soft);
 }
 .dx-item__media.is-cancelled img {
