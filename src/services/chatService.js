@@ -2,6 +2,7 @@ import { Utils } from '../common/utils';
 import { extractUploadUrl } from './prescriptionService';
 import { API_BASE } from '../chat/api';
 import { parseApiError } from '../chat/apiError';
+import { normalizeChatMessage } from '../chat/messageUtils';
 import { fetchWithTimeout } from './apiClient';
 
 const MESSAGE_KEYS = ['messages', 'results', 'items', 'message_list', 'history'];
@@ -9,7 +10,12 @@ const MESSAGE_KEYS = ['messages', 'results', 'items', 'message_list', 'history']
 const looksLikeMessage = (value) =>
   !!value &&
   typeof value === 'object' &&
-  ('id' in value || 'text' in value || 'sender_role' in value);
+  ('id' in value ||
+    'text' in value ||
+    'message' in value ||
+    'message_text' in value ||
+    'sender_role' in value ||
+    'role' in value);
 
 const findMessagesInPayload = (value, depth = 0) => {
   if (!value || typeof value !== 'object' || depth > 5) return null;
@@ -31,7 +37,9 @@ const findChatAccessInPayload = (value, depth = 0) => {
 
 const collapseNearDuplicates = (messages) => {
   const result = [];
-  for (const msg of messages) {
+  for (const raw of messages) {
+    const msg = normalizeChatMessage(raw);
+    if (!msg) continue;
     const idx = result.findIndex((existing) => {
       if (existing.id && msg.id && existing.id === msg.id) return true;
       if (existing.sender_role !== msg.sender_role) return false;
@@ -75,8 +83,8 @@ export const resetChatServiceDedupe = () => {
 const extractSentMessage = (body) => {
   if (!body || typeof body !== 'object') return null;
   const data = body.data && typeof body.data === 'object' ? body.data : body;
-  if (data.message && typeof data.message === 'object') return data.message;
-  if (looksLikeMessage(data)) return data;
+  if (data.message && typeof data.message === 'object') return normalizeChatMessage(data.message);
+  if (looksLikeMessage(data)) return normalizeChatMessage(data);
   return null;
 };
 

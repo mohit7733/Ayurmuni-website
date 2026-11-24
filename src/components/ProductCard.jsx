@@ -64,13 +64,14 @@ export default function ProductCard({
 
   const updateQty = async (nextQty) => {
     if (!(await requireAuth("Please login to add items to cart"))) return;
+    // Same order as View Cart: Rx gate first on increase, then stock.
+    if (nextQty > cartQty && isPrescriptionRequired(item)) {
+      showPrescriptionRequired({ variantId, productName: item.name });
+      return;
+    }
     const block = getAddQtyBlockMessage(item, nextQty);
     if (block) {
       showSuccessToast(block, "error");
-      return;
-    }
-    if (nextQty > cartQty && isPrescriptionRequired(item)) {
-      showPrescriptionRequired({ variantId, productName: item.name });
       return;
     }
     await syncCartQuantity(item, nextQty);

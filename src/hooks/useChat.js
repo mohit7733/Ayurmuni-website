@@ -8,7 +8,7 @@ import {
   isChatSendEnabled,
   shouldSuppressChatError,
 } from '../chat/chatAccessUtils';
-import { dedupeMessages } from '../chat/messageUtils';
+import { dedupeMessages, normalizeChatMessage, unwrapChatSocketPayload } from '../chat/messageUtils';
 import { Utils } from '../common/utils';
 
 const POLL_INTERVAL_MS = 12_000;
@@ -98,10 +98,12 @@ export function useChat(
       }
       const batches = await Promise.all(ids.map((id) => chatService.getMessages(id).catch(() => null)));
       relatedMessagesRef.current = batches.flatMap((data, index) =>
-        (data?.messages || []).map((message) => ({
-          ...message,
-          appointment_id: message.appointment_id || ids[index],
-        })),
+        (data?.messages || []).map((message) =>
+          normalizeChatMessage({
+            ...message,
+            appointment_id: message.appointment_id || ids[index],
+          }),
+        ),
       );
     })();
     relatedFlightRef.current = { key: relatedKey, promise };
@@ -192,6 +194,12 @@ export function useChat(
       mountedRef.current = false;
     };
   }, [appointmentId, loadMessages]);
+
+  useEffect(() => {
+    setState((prev) =>
+      prev.participantRole === role ? prev : { ...prev, participantRole: role },
+    );
+  }, [role]);
 
   useEffect(() => {
     loadMessagesRef.current = loadMessages;
@@ -394,10 +402,12 @@ export function useChat(
         }
       });
       ws.on('message', (data) => {
-        if (!data.message || !mountedRef.current) return;
+        if (!mountedRef.current) return;
+        const incoming = unwrapChatSocketPayload(data);
+        if (!incoming) return;
         setState((prev) => ({
           ...prev,
-          messages: appendOrReplaceMessage(prev.messages, data.message),
+          messages: appendOrReplaceMessage(prev.messages, incoming),
         }));
       });
       ws.on('error', (data) => {

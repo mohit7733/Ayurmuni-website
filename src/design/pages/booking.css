@@ -235,12 +235,14 @@
 .bk-slot:active:not(:disabled) {
   transform: scale(0.96);
 }
-.bk-slot.is-on {
+.bk-slot.is-on,
+.bk-slot.is-on:hover:not(:disabled) {
   background: linear-gradient(
     135deg,
     var(--am-primary),
     var(--am-green-700, var(--am-primary-hover))
   );
+  color: var(--am-on-primary, #fff);
   box-shadow: 0 8px 18px rgba(13, 97, 78, 0.32);
   animation: bk-pop 350ms var(--am-ease-out);
 }
@@ -716,7 +718,8 @@
   font-weight: var(--am-weight-medium);
 }
 
-.bk-slots-page .bk-slot.is-on {
+.bk-slots-page .bk-slot.is-on,
+.bk-slots-page .bk-slot.is-on:hover:not(:disabled) {
   border-color: var(--am-primary);
   color: var(--am-on-primary);
 }

@@ -351,7 +351,10 @@ export default function Appointments() {
           subtitle={
             upcomingOnly ? "Your next consultations" : "Manage your visits"
           }
-          backTo="/profile"
+          onBack={() => {
+            if (window.history.length > 1) navigate(-1);
+            else navigate("/home");
+          }}
           actions={
             <>
               <button
@@ -658,19 +661,20 @@ export default function Appointments() {
                 </article>
               );
             })}
+            {!loading && hasMore && visible.length > 0 ? (
+              <div className="ap-more-wrap">
+                <button
+                  type="button"
+                  className="ap-more"
+                  disabled={loadingMore}
+                  onClick={() => loadPage(page + 1, "append")}
+                >
+                  {loadingMore ? "Loading…" : "Load more"}
+                </button>
+              </div>
+            ) : null}
           </div>
         )}
-
-        {!loading && hasMore && visible.length > 0 ? (
-          <button
-            type="button"
-            className="ap-more"
-            disabled={loadingMore}
-            onClick={() => loadPage(page + 1, "append")}
-          >
-            {loadingMore ? "Loading…" : "Load more"}
-          </button>
-        ) : null}
           </div>
         </div>
       </section>

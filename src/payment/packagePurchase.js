@@ -5,11 +5,11 @@ import { formatExactRupee } from '../home/catalog';
 import { buildPackageVerifyPayload } from '../services/packageService';
 import { resolveCashfreeMode } from './cashfree';
 
-const WEB_PACKAGE_GATEWAYS = ['cashfree', 'razorpay'];
+const WEB_PACKAGE_GATEWAYS = ['cashfree'];
 
 const str = (value) => (value == null ? '' : String(value).trim());
 
-/** Autopay (recurring) plans are Razorpay subscriptions on the backend. */
+/** Autopay (recurring) plans — web still checks out via Cashfree. */
 export const isAutopayPackage = (item) => {
   const mode = str(item?.billingMode ?? item?.billing_mode).toLowerCase();
   const type = str(item?.purchaseType ?? item?.purchase_type).toLowerCase();
@@ -17,19 +17,18 @@ export const isAutopayPackage = (item) => {
   return Boolean(mode) && mode !== 'one_time' && mode !== 'onetime' && mode !== 'one-time';
 };
 
-/** Gateways the package sheet may offer: autopay is Razorpay only; never ICICI on the web. */
+/** Gateways the package sheet may offer — Cashfree only on web. */
 export const packageGatewayChoices = (item, enabled = WEB_PACKAGE_GATEWAYS) => {
-  if (isAutopayPackage(item)) return ['razorpay'];
   const list = (Array.isArray(enabled) ? enabled : []).filter((id) => WEB_PACKAGE_GATEWAYS.includes(id));
   return list.length ? list : ['cashfree'];
 };
 
-/** Gateway to send for this package (autopay forces razorpay; default cashfree). */
+/** Gateway to send for this package (always Cashfree on web). */
 export const resolvePackageGateway = (item, selected, enabled) => {
   const choices = packageGatewayChoices(item, enabled);
   const wanted = str(selected).toLowerCase();
   if (choices.includes(wanted)) return wanted;
-  return choices.includes('cashfree') ? 'cashfree' : choices[0];
+  return 'cashfree';
 };
 
 /** POST packages/purchase/ body. */

@@ -159,7 +159,7 @@ function useMedicineImages(items) {
 
 export function MedicineRow({ item, imageUrl }) {
   const price = getMedicinePrice(item);
-  const chips = getMedicineScheduleChips(item).slice(0, 3);
+  const chips = getMedicineScheduleChips(item).slice(0, 4);
   const image = imageUrl || getMedicineImage(item);
   const name = item?.medicine_name || item?.product_name || 'Medicine';
   const initial = String(name).charAt(0).toUpperCase() || 'M';
@@ -221,7 +221,7 @@ export function SlipRegimenTable({ items }) {
             const name = item?.medicine_name || item?.product_name || 'Medicine';
             const instruction = String(item?.instruction || '').trim();
             const chips = getMedicineScheduleChips(item)
-              .slice(0, 3)
+              .slice(0, 4)
               .map((chip) => chip.label)
               .filter(Boolean);
             const schedule = [...chips, instruction].filter(Boolean).join(' · ') || '—';

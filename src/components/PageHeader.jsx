@@ -21,12 +21,17 @@ export default function PageHeader({
       onBack();
       return;
     }
-    if (backTo) {
-      navigate(backTo);
+    // Prefer real history so Back does not push a duplicate of `backTo` and trap
+    // the user oscillating (e.g. Checkout ↔ Cart after cancelling payment).
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      navigate(-1);
       return;
     }
-    if (window.history.length > 1) navigate(-1);
-    else navigate('/home');
+    if (backTo) {
+      navigate(backTo, { replace: true });
+      return;
+    }
+    navigate('/home', { replace: true });
   };
 
   return (

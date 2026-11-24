@@ -31,9 +31,12 @@ export async function fetchUpcomingAppointmentList(pageSize = 50, { status } = {
     const callLive =
       String(item?.call_status || item?.appointment?.call_status || '').toLowerCase() ===
       'in_progress';
-    if (!callLive && isAppointmentInPast(item)) return false;
     const rowStatus = String(item?.status || item?.appointment_status || '').toLowerCase();
-    if (rowStatus === 'completed') return true;
+    // Completed / cancelled visits should leave the join banner even if call_status lags.
+    if (['completed', 'cancelled', 'canceled', 'missed', 'expired', 'no_show', 'noshow', 'rejected'].includes(rowStatus)) {
+      return false;
+    }
+    if (!callLive && isAppointmentInPast(item)) return false;
     return callLive || isActiveAppointmentStatus(rowStatus);
   });
   return sortAppointmentsByDateTime(active.map(mapAppointment));

@@ -4,18 +4,16 @@ import { ArrowRight, BadgeCheck, Star } from 'lucide-react';
 import { formatDoctorDisplayName } from '../consult/appointmentUtils';
 import {
   doctorDisplayName,
-  doctorFavorite,
   doctorFeeLabel,
   doctorImage,
   doctorQualification,
   doctorRating,
   doctorSpeciality,
-  favoriteFromToggle,
   getDoctorId,
 } from '../consult/doctors';
+import { toggleDoctorFavourite, useDoctorFavFlag } from '../consult/doctorFavSync';
 import { showSuccessToast } from '../config/key';
 import { requireAuth } from '../services/guestAuth';
-import { toggleFavDoctor } from '../services/consultService';
 import FavButton from './ui/FavButton';
 import DietitianBadge from './DietitianBadge';
 import { nameInitial } from '../utils/initials';
@@ -70,7 +68,7 @@ export default function SuggestedDoctorCard({ item, fallbackSpeciality = 'Ayurve
   const bios = Array.isArray(item?.specialized_bio)
     ? item.specialized_bio.map((bio) => String(bio || '').trim()).filter(Boolean).slice(0, 5)
     : [];
-  const [fav, setFav] = useState(() => doctorFavorite(item));
+  const fav = useDoctorFavFlag(item);
   const [imgFailed, setImgFailed] = useState(false);
   const showPhoto = Boolean(image) && !imgFailed;
 
@@ -83,21 +81,15 @@ export default function SuggestedDoctorCard({ item, fallbackSpeciality = 'Ayurve
     event.stopPropagation();
     if (!(await requireAuth('Please login to save favourite doctors'))) return;
     if (!id) return;
-    const prev = fav;
-    setFav(!prev);
-    try {
-      const res = await toggleFavDoctor(id);
-      if (res?.success === false) {
-        setFav(prev);
-        showSuccessToast(res?.message || 'Failed to update favourite', 'error');
-        return;
-      }
-      const next = favoriteFromToggle(res);
-      if (next !== undefined) setFav(next);
-    } catch {
-      setFav(prev);
-      showSuccessToast('Failed to update favourite status', 'error');
+    const result = await toggleDoctorFavourite(item);
+    if (!result.ok) {
+      showSuccessToast(result.message || 'Failed to update favourite', 'error');
+      return;
     }
+    showSuccessToast(
+      result.message || (result.saved ? 'Added to favourites' : 'Removed from favourites'),
+      'success',
+    );
   };
 
   return (

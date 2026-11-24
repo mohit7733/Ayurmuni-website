@@ -342,10 +342,6 @@ export const buildAppointmentStartEnd = (dateStr, startTime, endTime) => {
   return { start, end };
 };
 
-// Only a cancelled / rejected call removes the Home banner early; ending or leaving the
-// call keeps it until end_time (app development BANNER_CLOSED_CALL_STATUSES).
-const BANNER_CLOSED_CALL_STATUSES = new Set(['cancelled', 'canceled', 'rejected']);
-
 // Call states that close the join window (patient `left` can still rejoin inside the slot).
 const JOIN_CLOSED_CALL_STATUSES = new Set([
   'ended',
@@ -374,10 +370,25 @@ const JOINABLE_APPOINTMENT_STATUSES = new Set([
   'live',
 ]);
 
+// Finished visits — never offer Join Call, even if call_status lags as in_progress.
+const JOIN_CLOSED_APPOINTMENT_STATUSES = new Set([
+  'completed',
+  'cancelled',
+  'canceled',
+  'missed',
+  'expired',
+  'no_show',
+  'noshow',
+  'rejected',
+]);
+
 const DEFAULT_JOIN_WINDOW_MINUTES = 5;
 
 export const isActiveAppointmentStatus = (status) =>
   JOINABLE_APPOINTMENT_STATUSES.has(String(status || '').trim().toLowerCase());
+
+export const isJoinClosedAppointmentStatus = (status) =>
+  JOIN_CLOSED_APPOINTMENT_STATUSES.has(String(status || '').trim().toLowerCase());
 
 /** Date / start / end from list items, raw API rows or detail payloads. */
 export function resolveAppointmentSlot(source) {
@@ -425,6 +436,30 @@ const readStatus = (raw) =>
   raw?.rawData?.appointment?.appointment_status ??
   raw?.appointment_status;
 
+/** True when the doctor has already written an Rx — join is no longer offered. */
+const consultationLooksPrescribed = (raw) => {
+  if (!raw) return false;
+  if (raw.hasPrescription === true) return true;
+  const root = raw.rawData ?? raw.raw ?? raw;
+  const appt = root?.appointment ?? raw?.appointment ?? {};
+  if (
+    root?.has_prescription === true ||
+    root?.is_prescribed === true ||
+    appt?.has_prescription === true ||
+    appt?.is_prescribed === true
+  ) {
+    return true;
+  }
+  return Boolean(
+    root?.prescription_id ||
+      appt?.prescription_id ||
+      (root?.prescription && typeof root.prescription === 'object') ||
+      (appt?.prescription && typeof appt.prescription === 'object') ||
+      root?.prescription ||
+      appt?.prescription,
+  );
+};
+
 /** Start / effective end (end_time, or start + 15 min) of an appointment slot. */
 const getSlotBounds = (raw) => {
   const slot = resolveAppointmentSlot(raw);
@@ -438,9 +473,13 @@ const getSlotBounds = (raw) => {
 /** True while the appointment is inside its join window (5 min before start until end). */
 export function isAppointmentJoinable(raw, windowMinutes = DEFAULT_JOIN_WINDOW_MINUTES) {
   if (!raw) return false;
+  const appointmentStatus = String(readStatus(raw) || '').trim().toLowerCase();
+  // Completed / cancelled visits must not stay joinable if call_status is still in_progress.
+  if (isJoinClosedAppointmentStatus(appointmentStatus)) return false;
   const callStatus = readCallStatus(raw);
   if (JOIN_CLOSED_CALL_STATUSES.has(callStatus)) return false;
-  if (callStatus !== 'in_progress' && !isActiveAppointmentStatus(readStatus(raw))) return false;
+  if (consultationLooksPrescribed(raw)) return false;
+  if (callStatus !== 'in_progress' && !isActiveAppointmentStatus(appointmentStatus)) return false;
   const bounds = getSlotBounds(raw);
   if (!bounds) return callStatus === 'in_progress';
   const now = Date.now();
@@ -478,8 +517,11 @@ export function getJoinableAppointment(items = [], windowMinutes = 5) {
   const windowMs = windowMinutes * 60 * 1000;
 
   for (const item of items) {
+    const appointmentStatus = String(item?.status || item?.appointment_status || '').toLowerCase().trim();
+    if (isJoinClosedAppointmentStatus(appointmentStatus)) continue;
     const callStatus = String(item?.call_status || '').toLowerCase().trim();
-    if (BANNER_CLOSED_CALL_STATUSES.has(callStatus)) continue;
+    if (JOIN_CLOSED_CALL_STATUSES.has(callStatus)) continue;
+    if (consultationLooksPrescribed(item)) continue;
 
     const start = parseAppointmentStart(item?.date, item?.time);
     if (!start) continue;
@@ -505,7 +547,7 @@ export function getJoinableAppointment(items = [], windowMinutes = 5) {
   }
 
   return null;
-};
+}
 
 
 

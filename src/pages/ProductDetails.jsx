@@ -390,16 +390,17 @@ export default function ProductDetails({ medicine = false } = {}) {
     if (!(await requireAuth('Please login to add items to cart'))) return;
     if (!cartVariantId) return;
     const addQty = Math.max(1, Number(qty) || 1);
-    const block = getAddQtyBlockMessage(active, addQty);
-    if (block) {
-      showSuccessToast(block, 'error');
-      return;
-    }
+    // Same order as View Cart: Rx gate before stock on add/increase.
     if (isPrescriptionRequired(active) || isPrescriptionRequired(product)) {
       showPrescriptionRequired({
         variantId: cartVariantId,
         productName: product?.name || active?.name,
       });
+      return;
+    }
+    const block = getAddQtyBlockMessage(active, addQty);
+    if (block) {
+      showSuccessToast(block, 'error');
       return;
     }
     setPendingCta(goToCart ? 'buy' : 'add');

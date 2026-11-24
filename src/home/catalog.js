@@ -26,6 +26,8 @@ export const normalizeApiList = (response) => {
       'categories',
       'product_categories',
       'health_categories',
+      'health_diseases',
+      'diseases',
       'items',
       'diet_plans',
       'plans',
@@ -142,6 +144,40 @@ export const mapCatalogProductItem = (item) => {
   };
 };
 
+/** Parse Super Admin health `symptoms` from array, JSON string, or comma-separated text. */
+export const parseHealthSymptoms = (raw) => {
+  const toList = (arr) =>
+    arr
+      .map((entry) => {
+        if (entry == null) return '';
+        if (typeof entry === 'string') return entry.trim();
+        if (typeof entry === 'object') {
+          return String(
+            entry.name || entry.symptom || entry.title || entry.label || entry.text || '',
+          ).trim();
+        }
+        return String(entry).trim();
+      })
+      .filter(Boolean);
+
+  if (Array.isArray(raw)) return toList(raw);
+
+  if (typeof raw === 'string' && raw.trim()) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return toList(parsed);
+    } catch {
+      /* plain text */
+    }
+    return raw
+      .split(/[\n,|•]+/)
+      .map((part) => part.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+};
+
 export const mapProductCategory = (item) => ({
   id: String(
     item?.id ??
@@ -158,7 +194,36 @@ export const mapProductCategory = (item) => ({
       item?.title ??
       'Category',
   ),
+  description: String(
+    item?.description ??
+      item?.short_description ??
+      item?.category_description ??
+      item?.desc ??
+      item?.about ??
+      '',
+  ).trim(),
+  subscription: String(
+    item?.subscription ??
+      item?.subscription_text ??
+      item?.subtitle ??
+      item?.tagline ??
+      item?.short_title ??
+      '',
+  ).trim(),
+  symptoms: parseHealthSymptoms(
+    item?.symptoms ?? item?.symptom_list ?? item?.common_symptoms ?? item?.symptoms_list,
+  ),
   image_url: resolveImageUrl(item),
+  parent_id:
+    item?.parent_id != null
+      ? String(item.parent_id)
+      : item?.health_category_id != null
+        ? String(item.health_category_id)
+        : item?.service_category_id != null
+          ? String(item.service_category_id)
+          : item?.category_id != null
+            ? String(item.category_id)
+            : undefined,
 });
 
 export const mapDietPlanForHome = (item) => ({

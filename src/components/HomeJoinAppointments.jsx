@@ -10,6 +10,7 @@ import {
   getMsUntilJoinWindowChange,
   isActiveAppointmentStatus,
   isAppointmentInPast,
+  isJoinClosedAppointmentStatus,
   sortAppointmentsByDateTime,
 } from '../consult/appointmentUtils';
 import { requireAuth } from '../services/guestAuth';
@@ -96,14 +97,19 @@ export default function HomeJoinAppointments({ appointments, loading }) {
     };
   }, []);
 
-  // Banner keeps a just-completed slot until its end_time; the list does not (app development parity).
+  // Candidates for the join banner; completed / ended / prescribed visits are excluded.
   const bannerCandidates = useMemo(
     () =>
       sortAppointmentsByDateTime(
         (appointments || []).filter((item) => {
-          const callLive = String(item?.call_status || '').toLowerCase() === 'in_progress';
-          const completed = String(item?.status || '').toLowerCase() === 'completed';
-          return (callLive || completed || isActiveAppointmentStatus(item?.status)) && !isAppointmentInPast(item);
+          if (isJoinClosedAppointmentStatus(item?.status)) return false;
+          const callStatus = String(item?.call_status || '').toLowerCase();
+          if (['ended', 'completed', 'cancelled', 'canceled', 'rejected', 'no_show', 'missed'].includes(callStatus)) {
+            return false;
+          }
+          if (item?.hasPrescription) return false;
+          const callLive = callStatus === 'in_progress';
+          return (callLive || isActiveAppointmentStatus(item?.status)) && !isAppointmentInPast(item);
         }),
       ),
     // tick drops appointments whose end time passed while Home stays open

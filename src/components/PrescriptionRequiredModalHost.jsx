@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { subscribePrescriptionRequired } from '../services/prescriptionGate';
+import { Button, Modal } from './ui';
+import '../design/components/prescription-gate.css';
 
 export default function PrescriptionRequiredModalHost() {
   const navigate = useNavigate();
   const [state, setState] = useState(null);
 
   useEffect(() => subscribePrescriptionRequired(setState), []);
-
-  if (!state) return null;
 
   const close = () => setState(null);
 
@@ -18,8 +18,8 @@ export default function PrescriptionRequiredModalHost() {
   };
 
   const openUpload = () => {
-    const variantId = state.variantId;
-    const productName = state.productName;
+    const variantId = state?.variantId;
+    const productName = state?.productName;
     setState(null);
     const params = new URLSearchParams();
     if (variantId) params.set('variant', variantId);
@@ -34,24 +34,32 @@ export default function PrescriptionRequiredModalHost() {
     });
   };
 
+  const message =
+    state?.message ||
+    'This medicine needs a valid prescription before it can be added to cart.';
+
   return (
-    <div className="web-modal" role="dialog" onClick={close}>
-      <div className="web-modal-card" onClick={(event) => event.stopPropagation()}>
-        <h3>Prescription required</h3>
-        {state.productName ? <p className="muted">{state.productName}</p> : null}
-        <p>{state.message}</p>
-        <div className="detail-cta">
-          <button type="button" className="cta" onClick={openConsult}>
+    <Modal
+      open={Boolean(state)}
+      onClose={close}
+      title="Prescription required"
+      description={state?.productName || undefined}
+      className="rx-gate-modal"
+      footer={
+        <div className="rx-gate-actions">
+          <Button variant="primary" onClick={openConsult}>
             Consult a doctor
-          </button>
-          <button type="button" className="ghost" onClick={openUpload}>
+          </Button>
+          <Button variant="secondary" onClick={openUpload}>
             Upload prescription
-          </button>
-          <button type="button" className="ghost" onClick={close}>
+          </Button>
+          <Button variant="ghost" onClick={close}>
             Not now
-          </button>
+          </Button>
         </div>
-      </div>
-    </div>
+      }
+    >
+      <p className="rx-gate-message">{message}</p>
+    </Modal>
   );
 }

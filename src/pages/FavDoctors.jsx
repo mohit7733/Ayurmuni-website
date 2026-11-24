@@ -4,6 +4,11 @@ import AppShell from '../components/AppShell';
 import AdvanceLoad from '../components/ui/AdvanceLoad';
 import DoctorCard from '../components/DoctorCard';
 import { doctorFavorite, getDoctorId, listDoctors } from '../consult/doctors';
+import {
+  applyDoctorFavCache,
+  seedDoctorFavCacheFromList,
+  subscribeDoctorFav,
+} from '../consult/doctorFavSync';
 import { requireAuth } from '../services/guestAuth';
 import { getDoctors } from '../services/consultService';
 
@@ -18,10 +23,21 @@ export default function FavDoctors() {
       if (!(await requireAuth('Please login to view favourite doctors'))) return;
       setLoading(true);
       const res = await getDoctors();
-      setDoctors(listDoctors(res).filter(doctorFavorite));
+      const favourites = listDoctors(res).filter(doctorFavorite);
+      seedDoctorFavCacheFromList(favourites);
+      setDoctors(applyDoctorFavCache(favourites));
       setLoading(false);
     })();
   }, []);
+
+  useEffect(
+    () =>
+      subscribeDoctorFav(({ doctorId, isFavourite }) => {
+        if (isFavourite) return;
+        setDoctors((prev) => prev.filter((item) => getDoctorId(item) !== doctorId));
+      }),
+    [],
+  );
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();

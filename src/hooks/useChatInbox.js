@@ -67,7 +67,9 @@ const buildThreadBase = (item) => {
 export const summarizeMessages = (messages) => {
   const list = dedupeMessages(messages || []);
   const last = list[list.length - 1] || null;
-  const unread = list.filter((m) => m.sender_role !== PATIENT_ROLE && !m.is_seen).length;
+  const unread = list.filter(
+    (m) => String(m.sender_role || '').toLowerCase() !== PATIENT_ROLE && !m.is_seen,
+  ).length;
   return { lastMessage: last, unreadCount: unread, messageCount: list.length };
 };
 

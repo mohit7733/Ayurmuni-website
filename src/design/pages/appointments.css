@@ -301,18 +301,43 @@
   margin: 8px 0 0; background: #f8ecc9; color: #8a6b2e; border: 1px solid rgba(201, 165, 90, 0.5);
 }
 .appointments-page.ap-premium .ap-card .history-actions { margin-top: auto; gap: 8px; }
+.appointments-page .ap-more-wrap {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 8px 0 4px;
+}
+
 .appointments-page .ap-more {
   display: inline-flex;
-  align-self: center;
+  align-items: center;
+  justify-content: center;
   width: auto;
-  min-height: 36px;
-  margin: 4px auto 0;
-  padding: 0 18px;
-  border: 1px solid var(--am-primary-tint, #b7d8ce);
+  min-width: 148px;
+  min-height: 44px;
+  margin: 0;
+  padding: 0 22px;
+  border: 1.5px solid var(--am-primary, #0d614e);
   border-radius: 999px;
   background: #fff;
-  color: var(--am-primary);
+  color: var(--am-primary, #0d614e);
+  font-size: 14px;
   font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.appointments-page .ap-more:hover:not(:disabled) {
+  background: var(--am-primary-soft, #e7f3ef);
+}
+
+.appointments-page .ap-more:disabled {
+  opacity: 0.65;
+  cursor: default;
 }
 .appointments-page .ap-layout__main {
   display: flex;

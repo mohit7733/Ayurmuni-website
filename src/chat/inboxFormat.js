@@ -1,4 +1,5 @@
 import { formatMessageTime } from './dateFormatter';
+import { normalizeChatMessage, normalizeChatRole } from './messageUtils';
 
 export const formatListTime = (value) => {
   const date = new Date(value);
@@ -22,9 +23,9 @@ export const formatConsultDate = (value) => {
 };
 
 export const previewText = (thread) => {
-  const msg = thread.lastMessage;
+  const msg = thread.lastMessage ? normalizeChatMessage(thread.lastMessage) : null;
   if (!msg) return thread.canSend ? 'Chat is open — say hello to your doctor' : 'No messages yet';
-  const prefix = msg.sender_role === 'patient' ? 'You: ' : '';
+  const prefix = normalizeChatRole(msg.sender_role) === 'patient' ? 'You: ' : '';
   const text = String(msg.text || '').trim();
   if (text) return `${prefix}${text}`;
   const attachment = (msg.attachments || [])[0];

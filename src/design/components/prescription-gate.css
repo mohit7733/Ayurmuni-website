@@ -1,0 +1,45 @@
+.rx-gate-message {
+  margin: 0;
+  color: var(--am-text-muted);
+  font-size: var(--am-text-sm);
+  line-height: 1.5;
+}
+
+.rx-gate-modal .am-modal__desc {
+  color: var(--am-text);
+  font-weight: var(--am-weight-semibold);
+}
+
+.rx-gate-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--am-space-2);
+  width: 100%;
+}
+
+.rx-gate-actions > .am-btn {
+  flex: 1 1 calc(50% - var(--am-space-2));
+  min-width: 140px;
+  color: inherit;
+}
+
+.rx-gate-actions > .am-btn--primary {
+  color: var(--am-on-primary, #fff) !important;
+  background: var(--am-primary) !important;
+  border-color: var(--am-primary) !important;
+}
+
+.rx-gate-actions > .am-btn--secondary,
+.rx-gate-actions > .am-btn--ghost {
+  color: var(--am-primary-strong, var(--am-primary)) !important;
+}
+
+.rx-gate-actions > .am-btn--ghost {
+  flex: 1 1 100%;
+}
+
+@media (max-width: 420px) {
+  .rx-gate-actions > .am-btn {
+    flex-basis: 100%;
+  }
+}
