@@ -5020,6 +5020,12 @@ button.checkout-item {
   font-weight: 600;
 }
 
+.appoint-followup--danger {
+  background: var(--am-danger-soft, #fbe9e7);
+  color: var(--am-danger, #a8453a);
+  border: 1px solid color-mix(in srgb, var(--am-danger, #a8453a) 28%, transparent);
+}
+
 .appointments-page .history-actions .cta.danger {
   background: var(--am-danger-soft);
   color: var(--am-danger);

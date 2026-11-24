@@ -300,6 +300,11 @@
 .appointments-page.ap-premium .ap-card .appoint-followup {
   margin: 8px 0 0; background: #f8ecc9; color: #8a6b2e; border: 1px solid rgba(201, 165, 90, 0.5);
 }
+.appointments-page.ap-premium .ap-card .appoint-followup--danger {
+  background: var(--am-danger-soft, #fbe9e7);
+  color: var(--am-danger, #a8453a);
+  border-color: color-mix(in srgb, var(--am-danger, #a8453a) 28%, transparent);
+}
 .appointments-page.ap-premium .ap-card .history-actions { margin-top: auto; gap: 8px; }
 .appointments-page .ap-more-wrap {
   grid-column: 1 / -1;
