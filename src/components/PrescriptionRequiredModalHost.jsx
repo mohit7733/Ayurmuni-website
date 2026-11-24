@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FileText, Stethoscope, Upload } from 'lucide-react';
+import { Button, Modal } from './ui';
+import { PRODUCT_DETAIL_COPY as copy } from '../content/productDetail';
 import { subscribePrescriptionRequired } from '../services/prescriptionGate';
+import '../design/components/rx-gate-modal.css';
 
 export default function PrescriptionRequiredModalHost() {
   const navigate = useNavigate();
@@ -35,23 +39,49 @@ export default function PrescriptionRequiredModalHost() {
   };
 
   return (
-    <div className="web-modal" role="dialog" onClick={close}>
-      <div className="web-modal-card" onClick={(event) => event.stopPropagation()}>
-        <h3>Prescription required</h3>
-        {state.productName ? <p className="muted">{state.productName}</p> : null}
-        <p>{state.message}</p>
-        <div className="detail-cta">
-          <button type="button" className="cta" onClick={openConsult}>
-            Consult a doctor
-          </button>
-          <button type="button" className="ghost" onClick={openUpload}>
-            Upload prescription
-          </button>
-          <button type="button" className="ghost" onClick={close}>
-            Not now
-          </button>
+    <Modal
+      open
+      onClose={close}
+      size="sm"
+      title={copy.prescriptionRequired}
+      className="rx-gate-modal"
+      footer={
+        <div className="rx-gate__actions">
+          <Button
+            variant="primary"
+            block
+            leadingIcon={<Stethoscope size={18} aria-hidden />}
+            onClick={openConsult}
+          >
+            {copy.consultDoctor}
+          </Button>
+          <Button
+            variant="secondary"
+            block
+            leadingIcon={<Upload size={18} aria-hidden />}
+            onClick={openUpload}
+          >
+            {copy.uploadRx}
+          </Button>
+          <Button variant="ghost" block onClick={close}>
+            {copy.notNow}
+          </Button>
         </div>
+      }
+    >
+      <div className="rx-gate">
+        <div className="rx-gate__mark" aria-hidden>
+          <FileText size={22} strokeWidth={1.85} />
+        </div>
+        {state.productName ? (
+          <p className="rx-gate__product">
+            <span className="rx-gate__product-label">{copy.prescriptionProduct}</span>
+            <strong>{state.productName}</strong>
+          </p>
+        ) : null}
+        <p className="rx-gate__message">{state.message}</p>
+        <p className="rx-gate__hint">{copy.prescriptionHint}</p>
       </div>
-    </div>
+    </Modal>
   );
 }
