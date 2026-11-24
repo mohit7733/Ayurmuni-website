@@ -603,7 +603,13 @@ export default function Appointments() {
                     ) : null}
                   </div>
                   {refund ? (
-                    <p className="appoint-followup">
+                    <p
+                      className={`appoint-followup${
+                        refund.status === "refund_rejected" || refund.status === "refund_failed"
+                          ? " appoint-followup--danger"
+                          : ""
+                      }`}
+                    >
                       {refund.title} {refund.amount != null ? formatConsultationAmount(refund.amount) : ""}
                       {refund.at ? ` · ${formatPaymentTimestamp(refund.at)}` : ""}
                     </p>

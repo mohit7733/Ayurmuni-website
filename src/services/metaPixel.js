@@ -2,7 +2,7 @@
  * Meta (Facebook) Pixel — PageView + Phase 2 funnel events.
  * Env: VITE_META_PIXEL_ID overrides DEFAULT_PIXEL_ID.
  */
-const DEFAULT_PIXEL_ID = '1885952172892397';
+const DEFAULT_PIXEL_ID = '1885952172892398';
 const PIXEL_ID = String(import.meta.env.VITE_META_PIXEL_ID || DEFAULT_PIXEL_ID).trim();
 const SDK_URL = 'https://connect.facebook.net/en_US/fbevents.js';
 
