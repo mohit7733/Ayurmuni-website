@@ -31,8 +31,8 @@ const loadVideoCall = () => import("./pages/VideoCall");
 
 const AccessMode = loadPage(() => import("./pages/AccessMode"));
 const Onboarding = loadPage(() => import("./pages/Onboarding"));
-const PolicyDetail = loadPage(() => import("./pages/PolicyDetail"));
-const PolicyAccept = loadPage(() => import("./pages/PolicyAccept"));
+const PolicyDetail = loadPage(() => import("./pages/LegalDetail"));
+const PolicyAccept = loadPage(() => import("./pages/LegalAccept"));
 const AssessmentType = loadPage(() => import("./pages/AssessmentType"));
 const Questionnaire = loadPage(() => import("./pages/Questionnaire"));
 const PatientFAQ = loadPage(() => import("./pages/PatientFAQ"));
