@@ -116,16 +116,26 @@ export default function LocationPicker() {
     setLoading(true);
     setLocationError('');
     setRetryable(false);
+    // Cancel any pending map-drag geocode so it cannot overwrite GPS.
+    clearTimeout(moveTimerRef.current);
+    geocodeControllerRef.current?.abort();
     let coords;
     try {
-      coords = await getCurrentPosition();
+      coords = await getCurrentPosition({ maximumAge: 0, enableHighAccuracy: true, timeout: 20000 });
     } catch (error) {
       setLocationError(error?.message || 'Location unavailable. Search, enter a pincode, or move the map.');
       setLoading(false);
       return;
     }
-    setMarker(coords);
+    // Zoom in so the GPS pin is clearly where you are.
+    setMarker({ ...coords, zoom: 18 });
     setLoading(false);
+    if (coords.accuracy && coords.accuracy > 500) {
+      showSuccessToast(
+        'Location is approximate. Move the map to fine-tune the pin.',
+        'error',
+      );
+    }
     await updateLocation(coords);
   }, [updateLocation]);
 

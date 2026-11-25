@@ -599,8 +599,10 @@ button.co-card:active {
 
 .co-summary .co-sticky {
   position: static;
+  display: flex;
   flex-direction: column;
   align-items: stretch;
+  gap: var(--am-space-4);
   padding: var(--am-space-4);
   border: 1px solid var(--am-line);
   border-radius: var(--am-radius-xl);

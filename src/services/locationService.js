@@ -260,31 +260,99 @@ export const getPlaceDetails = async (item) => {
   throw new Error('Could not load this place.');
 };
 
-export const getCurrentPosition = () =>
+const GEO_MESSAGES = {
+  1: 'Location permission denied. Allow location access in your browser, or search / enter a pincode.',
+  2: 'Your location is unavailable right now. Search, enter a pincode, or move the map.',
+  3: 'Getting your location timed out. Please try again, or search / enter a pincode.',
+};
+
+const readGeoPosition = (position) => ({
+  latitude: position.coords.latitude,
+  longitude: position.coords.longitude,
+  accuracy: position.coords.accuracy,
+});
+
+/**
+ * Fresh device fix for "Use my current location".
+ * Prefers a watch for a few seconds (better accuracy) then falls back to getCurrentPosition.
+ */
+export const getCurrentPosition = (options = {}) =>
   new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
       reject(new Error('Geolocation is not supported'));
       return;
     }
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        resolve({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        });
-      },
-      (error) => {
-        const messages = {
-          1: 'Location permission denied. Allow location access in your browser, or search / enter a pincode.',
-          2: 'Your location is unavailable right now. Search, enter a pincode, or move the map.',
-          3: 'Getting your location timed out. Please try again, or search / enter a pincode.',
-        };
-        const err = new Error(messages[error?.code] || messages[2]);
+
+    const geoOpts = {
+      enableHighAccuracy: true,
+      timeout: 20000,
+      maximumAge: 0, // never reuse a cached city/IP guess
+      ...options,
+    };
+
+    let settled = false;
+    let watchId = null;
+    let best = null;
+    let fallbackTimer = null;
+
+    const finish = (result, error) => {
+      if (settled) return;
+      settled = true;
+      if (watchId != null) {
+        try {
+          navigator.geolocation.clearWatch(watchId);
+        } catch {
+          /* ignore */
+        }
+      }
+      if (fallbackTimer) clearTimeout(fallbackTimer);
+      if (result) resolve(result);
+      else {
+        const err = error instanceof Error ? error : new Error(GEO_MESSAGES[error?.code] || GEO_MESSAGES[2]);
         err.code = error?.code;
         reject(err);
-      },
-      { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 },
-    );
+      }
+    };
+
+    // Keep watching briefly and take the most accurate sample.
+    try {
+      watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          const next = readGeoPosition(position);
+          if (!best || (next.accuracy && (!best.accuracy || next.accuracy < best.accuracy))) {
+            best = next;
+          }
+          // Good enough for pinning a delivery address.
+          if (next.accuracy && next.accuracy <= 75) finish(next);
+        },
+        (error) => {
+          // If watch fails, try a one-shot below.
+          if (!best) {
+            navigator.geolocation.getCurrentPosition(
+              (position) => finish(readGeoPosition(position)),
+              (err) => finish(null, err),
+              geoOpts,
+            );
+          }
+        },
+        geoOpts,
+      );
+    } catch {
+      watchId = null;
+    }
+
+    // After 8s, accept the best reading we have; otherwise one-shot.
+    fallbackTimer = setTimeout(() => {
+      if (best) {
+        finish(best);
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (position) => finish(readGeoPosition(position)),
+        (error) => finish(null, error),
+        geoOpts,
+      );
+    }, 8000);
   });
 
 export const savedAddressToParsed = (item) => {

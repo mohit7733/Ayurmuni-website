@@ -19,17 +19,39 @@ export default function InteractiveMapPicker({ center, onCenterChange, loading, 
   }, [onCenterChange]);
 
   useEffect(() => {
+    const lat = Number(center?.latitude);
+    const lng = Number(center?.longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
     const moved =
-      Math.abs(center.latitude - lastCoords.current.latitude) > 0.00001 ||
-      Math.abs(center.longitude - lastCoords.current.longitude) > 0.00001;
+      !lastCoords.current ||
+      Math.abs(lat - lastCoords.current.latitude) > 0.00001 ||
+      Math.abs(lng - lastCoords.current.longitude) > 0.00001;
     if (!moved) return;
-    lastCoords.current = center;
-    try {
-      frameRef.current?.contentWindow?.moveMapTo?.(center.latitude, center.longitude);
-    } catch {
-      // ignore
-    }
-  }, [center.latitude, center.longitude, center]);
+    lastCoords.current = { latitude: lat, longitude: lng };
+
+    // Iframe map may still be booting — retry briefly so GPS recenter is not lost.
+    let tries = 0;
+    const zoom = Number(center?.zoom);
+    const push = () => {
+      try {
+        const win = frameRef.current?.contentWindow;
+        if (typeof win?.moveMapTo === 'function') {
+          win.moveMapTo(lat, lng, Number.isFinite(zoom) ? zoom : undefined);
+          return true;
+        }
+      } catch {
+        /* ignore */
+      }
+      return false;
+    };
+    if (push()) return undefined;
+    const timer = window.setInterval(() => {
+      tries += 1;
+      if (push() || tries >= 20) window.clearInterval(timer);
+    }, 150);
+    return () => window.clearInterval(timer);
+  }, [center.latitude, center.longitude, center.zoom, center]);
 
   return (
     <div className="map-picker-wrap">
@@ -40,7 +62,7 @@ export default function InteractiveMapPicker({ center, onCenterChange, loading, 
         srcDoc={html}
         sandbox="allow-scripts allow-same-origin"
       />
-      {loading ? <div className="map-picker-overlay">Finding location�</div> : null}
+      {loading ? <div className="map-picker-overlay">Finding your location…</div> : null}
       {children}
     </div>
   );
