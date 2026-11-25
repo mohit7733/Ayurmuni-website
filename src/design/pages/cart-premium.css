@@ -147,10 +147,11 @@
 .cp-browse-more { display: flex; justify-content: center; margin-top: 12px; padding: 4px 14px 14px; }
 .cp-skel { display: flex; flex-direction: column; gap: 10px; }
 
-/* phone checkout bar */
+/* phone checkout bar — one Checkout only (sticky bar). Summary CTA is desktop. */
 .cp-bar { display: none; }
 @media (max-width: 899px) {
-  .cp-summary .cp-btn--checkout { display: none; }
+  /* Beat ui-unify `.cp-btn { display: inline-flex !important }` */
+  .app-shell .cp-summary .cp-btn--checkout { display: none !important; }
   .cp-bar {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: calc(var(--am-z-tabbar, 50) + 1);
     display: flex; align-items: center; justify-content: space-between; gap: 12px;

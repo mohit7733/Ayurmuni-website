@@ -90,7 +90,14 @@ export class WebSocketService {
       else if (data.type === 'chat.receive') this.emit('message', data);
       else if (data.type === 'chat.error') this.emit('error', data);
       else if (data.type === 'chat.read') this.emit('read', data);
-      else if (data.type === 'ping') this.sendPong();
+      else if (
+        data.type === 'chat.presence' ||
+        data.type === 'presence' ||
+        data.type === 'user.online' ||
+        data.type === 'user.offline'
+      ) {
+        this.emit('presence', data);
+      } else if (data.type === 'ping') this.sendPong();
       else if (data.message) this.emit('message', data);
     } catch {
       // ignore parse errors

@@ -28,12 +28,9 @@
   padding-inline: clamp(20px, 5vw, 72px);
 }
 
-.auth-shell--welcome .site-header .site-brand img {
-  filter: brightness(0) invert(1);
-}
-
-.auth-shell--welcome .site-brand img {
-  filter: brightness(0) invert(1);
+/* Brand lives in the welcome panel — hide the header duplicate. */
+.auth-shell--welcome .site-header .site-brand {
+  display: none;
 }
 
 .auth-shell--welcome .app-shell-body {

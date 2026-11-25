@@ -13,14 +13,34 @@
   vertical-align: middle;
 }
 
+/* Legacy absolute photo overlay — never show Dietitian over the face. */
 .hm-doc-card__dietitian {
-  padding: 0 10px;
-  position: absolute;
-  left: 0;
-  bottom: 10px;
-  z-index: 9;
+  display: none !important;
 }
-.site-user-menu__head{
+
+/* Body chip rows: solid readable pill (not frosted glass on photo). */
+.am-flip-doc__chips > .am-dietitian-badge,
+.hm-doc-card__chips > .am-dietitian-badge {
+  margin: 0;
+  align-self: center;
+  flex: 0 0 auto;
+  padding: 4px 8px;
+  border: 1px solid color-mix(in srgb, var(--am-success, #2e7d4f) 28%, var(--am-line));
+  background: var(--am-success-soft, #e8f5ee);
+  color: #1f4a3a;
+  font-size: 11px;
+  line-height: 1;
+  box-shadow: none;
+  text-shadow: none;
+}
+
+.am-flip-doc__chips > .am-dietitian-badge svg,
+.hm-doc-card__chips > .am-dietitian-badge svg {
+  color: #1f6b4a;
+  filter: none;
+}
+
+.site-user-menu__head {
   justify-content: space-between;
 }
 .site-account-level {

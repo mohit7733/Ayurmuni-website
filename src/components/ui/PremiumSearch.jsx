@@ -82,11 +82,13 @@ export default function PremiumSearch({
 
   const showOverlay = !value && names.length > 0;
   const submitText = submitLabel === false ? '' : submitLabel || (onSubmit ? 'Search' : '');
+  // Only one search control: icon XOR submit button — never both.
+  const showIcon = !submitText;
 
   return (
     <form
       role="search"
-      className={cx('pm-search', value && 'has-value', className)}
+      className={cx('pm-search', value && 'has-value', !showIcon && 'pm-search--submit-only', className)}
       onSubmit={(event) => {
         event.preventDefault();
         onSubmit?.(value);
@@ -95,9 +97,11 @@ export default function PremiumSearch({
       <label htmlFor={id} className="am-sr-only">
         {label || placeholder}
       </label>
-      <span className="pm-search__icon" aria-hidden>
-        <Search size={15} strokeWidth={2.4} />
-      </span>
+      {showIcon ? (
+        <span className="pm-search__icon" aria-hidden>
+          <Search size={15} strokeWidth={2.4} />
+        </span>
+      ) : null}
       <span className="pm-search__field">
         <input
           id={id}

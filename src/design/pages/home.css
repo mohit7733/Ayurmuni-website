@@ -724,15 +724,14 @@
   display: none;
 }
 
+/* Rating / Verified sit under the photo so they never cover the face. */
 .hm-doc-card__chips {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 2;
+  position: static;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  max-width: calc(100% - 56px);
+  max-width: 100%;
+  margin: 0 0 4px;
 }
 
 .hm-doc-card__chips:empty {
@@ -743,15 +742,14 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 5px 8px;
-  border: 1px solid rgba(255, 255, 255, 0.55);
+  padding: 4px 8px;
+  border: 1px solid var(--am-line);
   border-radius: 999px;
-  background: rgba(255, 253, 248, 0.94);
+  background: var(--am-surface-muted, #f6f4ee);
   color: #1d2b27;
   font-size: 11px;
   font-weight: var(--am-weight-semibold);
   line-height: 1;
-  backdrop-filter: blur(8px);
 }
 
 .hm-doc-card__chip svg {
@@ -766,6 +764,8 @@
 }
 
 .hm-doc-card__chip--verified {
+  border-color: color-mix(in srgb, var(--am-success, #2e7d4f) 28%, var(--am-line));
+  background: var(--am-success-soft, #e8f5ee);
   color: #1f4a3a;
 }
 
@@ -1267,11 +1267,19 @@
 
 .hm-showcase .am-product-card__media {
   aspect-ratio: 5 / 4;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
   background:
     radial-gradient(70% 70% at 50% 42%, #fff, var(--am-sand-100));
 }
 
 .hm-showcase .am-product-card__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
   padding: 0;
   object-fit: cover;
   object-position: center;
