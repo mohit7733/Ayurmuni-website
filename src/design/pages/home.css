@@ -728,10 +728,12 @@
 .hm-doc-card__chips {
   position: static;
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 4px;
   max-width: 100%;
   margin: 0 0 4px;
+  min-width: 0;
 }
 
 .hm-doc-card__chips:empty {
@@ -741,15 +743,18 @@
 .hm-doc-card__chip {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
+  flex: 0 1 auto;
+  gap: 3px;
+  min-width: 0;
+  padding: 3px 6px;
   border: 1px solid var(--am-line);
   border-radius: 999px;
   background: var(--am-surface-muted, #f6f4ee);
   color: #1d2b27;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: var(--am-weight-semibold);
   line-height: 1;
+  white-space: nowrap;
 }
 
 .hm-doc-card__chip svg {

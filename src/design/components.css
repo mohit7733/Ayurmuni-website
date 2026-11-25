@@ -3576,11 +3576,12 @@
 .am-flip-doc__chips {
   position: static;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   max-width: 100%;
   margin: 0 0 2px;
+  min-width: 0;
 }
 
 .am-flip-doc__chips:empty {
@@ -3590,15 +3591,18 @@
 .am-flip-doc__chip {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
+  flex: 0 1 auto;
+  gap: 3px;
+  min-width: 0;
+  padding: 3px 6px;
   border: 1px solid var(--am-line);
   border-radius: var(--am-radius-pill);
   background: var(--am-surface-muted, #f6f4ee);
   color: var(--am-text);
-  font-size: var(--am-text-2xs);
+  font-size: 10px;
   font-weight: var(--am-weight-semibold);
   line-height: 1;
+  white-space: nowrap;
 }
 
 .am-flip-doc__chip svg {
