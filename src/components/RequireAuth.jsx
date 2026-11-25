@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { showSuccessToast } from '../config/key';
 import useLoggedIn from '../hooks/useLoggedIn';
+import { rememberReturnPath } from '../services/authReturn';
 
 export default function RequireAuth() {
   const loggedIn = useLoggedIn();
@@ -15,8 +16,8 @@ export default function RequireAuth() {
   }, [loggedIn]);
 
   if (!loggedIn) {
-    const from = `${location.pathname}${location.search}`;
-    return <Navigate to="/login" replace state={{ from }} />;
+    const from = rememberReturnPath(`${location.pathname}${location.search}`);
+    return <Navigate to="/login" replace state={{ from: from || undefined }} />;
   }
 
   return <Outlet />;

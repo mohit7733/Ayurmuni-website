@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { logoutOneSignalUser } from '../services/pushNotificationService';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowRight, Leaf, Package, Phone, ShieldCheck, Stethoscope, UserRound } from 'lucide-react';
 import leaf1Img from '/images/leaf1.png';
 import logoImg from '/greenlogo.png';
@@ -11,6 +11,13 @@ import {
   markAsGuest,
   resolveAccessLikeProfile,
 } from '../services/guestAuth';
+import {
+  consumeReturnPath,
+  peekReturnPath,
+  rememberReturnPath,
+  resolveReturnPath,
+  sanitizeReturnPath,
+} from '../services/authReturn';
 import { Button, Modal } from '../components/ui';
 import { AUTH_COPY as T } from '../content/auth';
 import '../design/brand.css';
@@ -20,10 +27,17 @@ const SHOWCASE_ICONS = [UserRound, Stethoscope, Package, Leaf];
 
 export default function AccessMode() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const returnFrom =
+    sanitizeReturnPath(location.state?.from) || peekReturnPath();
   const { clearLocationSession } = useDeliveryLocation();
   const [loading, setLoading] = useState(null);
   const [checking, setChecking] = useState(true);
   const [signOutOpen, setSignOutOpen] = useState(false);
+
+  useEffect(() => {
+    if (returnFrom) rememberReturnPath(returnFrom);
+  }, [returnFrom]);
 
   useEffect(() => {
     let cancelled = false;
@@ -35,7 +49,9 @@ export default function AccessMode() {
         if (cancelled) return;
         if (isComplete || isProfileComplete(cached)) {
           leaving = true;
-          navigate('/home', { replace: true });
+          navigate(consumeReturnPath(resolveReturnPath(returnFrom, '/home')), {
+            replace: true,
+          });
           return;
         }
       } catch {
@@ -47,13 +63,15 @@ export default function AccessMode() {
     return () => {
       cancelled = true;
     };
-  }, [navigate]);
+  }, [navigate, returnFrom]);
 
   const skipToHome = async () => {
     try {
       setLoading('skip');
       await markAsGuest();
-      navigate('/home', { replace: true });
+      navigate(consumeReturnPath(resolveReturnPath(returnFrom, '/home')), {
+        replace: true,
+      });
     } finally {
       setLoading(null);
     }
@@ -63,7 +81,10 @@ export default function AccessMode() {
     try {
       setLoading('onboard');
       await markAsGuest();
-      navigate('/onboarding');
+      const next = resolveReturnPath(returnFrom, '');
+      navigate('/onboarding', {
+        state: next ? { from: next } : undefined,
+      });
     } finally {
       setLoading(null);
     }

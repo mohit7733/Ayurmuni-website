@@ -1,6 +1,7 @@
 import { Utils } from '../common/utils';
 import { BaseUrl } from '../config/key';
 import { beginRequest, endRequest } from '../loading/requestActivity';
+import { currentLocationPath, rememberReturnPath } from './authReturn';
 
 let isRefreshing = false;
 let refreshPromise = null;
@@ -169,6 +170,7 @@ const handleAuthenticationFailed = async () => {
     // private mode
   }
   if (typeof window === 'undefined' || window.location?.pathname === '/login') return;
+  rememberReturnPath(currentLocationPath());
   window.location.assign('/login');
 };
 

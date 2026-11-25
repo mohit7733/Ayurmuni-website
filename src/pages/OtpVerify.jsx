@@ -22,6 +22,13 @@ import * as AuthService from '../services/authService';
 import * as ProfileServices from '../services/profileService';
 import { acceptPolicies } from '../services/policyService';
 import { isProfileComplete, markAsGuest, syncAccessFromProfile } from '../services/guestAuth';
+import {
+  consumeReturnPath,
+  peekReturnPath,
+  rememberReturnPath,
+  resolveReturnPath,
+  sanitizeReturnPath,
+} from '../services/authReturn';
 import { parsePolicyAcceptedCustomer } from '../utils/policyUtils';
 import { Button, Modal } from '../components/ui';
 import { AUTH_COPY as T } from '../content/auth';
@@ -56,6 +63,7 @@ export default function OtpVerify() {
   const NEW_CUSTOMER = params.customer;
   const accountDeleted = params.accountDeleted === true;
   const retentionDays = params.retentionDays;
+  const returnFrom = sanitizeReturnPath(params.from) || peekReturnPath();
 
   const [otp, setOtp] = useState(['', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
@@ -66,9 +74,13 @@ export default function OtpVerify() {
 
   useEffect(() => {
     if (!phoneNumber) {
-      navigate('/login', { replace: true });
+      navigate('/login', { replace: true, state: returnFrom ? { from: returnFrom } : undefined });
     }
-  }, [phoneNumber, navigate]);
+  }, [phoneNumber, navigate, returnFrom]);
+
+  useEffect(() => {
+    if (returnFrom) rememberReturnPath(returnFrom);
+  }, [returnFrom]);
 
   const applyOtpDigits = useCallback((digits) => {
     const cleaned = String(digits).replace(/[^0-9]/g, '').slice(0, OTP_LEN);
@@ -140,12 +152,18 @@ export default function OtpVerify() {
 
   const goAfterProfile = async (profile) => {
     const level = await syncAccessFromProfile(profile);
+    const next = resolveReturnPath(returnFrom, '/home');
     if (level === 'full' || isProfileComplete(profile)) {
-      navigate('/home', { replace: true });
+      navigate(consumeReturnPath(next), { replace: true });
       return;
     }
     await markAsGuest();
-    navigate('/access-mode', { replace: true });
+    // Keep return path for AccessMode skip / completed profile.
+    if (next && next !== '/home') rememberReturnPath(next);
+    navigate('/access-mode', {
+      replace: true,
+      state: next && next !== '/home' ? { from: next } : undefined,
+    });
   };
 
   const submitRegisterWithNotificationPreference = async (isNotificationEnabled) => {
@@ -204,7 +222,12 @@ export default function OtpVerify() {
         } catch {
           await recordPolicyAcceptance();
           await markAsGuest();
-          navigate('/access-mode', { replace: true });
+          const next = resolveReturnPath(returnFrom, '');
+          if (next) rememberReturnPath(next);
+          navigate('/access-mode', {
+            replace: true,
+            state: next ? { from: next } : undefined,
+          });
         }
       } else {
         showSuccessToast(response?.message || 'Failed to verify OTP', 'error');
@@ -258,10 +281,17 @@ export default function OtpVerify() {
       await recordPolicyAcceptance();
       if (isProfileComplete(loginFlags)) {
         await syncAccessFromProfile(loginFlags);
-        navigate('/home', { replace: true });
+        navigate(consumeReturnPath(resolveReturnPath(returnFrom, '/home')), {
+          replace: true,
+        });
       } else {
         await markAsGuest();
-        navigate('/access-mode', { replace: true });
+        const next = resolveReturnPath(returnFrom, '');
+        if (next) rememberReturnPath(next);
+        navigate('/access-mode', {
+          replace: true,
+          state: next ? { from: next } : undefined,
+        });
       }
     }
   };
@@ -386,7 +416,16 @@ export default function OtpVerify() {
           <span>
             {T.sentTo} <strong>+91 {phoneNumber}</strong>
           </span>
-          <Button variant="ghost" size="sm" onClick={() => navigate('/login')}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() =>
+              navigate('/login', {
+                replace: true,
+                state: returnFrom ? { from: returnFrom } : undefined,
+              })
+            }
+          >
             {T.edit}
           </Button>
         </div>

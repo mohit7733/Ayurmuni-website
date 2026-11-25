@@ -1,3 +1,4 @@
+import { isAuthenticated } from '../services/guestAuth';
 import { fetchQuestions } from './questionnaireApi';
 import {
   buildMedicalInitialAnswers,
@@ -26,6 +27,12 @@ export const loadQuestionnaire = async (mode) => {
     cachedPrakritiQuestions: [],
     error: '',
   };
+
+  // Public /assessment-prakriti: show the first step without calling APIs (avoids
+  // apiClient session-expired redirect when there is no token).
+  if (isPrakriti && !(await isAuthenticated())) {
+    return { ...empty, steps: [KNOW_PRAKRITI_STEP] };
+  }
 
   try {
     const response = await fetchQuestions(

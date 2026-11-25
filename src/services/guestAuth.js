@@ -1,6 +1,10 @@
 import { Utils } from '../common/utils';
 import { showSuccessToast } from '../config/key';
 import { navigate } from '../navigation/nav';
+import {
+  currentLocationPath,
+  rememberReturnPath,
+} from './authReturn';
 import * as ProfileServices from './profileService';
 
 export const ACCESS_KEYS = {
@@ -105,9 +109,10 @@ export async function persistProfileAndSyncAccess(profile) {
   return syncAccessFromProfile(profile);
 }
 
-export function navigateToLogin(message) {
+export function navigateToLogin(message, fromPath) {
   if (message) showSuccessToast(message, 'error');
-  navigate('/login');
+  const from = rememberReturnPath(fromPath || currentLocationPath());
+  navigate('/login', from ? { from } : undefined);
 }
 
 export function navigateToCompleteDetails(message) {
