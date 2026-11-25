@@ -31,7 +31,7 @@ export default function ReviewCard({
         </div>
         <Rating value={rating} stars />
       </header>
-      {text ? <p className="am-review__text">{text}</p> : null}
+      <p className="am-review__text">{text || ''}</p>
       {shown.length ? (
         <ul className="am-review__media">
           {shown.map((item, index) => (

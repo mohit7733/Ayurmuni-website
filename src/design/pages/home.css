@@ -654,6 +654,16 @@
   scroll-snap-align: start;
 }
 
+/* Keep carousel arrows on the photo band — not over name / credentials. */
+.am-rail-scroller:has(.hm-doc-rail) .am-rail-scroller__btn {
+  top: 90px;
+  transform: translateY(-50%);
+}
+
+.hm-doctor-row--split .am-rail-scroller:has(.hm-doc-rail) .am-rail-scroller__btn {
+  top: 74px;
+}
+
 .hm-doc-card {
   --doc-ink: #163028;
   --doc-green: #115443;

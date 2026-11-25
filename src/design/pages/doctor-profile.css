@@ -281,8 +281,17 @@
 .dp-reviews {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  align-items: start;
+  align-items: stretch;
   gap: 8px;
+}
+
+.dp-reviews > .am-review {
+  height: 100%;
+  min-width: 0;
+}
+
+.dp-reviews .am-review__media {
+  margin-top: auto;
 }
 
 .dp-fee {

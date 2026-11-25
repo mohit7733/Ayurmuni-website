@@ -368,7 +368,7 @@
   .app-shell .pd-page--brand .pd-review-list.pd-review-list--few {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: start;
+    align-items: stretch;
     overflow: visible;
     gap: 12px;
   }
