@@ -62,11 +62,13 @@ export const getHealthDiseases = async (params = {}) => {
   const query = new URLSearchParams();
   // Backend PublicHealthDiseaseListAPI filters on health_category_id; keep category_id for legacy.
   const healthCategoryId = String(
-    params?.health_category_id ?? params?.category_id ?? '',
+    params?.health_category_id ?? '',
   ).trim();
   if (healthCategoryId) {
-    query.set('health_category_id', healthCategoryId);
-    query.set('category_id', healthCategoryId);
+    query.set('health_category_id', String(healthCategoryId).trim());
+  }
+  if (params?.category_id) {
+    query.set('category_id', String(params?.category_id).trim());
   }
   const qs = query.toString();
   return apiClient(
