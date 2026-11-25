@@ -4067,10 +4067,25 @@ button.checkout-item {
   color: inherit;
 }
 
-.coupon-offer .cta {
+.coupon-offer .cta,
+.coupon-offer .ghost {
   width: auto;
   height: 36px;
   padding: 0 12px;
+}
+
+.coupon-offer.is-applied {
+  border-color: rgba(16, 83, 67, 0.35);
+  background: #eef7f3;
+  cursor: default;
+}
+
+.coupon-offer.is-applied .ghost:disabled {
+  opacity: 1;
+  color: var(--am-brand-green, #0d614e);
+  border-color: rgba(16, 83, 67, 0.28);
+  background: #fff;
+  cursor: default;
 }
 
 .coupon-error {
