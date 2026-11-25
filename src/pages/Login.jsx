@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowRight, Check } from 'lucide-react';
 import consultImg from '/images/login/10.webp';
 import medicineImg from '/images/login/9.webp';
@@ -14,6 +14,11 @@ import logoImg from '/greenlogo.png';
 import { Utils } from '../common/utils';
 import { showSuccessToast } from '../config/key';
 import { LOGIN_NOTICE_KEY } from '../services/apiClient';
+import {
+  peekReturnPath,
+  rememberReturnPath,
+  sanitizeReturnPath,
+} from '../services/authReturn';
 import MarqueeCollage from '../components/MarqueeCollage';
 import * as AuthService from '../services/authService';
 import { parseDeletedAccountInfo } from '../services/profileService';
@@ -49,6 +54,9 @@ const COLUMNS = [
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const returnFrom =
+    sanitizeReturnPath(location.state?.from) || peekReturnPath();
   const [phone, setPhone] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -67,6 +75,11 @@ export default function Login() {
     }, 3200);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    const from = sanitizeReturnPath(location.state?.from);
+    if (from) rememberReturnPath(from);
+  }, [location.state?.from]);
 
   useEffect(() => {
     try {
@@ -173,6 +186,7 @@ export default function Login() {
             accountDeleted: true,
             retentionDays: deletedInfo.retentionDays,
             policyAcceptedCustomer: true,
+            from: returnFrom || undefined,
           },
         });
         return;
@@ -186,6 +200,7 @@ export default function Login() {
             phone,
             customer: isCustomer,
             policyAcceptedCustomer: true,
+            from: returnFrom || undefined,
           },
         });
       } else {

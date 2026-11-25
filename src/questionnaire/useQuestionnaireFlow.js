@@ -23,7 +23,12 @@ import {
   isChoiceSelected,
   toggleAnswer,
 } from './utils';
-import { promoteToFullUser, resolveAccessLikeProfile } from '../services/guestAuth';
+import {
+  isAuthenticated,
+  promoteToFullUser,
+  requireAuth,
+  resolveAccessLikeProfile,
+} from '../services/guestAuth';
 import { trackMetaPrakritiTestComplete } from '../services/metaPixel';
 
 export const useQuestionnaireFlow = (mode) => {
@@ -82,10 +87,23 @@ export const useQuestionnaireFlow = (mode) => {
 
   const handleKnowPrakriti = useCallback(async (value) => {
     if (isSelectingKnowPrakriti.current) return;
+    if (!(await requireAuth('Please login to continue your prakriti assessment'))) {
+      return;
+    }
     isSelectingKnowPrakriti.current = true;
     setAnswers((prev) => ({ ...prev, knowPrakriti: value }));
     setSubmitting(true);
     try {
+      // Public entry may have loaded with no token — refetch questions after login.
+      if (
+        value === 'No' &&
+        !cachedPrakritiQuestions.current.length &&
+        (await isAuthenticated())
+      ) {
+        const result = await loadQuestionnaire('prakriti');
+        applyLoadResult(result);
+        cachedPrakritiQuestions.current = result.cachedPrakritiQuestions;
+      }
       if (value === 'Yes') {
         const response = await submitKnowPrakriti(true);
         const options = response?.data?.prakriti_result_options ?? [];
@@ -112,7 +130,7 @@ export const useQuestionnaireFlow = (mode) => {
       setSubmitting(false);
       isSelectingKnowPrakriti.current = false;
     }
-  }, []);
+  }, [applyLoadResult]);
 
   const handleSelect = useCallback(
     (choice) => {
@@ -138,6 +156,11 @@ export const useQuestionnaireFlow = (mode) => {
   );
 
   const submitAnswers = useCallback(async () => {
+    if (isPrakriti) {
+      if (!(await requireAuth('Please login to save your prakriti assessment'))) {
+        return false;
+      }
+    }
     if (isPrakriti && answers.knowPrakriti === 'Yes') {
       if (!answers.prakritiType) {
         showSuccessToast('Please select your prakriti', 'error');

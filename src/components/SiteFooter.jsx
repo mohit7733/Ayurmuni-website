@@ -22,6 +22,10 @@ const PUBLIC_FOOTER_LINKS = new Set([
   '/contact',
   '/terms',
   '/home',
+  '/consult',
+  '/consult/doctors',
+  '/assessment-prakriti',
+  '/patient-faq',
   '/profile/faq',
   '/profile/privacy',
   '/profile/help-center',
@@ -42,7 +46,7 @@ export default function SiteFooter() {
     const to = typeof item === 'string' ? item : item?.to;
     if (loggedIn || PUBLIC_FOOTER_LINKS.has(to)) return;
     event.preventDefault();
-    navigateToLogin('Please login to continue');
+    navigateToLogin('Please login to continue', to);
   };
 
   // The emblem and wordmark stay in normal flow under the links. Pinning them

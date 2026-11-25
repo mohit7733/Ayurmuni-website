@@ -353,6 +353,17 @@ export default function App() {
                       path="/share-review"
                       element={<DirectDoctorReview />}
                     />
+                    {/* Consult browse + prakriti assessment — public; booking/pay stay behind RequireAuth. */}
+                    <Route path="/consult" element={<Consult />} />
+                    <Route
+                      path="/consult/concern/:categoryId"
+                      element={<CategoryDoctor />}
+                    />
+                    <Route path="/consult/doctors" element={<Doctors />} />
+                    <Route
+                      path="/consult/doctors/:doctorId"
+                      element={<DoctorProfile />}
+                    />
 
                     <Route element={<RequireAuth />}>
                       <Route path="/notifications" element={<Notifications />} />
@@ -375,17 +386,7 @@ export default function App() {
                         path="/order-confirmation"
                         element={<OrderConfirmation />}
                       />
-                      <Route path="/consult" element={<Consult />} />
                       <Route path="/consult/history" element={<ConsultHistory />} />
-                      <Route
-                        path="/consult/concern/:categoryId"
-                        element={<CategoryDoctor />}
-                      />
-                      <Route path="/consult/doctors" element={<Doctors />} />
-                      <Route
-                        path="/consult/doctors/:doctorId"
-                        element={<DoctorProfile />}
-                      />
                       <Route
                         path="/consult/doctors/:doctorId/slots"
                         element={<DoctorSlot />}
