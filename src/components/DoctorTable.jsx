@@ -11,6 +11,7 @@ import {
   doctorRating,
   doctorSpeciality,
   getDoctorId,
+  isDietitian,
   resolveDoctorHealthDiseases,
   resolveDoctorSpecializations,
 } from '../consult/doctors';
@@ -53,6 +54,7 @@ function DoctorCard({ item, fallbackSpeciality, index }) {
   const fee = doctorFeeLabel(item);
   const reviewCount = Number(item?.total_reviews || item?.review_count || 0);
   const verified = Boolean(item?.is_verified);
+  const dietitian = isDietitian(item);
   const tags = focusTags(item, credential);
   const fav = useDoctorFavFlag(item);
 
@@ -88,23 +90,6 @@ function DoctorCard({ item, fallbackSpeciality, index }) {
         )}
         <div className="hm-doc-card__media-scrim" aria-hidden />
 
-        <div className="hm-doc-card__chips">
-          {rating ? (
-            <span className="hm-doc-card__chip">
-              <Star size={11} aria-hidden fill="currentColor" />
-              {rating}
-              {reviewCount ? <em>({reviewCount})</em> : null}
-            </span>
-          ) : null}
-          {verified ? (
-            <span className="hm-doc-card__chip hm-doc-card__chip--verified">
-              <BadgeCheck size={12} aria-hidden />
-              Verified
-            </span>
-          ) : null}
-        </div>
-
-
         <div className="hm-doc-card__fav">
           <FavButton
             on={fav}
@@ -112,12 +97,27 @@ function DoctorCard({ item, fallbackSpeciality, index }) {
             onClick={toggleFav}
           />
         </div>
-        <div className="hm-doc-card__dietitian">
-          <DietitianBadge doctor={item} />
-        </div>
       </div>
 
       <div className="hm-doc-card__body">
+        {(rating || verified || dietitian) ? (
+          <div className="hm-doc-card__chips">
+            {rating ? (
+              <span className="hm-doc-card__chip">
+                <Star size={11} aria-hidden fill="currentColor" />
+                {rating}
+                {reviewCount ? <em>({reviewCount})</em> : null}
+              </span>
+            ) : null}
+            {verified ? (
+              <span className="hm-doc-card__chip hm-doc-card__chip--verified">
+                <BadgeCheck size={12} aria-hidden />
+                Verified
+              </span>
+            ) : null}
+            {dietitian ? <DietitianBadge doctor={item} visible /> : null}
+          </div>
+        ) : null}
         <div className="hm-doc-card__id">
           <h3 className="hm-doc-card__name">
             <button type="button" className="hm-doc-card__name-btn am-stretched" onClick={openProfile}>

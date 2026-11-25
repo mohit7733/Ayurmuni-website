@@ -161,7 +161,7 @@ export default function OrderConfirmation() {
             </div>
             {orderRouteId ? (
               <Button
-                variant="ghost"
+                variant="secondary"
                 leadingIcon={<Package size={16} aria-hidden />}
                 onClick={() =>
                   navigate(

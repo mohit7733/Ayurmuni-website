@@ -84,6 +84,19 @@ export const buildMapHtml = (center) => `<!DOCTYPE html>
       if (el) el.style.display = 'flex';
     }
 
+    var pendingMove = null;
+
+    window.moveMapTo = function(lat, lng, zoom) {
+      if (!map) {
+        pendingMove = { lat: lat, lng: lng, zoom: zoom };
+        return;
+      }
+      skipNextIdle = true;
+      var nextZoom = (typeof zoom === 'number' && zoom > 0) ? zoom : Math.max(map.getZoom(), 17);
+      map.setView([lat, lng], nextZoom, { animate: true });
+      setTimeout(function() { if (map) map.invalidateSize(); }, 50);
+    };
+
     function initMap() {
       try {
         if (typeof L === 'undefined') {
@@ -101,16 +114,15 @@ export const buildMapHtml = (center) => `<!DOCTYPE html>
         setTimeout(function() { if (map) map.invalidateSize(); }, 0);
         setTimeout(function() { if (map) map.invalidateSize(); }, 300);
         window.addEventListener('resize', function() { if (map) map.invalidateSize(); });
+        if (pendingMove) {
+          var p = pendingMove;
+          pendingMove = null;
+          window.moveMapTo(p.lat, p.lng, p.zoom);
+        }
       } catch (e) {
         showMapError();
       }
     }
-
-    window.moveMapTo = function(lat, lng) {
-      if (!map) return;
-      skipNextIdle = true;
-      map.setView([lat, lng], map.getZoom(), { animate: true });
-    };
 
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', initMap);

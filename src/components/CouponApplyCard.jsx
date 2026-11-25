@@ -164,22 +164,37 @@ export default function CouponApplyCard({
             {scopedCoupons.length ? (
               scopedCoupons.map((item) => {
                 const gate = calcCouponDiscount(item, cartAmount);
+                const isApplied =
+                  Boolean(applied?.code) &&
+                  String(item.code || '').trim().toUpperCase() ===
+                    String(applied.code || '').trim().toUpperCase();
                 return (
-                  <article key={item.id || item.code} className="coupon-offer">
+                  <article
+                    key={item.id || item.code}
+                    className={`coupon-offer${isApplied ? ' is-applied' : ''}`}
+                  >
                     <div>
                       <strong>{item.code}</strong>
                       <p>{couponOfferTitle(item)}</p>
                       {couponMinNote(item) ? <small>{couponMinNote(item)}</small> : null}
-                      {!gate.ok && gate.error ? <small className="coupon-error">{gate.error}</small> : null}
+                      {!isApplied && !gate.ok && gate.error ? (
+                        <small className="coupon-error">{gate.error}</small>
+                      ) : null}
                     </div>
-                    <button
-                      type="button"
-                      className="cta"
-                      disabled={applying || !gate.ok}
-                      onClick={() => submit(item.code)}
-                    >
-                      Apply
-                    </button>
+                    {isApplied ? (
+                      <button type="button" className="ghost" disabled>
+                        Applied
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="cta"
+                        disabled={applying || !gate.ok}
+                        onClick={() => submit(item.code)}
+                      >
+                        Apply
+                      </button>
+                    )}
                   </article>
                 );
               })

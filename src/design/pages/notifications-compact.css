@@ -17,7 +17,16 @@
   margin: 0; font-family: var(--am-font-display); font-size: clamp(1.15rem, 1rem + 0.5vw, 1.35rem);
   font-weight: 600; line-height: 1.15; letter-spacing: -0.01em; color: var(--am-text, var(--nt-ink));
 }
-.nt-head__desc { margin: 0; font-size: var(--am-text-sm, 0.875rem); line-height: 1.4; color: var(--am-text-muted, #5f6f69); }
+.nt-head__desc {
+  margin: 0;
+  font-size: var(--am-text-sm, 0.875rem);
+  line-height: 1.4;
+  color: var(--am-text-muted, #5f6f69);
+  text-transform: none;
+}
+.nt-head__desc::first-letter {
+  text-transform: uppercase;
+}
 @media (min-width: 768px) {
   .nt-head__copy { flex-direction: row; align-items: baseline; gap: 12px; }
   .nt-head__desc { padding-left: 12px; border-left: 1px solid var(--nt-line); }
@@ -108,8 +117,24 @@
 
 .nt-more { display: flex; justify-content: center; padding: 8px 14px 12px; border-top: 1px solid rgba(216, 204, 180, 0.55); }
 .nt-more button {
-  min-height: 40px; padding: 0 18px; border: 1px solid var(--nt-line); border-radius: 999px; background: #fff;
+  min-height: 40px; padding: 0 18px; border: 1px solid var(--nt-green); border-radius: 999px; background: #fff;
   color: var(--nt-green); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+.nt-more button:hover:not(:disabled) {
+  background: var(--nt-green);
+  border-color: var(--nt-green);
+  color: var(--nt-ivory);
+  box-shadow: 0 8px 18px -10px rgba(16, 83, 67, 0.55);
+  transform: translateY(-1px);
+}
+.nt-more button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: none;
+}
+.nt-more button:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 @media (max-width: 640px) {
@@ -162,7 +187,8 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .nt-act .is-refreshing { animation: none; }
-  .nt-chip, .nt-row, .nt-head__back { transition: none; }
+  .nt-chip, .nt-row, .nt-head__back, .nt-more button { transition: none; }
+  .nt-more button:hover:not(:disabled) { transform: none; box-shadow: none; }
 }
 
 /* Notification detail sheet extras (app NotificationDetailModal parity) */

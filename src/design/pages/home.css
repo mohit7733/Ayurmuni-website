@@ -654,6 +654,16 @@
   scroll-snap-align: start;
 }
 
+/* Keep carousel arrows on the photo band — not over name / credentials. */
+.am-rail-scroller:has(.hm-doc-rail) .am-rail-scroller__btn {
+  top: 90px;
+  transform: translateY(-50%);
+}
+
+.hm-doctor-row--split .am-rail-scroller:has(.hm-doc-rail) .am-rail-scroller__btn {
+  top: 74px;
+}
+
 .hm-doc-card {
   --doc-ink: #163028;
   --doc-green: #115443;
@@ -714,15 +724,16 @@
   display: none;
 }
 
+/* Rating / Verified sit under the photo so they never cover the face. */
 .hm-doc-card__chips {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 2;
+  position: static;
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  max-width: calc(100% - 56px);
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  margin: 0 0 4px;
+  min-width: 0;
 }
 
 .hm-doc-card__chips:empty {
@@ -732,16 +743,18 @@
 .hm-doc-card__chip {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 5px 8px;
-  border: 1px solid rgba(255, 255, 255, 0.55);
+  flex: 0 1 auto;
+  gap: 3px;
+  min-width: 0;
+  padding: 3px 6px;
+  border: 1px solid var(--am-line);
   border-radius: 999px;
-  background: rgba(255, 253, 248, 0.94);
+  background: var(--am-surface-muted, #f6f4ee);
   color: #1d2b27;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: var(--am-weight-semibold);
   line-height: 1;
-  backdrop-filter: blur(8px);
+  white-space: nowrap;
 }
 
 .hm-doc-card__chip svg {
@@ -756,6 +769,8 @@
 }
 
 .hm-doc-card__chip--verified {
+  border-color: color-mix(in srgb, var(--am-success, #2e7d4f) 28%, var(--am-line));
+  background: var(--am-success-soft, #e8f5ee);
   color: #1f4a3a;
 }
 
@@ -1257,11 +1272,19 @@
 
 .hm-showcase .am-product-card__media {
   aspect-ratio: 5 / 4;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
   background:
     radial-gradient(70% 70% at 50% 42%, #fff, var(--am-sand-100));
 }
 
 .hm-showcase .am-product-card__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
   padding: 0;
   object-fit: cover;
   object-position: center;

@@ -10,6 +10,7 @@ import {
   doctorRating,
   doctorSpeciality,
   getDoctorId,
+  isDietitian,
 } from '../consult/doctors';
 import { toggleDoctorFavourite, useDoctorFavFlag } from '../consult/doctorFavSync';
 import { showSuccessToast } from '../config/key';
@@ -65,6 +66,7 @@ export default function SuggestedDoctorCard({ item, fallbackSpeciality = 'Ayurve
   const credential = doctorQualification(item) || doctorSpeciality(item) || fallbackSpeciality;
   const reviewCount = Number(item?.total_reviews || item?.review_count || 0);
   const verified = Boolean(item?.is_verified);
+  const dietitian = isDietitian(item);
   const bios = Array.isArray(item?.specialized_bio)
     ? item.specialized_bio.map((bio) => String(bio || '').trim()).filter(Boolean).slice(0, 5)
     : [];
@@ -110,22 +112,6 @@ export default function SuggestedDoctorCard({ item, fallbackSpeciality = 'Ayurve
         )}
         <div className="am-flip-doc__shade" aria-hidden />
 
-        <div className="am-flip-doc__chips">
-          {rating ? (
-            <span className="am-flip-doc__chip">
-              <Star size={12} aria-hidden fill="currentColor" />
-              {rating}
-              {reviewCount ? <span>({reviewCount})</span> : null}
-            </span>
-          ) : null}
-          {verified ? (
-            <span className="am-flip-doc__chip am-flip-doc__chip--verified">
-              <BadgeCheck size={13} aria-hidden />
-              Verified
-            </span>
-          ) : null}
-        </div>
-
         <div className="am-card-corner">
           <FavButton
             on={fav}
@@ -133,12 +119,27 @@ export default function SuggestedDoctorCard({ item, fallbackSpeciality = 'Ayurve
             onClick={toggleFav}
           />
         </div>
-        <div className="hm-doc-card__dietitian">
-          <DietitianBadge doctor={item} />
-        </div>
       </div>
 
       <div className="am-flip-doc__body">
+        {(rating || verified || dietitian) ? (
+          <div className="am-flip-doc__chips">
+            {rating ? (
+              <span className="am-flip-doc__chip">
+                <Star size={12} aria-hidden fill="currentColor" />
+                {rating}
+                {reviewCount ? <span>({reviewCount})</span> : null}
+              </span>
+            ) : null}
+            {verified ? (
+              <span className="am-flip-doc__chip am-flip-doc__chip--verified">
+                <BadgeCheck size={13} aria-hidden />
+                Verified
+              </span>
+            ) : null}
+            {dietitian ? <DietitianBadge doctor={item} visible /> : null}
+          </div>
+        ) : null}
         <h3 className="am-flip-doc__name">
           <button type="button" className="am-stretched" onClick={openProfile}>
             <MarqueeName>{name}</MarqueeName>

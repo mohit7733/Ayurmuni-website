@@ -68,6 +68,7 @@ export default function ChatConversation({
     isLoading,
     error,
     participantRole,
+    peerOnline,
     sendMessage,
     markAsRead,
     chatAccess,
@@ -102,7 +103,8 @@ export default function ChatConversation({
       ? meta.patientName || 'Patient'
       : formatDoctorDisplayName(meta.doctorName);
   const headerAvatar = participantRole === 'doctor' ? meta.patientAvatar : meta.doctorAvatar;
-  const statusLine = `Connected • ${participantRole === 'doctor' ? 'Doctor' : 'Patient'}`;
+  const peerLabel = participantRole === 'doctor' ? 'Patient' : 'Doctor';
+  const statusLine = peerOnline ? `Online • ${peerLabel}` : peerLabel;
 
   useEffect(() => {
     setMeta(readChatMeta(appointmentId, extras || {}));
@@ -283,7 +285,7 @@ export default function ChatConversation({
           ) : (
             <span>{String(headerTitle || '?').charAt(0).toUpperCase()}</span>
           )}
-          <i className="on" />
+          {peerOnline ? <i className="on" aria-label="Online" /> : null}
         </div>
         <div>
           <strong>{headerTitle || 'Unknown'}</strong>

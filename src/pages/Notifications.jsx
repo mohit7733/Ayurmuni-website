@@ -206,7 +206,7 @@ export default function Notifications() {
           </button>
           <div className="nt-head__copy">
             <h1 className="nt-head__title">Notifications</h1>
-            <p className="nt-head__desc">Orders, appointments, and offers</p>
+            <p className="nt-head__desc">Orders, Appointments, and Offers</p>
           </div>
         </header>
 

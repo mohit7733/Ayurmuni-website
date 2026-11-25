@@ -625,13 +625,17 @@
 }
 .pd-page--brand .pd-buy .am-btn--secondary,
 .pd-page--brand .pd-sticky .am-btn--secondary {
-  border: 1px solid var(--am-brand-green);
-  background: #fffdf8;
-  color: var(--am-brand-green);
+  /* Beat ui-unify's faint line-strong border so Add to cart stays outlined. */
+  border: 1.5px solid var(--am-brand-green) !important;
+  background: #fffdf8 !important;
+  color: var(--am-brand-green) !important;
+  box-shadow: none !important;
 }
 .pd-page--brand .pd-buy .am-btn--secondary:hover:not(:disabled),
 .pd-page--brand .pd-sticky .am-btn--secondary:hover:not(:disabled) {
-  background: #f3efe4;
+  border-color: var(--am-brand-green-deep, var(--am-brand-green)) !important;
+  background: #f3efe4 !important;
+  color: var(--am-brand-green-deep, var(--am-brand-green)) !important;
 }
 .pd-page--brand .pd-buy .am-btn:disabled,
 .pd-page--brand .pd-sticky .am-btn:disabled { opacity: 0.5; box-shadow: none; }
@@ -759,12 +763,17 @@
 /* ── Sticky buy bar (existing behaviour, mobile/tablet only) ── */
 .pd-page--brand .pd-sticky {
   gap: 10px;
+  overflow: visible;
   border: 1px solid rgba(216, 204, 180, 0.9);
   border-radius: 18px;
   background: rgba(255, 253, 248, 0.94);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   box-shadow: 0 -2px 0 rgba(255, 255, 255, 0.6) inset, 0 16px 32px -14px rgba(19, 35, 30, 0.35);
+}
+.pd-page--brand .pd-sticky .pd-buy {
+  overflow: visible;
+  min-width: 0;
 }
 @media (min-width: 1024px) {
   .pd-page--brand .pd-sticky { display: none; }
@@ -844,7 +853,9 @@
   mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 40px), transparent);
 }
 @media (max-width: 767px) {
-  .pd-page--brand { padding-top: 12px; gap: 20px; }
+  /* Sticky buy bar is fixed and sits over the footer, so page padding here
+     only leaves a cream gap above the trust strip. */
+  .pd-page--brand { padding-top: 12px; padding-bottom: 12px; gap: 20px; }
   .pd-page--brand .pd-layout { gap: 20px; }
   .pd-page--brand .pd-info { padding: 14px; gap: 12px; }
   .pd-page--brand .pd-topbar { margin-bottom: -6px; }
