@@ -117,10 +117,10 @@ export default function Onboarding() {
       newErrors.firstName = 'First name is required';
       isValid = false;
     }
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = 'Last name is required';
-      isValid = false;
-    }
+    // if (!formData.lastName.trim()) {
+    //   newErrors.lastName = 'Last name is required';
+    //   isValid = false;
+    // }
     if (formData.email.trim() && !EmailValidator(formData.email.trim())) {
       newErrors.email = 'Please enter a valid email address';
       isValid = false;
@@ -170,7 +170,6 @@ export default function Onboarding() {
 
   const isFormValid = () => {
     if (!formData.firstName.trim()) return false;
-    if (!formData.lastName.trim()) return false;
     if (!formData.gender) return false;
 
     const day = Number(dob.day);
@@ -204,7 +203,6 @@ export default function Onboarding() {
     () => isFormValid(),
     [
       formData.firstName,
-      formData.lastName,
       formData.email,
       formData.gender,
       dob.day,
@@ -379,16 +377,16 @@ export default function Onboarding() {
               ) : null}
             </label>
             <label>
-              Last name <span className="req">*</span>
+              Last name 
               <input
                 placeholder="Sharma"
                 autoComplete="family-name"
                 value={formData.lastName}
                 onChange={(e) => handleFieldChange('lastName', e.target.value)}
               />
-              {errors.lastName ? (
+              {/* {errors.lastName ? (
                 <span className="field-error">{errors.lastName}</span>
-              ) : null}
+              ) : null} */}
             </label>
           </div>
 
