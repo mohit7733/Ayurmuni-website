@@ -19,6 +19,7 @@ import { formatAppointmentId } from '../utils/formatDisplayId';
 import { showSuccessToast } from '../config/key';
 import { Utils } from '../common/utils';
 import { trackGoogleAdsLeadConversion } from '../services/googleAds';
+import { trackMetaConsultationBooked } from '../services/metaPixel';
 import {
   Badge,
   Button,
@@ -138,6 +139,7 @@ export default function BookingConfirm() {
   useEffect(() => {
     if (!detail) return;
     trackGoogleAdsLeadConversion(bookingCode(detail) || 'booking');
+    trackMetaConsultationBooked(detail);
   }, [detail]);
 
   const booking = useMemo(() => {

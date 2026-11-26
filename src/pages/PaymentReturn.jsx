@@ -5,6 +5,7 @@ import { Button, EmptyState } from '../components/ui';
 import '../design/pages/checkout.css';
 import { CHECKOUT_KEY, ORDER_RESULT_KEY } from '../cart/mapCart';
 import { isConsultationPaymentSettled } from '../consult/consultPayment';
+import { readPaidConsultationRupees } from '../consult/consultationConversion';
 import { CONSULT_BOOKING_KEY, CONSULT_PAY_KEY, CONSULT_PENDING_PAYMENT_KEY } from '../consult/doctors';
 import {
   buildCashfreeVerifyPayload,
@@ -130,12 +131,18 @@ export default function PaymentReturn() {
           sessionStorage.removeItem(CONSULT_PENDING_PAYMENT_KEY);
           const paid = verify?.data && typeof verify.data === 'object' ? verify.data : {};
           const paidStatus = String(paid.appointment_status || paid.booking?.status || '').toLowerCase();
+          const confirmBase = pending.confirmBase || {};
+          const paidRupees = readPaidConsultationRupees(
+            { ...confirmBase, ...paid },
+            confirmBase.amount,
+          );
           sessionStorage.setItem(
             CONSULT_BOOKING_KEY,
             JSON.stringify({
-              ...(pending.confirmBase || {}),
+              ...confirmBase,
               ...paid,
               appointment_status: paidStatus === 'completed' ? 'completed' : 'confirmed',
+              ...(paidRupees != null ? { paid_amount: paidRupees, amount: paidRupees } : {}),
             }),
           );
           navigate('/consult/booking-confirm', { replace: true });

@@ -83,7 +83,7 @@ import {
 } from "../components/ui";
 import { BOOKING_COPY as T } from "../content/booking";
 import { nameInitial } from '../utils/initials';
-import { trackMetaPurchase, trackMetaSchedule } from "../services/metaPixel";
+import { readPaidConsultationRupees } from '../consult/consultationConversion';
 import "../design/pages/booking.css";
 import "../design/components/consult-plan.css";
 
@@ -376,38 +376,7 @@ export default function ConsultPay() {
     clearPending(slot.id);
     sessionStorage.removeItem(CONSULT_PAY_KEY);
     const paid = result?.data || result || {};
-    const appointmentId = String(
-      readAppointmentId(result) ||
-        paid.appointment_id ||
-        paid.appointment?.id ||
-        paid.booking?.id ||
-        "",
-    ).trim();
-    const amount =
-      Number(
-        paid.amount ||
-          paid.consultation_fee ||
-          paid.total_amount ||
-          totalAmount,
-      ) || undefined;
-    const paymentId = String(paid.payment_id || paid.id || appointmentId || Date.now()).trim();
-    trackMetaPurchase({
-      eventId: `consult_pay_${paymentId}`,
-      contentIds: appointmentId ? [`appointment_${appointmentId}`] : undefined,
-      contentName: doctorDisplayName(doctor) || "consultation",
-      value: amount,
-      currency: "INR",
-      orderId: appointmentId || undefined,
-    });
-    trackMetaSchedule({
-      eventId: appointmentId
-        ? `schedule_appt_${appointmentId}`
-        : `schedule_${paymentId}`,
-      contentIds: appointmentId ? [`appointment_${appointmentId}`] : undefined,
-      contentName: doctorDisplayName(doctor) || "consultation",
-      value: amount,
-      currency: "INR",
-    });
+    const paidRupees = readPaidConsultationRupees(paid, totalAmount);
     sessionStorage.setItem(
       CONSULT_BOOKING_KEY,
       JSON.stringify({
@@ -425,11 +394,8 @@ export default function ConsultPay() {
           phone_number: activePatient?.phone_number || activePatient?.phone,
         },
         patient_name: paid.patient_name || patientName(activePatient),
-        amount:
-          paid.amount ||
-          paid.consultation_fee ||
-          paid.total_amount ||
-          totalAmount,
+        paid_amount: paidRupees,
+        amount: paidRupees != null ? paidRupees : paid.amount,
         consultation_mode:
           paid.consultation_mode || paid.mode || "Video consultation",
         hospital_name:
