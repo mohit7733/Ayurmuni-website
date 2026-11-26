@@ -42,6 +42,30 @@ const AVAILABILITY = [
 ];
 
 const pad = (value) => String(value).padStart(2, '0');
+
+/** Quick windows for GET /customers/doctors/?start_time=&end_time= (HH:mm). */
+const TIME_PRESETS = [
+  { label: T.timeAny, value: '', start: '', end: '' },
+  { label: T.timeMorning, value: 'morning', start: '09:00', end: '12:00' },
+  { label: T.timeAfternoon, value: 'afternoon', start: '12:00', end: '17:00' },
+  { label: T.timeEvening, value: 'evening', start: '17:00', end: '21:00' },
+  { label: T.timeNight, value: 'night', start: '21:00', end: '23:59' },
+];
+
+const normalizeTime = (value) => {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  const match = raw.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+  if (!match) return '';
+  const hour = Number(match[1]);
+  const minute = Number(match[2]);
+  if (hour > 23 || minute > 59) return '';
+  return `${pad(hour)}:${pad(minute)}`;
+};
+
+const timePresetFor = (start, end) =>
+  TIME_PRESETS.find((item) => item.start === start && item.end === end)?.value || '';
+
 const ymd = (date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 
 const startOfWeek = (date) => {
@@ -94,9 +118,61 @@ const getPresetDates = (type) => {
   return { from: '', to: '' };
 };
 
-function FilterGroups({ specialities, specialization, setSpecialization, availability, setAvailability, experience, setExperience }) {
+function FilterGroups({
+  specialities,
+  specialization,
+  setSpecialization,
+  availability,
+  setAvailability,
+  startTime,
+  endTime,
+  setStartTime,
+  setEndTime,
+  experience,
+  setExperience,
+}) {
+  const timePreset = timePresetFor(startTime, endTime);
+
+  const applyTimePreset = (preset) => {
+    setStartTime(preset.start);
+    setEndTime(preset.end);
+  };
+
   return (
     <>
+      <fieldset className="cs-filter-group">
+        <legend>{T.availableTime}</legend>
+        <div className="cs-chip-wrap">
+          {TIME_PRESETS.map((item) => (
+            <Chip
+              key={item.value || 'any-time'}
+              selected={timePreset === item.value}
+              onClick={() => applyTimePreset(item)}
+            >
+              {item.label}
+            </Chip>
+          ))}
+        </div>
+        <div className="cs-time-range">
+          <label className="cs-time-range__field">
+            <span>{T.timeStart}</span>
+            <input
+              type="time"
+              value={startTime}
+              onChange={(event) => setStartTime(normalizeTime(event.target.value))}
+            />
+          </label>
+          <label className="cs-time-range__field">
+            <span>{T.timeEnd}</span>
+            <input
+              type="time"
+              value={endTime}
+              min={startTime || undefined}
+              onChange={(event) => setEndTime(normalizeTime(event.target.value))}
+            />
+          </label>
+        </div>
+      </fieldset>
       {specialities.length > 0 ? (
         <fieldset className="cs-filter-group">
           <legend>{T.speciality}</legend>
@@ -128,6 +204,8 @@ function FilterGroups({ specialities, specialization, setSpecialization, availab
         </div>
       </fieldset>
 
+
+
       <fieldset className="cs-filter-group">
         <legend>{T.experience}</legend>
         <div className="cs-chip-wrap">
@@ -153,6 +231,8 @@ export default function Doctors() {
   const [experience, setExperience] = useState('');
   const [specialization, setSpecialization] = useState('');
   const [availability, setAvailability] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
   const [specialities, setSpecialities] = useState([]);
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -208,6 +288,13 @@ export default function Doctors() {
   const concernPending = Boolean(concernId) && !useUrlDisease && concernKey !== concernId;
   const concernMiss = Boolean(concernId) && !useUrlDisease && concernKey === concernId && !concernDiseases;
 
+  const timeWindow = useMemo(() => {
+    const start = normalizeTime(startTime);
+    const end = normalizeTime(endTime);
+    if (!start || !end || end <= start) return { start: '', end: '' };
+    return { start, end };
+  }, [startTime, endTime]);
+
   const filters = useMemo(
     () => ({
       search: submitted || undefined,
@@ -215,10 +302,22 @@ export default function Doctors() {
       health_disease_id: useUrlDisease ? diseaseId : concernDiseases || undefined,
       from_date: dates.from || undefined,
       to_date: dates.to || undefined,
+      start_time: timeWindow.start || undefined,
+      end_time: timeWindow.end || undefined,
       page: 1,
       page_size: 20,
     }),
-    [submitted, experience, useUrlDisease, diseaseId, concernDiseases, dates.from, dates.to],
+    [
+      submitted,
+      experience,
+      useUrlDisease,
+      diseaseId,
+      concernDiseases,
+      dates.from,
+      dates.to,
+      timeWindow.start,
+      timeWindow.end,
+    ],
   );
 
   // Only the newest filter/search request may write the list (typing, filter chips, refresh).
@@ -271,6 +370,18 @@ export default function Doctors() {
       label: AVAILABILITY.find((item) => item.value === availability)?.label,
       clear: () => setAvailability(''),
     },
+    timeWindow.start &&
+    timeWindow.end && {
+      key: 'time',
+      label:
+        TIME_PRESETS.find(
+          (item) => item.start === timeWindow.start && item.end === timeWindow.end,
+        )?.label || T.timeRangeLabel(timeWindow.start, timeWindow.end),
+      clear: () => {
+        setStartTime('');
+        setEndTime('');
+      },
+    },
     experience && {
       key: 'experience',
       label: EXPERIENCE.find((item) => item.value === experience)?.label,
@@ -281,6 +392,8 @@ export default function Doctors() {
   const clearAll = () => {
     setSpecialization('');
     setAvailability('');
+    setStartTime('');
+    setEndTime('');
     setExperience('');
   };
 
@@ -292,6 +405,10 @@ export default function Doctors() {
     setSpecialization,
     availability,
     setAvailability,
+    startTime,
+    endTime,
+    setStartTime,
+    setEndTime,
     experience,
     setExperience,
   };

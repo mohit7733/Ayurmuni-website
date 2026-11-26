@@ -1259,6 +1259,198 @@
   border-top: 1px solid rgba(28, 42, 36, 0.08);
 }
 
+/* Vikriti — chosen result leads, other types stay quiet */
+.pk-vikriti {
+  margin: 4px 18px 2px;
+  padding: 16px 0 2px;
+  border-top: 1px solid rgba(28, 42, 36, 0.08);
+}
+
+.pk-board--vikriti .pk-vikriti {
+  border-top: 0;
+  padding-top: 8px;
+}
+
+.pk-vikriti__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.pk-vikriti__icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--am-green-50, #e8f5ee);
+  color: var(--pk-primary);
+}
+
+.pk-vikriti__copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.pk-vikriti__title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pk-vikriti__title h3 {
+  margin: 0;
+  font-family: var(--am-font-display, "Satoshi", sans-serif);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.pk-vikriti__copy > p {
+  margin: 2px 0 0;
+  color: var(--pk-muted);
+  font-size: 12px;
+}
+
+.pk-vik-results {
+  display: grid;
+  gap: 10px;
+}
+
+.pk-vik-yours {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 14px 16px 16px;
+  border: 1px solid rgba(13, 97, 78, 0.16);
+  border-radius: 16px;
+  background: linear-gradient(165deg, #f8fcf9 0%, #e5f3eb 100%);
+}
+
+.pk-vik-yours__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pk-vik-yours__label {
+  margin: 0;
+  color: var(--pk-primary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pk-vik-yours__badge {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--pk-primary);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.pk-vik-yours h4 {
+  margin: 10px 0 0;
+  color: #0c3f33;
+  font-family: var(--am-font-display, "Satoshi", sans-serif);
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.pk-vik-yours__trait {
+  margin: 4px 0 0;
+  color: var(--pk-muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.pk-vik-yours__guidance {
+  margin: 10px 0 0;
+  color: var(--pk-title);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.pk-vik-others {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(28, 42, 36, 0.08);
+}
+
+.pk-vik-others__head {
+  margin: 0 0 8px;
+  color: var(--pk-hint);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pk-vik-others__grid {
+  display: grid;
+  gap: 14px;
+}
+
+.pk-vik-others__label {
+  margin: 0 0 2px;
+  color: #5c6f67;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.pk-vik-others ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pk-vik-others li {
+  padding: 8px 0 2px;
+}
+
+.pk-vik-others li + li {
+  border-top: 1px solid rgba(28, 42, 36, 0.06);
+}
+
+.pk-vik-others__name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.pk-vik-others__name strong {
+  color: #3d4f47;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.pk-vik-others__name span {
+  color: var(--pk-hint);
+  font-size: 12px;
+}
+
+.pk-vik-others li > p {
+  margin: 2px 0 0;
+  color: #8a9992;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
 @media (min-width: 700px) {
   .pk-page--result .pk-board .pk-layout {
     gap: 0;
@@ -1291,6 +1483,22 @@
     column-gap: 28px;
     row-gap: 12px;
   }
+
+  .pk-vikriti {
+    margin: 2px 18px 2px;
+  }
+
+  .pk-vik-results,
+  .pk-vik-others__grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 12px;
+    align-items: stretch;
+  }
+
+  .pk-vik-others__grid {
+    column-gap: 28px;
+    align-items: start;
+  }
 }
 
 @media (min-width: 1024px) {
@@ -1299,7 +1507,8 @@
     grid-template-columns: minmax(240px, 1.12fr) minmax(220px, 0.96fr) minmax(240px, 1.08fr);
     grid-template-areas:
       "hero dosha essence"
-      "guide guide guide";
+      "guide guide guide"
+      "vikriti vikriti vikriti";
     align-items: stretch;
     column-gap: 0;
     row-gap: 0;
@@ -1338,7 +1547,24 @@
   .pk-page--result .pk-board .pk-guide {
     grid-area: guide;
     grid-column: 1 / -1;
+    margin: 4px 22px 16px;
+    padding: 16px 0 0;
+  }
+
+  .pk-page--result .pk-board .pk-vikriti {
+    grid-area: vikriti;
+    grid-column: 1 / -1;
     margin: 4px 22px 0;
     padding: 16px 0 0;
+  }
+
+  .pk-page--result .pk-board.pk-board--vikriti {
+    display: block;
+  }
+
+  .pk-page--result .pk-board.pk-board--vikriti .pk-vikriti {
+    margin: 8px 18px 4px;
+    padding-top: 4px;
+    border-top: 0;
   }
 }

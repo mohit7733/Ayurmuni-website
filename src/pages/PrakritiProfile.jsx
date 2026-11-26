@@ -19,6 +19,7 @@ import {
   Zap,
 } from 'lucide-react';
 import logoImg from '/images/FinalLogo.webp';
+import { buildVikritiFromMedicalHistory } from '../content/vikriti';
 import { PRAKRITI_IMAGES } from '../questionnaire/configs';
 import * as ProfileServices from '../services/profileService';
 import { requireAuth } from '../services/guestAuth';
@@ -121,6 +122,9 @@ export const formatPrakritiData = (apiData) => {
       doList: apiData?.content?.lifestyle?.["do's"] || [],
       dontList: apiData?.content?.lifestyle?.["don'ts"] || [],
     },
+    vikriti: buildVikritiFromMedicalHistory(
+      apiData?.medical_history || apiData?.medicalHistory,
+    ),
   };
 };
 
@@ -191,7 +195,90 @@ function GuidelineCard({ title, subtitle, Icon: IconCmp, data, positive, classNa
   );
 }
 
-function PrakritiHeader({ hideBack, onBack, onShare, shareNote }) {
+function VikritiResult({ label, item }) {
+  return (
+    <article className="pk-vik-yours">
+      <div className="pk-vik-yours__top">
+        <p className="pk-vik-yours__label">{label}</p>
+        <span className="pk-vik-yours__badge">
+          <Check size={11} strokeWidth={3} aria-hidden="true" />
+          Yours
+        </span>
+      </div>
+      <h4>{item.name}</h4>
+      <p className="pk-vik-yours__trait">{item.trait}</p>
+      <p className="pk-vik-yours__guidance">{item.guidance}</p>
+    </article>
+  );
+}
+
+function VikritiOthers({ label, items }) {
+  if (!items.length) return null;
+  return (
+    <div className="pk-vik-others__col">
+      <p className="pk-vik-others__label">{label}</p>
+      <ul>
+        {items.map((item) => (
+          <li key={item.id}>
+            <div className="pk-vik-others__name">
+              <strong>{item.name}</strong>
+              <span>{item.trait}</span>
+            </div>
+            <p>{item.guidance}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function VikritiSection({ vikriti, justCompleted = false }) {
+  if (!vikriti) return null;
+  const gutOutcomes = vikriti.gut?.outcomes || [];
+  const agniOutcomes = vikriti.agni?.outcomes || [];
+  const gutSelected = gutOutcomes.find((item) => item.selected);
+  const agniSelected = agniOutcomes.find((item) => item.selected);
+  const gutOthers = gutOutcomes.filter((item) => !item.selected);
+  const agniOthers = agniOutcomes.filter((item) => !item.selected);
+  if (!gutSelected && !agniSelected) return null;
+
+  return (
+    <section className="pk-vikriti" aria-label="Vikriti">
+      <div className="pk-vikriti__head">
+        <span className="pk-vikriti__icon" aria-hidden="true">
+          <Heart size={15} strokeWidth={2} />
+        </span>
+        <div className="pk-vikriti__copy">
+          <div className="pk-vikriti__title">
+            <h3>Vikriti</h3>
+            <span className="pk-pill">
+              <Sparkles size={12} strokeWidth={2} aria-hidden="true" />
+              {justCompleted ? 'Just completed' : 'Current state'}
+            </span>
+          </div>
+          <p>Your gut and digestion, from the options you chose</p>
+        </div>
+      </div>
+
+      <div className="pk-vik-results">
+        {gutSelected ? <VikritiResult label="Gut constitution" item={gutSelected} /> : null}
+        {agniSelected ? <VikritiResult label="Digestive strength" item={agniSelected} /> : null}
+      </div>
+
+      {gutOthers.length || agniOthers.length ? (
+        <div className="pk-vik-others">
+          <p className="pk-vik-others__head">Other types</p>
+          <div className="pk-vik-others__grid">
+            <VikritiOthers label="Gut constitution" items={gutOthers} />
+            <VikritiOthers label="Digestive strength" items={agniOthers} />
+          </div>
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+function PrakritiHeader({ hideBack, onBack, onShare, shareNote, title = 'Prakriti Analysis' }) {
   return (
     <header className="pk-head">
       {hideBack ? (
@@ -201,7 +288,7 @@ function PrakritiHeader({ hideBack, onBack, onShare, shareNote }) {
           <ChevronLeft size={18} strokeWidth={2.25} aria-hidden="true" />
         </button>
       )}
-      <h1>Prakriti Analysis</h1>
+      <h1>{title}</h1>
       {onShare ? (
         <button type="button" className="pk-head__btn" onClick={onShare} aria-label="Share">
           <Share2 size={16} strokeWidth={2} aria-hidden="true" />
@@ -222,6 +309,7 @@ export default function PrakritiProfile() {
   const navigate = useNavigate();
   const location = useLocation();
   const fromAssessment = Boolean(location.state?.fromAssessment);
+  const fromMedical = Boolean(location.state?.fromMedical);
   const [analysisData, setAnalysisData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [hasPrakriti, setHasPrakriti] = useState(false);
@@ -234,7 +322,14 @@ export default function PrakritiProfile() {
       setHasPrakriti(false);
       setAnalysisData(null);
       let response = await ProfileServices.get_prakriti_info();
-      if (!hasValidPrakritiPayload(response) && fromAssessment) {
+      const arrivedFromFlow = fromAssessment || fromMedical;
+      const vikritiMissing = () =>
+        hasValidPrakritiPayload(response) &&
+        !formatPrakritiData(response.data).vikriti;
+      if (
+        arrivedFromFlow &&
+        (!hasValidPrakritiPayload(response) || (fromMedical && vikritiMissing()))
+      ) {
         await new Promise((resolve) => setTimeout(resolve, 700));
         response = await ProfileServices.get_prakriti_info();
       }
@@ -252,7 +347,7 @@ export default function PrakritiProfile() {
     } finally {
       setLoading(false);
     }
-  }, [fromAssessment]);
+  }, [fromAssessment, fromMedical]);
 
   useEffect(() => {
     getPrakritiInfo();
@@ -265,7 +360,7 @@ export default function PrakritiProfile() {
   const handleGoHome = () => navigate('/home', { replace: true });
 
   const handleHeaderBack = () => {
-    if (fromAssessment) {
+    if (fromAssessment || fromMedical) {
       handleGoHome();
       return;
     }
@@ -319,12 +414,13 @@ export default function PrakritiProfile() {
     return top?.color || '#0D614E';
   }, [analysisData]);
 
-  const renderHeader = (showShare) => (
+  const renderHeader = (showShare, title) => (
     <PrakritiHeader
       hideBack={false}
       onBack={handleHeaderBack}
       onShare={showShare ? handleShare : null}
       shareNote={showShare ? shareNote : ''}
+      title={title}
     />
   );
 
@@ -385,12 +481,17 @@ export default function PrakritiProfile() {
 
   const doList = analysisData.lifestyleGuidelines.doList || [];
   const dontList = analysisData.lifestyleGuidelines.dontList || [];
+  const showVikriti = !fromAssessment && Boolean(analysisData.vikriti);
+  const showPrakriti = !fromMedical || !showVikriti;
+  const pageTitle = showVikriti && !showPrakriti ? 'Vikriti' : 'Prakriti Analysis';
 
   return (
     <section className="catalog-page pk-page pk-page--result">
-      {renderHeader(true)}
+      {renderHeader(true, pageTitle)}
 
-      <div className="pk-board">
+      <div className={`pk-board${showPrakriti ? '' : ' pk-board--vikriti'}`}>
+      {showPrakriti ? (
+      <>
       <div className="pk-layout">
         <div className="pk-hero">
           <div className="pk-hero__badge">
@@ -478,6 +579,12 @@ export default function PrakritiProfile() {
             />
           </div>
         </section>
+      </>
+      ) : null}
+
+        {showVikriti ? (
+          <VikritiSection vikriti={analysisData.vikriti} justCompleted={fromMedical} />
+        ) : null}
       </div>
 
         <div className="pk-end">
@@ -490,7 +597,7 @@ export default function PrakritiProfile() {
             Go to Home
           </button>
           <button type="button" className="pk-cta" onClick={handleVikritiAssessment}>
-            Vikriti assessment
+            {analysisData.vikriti ? 'Retake Vikriti assessment' : 'Vikriti assessment'}
             <ArrowRight size={18} aria-hidden="true" />
           </button>
         </div>
