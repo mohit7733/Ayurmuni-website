@@ -2,13 +2,30 @@
  * Meta (Facebook) Pixel — PageView + Phase 2 funnel events.
  * Env: VITE_META_PIXEL_ID overrides DEFAULT_PIXEL_ID.
  */
+import {
+  canTrackConsultationConversion,
+  consultationConversionEventIds,
+  consultationConversionId,
+  readPaidConsultationRupees,
+} from '../consult/consultationConversion';
 const DEFAULT_PIXEL_ID = '1885952172892397';
 const PIXEL_ID = String(import.meta.env.VITE_META_PIXEL_ID || DEFAULT_PIXEL_ID).trim();
 const SDK_URL = 'https://connect.facebook.net/en_US/fbevents.js';
 
 let initPromise = null;
+const bookedConsultationKeys = new Set();
+const CONSULT_BOOKED_PREFIX = 'meta_consult_booked_';
 
-export const isMetaPixelConfigured = () => Boolean(PIXEL_ID) && typeof window !== 'undefined';
+const browserWindow = () => {
+  try {
+    if (typeof window !== 'undefined') return window;
+    return globalThis.window || null;
+  } catch {
+    return null;
+  }
+};
+
+export const isMetaPixelConfigured = () => Boolean(PIXEL_ID) && Boolean(browserWindow());
 
 const asNumber = (value) => {
   const n = Number(value);
@@ -34,7 +51,11 @@ export const initMetaPixel = () => {
   if (initPromise) return initPromise;
 
   initPromise = new Promise((resolve) => {
-    const f = window;
+    const f = browserWindow();
+    if (!f) {
+      resolve(null);
+      return;
+    }
     if (f.fbq) {
       try {
         f.fbq('init', PIXEL_ID);
@@ -83,13 +104,23 @@ const cleanParams = (params = {}) =>
     Object.entries(params || {}).filter(([, v]) => v !== undefined && v !== null && v !== ''),
   );
 
+const splitEventId = (params = {}) => {
+  const cleaned = cleanParams(params);
+  const eventID = cleaned.eventID ? String(cleaned.eventID) : '';
+  if (eventID) delete cleaned.eventID;
+  return { cleaned, eventID };
+};
+
+/** eventID is the 4th fbq argument so it dedupes with a matching Conversions API event_id. */
 const track = (eventName, params = {}) => {
   if (!isMetaPixelConfigured() || !eventName) return;
   initMetaPixel().then((fbq) => {
     if (!fbq) return;
     try {
-      const cleaned = cleanParams(params);
-      if (Object.keys(cleaned).length) fbq('track', eventName, cleaned);
+      const { cleaned, eventID } = splitEventId(params);
+      const options = eventID ? { eventID } : undefined;
+      if (Object.keys(cleaned).length) fbq('track', eventName, cleaned, options);
+      else if (options) fbq('track', eventName, {}, options);
       else fbq('track', eventName);
     } catch (error) {
       console.warn(`[meta-pixel] ${eventName} failed:`, error?.message || error);
@@ -103,8 +134,10 @@ const trackCustom = (eventName, params = {}) => {
   initMetaPixel().then((fbq) => {
     if (!fbq) return;
     try {
-      const cleaned = cleanParams(params);
-      if (Object.keys(cleaned).length) fbq('trackCustom', eventName, cleaned);
+      const { cleaned, eventID } = splitEventId(params);
+      const options = eventID ? { eventID } : undefined;
+      if (Object.keys(cleaned).length) fbq('trackCustom', eventName, cleaned, options);
+      else if (options) fbq('trackCustom', eventName, {}, options);
       else fbq('trackCustom', eventName);
     } catch (error) {
       console.warn(`[meta-pixel] custom ${eventName} failed:`, error?.message || error);
@@ -186,6 +219,48 @@ export const trackMetaCompleteRegistration = (input = {}) =>
       contentName: input.contentName || 'customer_register',
     }),
   );
+
+const browserSession = () => {
+  try {
+    if (typeof sessionStorage !== 'undefined') return sessionStorage;
+    return globalThis.sessionStorage || null;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Schedule + Purchase once the confirmation page is showing a paid booking.
+ * Fires once per booking id (sessionStorage). A refresh does not send again.
+ * eventID matches `schedule_<id>` / `purchase_<id>` for a server Conversions API event.
+ */
+export const trackMetaConsultationBooked = (detail) => {
+  if (!canTrackConsultationConversion(detail) || !isMetaPixelConfigured()) return false;
+  const bookingId = consultationConversionId(detail);
+  const value = readPaidConsultationRupees(detail);
+  const key = `${CONSULT_BOOKED_PREFIX}${bookingId}`;
+  const storage = browserSession();
+  if (bookedConsultationKeys.has(key)) return false;
+  try {
+    if (storage?.getItem(key) === '1') {
+      bookedConsultationKeys.add(key);
+      return false;
+    }
+  } catch {
+    /* private mode: the in-memory set still blocks a second call this load */
+  }
+  bookedConsultationKeys.add(key);
+  try {
+    storage?.setItem(key, '1');
+  } catch {
+    /* ignore quota / private mode */
+  }
+  const money = { value, currency: 'INR' };
+  const eventIds = consultationConversionEventIds(detail, bookingId);
+  track('Schedule', { ...money, eventID: eventIds.schedule });
+  track('Purchase', { ...money, eventID: eventIds.purchase });
+  return true;
+};
 
 export const trackMetaSchedule = (input = {}) =>
   track(
