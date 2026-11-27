@@ -32,7 +32,7 @@ export const COMING_SOON_FEATURES = {
   orders: true,
   returns: true,
   wishlist: true,
-  plans: true,
+  plans: false,
   diets: true,
   rewards: true,
   payments: true,

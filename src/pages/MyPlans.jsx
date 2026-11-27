@@ -18,7 +18,7 @@ import AppShell from '../components/AppShell';
 import PageHeader from '../components/PageHeader';
 import { Button, Chip, EmptyState, ErrorState, SearchField, SectionHold } from '../components/ui';
 import { formatPlanMoney } from '../packages/planTheme';
-import { requireAuth } from '../services/guestAuth';
+import { isAuthenticated, requireAuth } from '../services/guestAuth';
 import { getMyPackages, isPlanExpired } from '../services/packageService';
 import PackageCount from '../components/PackageCount';
 import {
@@ -286,7 +286,7 @@ export default function MyPlans() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const ok = await requireAuth('Sign in to view your plans.');
+      const ok = await isAuthenticated();
       if (cancelled) return;
       setAuthed(ok);
       if (ok) fetchPage(1, 'initial');
@@ -303,7 +303,7 @@ export default function MyPlans() {
         <PageHeader
           title="My Plans"
           subtitle="Care plans you have purchased"
-          backTo="/profile"
+          backTo={authed ? '/profile' : '/home'}
           actions={
             <div className="mp-toolbar">
               <SearchField

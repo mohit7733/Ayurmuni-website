@@ -364,6 +364,8 @@ export default function App() {
                       path="/consult/doctors/:doctorId"
                       element={<DoctorProfile />}
                     />
+                    {/* Purchased plans list — public shell; page prompts sign-in when needed. */}
+                    <Route path="/profile/plans" element={<MyPlans />} />
 
                     <Route element={<RequireAuth />}>
                       <Route path="/notifications" element={<Notifications />} />
@@ -473,7 +475,6 @@ export default function App() {
                         element={<ReturnDetails />}
                       />
                       <Route path="/profile/wishlist" element={<Wishlist />} />
-                      <Route path="/profile/plans" element={<MyPlans />} />
                       <Route path="/profile/diets" element={<MyDiets />} />
                       <Route
                         path="/profile/favourite-doctors"
