@@ -95,6 +95,12 @@ const formatReviewDate = (value) => {
   return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
+const formatExpiryMonthYear = (value) => {
+  if (!value) return '';
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+};
+
 export default function ProductDetails({ medicine = false } = {}) {
   const { variantId } = useParams();
   const navigate = useNavigate();
@@ -279,6 +285,10 @@ export default function ProductDetails({ medicine = false } = {}) {
     { label: 'Pack size', value: [active?.size || active?.title, active?.weightage].filter(Boolean).join(' ') },
     { label: 'Manufacturer', value: textOf(product?.manufacturer) },
     { label: 'Origin', value: textOf(product?.origin) },
+    {
+      label: 'Expires at',
+      value: formatExpiryMonthYear(active?.expire_at || product?.expire_at) || textOf(active?.expire_at || product?.expire_at),
+    },
     { label: 'Treatment', value: textOf(product?.treatment_type) },
     { label: 'Dosage', value: textOf(product?.dosages) },
   ].filter((item) => item.value);
@@ -376,20 +386,52 @@ export default function ProductDetails({ medicine = false } = {}) {
     });
   };
 
+  /** When the variant is already in cart, +/- syncs immediately (same as medicine cards). */
+  const changeCartQty = async (nextQty) => {
+    if (!(await requireAuth('Please login to add items to cart'))) return;
+    if (!cartVariantId) return;
+    const next = Math.max(0, Number(nextQty) || 0);
+    // Rx qty can only go down on the cart page — block decreases on detail.
+    if (needsRx && next < cartQty) return;
+    if (next > cartQty) {
+      if (needsRx) {
+        showPrescriptionRequired({
+          variantId: cartVariantId,
+          productName: product?.name || active?.name,
+        });
+        return;
+      }
+      const block = getAddQtyBlockMessage(active, next);
+      if (block) {
+        showSuccessToast(block, 'error');
+        return;
+      }
+    }
+    setPendingCta('add');
+    const ok = await syncCartQuantity({ ...active, variant_id: cartVariantId }, next);
+    setPendingCta(null);
+    if (!ok) {
+      showSuccessToast('Try again to add into cart', 'error');
+      return;
+    }
+    setQty(next > 0 ? next : 1);
+  };
+
   const addToCart = async (goToCart = false) => {
     if (!(await requireAuth('Please login to add items to cart'))) return;
     if (!cartVariantId) return;
     const addQty = Math.max(1, Number(qty) || 1);
-    const block = getAddQtyBlockMessage(active, addQty);
-    if (block) {
-      showSuccessToast(block, 'error');
-      return;
-    }
+    // Same order as View Cart: Rx gate before stock on add/increase.
     if (isPrescriptionRequired(active) || isPrescriptionRequired(product)) {
       showPrescriptionRequired({
         variantId: cartVariantId,
         productName: product?.name || active?.name,
       });
+      return;
+    }
+    const block = getAddQtyBlockMessage(active, addQty);
+    if (block) {
+      showSuccessToast(block, 'error');
       return;
     }
     setPendingCta(goToCart ? 'buy' : 'add');
@@ -768,17 +810,30 @@ export default function ProductDetails({ medicine = false } = {}) {
                 <button
                   type="button"
                   aria-label={T.decreaseQty}
-                  disabled={out || qty <= 1}
-                  onClick={() => setQty((current) => (current > 1 ? current - 1 : 1))}
+                  disabled={out || ctaBusy || needsRx || (cartQty === 0 && qty <= 1)}
+                  onClick={() => {
+                    if (needsRx) return;
+                    if (cartQty > 0) {
+                      changeCartQty(Math.max(0, cartQty - 1));
+                      return;
+                    }
+                    setQty((current) => (current > 1 ? current - 1 : 1));
+                  }}
                 >
                   <Minus size={14} aria-hidden />
                 </button>
-                <span aria-live="polite">{qty}</span>
+                <span aria-live="polite">{ctaBusy ? '…' : cartQty > 0 ? cartQty : qty}</span>
                 <button
                   type="button"
                   aria-label={T.increaseQty}
-                  disabled={out || atMax}
-                  onClick={increaseQty}
+                  disabled={out || ctaBusy || atMax}
+                  onClick={() => {
+                    if (cartQty > 0) {
+                      changeCartQty(cartQty + 1);
+                      return;
+                    }
+                    increaseQty();
+                  }}
                 >
                   <Plus size={14} aria-hidden />
                 </button>

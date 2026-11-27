@@ -2,6 +2,7 @@ import { Utils } from '../common/utils';
 import { BaseUrl } from '../config/key';
 import { roundMoney } from '../cart/feeQuote';
 import { toApiPaymentGateway } from '../payment/gateways';
+import { resolveOrderItems } from '../utils/orderDetailUtils';
 import { apiClient } from './apiClient';
 
 export const getOrderFeeQuote = async (payload) => {
@@ -261,6 +262,9 @@ export const extractOrderDetail = (response) => {
     null;
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   if (Array.isArray(raw.results) || Array.isArray(raw.orders)) return null;
-  if (raw.id || raw.order_id || raw.order_code) return raw;
-  return null;
+  if (!(raw.id || raw.order_id || raw.order_code)) return null;
+  // Normalize alternate item keys so cancelled/detail payloads still render lines.
+  const items = resolveOrderItems(raw);
+  if (items === raw.items) return raw;
+  return { ...raw, items };
 };

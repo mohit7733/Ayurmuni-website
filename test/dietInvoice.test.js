@@ -61,19 +61,70 @@ describe('diet invoice breakup', () => {
       patients: [],
     });
     expect(doc.documentHeading).toBe('TAX INVOICE');
+    expect(doc.variant).toBe('invoice');
+    expect(doc.from.title).toBe('Sender:');
     expect(doc.billTo.lines[0]).toBe('Mohit Beniwal');
     expect(doc.lineItems.map((row) => row.description)).toEqual([
-      'Gut-Brain Harmony & Anxiety Calming Diet Plan — Diet plan price',
-      'Platform fee',
-      'GST (18%)',
+      'Gut-Brain Harmony & Anxiety Calming Diet Plan',
     ]);
+    expect(doc.lineItems[0].taxableValue).toBe('500.00');
+    expect(doc.lineItems[0].tax).toBe('90.00\n(18.0%)');
+    expect(doc.lineItems[0].total).toBe('590.00');
+    expect(doc.lineItems.some((row) => /gst|platform fee/i.test(row.description))).toBe(false);
     expect(doc.totals.map((row) => row.value)).toEqual(['1', '-', '500.00', '90.00', '590.00']);
     expect(doc.sections[0].lines).toEqual([
       'Diet plan price: 500.00',
-      'Platform fee: 0.00',
-      'GST (18%): 90.00',
+      'Taxable value: 500.00',
+      'IGST (18%): 90.00',
       'Total payable: 590.00',
     ]);
     expect(doc.rightMeta[0]).toEqual({ label: 'Payment Status', value: 'Paid' });
+  });
+
+  it('keeps GST in the tax column and does not add a platform fee the total excludes', () => {
+    const doc = buildDietInvoiceDocument({
+      quote: {
+        diet_plan_name: 'AyurMuni 3-Month Wellness Journey',
+        fees: { gst_percent: '18.00' },
+        summary: {
+          lines: [
+            { amount: 5, effect: 'add', key: 'listed_price', label: 'Diet plan price' },
+            { amount: 0.9, effect: 'add', key: 'platform_fee', label: 'Platform fee' },
+            { amount: 0.9, effect: 'add', key: 'gst', label: 'GST' },
+          ],
+          total_payable_amount: 5.9,
+        },
+        total_payable_amount: '5.90',
+      },
+    });
+    expect(doc.lineItems).toHaveLength(1);
+    expect(doc.lineItems[0].description).toBe('AyurMuni 3-Month Wellness Journey');
+    expect(doc.lineItems[0].rate).toBe('5.00');
+    expect(doc.lineItems[0].taxableValue).toBe('5.00');
+    expect(doc.lineItems[0].tax).toBe('0.90\n(18.0%)');
+    expect(doc.lineItems[0].total).toBe('5.90');
+    expect(doc.totals.map((row) => row.value)).toEqual(['1', '-', '5.00', '0.90', '5.90']);
+  });
+
+  it('shows a platform fee as its own taxable line when the payable total includes it', () => {
+    const doc = buildDietInvoiceDocument({
+      quote: {
+        diet_plan_name: 'Diet plan',
+        fees: { gst_percent: '18' },
+        summary: {
+          lines: [
+            { amount: 500, effect: 'add', key: 'listed_price', label: 'Diet plan price' },
+            { amount: 10, effect: 'add', key: 'platform_fee', label: 'Platform fee' },
+            { amount: 90, effect: 'add', key: 'gst', label: 'GST' },
+          ],
+          total_payable_amount: 600,
+        },
+      },
+    });
+    expect(doc.lineItems.map((row) => [row.description, row.taxableValue, row.tax, row.total])).toEqual([
+      ['Diet plan', '500.00', '90.00\n(18.0%)', '590.00'],
+      ['Platform fee', '10.00', '0.00', '10.00'],
+    ]);
+    expect(doc.totals.map((row) => row.value)).toEqual(['1', '-', '510.00', '90.00', '600.00']);
   });
 });

@@ -371,7 +371,7 @@ export default function Profile() {
                   leadingIcon={<Pencil size={15} aria-hidden />}
                   onClick={() => navigate('/profile/edit')}
                 >
-                  {T.edit} profile
+                  {T.edit} Profile
                 </Button>
                 <button
                   type="button"

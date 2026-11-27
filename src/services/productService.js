@@ -60,14 +60,26 @@ export const getHealthCategories = async (options = {}) => {
 
 export const getHealthDiseases = async (params = {}) => {
   const query = new URLSearchParams();
-  const categoryId = String(params?.category_id ?? '').trim();
-  if (categoryId) query.set('category_id', categoryId);
+  // Backend PublicHealthDiseaseListAPI filters on health_category_id; keep category_id for legacy.
+  const healthCategoryId = String(
+    params?.health_category_id ?? '',
+  ).trim();
+  if (healthCategoryId) {
+    query.set('health_category_id', String(healthCategoryId).trim());
+  }
+  if (params?.category_id) {
+    query.set('category_id', String(params?.category_id).trim());
+  }
   const qs = query.toString();
   return apiClient(
     qs ? `user/health-diseases/?${qs}` : 'user/health-diseases/',
     { method: 'GET' },
   );
 };
+
+/** Concern-level metadata (includes Super Admin symptoms when present). */
+export const getUserHealthCategories = async () =>
+  apiClient('user/health-categories/', { method: 'GET' }, false);
 
 export const PRODUCT_PAGE_SIZE = 20;
 

@@ -733,7 +733,9 @@ export default function ConsultPay() {
         <div className="bk-page bk-pay-page">
           <PageHeader
             title={T.payTitle}
-            backTo={`/consult/doctors/${doctorId}/slots`}
+            onBack={() =>
+              navigate(`/consult/doctors/${doctorId}/slots`, { replace: true })
+            }
           />
           <EmptyState
             className="bk-pay-empty"
@@ -742,7 +744,9 @@ export default function ConsultPay() {
             description={T.noSlotText}
             action={
               <Button
-                onClick={() => navigate(`/consult/doctors/${doctorId}/slots`)}
+                onClick={() =>
+                  navigate(`/consult/doctors/${doctorId}/slots`, { replace: true })
+                }
               >
                 {T.pickASlot}
               </Button>
@@ -775,7 +779,9 @@ export default function ConsultPay() {
       <div className="bk-page bk-pay-page">
         <PageHeader
           title={T.payTitle}
-          backTo={`/consult/doctors/${doctorId}/slots`}
+          onBack={() =>
+            navigate(`/consult/doctors/${doctorId}/slots`, { replace: true })
+          }
         />
         <StepIndicator steps={T.steps} current={1} label={T.stepsLabel} />
 
@@ -951,7 +957,7 @@ export default function ConsultPay() {
               </div>
             )}
 
-            {!planIsFree && gateways.length > 1 ? (
+            {!planIsFree && gateways.length > 0 ? (
               <div className="bk-card">
                 <PaymentGatewaySelector
                   gateways={gateways}

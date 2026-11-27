@@ -3,9 +3,19 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const apiClient = vi.fn(async () => ({ success: true, data: {} }));
 vi.mock('../src/services/apiClient', () => ({ apiClient }));
 
-const { apiEndCall, apiPostCallEvent, shouldPostLeftOnDisconnect } = await import('../src/services/videoCallApi.js');
+const {
+  apiEndCall,
+  apiPostCallEvent,
+  clearJoinedDeliveryState,
+  reportJoinedEvent,
+  shouldPostLeftOnDisconnect,
+} = await import('../src/services/videoCallApi.js');
 
-beforeEach(() => apiClient.mockClear());
+beforeEach(() => {
+  apiClient.mockClear();
+  apiClient.mockImplementation(async () => ({ success: true, data: {} }));
+  clearJoinedDeliveryState();
+});
 
 describe('videoCallApi', () => {
   it('apiEndCall POSTs call/left/ (same as the app, not call/end/)', async () => {
@@ -25,6 +35,84 @@ describe('videoCallApi', () => {
       session_id: 's1',
       metadata: { source: 'agora_sdk' },
     });
+  });
+
+  it('reportJoinedEvent posts joined only while call is in_progress', async () => {
+    apiClient.mockImplementation(async (url) => {
+      if (String(url).includes('/status/')) {
+        return {
+          success: true,
+          data: {
+            call_status: 'in_progress',
+            presence_sync: {
+              should_report_joined: true,
+              can_report_presence: true,
+              joined_event_max_retry_seconds: 180,
+            },
+          },
+        };
+      }
+      return { success: true, data: { joined_at_recorded: true } };
+    });
+
+    await reportJoinedEvent('appt-1', 'sess-1');
+
+    const eventCalls = apiClient.mock.calls.filter(([url]) =>
+      String(url).includes('/events/'),
+    );
+    expect(eventCalls).toHaveLength(1);
+    expect(JSON.parse(eventCalls[0][1].body)).toEqual({
+      event_type: 'joined',
+      session_id: 'sess-1',
+      metadata: { source: 'agora_sdk' },
+    });
+  });
+
+  it('reportJoinedEvent skips duplicate delivery after success', async () => {
+    apiClient.mockImplementation(async (url) => {
+      if (String(url).includes('/status/')) {
+        return {
+          success: true,
+          data: {
+            call_status: 'in_progress',
+            presence_sync: {
+              should_report_joined: true,
+              can_report_presence: true,
+            },
+          },
+        };
+      }
+      return { success: true, data: { joined_at_recorded: true } };
+    });
+
+    await reportJoinedEvent('appt-2', 's1');
+    await reportJoinedEvent('appt-2', 's1');
+
+    const eventCalls = apiClient.mock.calls.filter(([url]) =>
+      String(url).includes('/events/'),
+    );
+    expect(eventCalls).toHaveLength(1);
+  });
+
+  it('reportJoinedEvent does not post when presence is not allowed', async () => {
+    apiClient.mockImplementation(async () => ({
+      success: true,
+      data: {
+        call_status: 'not_started',
+        presence_sync: {
+          should_report_joined: true,
+          can_report_presence: false,
+        },
+      },
+    }));
+
+    const result = await reportJoinedEvent('appt-3', 's1');
+    expect(result.stopped).toBe(true);
+
+    const eventCalls = apiClient.mock.calls.filter(([url]) =>
+      String(url).includes('/events/'),
+    );
+    expect(eventCalls).toHaveLength(0);
   });
 });
 

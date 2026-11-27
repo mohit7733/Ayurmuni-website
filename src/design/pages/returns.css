@@ -319,6 +319,11 @@
   color: var(--dx-ink);
   font-weight: var(--am-weight-semibold);
 }
+.rt-stages li.is-failed {
+  border-top-color: #b91c1c;
+  color: #991b1b;
+  font-weight: var(--am-weight-semibold);
+}
 
 .rt-note {
   display: flex;

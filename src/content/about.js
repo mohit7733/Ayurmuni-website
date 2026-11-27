@@ -18,7 +18,7 @@ export const ABOUT = {
     {
       id: 'medicines',
       title: 'Ayurvedic medicines, delivered',
-      text: 'Certified medicines and wellness products from Ayurvedic houses like Zandu, AVP, Vaidyaratnam and AIMIL, delivered across Delhi NCR. Same-day delivery in select areas.',
+      text: 'Certified medicines and wellness products from Ayurvedic houses, delivered across Delhi NCR. Same-day delivery in select areas.',
       image: '/images/login/delivery.webp',
       alt: 'A rider delivering an Ayurmuni parcel',
     },

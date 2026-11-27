@@ -87,6 +87,7 @@ const mapEligibilityItem = (item, orderItems) => {
   const eligible = item?.eligible != null ? isTrue(item.eligible) : isTrue(item?.is_eligible);
   return {
     orderItemId,
+    orderLineId: str(orderLine?.id, orderLine?.order_item_id, orderItemId),
     name: str(
       item?.product_name,
       item?.variant_title,
@@ -262,6 +263,12 @@ export const normalizeReturnRequest = (raw) => ({
     skuCode: str(item?.sku_code),
     variantId: str(item?.variant_id),
     sellingPrice: num(item?.selling_price),
+    name: str(item?.product_name, item?.variant_name, item?.name, item?.sku_code, 'Item'),
+    image: str(
+      item?.cover_image,
+      item?.product_image,
+      Array.isArray(item?.variant_images) ? item.variant_images[0] : '',
+    ),
   })),
   media: Array.isArray(raw?.media) ? raw.media : [],
   createdAt: str(raw?.created_at),
@@ -314,9 +321,33 @@ export const getReturnById = async (returnId) => {
     return { data: null, error: response?.message || 'Could not load return request.' };
   }
   const data = unwrap(response);
+  const request =
+    data?.return_request && typeof data.return_request === 'object'
+      ? data.return_request
+      : data?.id
+        ? data
+        : null;
   return {
-    data: data && typeof data === 'object' && data.id ? normalizeReturnRequest(data) : null,
+    data: request ? normalizeReturnRequest(request) : null,
     error: '',
+  };
+};
+
+/** Gateway payout on a return: failed attempts carry a reason the customer should see. */
+export const getRefundPayoutState = (refundRequest) => {
+  const gateway = str(
+    refundRequest?.gateway_status,
+    refundRequest?.payout?.status,
+    refundRequest?.status,
+  ).toLowerCase();
+  return {
+    gateway,
+    failed: /fail|reject|declin/.test(gateway),
+    reason: str(
+      refundRequest?.failed_reason,
+      refundRequest?.payout?.failed_reason,
+      refundRequest?.payout?.status_description,
+    ),
   };
 };
 

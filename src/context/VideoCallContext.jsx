@@ -22,6 +22,8 @@ import {
   apiPostCallEvent,
   apiStartCall,
   buildTokenInfo,
+  clearJoinedDeliveryState,
+  reportJoinedEvent,
   requestCallPermissions,
   shouldPostLeftOnDisconnect,
 } from '../services/videoCallApi';
@@ -125,6 +127,7 @@ export function VideoCallProvider({ children }) {
   }, []);
 
   const resetCallState = useCallback(() => {
+    clearJoinedDeliveryState(appointmentIdRef.current);
     setViewMode('idle');
     setCallParams(null);
     setIsJoined(false);
@@ -229,19 +232,33 @@ export function VideoCallProvider({ children }) {
     });
   }, []);
 
+  const deliverJoinedPresence = useCallback((sessionId) => {
+    const appointmentId = appointmentIdRef.current;
+    if (!appointmentId || !isJoinedRef.current) {
+      return;
+    }
+
+    reportJoinedEvent(appointmentId, sessionId ?? sessionIdRef.current).catch((err) => {
+      // Do not flip local Agora UI — join tracking failed on the server only.
+      console.log('[API] joined presence delivery failed:', err);
+    });
+  }, []);
+
   const joinAgoraChannel = useCallback(
-    async (tokenInfo, appointmentId) => {
+    async (tokenInfo, _appointmentId) => {
       const AgoraRTC = await loadAgora();
       setLoadingLabel('Joining call...');
       if (!clientRef.current) {
         const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
         clientRef.current = client;
-        bindClientEvents(client, appointmentId);
+        bindClientEvents(client);
       }
 
       const uid = tokenInfo.uid || null;
       const connectionState = clientRef.current.connectionState;
-      if (connectionState !== 'CONNECTED' && connectionState !== 'CONNECTING') {
+      const alreadyConnected =
+        connectionState === 'CONNECTED' || connectionState === 'CONNECTING';
+      if (!alreadyConnected) {
         await clientRef.current.join(
           tokenInfo.appId,
           tokenInfo.channelName,
@@ -249,6 +266,15 @@ export function VideoCallProvider({ children }) {
           uid,
         );
       }
+
+      // Agora channel connection confirmed — report before local track setup so
+      // mic/camera failures cannot skip presence tracking.
+      setIsJoined(true);
+      isJoinedRef.current = true;
+      setErrorMsg(null);
+      const sessionId = `${tokenInfo.channelName}-${clientRef.current.uid}`;
+      sessionIdRef.current = sessionId;
+      deliverJoinedPresence(sessionId);
 
       if (!localAudioRef.current || !localVideoRef.current) {
         const [audioTrack, videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks(
@@ -265,14 +291,8 @@ export function VideoCallProvider({ children }) {
         }
         await clientRef.current.publish([audioTrack, videoTrack]);
       }
-      setIsJoined(true);
-      isJoinedRef.current = true;
-      setErrorMsg(null);
-      const sessionId = `${tokenInfo.channelName}-${clientRef.current.uid}`;
-      sessionIdRef.current = sessionId;
-      apiPostCallEvent(appointmentId, 'joined', sessionId);
     },
-    [bindClientEvents],
+    [bindClientEvents, deliverJoinedPresence],
   );
 
   const prepareAndJoin = useCallback(async () => {
@@ -473,6 +493,29 @@ export function VideoCallProvider({ children }) {
     activateKeepAwake();
     return () => deactivateKeepAwake();
   }, [viewMode]);
+
+  // Resume / reconnect: re-deliver joined if still in channel and backend needs it.
+  useEffect(() => {
+    const reconcilePresence = () => {
+      if (viewMode === 'idle' || !appointmentIdRef.current || !isJoinedRef.current) {
+        return;
+      }
+      deliverJoinedPresence();
+    };
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        reconcilePresence();
+      }
+    };
+
+    window.addEventListener('online', reconcilePresence);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.removeEventListener('online', reconcilePresence);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [deliverJoinedPresence, viewMode]);
 
   useEffect(() => {
     if (viewMode === 'idle' || !appointmentIdRef.current || !isJoined) {

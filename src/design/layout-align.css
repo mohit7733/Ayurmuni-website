@@ -368,7 +368,7 @@
   .app-shell .pd-page--brand .pd-review-list.pd-review-list--few {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: start;
+    align-items: stretch;
     overflow: visible;
     gap: 12px;
   }
@@ -397,8 +397,16 @@
   .app-shell .pd-page--brand .pd-pack-buy .pd-purchase::before,
   .app-shell .pd-page--brand .pd-pack-buy .pd-purchase::after,
   .app-shell .pd-page--brand .pd-pack-buy .pd-purchase .pd-buy::after { content: none; display: none; }
-  .app-shell .pd-page--brand .pd-pack-buy .pd-purchase .pd-buy .am-btn--secondary { background: #fffdf8; box-shadow: none; }
-  .app-shell .pd-page--brand .pd-pack-buy .pd-purchase .pd-buy .am-btn--secondary:hover:not(:disabled) { background: var(--am-green-50); }
+  .app-shell .pd-page--brand .pd-pack-buy .pd-purchase .pd-buy .am-btn--secondary {
+    border: 1.5px solid var(--am-brand-green, var(--am-primary)) !important;
+    background: #fffdf8 !important;
+    color: var(--am-brand-green, var(--am-primary)) !important;
+    box-shadow: none !important;
+  }
+  .app-shell .pd-page--brand .pd-pack-buy .pd-purchase .pd-buy .am-btn--secondary:hover:not(:disabled) {
+    border-color: var(--am-brand-green-deep, var(--am-primary)) !important;
+    background: var(--am-green-50) !important;
+  }
 }
 
 /* t63u: gallery - one clean edge, subtle progress line, flat image-filled thumbs */

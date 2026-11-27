@@ -10,10 +10,19 @@ import YogaCard from '../components/yoga/YogaCard';
 import PageHeader from '../components/PageHeader';
 import ProductCard from '../components/ProductCard';
 import dietCoverImg from '/images/login/14.webp';
-import { mapDietPlanForHome, mapProductCategory, normalizeApiList } from '../home/catalog';
+import {
+  mapDietPlanForHome,
+  mapProductCategory,
+  normalizeApiList,
+  parseHealthSymptoms,
+} from '../home/catalog';
 import { getDoctors } from '../services/consultService';
 import { getDietPlans } from '../services/dietService';
-import { getHealthCategories } from '../services/productService';
+import {
+  getHealthCategories,
+  getHealthDiseases,
+  getUserHealthCategories,
+} from '../services/productService';
 import { getYogaSession } from '../services/yogaService';
 import { getDoctorId, listDoctors } from '../consult/doctors';
 import { normalizeDietPlanList } from '../diet/utils';
@@ -98,6 +107,7 @@ export default function CategoryDoctor() {
   const [selectedDiseaseId, setSelectedDiseaseId] = useState(null);
   const [diseases, setDiseases] = useState([]);
   const [diseasesLoading, setDiseasesLoading] = useState(false);
+  const [concernSymptoms, setConcernSymptoms] = useState([]);
   const [doctors, setDoctors] = useState([]);
   const [doctorsLoading, setDoctorsLoading] = useState(true);
   const [dietPlans, setDietPlans] = useState([]);
@@ -112,8 +122,48 @@ export default function CategoryDoctor() {
 
   useEffect(() => {
     setSelectedDiseaseId(null);
+    setConcernSymptoms([]);
   }, [concernId]);
 
+  // Concern-level symptoms from user/health-categories/ (includes Super Admin assignments).
+  useEffect(() => {
+    if (!concernId) return undefined;
+    let alive = true;
+    const matchConcern = (item) =>
+      String(item?.id ?? item?.health_category_id ?? item?.category_id ?? '') === String(concernId);
+
+    (async () => {
+      try {
+        const userRes = await getUserHealthCategories();
+        if (!alive) return;
+        const fromUser = normalizeApiList(userRes).find(matchConcern);
+        if (fromUser) {
+          const mapped = mapProductCategory(fromUser);
+          setConcernSymptoms(
+            parseHealthSymptoms(
+              fromUser?.symptoms ??
+                fromUser?.symptom_list ??
+                fromUser?.common_symptoms ??
+                mapped.symptoms,
+            ),
+          );
+          return;
+        }
+        const fallback = await getHealthCategories();
+        if (!alive || fallback?.success === false) return;
+        const found = normalizeApiList(fallback).find(matchConcern);
+        if (found) setConcernSymptoms(parseHealthSymptoms(found?.symptoms ?? found?.symptom_list));
+      } catch {
+        if (alive) setConcernSymptoms([]);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [concernId]);
+
+  // Diseases for this concern — prefer user/health-diseases/ (symptoms included).
   useEffect(() => {
     if (!concernId) {
       setDiseases([]);
@@ -122,32 +172,66 @@ export default function CategoryDoctor() {
     let alive = true;
     (async () => {
       setDiseasesLoading(true);
-      const res = await getHealthCategories({ id: concernId });
-      if (!alive) return;
-      const raw = normalizeApiList(res);
       const parent = String(concernId);
-      setDiseases(
+      const mapScoped = (raw) =>
         raw
           .filter((item) => {
-            const id = String(item?.id ?? item?.health_category_id ?? '');
+            const id = String(
+              item?.id ?? item?.health_disease_id ?? item?.health_category_id ?? '',
+            );
             if (!id || id === parent) return false;
-            const itemParent = item?.parent_id != null ? String(item.parent_id) : '';
+            const itemParent =
+              item?.parent_id != null
+                ? String(item.parent_id)
+                : item?.health_category_id != null
+                  ? String(item.health_category_id)
+                  : '';
             return itemParent ? itemParent === parent : true;
           })
           .map(mapProductCategory)
-          .filter((item) => item.id),
-      );
-      setDiseasesLoading(false);
+          .filter((item) => item.id);
+
+      try {
+        const diseaseRes = await getHealthDiseases({ health_category_id: concernId });
+        if (!alive) return;
+        let list = mapScoped(normalizeApiList(diseaseRes));
+        if (!list.length) {
+          const res = await getHealthCategories({ id: concernId });
+          if (!alive) return;
+          list = mapScoped(normalizeApiList(res));
+        }
+        setDiseases(list);
+      } catch {
+        if (!alive) return;
+        try {
+          const res = await getHealthCategories({ id: concernId });
+          if (!alive) return;
+          setDiseases(mapScoped(normalizeApiList(res)));
+        } catch {
+          if (alive) setDiseases([]);
+        }
+      } finally {
+        if (alive) setDiseasesLoading(false);
+      }
     })();
     return () => {
       alive = false;
     };
   }, [concernId]);
 
-  const selectedDiseaseName = useMemo(
-    () => diseases.find((item) => String(item.id) === String(selectedDiseaseId))?.name,
+  const selectedDisease = useMemo(
+    () => diseases.find((item) => String(item.id) === String(selectedDiseaseId)) || null,
     [diseases, selectedDiseaseId],
   );
+  const selectedDiseaseName = selectedDisease?.name;
+
+  // Selected disease → only that disease's assigned symptoms; All → concern symptoms.
+  const visibleSymptoms = useMemo(() => {
+    if (selectedDiseaseId) {
+      return Array.isArray(selectedDisease?.symptoms) ? selectedDisease.symptoms : [];
+    }
+    return concernSymptoms;
+  }, [selectedDiseaseId, selectedDisease, concernSymptoms]);
 
   const concernMatch = useMemo(
     () => ({
@@ -463,7 +547,7 @@ export default function CategoryDoctor() {
           }
         />
 
-        {categoryDesc || categorySubscription ? (
+        {categoryDesc || categorySubscription || visibleSymptoms.length > 0 ? (
           <div className="cs-about">
             <span className="cs-about__icon" aria-hidden>
               <Leaf size={20} />
@@ -471,6 +555,18 @@ export default function CategoryDoctor() {
             <div>
               {categoryDesc ? <p>{categoryDesc}</p> : null}
               {categorySubscription ? <small>{categorySubscription}</small> : null}
+              {visibleSymptoms.length > 0 ? (
+                <div className="cs-symptoms" aria-label="Symptoms">
+                  <p className="cs-symptoms__label">
+                    {selectedDiseaseName ? `${selectedDiseaseName} symptoms` : 'Common symptoms'}
+                  </p>
+                  <ul className="cs-symptoms__list">
+                    {visibleSymptoms.map((symptom) => (
+                      <li key={symptom}>{symptom}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
             </div>
           </div>
         ) : null}

@@ -4067,10 +4067,25 @@ button.checkout-item {
   color: inherit;
 }
 
-.coupon-offer .cta {
+.coupon-offer .cta,
+.coupon-offer .ghost {
   width: auto;
   height: 36px;
   padding: 0 12px;
+}
+
+.coupon-offer.is-applied {
+  border-color: rgba(16, 83, 67, 0.35);
+  background: #eef7f3;
+  cursor: default;
+}
+
+.coupon-offer.is-applied .ghost:disabled {
+  opacity: 1;
+  color: var(--am-brand-green, #0d614e);
+  border-color: rgba(16, 83, 67, 0.28);
+  background: #fff;
+  cursor: default;
 }
 
 .coupon-error {
@@ -5018,6 +5033,12 @@ button.checkout-item {
   color: var(--am-primary);
   font-size: 12px;
   font-weight: 600;
+}
+
+.appoint-followup--danger {
+  background: var(--am-danger-soft, #fbe9e7);
+  color: var(--am-danger, #a8453a);
+  border: 1px solid color-mix(in srgb, var(--am-danger, #a8453a) 28%, transparent);
 }
 
 .appointments-page .history-actions .cta.danger {

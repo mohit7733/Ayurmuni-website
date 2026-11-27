@@ -572,7 +572,11 @@ export default function Checkout() {
     return (
       <AppShell tab="cart">
         <section className="co-page">
-          <PageHeader title={T.title} subtitle={T.emptyTitle} backTo="/cart" />
+          <PageHeader
+            title={T.title}
+            subtitle={T.emptyTitle}
+            onBack={() => navigate('/cart', { replace: true })}
+          />
           <EmptyState
             title={T.emptyTitle}
             description={T.emptyText}
@@ -590,7 +594,11 @@ export default function Checkout() {
   return (
     <AppShell tab="cart">
       <section className="co-page">
-        <PageHeader title={T.title} subtitle={T.itemsInOrder(itemUnits)} backTo="/cart" />
+        <PageHeader
+          title={T.title}
+          subtitle={T.itemsInOrder(itemUnits)}
+          onBack={() => navigate('/cart', { replace: true })}
+        />
 
         <div className="co-layout">
           <div className="co-main">
@@ -788,8 +796,12 @@ export default function Checkout() {
             <div className="co-sticky">
               <div className="co-sticky__meta">
                 <strong>{money(total)}</strong>
-                <small>
-                  {method === 'cod' ? T.payOnDelivery : T.payNow} · {T.itemsInOrder(itemUnits)}
+                <small className="co-sticky__hint">
+                  <span>{method === 'cod' ? T.payOnDelivery : T.payNow}</span>
+                  <span className="co-sticky__sep" aria-hidden>
+                    ·
+                  </span>
+                  <span>{T.itemsInOrder(itemUnits)}</span>
                 </small>
               </div>
               <Button

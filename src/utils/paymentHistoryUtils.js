@@ -25,8 +25,30 @@ const normalizeStatus = (status) => {
   const value = String(status || '').trim().toLowerCase();
   if (value === 'success' || value === 'captured') return 'paid';
   if (value === 'refunded' || value === 'refund_processed' || value === 'refund') return 'refund_paid';
-  if (value === 'refund_requested') return 'refund_pending';
+  if (value === 'refund_requested' || value === 'refund_initiated') return 'refund_pending';
+  if (
+    value === 'refund_rejected' ||
+    value === 'refund_declined' ||
+    value === 'refund_denied' ||
+    value === 'rejected'
+  ) {
+    return 'refund_rejected';
+  }
   return value;
+};
+
+const REFUND_PROGRESS_STATUSES = new Set([
+  'refund_paid',
+  'refund_pending',
+  'refund_failed',
+  'refund_rejected',
+]);
+
+const REFUND_PROGRESS_TITLE = {
+  refund_paid: 'Refunded',
+  refund_pending: 'Refund initiated',
+  refund_failed: 'Refund failed',
+  refund_rejected: 'Refund rejected',
 };
 
 const mapHistoryEntry = (entry) => {
@@ -105,8 +127,12 @@ const withConfirmedStep = (list, sources) => {
 const LEDGER_STATUS = {
   captured: 'paid',
   refund_requested: 'refund_pending',
+  refund_initiated: 'refund_pending',
   refund_processed: 'refund_paid',
   refund_failed: 'refund_failed',
+  refund_rejected: 'refund_rejected',
+  refund_declined: 'refund_rejected',
+  refund_denied: 'refund_rejected',
 };
 
 /** One row from GET payments/customer/history/ for this consultation. */
@@ -182,18 +208,19 @@ export const getCompletedRefund = (appointmentStatus, ...sources) => {
   return { amount: refund.amount, at: refund.at, refundId: refund.gateway_refund_id };
 };
 
-/** Latest refund step from consultation `refund.history`: completed, then initiated, then failed. */
+/** Latest refund step from consultation history (newest event wins — not “initiated” over a later reject). */
 export const getRefundProgress = (appointmentStatus, ...sources) => {
   const status = String(appointmentStatus || '').trim().toLowerCase();
   if (!REFUND_ELIGIBLE_STATUSES.has(status)) return null;
   const history = getPaymentHistory(...sources);
-  const paid = [...history].reverse().find((entry) => entry.status === 'refund_paid');
-  if (paid) return { ...paid, title: 'Refunded' };
-  const pending = [...history].reverse().find((entry) => entry.status === 'refund_pending');
-  if (pending) return { ...pending, title: 'Refund initiated' };
-  const failed = [...history].reverse().find((entry) => entry.status === 'refund_failed');
-  if (failed) return { ...failed, title: 'Refund failed' };
-  return null;
+  const latest = [...history].reverse().find((entry) => REFUND_PROGRESS_STATUSES.has(entry.status));
+  if (!latest) return null;
+  const title =
+    REFUND_PROGRESS_TITLE[latest.status] ||
+    String(latest.status || '')
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+  return { ...latest, title };
 };
 
 export const PAYMENT_STATUS_LABELS = {
@@ -209,6 +236,7 @@ export const PAYMENT_STATUS_LABELS = {
   refund_pending: 'Refund initiated',
   refund_paid: 'Refund completed',
   refund_failed: 'Refund failed',
+  refund_rejected: 'Refund rejected',
 };
 
 export const formatPaymentStatusLabel = (status) =>
@@ -221,7 +249,11 @@ export const formatPaymentStatusLabel = (status) =>
 export const getPaymentStatusTone = (status) => {
   if (status === 'paid' || status === 'refund_paid' || status === 'confirmed' || status === 'completed') return 'success';
   if (status === 'refund_pending' || status === 'pending') return 'warning';
-  if (['failed', 'refund_failed', 'cancelled', 'canceled', 'missed'].includes(status)) return 'danger';
+  if (
+    ['failed', 'refund_failed', 'refund_rejected', 'cancelled', 'canceled', 'missed'].includes(status)
+  ) {
+    return 'danger';
+  }
   return 'neutral';
 };
 

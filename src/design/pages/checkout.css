@@ -599,8 +599,10 @@ button.co-card:active {
 
 .co-summary .co-sticky {
   position: static;
+  display: flex;
   flex-direction: column;
   align-items: stretch;
+  gap: var(--am-space-4);
   padding: var(--am-space-4);
   border: 1px solid var(--am-line);
   border-radius: var(--am-radius-xl);
@@ -613,11 +615,19 @@ button.co-card:active {
   font-size: var(--am-text-xl);
 }
 
-.co-sticky__meta small {
-  display: block;
+.co-sticky__meta small,
+.co-sticky__hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.15em 0.55em;
   margin-top: var(--am-space-1);
   color: var(--am-text-muted);
   font-size: var(--am-text-xs);
+}
+
+.co-sticky__sep {
+  color: var(--am-text-subtle);
 }
 
 .co-sticky .am-btn {

@@ -3,7 +3,7 @@ export const PROFILE_COPY = {
   subtitle: 'Manage your account',
   loading: 'Loading profile…',
   edit: 'Edit',
-  viewPrakriti: 'View prakriti',
+  viewPrakriti: 'View Prakriti',
   logout: 'Logout',
   logoutTitle: 'Logout',
   logoutText: 'Are you sure you want to logout from Ayurmuni?',
@@ -38,7 +38,7 @@ export const PROFILE_COPY = {
   guestSignOut: 'Sign out of guest session',
 
   // Edit
-  editTitle: 'Edit profile',
+  editTitle: 'Edit Profile',
   editSubtitle: 'Name, email, and photo',
   changePhoto: 'Change photo',
   takePhoto: 'Take photo',

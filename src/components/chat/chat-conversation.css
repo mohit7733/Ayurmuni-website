@@ -225,8 +225,8 @@
 .chat-lux .chat-bubble.other > div {
   background: #fff;
   color: var(--cl-ink);
-  border: 1px solid rgba(228, 196, 122, 0.65);
-  box-shadow: 0 1px 2px rgba(16, 83, 67, 0.06);
+  border: 1px solid rgba(16, 83, 67, 0.18);
+  box-shadow: 0 1px 3px rgba(16, 83, 67, 0.08);
 }
 .chat-lux .chat-bubble.own > div {
   background: linear-gradient(135deg, #136150 0%, #105343 100%);

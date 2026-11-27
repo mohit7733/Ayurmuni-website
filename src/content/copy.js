@@ -6,7 +6,7 @@ export const COPY = {
   skipToContent: 'Skip to main content',
   trust: [
     { id: 'doctors', title: 'MD Ayurveda Doctors', text: 'Postgraduate Ayurveda specialists, on video from anywhere in India' },
-    { id: 'secure', title: 'Certified Ayurvedic Medicine', text: 'From trusted brands like Zandu, AVP, Vaidyaratnam and AIMIL' },
+    { id: 'secure', title: 'Certified Ayurvedic Medicine', text: 'From trusted brands' },
     { id: 'authentic', title: '100% Certified Organic Food Brands', text: "Ahara chosen to match your Prakriti and your doctor's plan" },
     { id: 'private', title: 'Same Day Delivery', text: 'In select areas of Delhi NCR' },
   ],

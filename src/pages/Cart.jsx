@@ -24,6 +24,7 @@ import {
   buildDoctorDetailRoute,
   buildUploadVerifyRoute,
   groupRxLines,
+  isApprovedUploadLine,
   groupSubtotal,
   toggleGroupSelection,
 } from "../cart/rxGroups";
@@ -211,13 +212,19 @@ export default function Cart() {
 
   const changeQty = async (item, action) => {
     const isPrescribed = item.source === "prescribed";
+    const approvedUpload = isApprovedUploadLine(item);
     const rxRequired =
       isPrescriptionRequired(item) || item.prescription_required;
     const oldQty = Math.max(0, Number(item.quantity) || 0);
+    const lockedQty = isPrescribed && !approvedUpload;
 
-    if (isPrescribed && action === "remove") return;
+    if (lockedQty && action === "remove") return;
 
-    if (rxRequired && (isPrescribed || action === "plus")) {
+    // Increase on Rx / approved-upload lines opens the same prescription modal as product pages.
+    if (
+      action === "plus" &&
+      (approvedUpload || (rxRequired && !isPrescribed))
+    ) {
       showPrescriptionRequired({
         variantId: item.variant_id,
         productName: item.name,
@@ -225,11 +232,11 @@ export default function Cart() {
       return;
     }
 
-    if (isPrescribed && action === "minus" && oldQty <= 1) return;
+    if (lockedQty && action === "minus" && oldQty <= 1) return;
 
     const nextQty =
       action === "minus"
-        ? Math.max(isPrescribed ? 1 : 0, oldQty - 1)
+        ? Math.max(lockedQty ? 1 : 0, oldQty - 1)
         : oldQty + 1;
     const stockMsg = getAddQtyBlockMessage(item, nextQty, { cartLine: true });
     if (stockMsg) {
@@ -237,7 +244,7 @@ export default function Cart() {
       return;
     }
 
-    if (isPrescribed && action === "plus") {
+    if (lockedQty && action === "plus") {
       const doctorQty =
         doctorQtyRef.current[item.id] ??
         (Number(item.prescribed_quantity) || oldQty);
@@ -312,6 +319,8 @@ export default function Cart() {
   const renderLine = (item) => {
     const adding = addingVariantId === item.variant_id;
     const isPrescribed = item.source === "prescribed";
+    const approvedUpload = isApprovedUploadLine(item);
+    const lockedQty = isPrescribed && !approvedUpload;
     const mrp = mrpOf(item);
     const off = mrp ? Math.round(((mrp - Number(item.price)) / mrp) * 100) : 0;
     return (
@@ -389,10 +398,10 @@ export default function Cart() {
             <button
               type="button"
               aria-label={T.decreaseQty}
-              disabled={adding || (isPrescribed && item.quantity <= 1)}
+              disabled={adding || (lockedQty && item.quantity <= 1)}
               onClick={() => changeQty(item, "minus")}
             >
-              {!isPrescribed && Number(item.quantity) <= 1 ? (
+              {!lockedQty && Number(item.quantity) <= 1 ? (
                 <Trash2 size={14} aria-hidden />
               ) : (
                 <Minus size={14} aria-hidden />

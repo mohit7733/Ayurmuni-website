@@ -72,6 +72,11 @@
   border: 1px solid var(--cp-line); border-radius: 999px; background: #fff; color: var(--cp-green); font: inherit; font-size: 11.5px; font-weight: 600; cursor: pointer;
 }
 .cp-line__side { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.cp-qty {
+  display: inline-flex; align-items: center; height: 34px; padding: 0 12px;
+  border-radius: 999px; background: rgba(16, 83, 67, 0.06);
+  font-size: 13px; font-weight: 700; color: var(--cp-ink);
+}
 .cp-line__total { font-size: 12px; font-weight: 700; color: #4b5a55; }
 .cp-stepper {
   display: inline-flex; align-items: center; height: 34px; border-radius: 999px; overflow: hidden;
@@ -147,10 +152,11 @@
 .cp-browse-more { display: flex; justify-content: center; margin-top: 12px; padding: 4px 14px 14px; }
 .cp-skel { display: flex; flex-direction: column; gap: 10px; }
 
-/* phone checkout bar */
+/* phone checkout bar — one Checkout only (sticky bar). Summary CTA is desktop. */
 .cp-bar { display: none; }
 @media (max-width: 899px) {
-  .cp-summary .cp-btn--checkout { display: none; }
+  /* Beat ui-unify `.cp-btn { display: inline-flex !important }` */
+  .app-shell .cp-summary .cp-btn--checkout { display: none !important; }
   .cp-bar {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: calc(var(--am-z-tabbar, 50) + 1);
     display: flex; align-items: center; justify-content: space-between; gap: 12px;

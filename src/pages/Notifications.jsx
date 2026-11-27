@@ -25,7 +25,8 @@ const TYPE_FILTERS = [
   { key: "all", label: "All types" },
   { key: "order", label: "Orders" },
   { key: "appointment", label: "Appointments" },
-  { key: "prescription", label: "Follow-ups" },
+  { key: "prescription", label: "Prescription Requests" },
+  { key: "follow_up", label: "Follow-up" },
 ];
 
 const SECTIONS = [
@@ -205,7 +206,7 @@ export default function Notifications() {
           </button>
           <div className="nt-head__copy">
             <h1 className="nt-head__title">Notifications</h1>
-            <p className="nt-head__desc">Orders, appointments, and offers</p>
+            <p className="nt-head__desc">Orders, Appointments, and Offers</p>
           </div>
         </header>
 

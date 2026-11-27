@@ -1,5 +1,19 @@
 import { calculateBmi } from './bmi';
 
+/**
+ * Digits + optional decimal only, with short limits so users can't paste huge numbers.
+ * Height: up to 3 digits + 1 decimal (e.g. 172.5). Weight: up to 3 digits + 1 decimal (e.g. 75.5).
+ */
+const sanitizeDecimal = (value, { maxWhole = 3, maxFraction = 1 } = {}) => {
+  const cleaned = String(value ?? '').replace(/[^\d.]/g, '');
+  if (!cleaned) return '';
+  const [wholeRaw, ...fractionParts] = cleaned.split('.');
+  const whole = wholeRaw.slice(0, maxWhole);
+  if (!fractionParts.length) return whole;
+  const fraction = fractionParts.join('').replace(/\./g, '').slice(0, maxFraction);
+  return fraction ? `${whole}.${fraction}` : `${whole}.`;
+};
+
 export default function BasicInfoForm({ questions, selectedAnswers, onChange }) {
   const heightQuestion = questions.find((item) => {
     const q = item?.question?.toLowerCase?.() ?? '';
@@ -18,10 +32,16 @@ export default function BasicInfoForm({ questions, selectedAnswers, onChange }) 
         Height *
         <div className="unit-row">
           <input
+            type="text"
             inputMode="decimal"
-            placeholder="Enter height"
+            pattern="[0-9]{1,3}([.][0-9])?"
+            maxLength={5}
+            autoComplete="off"
+            placeholder="e.g. 172"
             value={heightValue}
-            onChange={(e) => onChange(`${heightId}_height`, e.target.value)}
+            onChange={(e) =>
+              onChange(`${heightId}_height`, sanitizeDecimal(e.target.value, { maxWhole: 3, maxFraction: 1 }))
+            }
           />
           <span>cm</span>
         </div>
@@ -30,10 +50,16 @@ export default function BasicInfoForm({ questions, selectedAnswers, onChange }) 
         Weight *
         <div className="unit-row">
           <input
+            type="text"
             inputMode="decimal"
-            placeholder="Enter weight"
+            pattern="[0-9]{1,3}([.][0-9])?"
+            maxLength={5}
+            autoComplete="off"
+            placeholder="e.g. 75"
             value={weightValue}
-            onChange={(e) => onChange(`${heightId}_weight`, e.target.value)}
+            onChange={(e) =>
+              onChange(`${heightId}_weight`, sanitizeDecimal(e.target.value, { maxWhole: 3, maxFraction: 1 }))
+            }
           />
           <span>kg</span>
         </div>

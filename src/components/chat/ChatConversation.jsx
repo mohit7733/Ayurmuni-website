@@ -4,7 +4,7 @@ import './chat-conversation.css';
 import AdvanceLoad from '../ui/AdvanceLoad';
 import { formatMessageTime } from '../../chat/dateFormatter';
 import { getChatDisabledReason, shouldSuppressChatError } from '../../chat/chatAccessUtils';
-import { dedupeMessages, isTempMessage } from '../../chat/messageUtils';
+import { dedupeMessages, isTempMessage, normalizeChatRole } from '../../chat/messageUtils';
 import { formatDoctorDisplayName } from '../../consult/appointmentUtils';
 import { doctorDisplayName, doctorImage, getDoctorId } from '../../consult/doctors';
 import { useChat } from '../../hooks/useChat';
@@ -68,6 +68,7 @@ export default function ChatConversation({
     isLoading,
     error,
     participantRole,
+    peerOnline,
     sendMessage,
     markAsRead,
     chatAccess,
@@ -102,7 +103,8 @@ export default function ChatConversation({
       ? meta.patientName || 'Patient'
       : formatDoctorDisplayName(meta.doctorName);
   const headerAvatar = participantRole === 'doctor' ? meta.patientAvatar : meta.doctorAvatar;
-  const statusLine = `Connected • ${participantRole === 'doctor' ? 'Doctor' : 'Patient'}`;
+  const peerLabel = participantRole === 'doctor' ? 'Patient' : 'Doctor';
+  const statusLine = peerOnline ? `Online • ${peerLabel}` : peerLabel;
 
   useEffect(() => {
     setMeta(readChatMeta(appointmentId, extras || {}));
@@ -162,7 +164,7 @@ export default function ChatConversation({
     if (!isChatEnabled) return;
     const unread = visibleMessages.filter(
       (msg) =>
-        msg.sender_role !== participantRole &&
+        normalizeChatRole(msg.sender_role) !== normalizeChatRole(participantRole) &&
         !msg.is_seen &&
         !markedReadRef.current.has(msg.id),
     );
@@ -283,7 +285,7 @@ export default function ChatConversation({
           ) : (
             <span>{String(headerTitle || '?').charAt(0).toUpperCase()}</span>
           )}
-          <i className="on" />
+          {peerOnline ? <i className="on" aria-label="Online" /> : null}
         </div>
         <div>
           <strong>{headerTitle || 'Unknown'}</strong>
@@ -305,13 +307,15 @@ export default function ChatConversation({
           visibleMessages.map((item, index) => {
             const prev = index > 0 ? visibleMessages[index - 1] : null;
             const showDate = !prev || formatChatDay(item.created_at) !== formatChatDay(prev.created_at);
-            const isOwn = item.sender_role === participantRole;
+            const ownRole = normalizeChatRole(participantRole);
+            const itemRole = normalizeChatRole(item.sender_role);
+            const isOwn = itemRole === ownRole && !!ownRole;
             const pending = isTempMessage(item);
             const next = visibleMessages[index + 1];
-            const groupStart = showDate || prev?.sender_role !== item.sender_role;
+            const groupStart = showDate || normalizeChatRole(prev?.sender_role) !== itemRole;
             const groupEnd =
               !next ||
-              next.sender_role !== item.sender_role ||
+              normalizeChatRole(next.sender_role) !== itemRole ||
               formatChatDay(next.created_at) !== formatChatDay(item.created_at);
             return (
               <div

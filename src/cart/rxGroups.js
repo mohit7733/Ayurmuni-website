@@ -1,4 +1,8 @@
-import { getPrescribedItems, mapPrescribedItem } from '../services/prescriptionService';
+import {
+  getPrescribedItems,
+  isPrescriptionApproved,
+  mapPrescribedItem,
+} from '../services/prescriptionService';
 
 /**
  * Prescribed-cart grouping, ported from the app's MyCart.tsx (groupRxLines / doctorRxGroups /
@@ -8,6 +12,11 @@ import { getPrescribedItems, mapPrescribedItem } from '../services/prescriptionS
 /** App: prescription_cart.items[].source === 'upload' marks an uploaded-prescription group. */
 export const isUploadRxLine = (line) =>
   String(line?.rx_source ?? line?.rx_group?.source ?? '').toLowerCase() === 'upload';
+
+/** Uploaded prescription that is already approved — quantity may only go down. */
+export const isApprovedUploadLine = (line) =>
+  isUploadRxLine(line) &&
+  (isPrescriptionApproved(line?.rx_group) || isPrescriptionApproved({ status: line?.rx_status }));
 
 const requestIdOf = (line) => {
   const raw = line?.rx_group?.prescription_request_id ?? line?.prescription_request_id;

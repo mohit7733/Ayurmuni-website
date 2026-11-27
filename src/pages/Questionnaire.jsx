@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import PrakritiNoteModal from '../components/PrakritiNoteModal';
+import { Button, Modal } from '../components/ui';
 import QuestLayout from '../questionnaire/QuestLayout';
 import { QUESTIONNAIRE_SETUP } from '../questionnaire/configs';
 import { useQuestionnaireFlow } from '../questionnaire/useQuestionnaireFlow';
@@ -12,16 +13,15 @@ export default function Questionnaire({ mode }) {
   const flow = useQuestionnaireFlow(mode);
   const { config } = QUESTIONNAIRE_SETUP[mode];
   const [questReady, setQuestReady] = useState(mode !== 'prakriti' || noteSeen);
+  const [exitOpen, setExitOpen] = useState(false);
 
-  const confirmExit = useCallback(() => {
-    const ok = window.confirm(
-      `${mode === 'medical' ? 'Exit Health Quest?' : 'Exit Prakriti Quest?'}\nYour progress on this attempt will be lost.`,
-    );
-    if (ok) {
-      if (window.history.length > 1) navigate(-1);
-      else navigate('/assessment');
-    }
-  }, [mode, navigate]);
+  const exitTitle = mode === 'medical' ? 'Exit Health Quest?' : 'Exit Prakriti Quest?';
+
+  const leaveQuest = useCallback(() => {
+    setExitOpen(false);
+    if (window.history.length > 1) navigate(-1);
+    else navigate('/assessment');
+  }, [navigate]);
 
   if (mode === 'prakriti' && !questReady) {
     return (
@@ -36,6 +36,24 @@ export default function Questionnaire({ mode }) {
   }
 
   return (
-    <QuestLayout flow={flow} config={config} onExit={confirmExit} />
+    <>
+      <QuestLayout flow={flow} config={config} onExit={() => setExitOpen(true)} />
+      <Modal
+        open={exitOpen}
+        onClose={() => setExitOpen(false)}
+        title={exitTitle}
+        description="Your progress on this attempt will be lost."
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setExitOpen(false)}>
+              Stay
+            </Button>
+            <Button variant="danger" onClick={leaveQuest}>
+              Exit Quest
+            </Button>
+          </>
+        }
+      />
+    </>
   );
 }

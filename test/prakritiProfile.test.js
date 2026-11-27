@@ -32,6 +32,7 @@ describe('formatPrakritiData', () => {
     expect(data.lifestyleGuidelines.dontList).toEqual(['Skip meals']);
     expect(data.imageUrl).toBe('https://img.test/vata.png');
     expect(data.doshas.map((d) => d.color)).toEqual(['#0d614e', '#1c7c4f', '#3d6b5c']);
+    expect(data.vikriti).toBeNull();
   });
 
   it('formats a mixed constitution and title', () => {
@@ -40,6 +41,43 @@ describe('formatPrakritiData', () => {
     expect(data.coreEssence.title).toBe('The Dynamic Creator');
     expect(data.doshas.map((d) => d.percentage)).toEqual([50, 30, 20]);
     expect(data.lifestyleGuidelines.doList).toEqual([]);
+  });
+
+  it('maps medical_history gut and agni answers into highlighted vikriti outcomes', () => {
+    const data = formatPrakritiData({
+      result: 'Vata',
+      vata: 60,
+      pitta: 25,
+      kapha: 15,
+      medical_history: {
+        questions: [
+          {
+            question: 'gut constitution, select whichever is most applicable for you',
+            answer: {
+              index: 0,
+              value: 'Vata dominant gut (krura koshtha) - frequently constipated hard stools',
+            },
+          },
+          {
+            question:
+              'digestive and metabolic health assessment, select whichever is most applicable for you',
+            answer: {
+              index: 0,
+              value: 'Strong - frequently hungry, able to digest food quickly (teekshna agni)',
+            },
+          },
+        ],
+      },
+    });
+
+    expect(data.vikriti.gut.selectedId).toBe('krura');
+    expect(data.vikriti.agni.selectedId).toBe('teekshna');
+    expect(data.vikriti.gut.outcomes.filter((o) => o.selected).map((o) => o.id)).toEqual(['krura']);
+    expect(data.vikriti.agni.outcomes.filter((o) => o.selected).map((o) => o.id)).toEqual([
+      'teekshna',
+    ]);
+    expect(data.vikriti.gut.outcomes).toHaveLength(3);
+    expect(data.vikriti.agni.outcomes).toHaveLength(4);
   });
 });
 

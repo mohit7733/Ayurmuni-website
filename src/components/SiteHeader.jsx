@@ -19,6 +19,7 @@ import {
 import logoImg from '/greenlogo.png';
 import { Utils } from '../common/utils';
 import { showSuccessToast } from '../config/key';
+import { PROFILE_COPY as T } from '../content/profile';
 import { useLocation as useDeliveryLocation } from '../context/LocationContext';
 import { useCart } from '../hooks/useCart';
 import { useUnreadNotificationCount } from '../hooks/useNotifications';
@@ -30,6 +31,7 @@ import RecentSearchList from './search/RecentSearchList';
 import LiveSearchResults from './search/LiveSearchResults';
 import { savedAddressToParsed } from '../services/locationService';
 import { getAddresses, listAddresses, updateAddress } from '../services/profileService';
+import { logoutOneSignalUser } from '../services/pushNotificationService';
 import {
   guardComingSoonPath,
   isFeatureComingSoon,
@@ -38,6 +40,7 @@ import {
 import { PRIMARY_NAV } from '../site/nav';
 import Button from './ui/Button';
 import IconButton from './ui/IconButton';
+import Modal from './ui/Modal';
 import { cx } from './ui/cx';
 import '../design/global-search.css';
 
@@ -93,6 +96,7 @@ export default function SiteHeader({ minimal = false }) {
   const live = useGlobalSearch(liveQuery, Boolean(searchOpen && loggedIn && liveQuery));
   const [locationOpen, setLocationOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
+  const [logoutOpen, setLogoutOpen] = useState(false);
   const [savedAddresses, setSavedAddresses] = useState([]);
 
   useEffect(() => {
@@ -349,8 +353,10 @@ export default function SiteHeader({ minimal = false }) {
   };
 
   const signOut = async () => {
+    setLogoutOpen(false);
     setUserOpen(false);
     await clearLocationSession();
+    logoutOneSignalUser();
     await Utils.clearAllData();
     showSuccessToast('Signed out successfully', 'success');
     navigate('/welcome', { replace: true });
@@ -632,9 +638,16 @@ export default function SiteHeader({ minimal = false }) {
                       <Settings size={16} aria-hidden />
                       Settings
                     </Link>
-                    <button type="button" className="site-menu-row site-menu-row--danger" onClick={signOut}>
+                    <button
+                      type="button"
+                      className="site-menu-row site-menu-row--danger"
+                      onClick={() => {
+                        setUserOpen(false);
+                        setLogoutOpen(true);
+                      }}
+                    >
                       <LogOut size={16} aria-hidden />
-                      Logout
+                      {T.logout}
                     </button>
                   </div>
                 ) : null}
@@ -647,6 +660,23 @@ export default function SiteHeader({ minimal = false }) {
           )}
         </div>
       </div>
+
+      <Modal
+        open={logoutOpen}
+        onClose={() => setLogoutOpen(false)}
+        title={T.logoutTitle}
+        description={T.logoutText}
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setLogoutOpen(false)}>
+              {T.logoutCancel}
+            </Button>
+            <Button variant="primary" onClick={signOut}>
+              {T.logoutConfirm}
+            </Button>
+          </>
+        }
+      />
 
       {menuOpen ? (
         <button

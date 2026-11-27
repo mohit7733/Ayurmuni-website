@@ -43,6 +43,7 @@ import {
   validateReturnForm,
 } from '../services/returnService';
 import { formatOrderId } from '../utils/formatDisplayId';
+import { getReturnableOrderItems, isReturnPickerItemAllowed } from '../utils/orderDetailUtils';
 import '../design/pages/returns.css';
 
 const formatShortDate = (value) => {
@@ -66,6 +67,7 @@ export default function ReturnRequest() {
   const selectionTouchedRef = useRef(false);
 
   const [order, setOrder] = useState(location.state?.order || null);
+  const [orderSettled, setOrderSettled] = useState(Boolean(location.state?.order));
   const [reasonCode, setReasonCode] = useState('');
   const [reasonText, setReasonText] = useState('');
   const [eligibility, setEligibility] = useState(null);
@@ -98,6 +100,7 @@ export default function ReturnRequest() {
       const res = await getOrderById(orderId);
       const detail = extractOrderDetail(res);
       if (detail) setOrder(detail);
+      setOrderSettled(true);
     })();
   }, [orderId]);
 
@@ -153,14 +156,27 @@ export default function ReturnRequest() {
     })();
   }, [loadEligibility]);
 
-  const items = useMemo(() => eligibility?.items ?? [], [eligibility]);
-  const eligibleItems = items.filter((item) => item.eligible);
+  const returnableLines = useMemo(() => getReturnableOrderItems(order), [order]);
+  const items = useMemo(() => {
+    const eligible = (eligibility?.items ?? []).filter((item) => item.eligible);
+    if (!order) return [];
+    return eligible.filter((item) => isReturnPickerItemAllowed(item, returnableLines));
+  }, [eligibility, order, returnableLines]);
+  const eligibleItems = items;
   const isCod = Boolean(eligibility?.isCod);
   const paymentSource = getPaymentSourceLabel(order, eligibility?.refundMode);
-  const selectedIds = Object.keys(selected).filter((id) => selected[id] > 0);
-  const selectedQty = selectedIds.reduce((sum, id) => sum + selected[id], 0);
+  const visibleSelected = useMemo(() => {
+    const next = {};
+    items.forEach((item) => {
+      const qty = selected[item.orderItemId];
+      if (qty > 0) next[item.orderItemId] = qty;
+    });
+    return next;
+  }, [items, selected]);
+  const selectedIds = Object.keys(visibleSelected);
+  const selectedQty = selectedIds.reduce((sum, id) => sum + visibleSelected[id], 0);
   const refundTotal = items.reduce(
-    (sum, item) => sum + (selected[item.orderItemId] ? item.price * selected[item.orderItemId] : 0),
+    (sum, item) => sum + (visibleSelected[item.orderItemId] ? item.price * visibleSelected[item.orderItemId] : 0),
     0,
   );
   const windowEnds = eligibility?.returnWindowEndsAt;
@@ -266,7 +282,7 @@ export default function ReturnRequest() {
         reasonCode,
         reasonText,
         reasonLabel,
-        selected,
+        selected: visibleSelected,
         mediaUrls: uploaded,
         isCod,
         refundMethod,
@@ -406,6 +422,8 @@ export default function ReturnRequest() {
                     Retry
                   </Button>
                 </div>
+              ) : !orderSettled ? (
+                <p className="dx-note">Checking which items can be returned.</p>
               ) : items.length === 0 ? (
                 <p className="dx-note">
                   {eligibility?.message || 'No items in this order can be returned.'}

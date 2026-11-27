@@ -3,9 +3,11 @@
 import { formatDisplayId } from '../utils/formatDisplayId';
 import {
   buildBillToBlock,
-  buildWellnessFromBlock,
+  formatInvoiceDate,
+  INVOICE_DECLARATION,
+  INVOICE_FOOTER,
   INVOICE_SELLER_FALLBACK,
-  money,
+  invoiceSellerBlock,
 } from './documentData';
 
 const num = (value) => {
@@ -213,55 +215,126 @@ const buyerFrom = (profile, patients) => {
   };
 };
 
-const issuedOn = (plan) => {
-  const raw = plan?.started_at || plan?.purchased_at || plan?.paid_at;
-  const date = raw ? new Date(raw) : new Date();
-  if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+const issuedOn = (plan) =>
+  formatInvoiceDate(plan?.started_at || plan?.purchased_at || plan?.paid_at || new Date());
+
+const round2 = (value) => Math.round((Number(value) || 0) * 100) / 100;
+const invoiceMoney = (value) => {
+  const n = Number(value);
+  return Number.isFinite(n) ? n.toFixed(2) : '-';
+};
+const closeMoney = (a, b) => Math.abs(round2(a) - round2(b)) < 0.05;
+
+const PRICE_KEYS = new Set(['listed_price', 'selling_price', 'price', 'plan_price']);
+const isGstLine = (line) => line.key === 'gst' || line.key === 'gst_amount';
+const isDiscountLine = (line) => line.effect === 'subtract';
+
+const gstPercentOf = (data, lines) => {
+  const fees = data.fees && typeof data.fees === 'object' ? data.fees : {};
+  const configurations = data.configurations && typeof data.configurations === 'object' ? data.configurations : {};
+  const direct = num(fees.gst_percent ?? configurations?.gst?.percent);
+  if (direct != null && direct > 0) return direct;
+  const label = lines.find(isGstLine)?.label || '';
+  const match = label.match(/(\d+(?:\.\d+)?)\s*%/);
+  return match ? Number(match[1]) : 0;
 };
 
-const feeLine = (sno, description, amount, tax) => ({
+const taxCell = (tax, percent) => {
+  if (!(tax > 0)) return '0.00';
+  if (!(percent > 0)) return invoiceMoney(tax);
+  const shown = Math.abs(percent - Math.round(percent)) < 0.05 ? Number(percent).toFixed(1) : Number(percent.toFixed(2));
+  return `${invoiceMoney(tax)}\n(${shown}%)`;
+};
+
+const supplyRow = (sno, description, taxable, tax, percent, qty = 1) => ({
   sno,
   description,
-  qty: 1,
-  rate: money(amount),
-  taxableValue: money(amount),
-  tax,
-  total: money(amount),
+  qty: qty ? String(qty) : '',
+  rate: taxable != null && qty ? invoiceMoney(round2(taxable / qty)) : '',
+  taxableValue: invoiceMoney(taxable),
+  tax: taxCell(tax, percent),
+  total: invoiceMoney(round2(taxable + tax)),
+  taxableNum: round2(taxable),
+  taxNum: round2(tax),
 });
+
+/**
+ * Tax invoice rows. GST is the IGST column of the supply, not a goods line
+ * whose amount is added again. A fee is a goods line only when the payable
+ * total includes it.
+ */
+const buildDietSupplyRows = (lines, data, planName, grand) => {
+  const gst = round2(lines.filter(isGstLine).reduce((sum, line) => sum + signedAmount(line), 0));
+  const percent = gstPercentOf(data, lines);
+  const charges = lines.filter((line) => !isGstLine(line));
+  const chargeSum = round2(charges.reduce((sum, line) => sum + signedAmount(line), 0));
+  const payableBase = round2(grand - gst);
+  const priceSum = round2(
+    charges.filter((line) => PRICE_KEYS.has(line.key) || isDiscountLine(line)).reduce((sum, line) => sum + signedAmount(line), 0),
+  );
+  const inPayable = closeMoney(chargeSum, payableBase)
+    ? charges
+    : closeMoney(priceSum, payableBase)
+      ? charges.filter((line) => PRICE_KEYS.has(line.key) || isDiscountLine(line))
+      : charges;
+  const planNet = round2(
+    inPayable
+      .filter((line) => PRICE_KEYS.has(line.key) || isDiscountLine(line))
+      .reduce((sum, line) => sum + signedAmount(line), 0),
+  );
+  const extras = inPayable.filter(
+    (line) => !PRICE_KEYS.has(line.key) && !isDiscountLine(line) && Math.abs(line.amount) > 0.0001,
+  );
+  const extraSum = round2(extras.reduce((sum, line) => sum + signedAmount(line), 0));
+  const taxableBase = closeMoney(planNet + extraSum, payableBase) ? round2(planNet + extraSum) : payableBase;
+  const gstOnWhole = percent > 0 && closeMoney(gst, (taxableBase * percent) / 100);
+  const rows = [];
+  const planTaxable = planNet || round2(taxableBase - extraSum);
+  const planTax = gstOnWhole ? round2((Math.max(planTaxable, 0) / (taxableBase || 1)) * gst) : gst;
+  rows.push(supplyRow(1, planName, planTaxable, Math.max(0, planTax), percent));
+  extras.forEach((line) => {
+    const taxable = round2(signedAmount(line));
+    const tax = gstOnWhole ? round2((taxable / (taxableBase || 1)) * gst) : 0;
+    rows.push(supplyRow(rows.length + 1, line.label, taxable, Math.max(0, tax), tax > 0 ? percent : 0));
+  });
+  return { rows, gst, taxable: round2(rows.reduce((sum, row) => sum + row.taxableNum, 0)) };
+};
 
 /** Structured invoice input for renderDocumentHtml. */
 export const buildDietInvoiceDocument = ({ quote, plan, profile, patients } = {}) => {
   const data = quote?.data && typeof quote.data === 'object' ? quote.data : quote || {};
   const { lines, total } = collectDietBreakup(data);
   const planName = data.diet_plan_name || plan?.name || plan?.title || 'Diet plan';
-  const gst = lines
-    .filter((line) => line.key === 'gst' || line.key === 'gst_amount')
-    .reduce((sum, line) => sum + signedAmount(line), 0);
-  const taxable = lines
-    .filter((line) => line.key !== 'gst' && line.key !== 'gst_amount')
-    .reduce((sum, line) => sum + signedAmount(line), 0);
-  const grand = total != null ? total : taxable + gst;
-  const lineItems = lines.map((line, index) => {
-    const amount = signedAmount(line);
-    const isGst = line.key === 'gst' || line.key === 'gst_amount';
-    const priceKeys = new Set(['listed_price', 'selling_price', 'price', 'plan_price']);
-    const description = priceKeys.has(line.key) ? `${planName} — ${line.label}` : line.label;
-    return feeLine(index + 1, description, amount, isGst ? money(Math.abs(line.amount)) : '0.00');
+  const gstOnly = round2(lines.filter(isGstLine).reduce((sum, line) => sum + signedAmount(line), 0));
+  const chargeSum = round2(lines.filter((line) => !isGstLine(line)).reduce((sum, line) => sum + signedAmount(line), 0));
+  const grand = total != null ? total : round2(chargeSum + gstOnly);
+  const built = lines.length
+    ? buildDietSupplyRows(lines, data, planName, grand)
+    : { rows: [supplyRow(1, planName, grand, 0, 0)], gst: 0, taxable: grand };
+  const { rows, gst, taxable } = built;
+  const breakup = [];
+  lines.forEach((line) => {
+    if (isGstLine(line) || Math.abs(line.amount) < 0.0001) return;
+    const shown = invoiceMoney(Math.abs(line.amount));
+    breakup.push(line.effect === 'subtract' ? `${line.label}: - ${shown}` : `${line.label}: ${shown}`);
   });
-  const breakup = lines.map((line) => {
-    const shown = money(Math.abs(line.amount));
-    return line.effect === 'subtract' ? `${line.label}: - ${shown}` : `${line.label}: ${shown}`;
-  });
-  breakup.push(`Total payable: ${money(grand)}`);
+  breakup.push(`Taxable value: ${invoiceMoney(taxable)}`);
+  breakup.push(gstPercentOf(data, lines) > 0 ? `IGST (${gstPercentOf(data, lines)}%): ${invoiceMoney(gst)}` : `IGST: ${invoiceMoney(gst)}`);
+  breakup.push(`Total payable: ${invoiceMoney(grand)}`);
+
+  const billTo = buildBillToBlock(buyerFrom(profile, patients));
+  const shipLines = billTo.lines.filter((line) => line && line !== '-');
 
   return {
+    variant: 'invoice',
     documentHeading: 'TAX INVOICE',
-    from: buildWellnessFromBlock({}),
-    billTo: buildBillToBlock(buyerFrom(profile, patients)),
+    from: invoiceSellerBlock({}),
+    billTo,
+    shipTo: shipLines.length ? { title: 'Ship To', lines: shipLines } : null,
+    leftMetaTitle: 'Invoice Details-',
     leftMeta: [
       { label: 'Invoice Date', value: issuedOn(plan) || '-' },
-      { label: 'Reference', value: formatDisplayId('DIT', data.diet_plan_id || plan?.id) },
+      { label: 'Invoice Code', value: formatDisplayId('DIT', data.diet_plan_id || plan?.id) },
       { label: 'Plan', value: planName },
     ],
     rightMeta: [
@@ -269,19 +342,18 @@ export const buildDietInvoiceDocument = ({ quote, plan, profile, patients } = {}
       { label: 'Currency', value: data.currency || data.summary?.currency || 'INR' },
       ...(plan?.duration ? [{ label: 'Duration', value: String(plan.duration) }] : []),
     ],
-    lineItems: lineItems.length
-      ? lineItems
-      : [feeLine(1, planName, grand, '0.00')],
+    lineItems: rows.map(({ taxableNum, taxNum, ...row }) => row),
     totals: [
       { label: 'Qty', value: '1' },
       { label: 'Rate', value: '-' },
-      { label: 'Taxable', value: money(taxable) },
-      { label: 'GST', value: money(gst) },
-      { label: 'Grand Total', value: money(grand) },
+      { label: 'Taxable', value: invoiceMoney(taxable) },
+      { label: 'GST', value: invoiceMoney(gst) },
+      { label: 'Grand Total', value: invoiceMoney(grand) },
     ],
     sections: [{ title: 'Price breakup', lines: breakup }],
     signatoryFor: INVOICE_SELLER_FALLBACK.wellness_name,
     showSignature: true,
-    footerNote: 'THIS IS A COMPUTER GENERATED INVOICE. NO PHYSICAL SIGNATURE REQUIRED.',
+    declaration: INVOICE_DECLARATION,
+    footerNote: INVOICE_FOOTER,
   };
 };

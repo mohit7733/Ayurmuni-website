@@ -8,7 +8,8 @@ import {
   isChatSendEnabled,
   shouldSuppressChatError,
 } from '../chat/chatAccessUtils';
-import { dedupeMessages } from '../chat/messageUtils';
+import { dedupeMessages, normalizeChatMessage, normalizeChatRole, unwrapChatSocketPayload } from '../chat/messageUtils';
+import { resolvePeerOnline } from '../chat/presenceUtils';
 import { Utils } from '../common/utils';
 
 const POLL_INTERVAL_MS = 12_000;
@@ -29,6 +30,7 @@ export function useChat(
     messages: [],
     isLoading: true,
     isConnected: false,
+    peerOnline: false,
     error: null,
     participantRole: role,
     chatAccess: null,
@@ -98,10 +100,12 @@ export function useChat(
       }
       const batches = await Promise.all(ids.map((id) => chatService.getMessages(id).catch(() => null)));
       relatedMessagesRef.current = batches.flatMap((data, index) =>
-        (data?.messages || []).map((message) => ({
-          ...message,
-          appointment_id: message.appointment_id || ids[index],
-        })),
+        (data?.messages || []).map((message) =>
+          normalizeChatMessage({
+            ...message,
+            appointment_id: message.appointment_id || ids[index],
+          }),
+        ),
       );
     })();
     relatedFlightRef.current = { key: relatedKey, promise };
@@ -187,11 +191,20 @@ export function useChat(
   useEffect(() => {
     mountedRef.current = true;
     skipConnectLoadRef.current = true;
+    setState((prev) => ({ ...prev, peerOnline: false, isConnected: false }));
     loadMessages();
     return () => {
       mountedRef.current = false;
     };
   }, [appointmentId, loadMessages]);
+
+  useEffect(() => {
+    setState((prev) =>
+      prev.participantRole === role
+        ? prev
+        : { ...prev, participantRole: role, peerOnline: false },
+    );
+  }, [role]);
 
   useEffect(() => {
     loadMessagesRef.current = loadMessages;
@@ -386,19 +399,48 @@ export function useChat(
     [appointmentId],
   );
 
+  const applyPeerPresence = useCallback((payload) => {
+    setState((prev) => {
+      const resolved = resolvePeerOnline(payload, prev.participantRole);
+      if (resolved === null || resolved === prev.peerOnline) return prev;
+      return { ...prev, peerOnline: resolved };
+    });
+  }, []);
+
   const attachSocketHandlers = useCallback(
     (ws) => {
-      ws.on('connected', () => {
-        if (mountedRef.current) {
-          setState((prev) => ({ ...prev, isConnected: true, error: null }));
-        }
+      ws.on('connected', (data) => {
+        if (!mountedRef.current) return;
+        setState((prev) => {
+          const resolved = resolvePeerOnline(data, prev.participantRole);
+          return {
+            ...prev,
+            isConnected: true,
+            error: null,
+            // Stay offline unless the server explicitly says the peer is online.
+            peerOnline: resolved === true,
+          };
+        });
+      });
+      ws.on('presence', (data) => {
+        if (!mountedRef.current) return;
+        applyPeerPresence(data);
       });
       ws.on('message', (data) => {
-        if (!data.message || !mountedRef.current) return;
-        setState((prev) => ({
-          ...prev,
-          messages: appendOrReplaceMessage(prev.messages, data.message),
-        }));
+        if (!mountedRef.current) return;
+        const incoming = unwrapChatSocketPayload(data);
+        if (!incoming) return;
+        setState((prev) => {
+          const fromPeer =
+            normalizeChatRole(incoming.sender_role) &&
+            normalizeChatRole(incoming.sender_role) !== normalizeChatRole(prev.participantRole);
+          return {
+            ...prev,
+            messages: appendOrReplaceMessage(prev.messages, incoming),
+            // A live message from the other party means they are currently online.
+            ...(fromPeer ? { peerOnline: true } : null),
+          };
+        });
       });
       ws.on('error', (data) => {
         // Socket chat.error with a send-gate code: close the composer the same way as REST.
@@ -422,7 +464,7 @@ export function useChat(
         }));
       });
     },
-    [appendOrReplaceMessage],
+    [appendOrReplaceMessage, applyPeerPresence],
   );
 
   const readAccessToken = useCallback(async () => {
@@ -458,7 +500,9 @@ export function useChat(
         loadMessagesRef.current?.();
       },
       () => {
-        if (mountedRef.current) setState((prev) => ({ ...prev, isConnected: true }));
+        if (mountedRef.current) {
+          setState((prev) => ({ ...prev, isConnected: false, peerOnline: false }));
+        }
       },
       readAccessToken,
     );
@@ -499,6 +543,7 @@ export function useChat(
     sendMessage,
     markAsRead,
     isConnected: state.isConnected,
+    peerOnline: state.peerOnline,
     isChatEnabled: isChatEnabledFlag,
   };
 }

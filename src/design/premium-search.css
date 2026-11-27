@@ -22,6 +22,9 @@
     0 4px 14px -6px rgba(16, 83, 67, 0.16);
   transition: border-color 200ms ease, box-shadow 220ms ease, scale 220ms ease;
 }
+.pm-search--submit-only {
+  padding-left: 14px;
+}
 .pm-search:hover { border-color: rgba(176, 141, 72, 0.58); }
 .pm-search:focus-within {
   border-color: var(--pm-gold-strong);
@@ -154,20 +157,40 @@
 @media (hover: none), (pointer: coarse) {
   .pm-search__kbd { display: none; }
 }
-@media (max-width: 1199px) {
-  .pm-search { height: 48px; }
-  .pm-search__clear { width: 36px; height: 36px; }
+
+/* Phone + tablet: taller bar, one Search button fully inside the pill. */
+@media (max-width: 1023px) {
+  .pm-search {
+    width: 100%;
+    height: 48px;
+    gap: 8px;
+    padding: 4px 4px 4px 12px;
+  }
+  .pm-search--submit-only {
+    padding-left: 14px;
+  }
+  .pm-search__clear {
+    position: relative;
+    width: 36px;
+    height: 36px;
+  }
   .pm-search__clear::before,
-  .pm-search__submit::before { content: ""; position: absolute; inset: -4px; }
-  .pm-search__clear,
-  .pm-search__submit { position: relative; }
-  .pm-search__submit { height: 38px; padding: 0 14px; }
-}
-@media (max-width: 639px) {
-  .pm-search { width: 100%; }
-  .pm-search__icon { width: 32px; height: 32px; }
+  .pm-search__submit::before {
+    content: "";
+    position: absolute;
+    inset: -4px;
+  }
+  .pm-search__submit {
+    position: relative;
+    height: 40px;
+    min-width: 88px;
+    padding: 0 18px;
+    font-size: 0.9rem;
+  }
   .pm-search .pm-search__input,
-  .pm-search__ph { font-size: 0.9rem; }
+  .pm-search__ph {
+    font-size: 0.9rem;
+  }
 }
 
 /* Matching premium pill button (e.g. Cart beside the search). */
@@ -477,17 +500,12 @@
   box-shadow: none;
 }
 
-/* Phone + tablet: full-width search needs a taller bar and an inset Search CTA
-   so the green button never looks clipped against the pill edge. */
+/* Phone + tablet: listing toolbar — Search button only (no left icon). */
 @media (max-width: 1023px) {
   .am-page-bar--slot > .pm-search {
     height: 48px;
-    gap: 6px;
-    padding: 0 5px 0 6px;
-  }
-  .am-page-bar--slot .pm-search__icon {
-    width: 34px;
-    height: 34px;
+    gap: 8px;
+    padding: 4px 4px 4px 14px;
   }
   .am-page-bar--slot .pm-search__field {
     height: 100%;
@@ -497,9 +515,10 @@
     height: 32px;
   }
   .am-page-bar--slot .pm-search__submit {
-    height: 38px;
-    padding: 0 14px;
-    font-size: 0.84rem;
+    height: 40px;
+    min-width: 88px;
+    padding: 0 18px;
+    font-size: 0.9rem;
   }
 }
 

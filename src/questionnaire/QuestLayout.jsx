@@ -8,6 +8,11 @@ import { getStepKey } from './utils';
 import BasicInfoForm from './BasicInfoForm';
 import { isQuestMuted, playQuestSound, questHaptic, setQuestMuted } from './questSound';
 
+const sentenceCase = (value) => {
+  const text = String(value || '').trim();
+  return text ? text.charAt(0).toUpperCase() + text.slice(1) : text;
+};
+
 // T125: game-like journey. Milestone lines are encouragement only (no claims).
 const MILESTONES = [
   { at: 25, text: 'A quarter of the way. Keep going!' },
@@ -366,7 +371,7 @@ export default function QuestLayout({ flow, onExit }) {
           </i>
         </div>
         <h2 id="quest-question" aria-live="polite">
-          {basicInfoStep ? 'Share your basic information' : currentStep.question}
+          {basicInfoStep ? 'Share your basic information' : sentenceCase(currentStep.question)}
         </h2>
         {currentStep.answer_type !== 'multi_choice' &&
         currentStep.answer_type !== 'text' &&

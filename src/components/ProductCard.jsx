@@ -64,16 +64,27 @@ export default function ProductCard({
 
   const updateQty = async (nextQty) => {
     if (!(await requireAuth("Please login to add items to cart"))) return;
-    const block = getAddQtyBlockMessage(item, nextQty);
-    if (block) {
-      showSuccessToast(block, "error");
-      return;
+    const next = Math.max(0, Number(nextQty) || 0);
+    // Rx qty can only go down on the cart page — block decreases everywhere else.
+    if (rx && next < cartQty) return;
+    // Rx/stock gates only apply when adding.
+    if (next > cartQty) {
+      if (rx) {
+        showPrescriptionRequired({ variantId, productName: item.name });
+        return;
+      }
+      const block = getAddQtyBlockMessage(item, next);
+      if (block) {
+        showSuccessToast(block, "error");
+        return;
+      }
     }
-    if (nextQty > cartQty && isPrescriptionRequired(item)) {
-      showPrescriptionRequired({ variantId, productName: item.name });
-      return;
-    }
-    await syncCartQuantity(item, nextQty);
+    await syncCartQuantity(item, next);
+  };
+
+  const stopCardNav = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
   };
 
   const toggleWish = async (e) => {
@@ -192,11 +203,16 @@ export default function ProductCard({
               className="am-stepper"
               role="group"
               aria-label={`Quantity of ${item.name || "item"}`}
+              onClick={stopCardNav}
             >
               <button
                 type="button"
-                onClick={() => updateQty(Math.max(0, cartQty - 1))}
-                disabled={adding}
+                onClick={(e) => {
+                  stopCardNav(e);
+                  if (rx) return;
+                  updateQty(Math.max(0, cartQty - 1));
+                }}
+                disabled={adding || rx}
                 aria-label="Decrease quantity"
               >
                 <Minus size={16} aria-hidden />
@@ -204,7 +220,10 @@ export default function ProductCard({
               <span aria-live="polite">{adding ? "…" : cartQty}</span>
               <button
                 type="button"
-                onClick={() => updateQty(cartQty + 1)}
+                onClick={(e) => {
+                  stopCardNav(e);
+                  updateQty(cartQty + 1);
+                }}
                 disabled={adding}
                 aria-label="Increase quantity"
               >
@@ -216,7 +235,10 @@ export default function ProductCard({
               type="button"
               className="am-product-card__add"
               disabled={adding}
-              onClick={() => updateQty(1)}
+              onClick={(e) => {
+                stopCardNav(e);
+                updateQty(1);
+              }}
             >
               {adding ? "Adding…" : rx ? "Add (Rx)" : "Add to cart"}
             </button>

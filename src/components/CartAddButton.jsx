@@ -40,19 +40,25 @@ export default function CartAddButton({ item, className = "", compact = false })
   const updateQty = async (nextQty) => {
     if (!variantId) return false;
     if (!(await requireAuth("Please login to add items to cart"))) return false;
-    const block = getAddQtyBlockMessage(item, nextQty);
-    if (block) {
-      showSuccessToast(block, "error");
-      return false;
-    }
-    if (nextQty > cartQty && rx) {
-      showPrescriptionRequired({ variantId, productName: item?.name });
-      return false;
+    const next = Math.max(0, Number(nextQty) || 0);
+    // Rx qty can only go down on the cart page — block decreases everywhere else.
+    if (rx && next < cartQty) return false;
+    // Rx/stock gates only on increase.
+    if (next > cartQty) {
+      if (rx) {
+        showPrescriptionRequired({ variantId, productName: item?.name });
+        return false;
+      }
+      const block = getAddQtyBlockMessage(item, next);
+      if (block) {
+        showSuccessToast(block, "error");
+        return false;
+      }
     }
     setBusy(true);
     let ok = false;
     try {
-      ok = await syncCartQuantity({ ...item, variant_id: variantId }, nextQty);
+      ok = await syncCartQuantity({ ...item, variant_id: variantId }, next);
     } finally {
       setBusy(false);
     }
@@ -100,10 +106,11 @@ export default function CartAddButton({ item, className = "", compact = false })
       >
         <button
           type="button"
-          disabled={adding}
+          disabled={adding || rx}
           aria-label={`Decrease quantity of ${name}`}
           onClick={(e) => {
             stop(e);
+            if (rx) return;
             updateQty(Math.max(0, cartQty - 1));
           }}
         >

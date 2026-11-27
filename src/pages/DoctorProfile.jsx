@@ -32,7 +32,7 @@ import {
 } from '../components/detail/Detail';
 import ShareButton from '../components/ShareButton';
 import { formatConsultationAmount } from '../home/catalog';
-import { getDoctorById, toggleFavDoctor } from '../services/consultService';
+import { getDoctorById } from '../services/consultService';
 import { getReviews } from '../services/productService';
 import { requireAuth } from '../services/guestAuth';
 import { invalidateApiCache } from '../services/apiClient';
@@ -42,13 +42,11 @@ import { nameInitial } from '../utils/initials';
 import {
   doctorConsultFee,
   doctorExperience,
-  doctorFavorite,
   doctorImage,
   doctorLocation,
   doctorQualification,
   doctorRating,
   doctorSpeciality,
-  favoriteFromToggle,
   formatEarliestDate,
   getDoctorId,
   parseDoctor,
@@ -58,6 +56,7 @@ import {
   resolveLanguages,
   resolveSocialAccounts,
 } from '../consult/doctors';
+import { toggleDoctorFavourite, useDoctorFavFlag } from '../consult/doctorFavSync';
 import {
   collectReviewImageUrls,
   extractReviewsList,
@@ -114,7 +113,6 @@ export default function DoctorProfile() {
   const [loading, setLoading] = useState(!seeded);
   const [refreshing, setRefreshing] = useState(false);
   const [failed, setFailed] = useState(false);
-  const [fav, setFav] = useState(doctorFavorite(seeded));
   const [showFullAbout, setShowFullAbout] = useState(false);
   const [showAllConditions, setShowAllConditions] = useState(false);
   const [photoFailed, setPhotoFailed] = useState(false);
@@ -140,7 +138,6 @@ export default function DoctorProfile() {
         }
         if (profile) {
           setDoctor((prev) => ({ ...(prev || {}), ...profile }));
-          setFav(doctorFavorite(profile));
         }
         setReviews(normalizeReviewsForDisplay(extractReviewsList(reviewRes)));
       } catch {
@@ -212,6 +209,7 @@ export default function DoctorProfile() {
   const showAvailability = hasAvailability || slotsCount > 0 || Boolean(earliestDate);
   const displayName = formatDoctorDisplayName(doctorDisplaySafe(doctor));
   const speciality = doctorSpeciality(doctor) || 'Ayurveda';
+  const fav = useDoctorFavFlag(doctor || { doctor_id: id });
 
   const toggleFav = async () => {
     if (!(await requireAuth('Please login to save favourite doctors'))) return;
@@ -219,22 +217,15 @@ export default function DoctorProfile() {
       showSuccessToast('Doctor unavailable', 'error');
       return;
     }
-    const prev = fav;
-    setFav(!prev);
-    try {
-      const res = await toggleFavDoctor(id);
-      if (res?.success === false) {
-        setFav(prev);
-        showSuccessToast(res?.message || 'Failed to update favourite', 'error');
-        return;
-      }
-      const next = favoriteFromToggle(res);
-      if (next !== undefined) setFav(next);
-      else showSuccessToast(res?.message || 'Favourite updated', 'success');
-    } catch {
-      setFav(prev);
-      showSuccessToast('Failed to update favourite status', 'error');
+    const result = await toggleDoctorFavourite(doctor || id);
+    if (!result.ok) {
+      showSuccessToast(result.message || 'Failed to update favourite', 'error');
+      return;
     }
+    showSuccessToast(
+      result.message || (result.saved ? 'Added to favourites' : 'Removed from favourites'),
+      'success',
+    );
   };
 
   const book = async () => {

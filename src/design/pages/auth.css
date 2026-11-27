@@ -28,12 +28,9 @@
   padding-inline: clamp(20px, 5vw, 72px);
 }
 
-.auth-shell--welcome .site-header .site-brand img {
-  filter: brightness(0) invert(1);
-}
-
-.auth-shell--welcome .site-brand img {
-  filter: brightness(0) invert(1);
+/* Brand lives in the welcome panel — hide the header duplicate. */
+.auth-shell--welcome .site-header .site-brand {
+  display: none;
 }
 
 .auth-shell--welcome .app-shell-body {
@@ -1057,6 +1054,7 @@
   transition:
     border-color var(--am-dur-fast) var(--am-ease-standard),
     background var(--am-dur-fast) var(--am-ease-standard);
+    margin: 16px 0;
 }
 .au-policy__check:hover,
 .au-policy__check:has(input:checked) {
@@ -1155,7 +1153,7 @@
   margin-top: 10px;
   background: linear-gradient(90deg, rgba(201, 165, 90, 0.75), rgba(201, 165, 90, 0));
 }
-.au-policy__intro { margin: 0; font-size: 14px; line-height: 1.5; color: #4a5a55; }
+.au-policy__intro { margin:16px 0; font-size: 14px; line-height: 1.5; color: #4a5a55; }
 .au-policy__list {
   overflow: hidden;
   border: 1px solid rgba(216, 204, 180, 0.9);

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
+  CircleAlert,
   CreditCard,
   Download,
   Headphones,
@@ -14,6 +15,7 @@ import {
   ShoppingBag,
   Star,
   Truck,
+  X,
 } from 'lucide-react';
 import AppShell from '../components/AppShell';
 import {
@@ -51,6 +53,8 @@ import {
   normalizeReturnList,
   sortReturnsNewestFirst,
 } from '../services/returnService';
+import { buildOrderInvoiceDocument } from '../documents/orderInvoice';
+import { printDocumentHtml, renderDocumentHtml } from '../documents/documentHtml';
 import { formatOrderId } from '../utils/formatDisplayId';
 import { consumePendingProductReview } from '../utils/pendingReviews';
 import { isOrderItemRated, resolveOrderItemVariantId } from '../utils/reviewUtils';
@@ -64,8 +68,13 @@ import {
   formatDeliveryAddress,
   formatOrderDateTime,
   getDeliveryAgent,
+  getOrderPaymentDetail,
   getRefundInfo,
+  refundStatusLabel,
+  refundStatusTone,
+  getReturnableOrderItems,
   INVOICE_ALLOWED,
+  resolveOrderItems,
   RETURN_ALLOWED,
   RETURN_LIST_STATUSES,
   SUPPORT_EMAIL,
@@ -119,21 +128,28 @@ export default function OrderDetails() {
     }));
   }, [order?.id, orderId, location.key]);
 
-  const items = Array.isArray(order?.items) ? order.items : [];
+  const items = resolveOrderItems(order);
   const addressObj = order?.delivery_address || order?.address || order?.shipping_address;
   const address = formatDeliveryAddress(addressObj) || formatAddress(addressObj);
   const status = String(order?.order_status || order?.status || '').toLowerCase();
+  const isCancelledOrder = status === 'cancelled' || status === 'canceled';
   const canReview = status === 'delivered' || status === 'completed';
   const canCancel = CANCEL_ALLOWED.includes(status);
   const canInvoice = INVOICE_ALLOWED.includes(status);
   const canListReturns = RETURN_LIST_STATUSES.includes(status);
   // One return request per order: once raised, its status replaces the "Return" action.
   const latestReturn = orderReturns[0] ?? null;
-  const canReturn = RETURN_ALLOWED.includes(status) && returnsChecked && orderReturns.length === 0;
+  const returnableItems = useMemo(() => getReturnableOrderItems(order), [order]);
+  const canReturn =
+    RETURN_ALLOWED.includes(status) &&
+    returnsChecked &&
+    orderReturns.length === 0 &&
+    returnableItems.length > 0;
   const canTrackLive = TRACKING_ALLOWED.includes(status);
   const orderCode = order?.order_code || order?.order_number || orderId;
   const trackingSteps = useMemo(() => buildOrderTrackingSteps(order), [order]);
   const payment = useMemo(() => buildPaymentRows(order), [order]);
+  const paymentDetail = useMemo(() => getOrderPaymentDetail(order), [order]);
   const refund = useMemo(() => getRefundInfo(order), [order]);
   const agent = useMemo(() => getDeliveryAgent(order, liveTracking), [order, liveTracking]);
   const eta =
@@ -192,6 +208,7 @@ export default function OrderDetails() {
         entityType: 'product',
         entityName: item?.variant?.variant_title || item?.product_name || item?.name || 'Product',
         entitySubtitle: `Order ${formatOrderId(order?.order_code ?? order?.id)}`,
+        entityImage: resolveImageUrl(item?.variant || item) || '',
         variantId,
         orderId: String(order.id),
         initialRating: 0,
@@ -209,11 +226,18 @@ export default function OrderDetails() {
       return;
     }
     const updated = res?.data?.data ?? res?.data ?? null;
-    setOrder((prev) => ({
-      ...prev,
-      ...(updated && typeof updated === 'object' && !Array.isArray(updated) ? updated : {}),
-      order_status: updated?.order_status || 'cancelled',
-    }));
+    setOrder((prev) => {
+      const patch =
+        updated && typeof updated === 'object' && !Array.isArray(updated) ? updated : {};
+      const nextItems = resolveOrderItems({ ...prev, ...patch });
+      const keptItems = nextItems.length ? nextItems : resolveOrderItems(prev);
+      return {
+        ...prev,
+        ...patch,
+        items: keptItems,
+        order_status: patch?.order_status || 'cancelled',
+      };
+    });
     setCancelOpen(false);
     setCancelReason('');
     setCustomReason('');
@@ -224,6 +248,14 @@ export default function OrderDetails() {
     if (!order?.id || invoiceLoading) return;
     setInvoiceLoading(true);
     try {
+      const html = renderDocumentHtml(
+        buildOrderInvoiceDocument(order),
+        `Invoice ${formatOrderId(order?.order_code ?? order.id)}`,
+      );
+      if (await printDocumentHtml(html)) {
+        showSuccessToast('Invoice downloaded', 'success');
+        return;
+      }
       const response = await downloadInvoiceFile(order.id);
       if (!response?.success || !response.data) throw new Error('Invoice PDF data not found');
       const fileName = `Invoice_${formatOrderId(order?.order_code ?? order.id).replace(/[^a-zA-Z0-9._-]/g, '_')}.pdf`;
@@ -294,9 +326,42 @@ export default function OrderDetails() {
             : 'pending',
   }));
   const itemCount = items.reduce((sum, item) => sum + (Number(item?.quantity) || 1), 0);
-  const words = (value) => (value ? String(value).replace(/_/g, ' ') : '');
-  const method = (value) => (/^(upi|cod|emi|nb)$/i.test(String(value || '')) ? String(value).toUpperCase() : words(value));
+  const words = (value) =>
+    value
+      ? String(value)
+          .replace(/_/g, ' ')
+          .replace(/\b\w/g, (c) => c.toUpperCase())
+      : '';
+  const method = (value) =>
+    /^(upi|cod|emi|nb)$/i.test(String(value || ''))
+      ? String(value).toUpperCase()
+      : words(value);
   const paymentMethod = method(order?.payment_method || order?.payment_type);
+  const refundTimeline = (refund?.history || []).map((entry, index, list) => ({
+    key: `${entry.status}-${entry.createdAt}-${index}`,
+    title: refundStatusLabel(entry.status),
+    time: formatOrderDateTime(entry.createdAt),
+    state:
+      index === list.length - 1
+        ? refundStatusTone(entry.status) === 'danger'
+          ? 'failed'
+          : 'current'
+        : 'done',
+  }));
+  const refundTrack = refundTimeline.length ? (
+    <DetailCard
+      id="order-refund-progress"
+      title={T.refund}
+      icon={RefreshCw}
+      meta={refund.amount != null ? formatRupee(refund.amount) : undefined}
+    >
+      <Timeline items={refundTimeline} />
+    </DetailCard>
+  ) : null;
+  const paymentStatusLabel = paymentDetail.failed
+    ? T.paymentFailed
+    : words(paymentDetail.status);
+  const paymentRecord = paymentDetail.record;
 
   return (
     <AppShell tab="profile">
@@ -336,6 +401,11 @@ export default function OrderDetails() {
                     {itemCount} {itemCount === 1 ? 'item' : 'items'}
                   </MetaChip>
                   {paymentMethod ? <MetaChip icon={CreditCard}>{paymentMethod}</MetaChip> : null}
+                  {paymentDetail.failed ? (
+                    <MetaChip icon={CircleAlert} tone="danger">
+                      {T.paymentFailed}
+                    </MetaChip>
+                  ) : null}
                   {eta ? <MetaChip icon={Truck}>{T.arrivingBy(eta)}</MetaChip> : null}
                 </>
               }
@@ -434,7 +504,17 @@ export default function OrderDetails() {
                       items={[
                         { label: T.placedOn, value: formatOrderDateTime(order.created_at) },
                         { label: T.paymentMethod, value: paymentMethod },
-                        { label: T.paymentStatus, value: words(order.payment_status) },
+                        {
+                          label: T.paymentStatus,
+                          value: paymentStatusLabel,
+                          tone: paymentDetail.failed ? 'danger' : undefined,
+                        },
+                        {
+                          label: T.failureReason,
+                          value: paymentDetail.failed ? paymentDetail.reason : '',
+                          wide: true,
+                          tone: 'danger',
+                        },
                         { label: T.shippingMethod, value: words(order.shipping_method) },
                       ]}
                     />
@@ -445,7 +525,7 @@ export default function OrderDetails() {
                       <InfoGrid
                         columns={2}
                         items={[
-                          { label: T.refundStatus, value: words(refund.status) },
+                          { label: T.refundStatus, value: refundStatusLabel(refund.latestStatus || refund.status) },
                           { label: T.refundAmount, value: refund.amount != null ? formatRupee(refund.amount) : '' },
                           { label: T.refundMethod, value: words(refund.method), wide: true },
                         ]}
@@ -467,60 +547,150 @@ export default function OrderDetails() {
                 </>
               }
             >
+              {paymentDetail.failed ? (
+                <DetailCard
+                  id="order-payment-failed"
+                  title={T.paymentFailed}
+                  icon={CircleAlert}
+                  tone="danger"
+                >
+                  <p className="dx-prose">{paymentDetail.reason || T.paymentFailedFallback}</p>
+                  <InfoGrid
+                    items={[
+                      {
+                        label: T.paymentAmount,
+                        value:
+                          paymentRecord?.amount != null && paymentRecord.amount !== ''
+                            ? formatRupee(paymentRecord.amount)
+                            : '',
+                      },
+                      {
+                        label: T.paymentAttempted,
+                        value: formatOrderDateTime(paymentRecord?.created_at),
+                      },
+                      {
+                        label: T.paymentFailedOn,
+                        value: formatOrderDateTime(paymentRecord?.updated_at),
+                      },
+                      {
+                        label: paymentDetail.expired ? T.paymentExpiredAt : T.paymentExpiresAt,
+                        value: formatOrderDateTime(paymentDetail.expiresAt),
+                      },
+                    ]}
+                  />
+                </DetailCard>
+              ) : null}
+
+              {isCancelledOrder ? (
+                <>
+                  {refundTrack}
+                  <DetailCard id="order-track" title={T.trackOrder} icon={Truck}>
+                    <Timeline items={trackingTimeline} />
+                  </DetailCard>
+                </>
+              ) : null}
+
               <DetailCard
                 id="order-items"
-                title={T.itemsTitle}
+                title={isCancelledOrder ? T.cancelledItemsTitle : T.itemsTitle}
                 icon={ShoppingBag}
                 meta={`${itemCount} ${itemCount === 1 ? 'item' : 'items'}`}
               >
-                <ul className="dx-items">
-                  {items.map((item) => {
-                    const variantId = resolveOrderItemVariantId(item);
-                    const local = localReviews[variantId];
-                    const rated = isOrderItemRated(item) || Boolean(local);
-                    const image = resolveImageUrl(item?.variant || item);
-                    const name = item?.variant?.variant_title || item?.product_name || item?.name;
-                    const unit = Number(item.selling_price ?? item.price ?? item.unit_price) || 0;
-                    const qty = Number(item.quantity) || 1;
-                    const lineTotal = Number(item.total_price ?? item.subtotal) || unit * qty;
-                    const rating = local?.rating || item?.review?.rating;
-                    return (
-                      <li key={item.id || item.variant_id} className="dx-item">
-                        <span className="dx-item__media">
-                          {image ? (
-                            <img src={image} alt="" loading="lazy" decoding="async" />
-                          ) : (
-                            <Leaf size={20} aria-hidden />
-                          )}
-                        </span>
-                        <span className="dx-item__copy">
-                          <strong>{name}</strong>
-                          <small>{T.qty(qty)}</small>
-                          {rated ? (
-                            <small className="dx-item__rated">
-                              <Star size={12} aria-hidden />
-                              {rating ? T.youRated(rating) : T.reviewSubmitted}
-                            </small>
-                          ) : null}
-                        </span>
-                        <span className="dx-item__end">
-                          <strong>{formatRupee(lineTotal)}</strong>
-                          {unit * qty > lineTotal ? <s className="dx-item__was">{formatRupee(unit * qty)}</s> : null}
-                          {!rated && variantId && canReview ? (
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              leadingIcon={<Star size={14} aria-hidden />}
-                              onClick={() => openProductReview(item)}
-                            >
-                              {T.rate}
-                            </Button>
-                          ) : null}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
+                {items.length ? (
+                  <ul className="dx-items">
+                    {items.map((item) => {
+                      const variantId = resolveOrderItemVariantId(item);
+                      const local = localReviews[variantId];
+                      const rated = isOrderItemRated(item) || Boolean(local);
+                      const image = resolveImageUrl(item?.variant || item);
+                      const name =
+                        item?.variant?.variant_title ||
+                        item?.product_name ||
+                        item?.name ||
+                        item?.title ||
+                        'Product';
+                      const unit = Number(item.selling_price ?? item.price ?? item.unit_price) || 0;
+                      const qty = Number(item.quantity) || 1;
+                      const lineTotal = Number(item.total_price ?? item.subtotal) || unit * qty;
+                      const rating = local?.rating || item?.review?.rating;
+                      const lineCancelled =
+                        isCancelledOrder ||
+                        /cancel/i.test(String(item?.status || item?.item_status || ''));
+                      const goToProduct = () => {
+                        if (!variantId) return;
+                        navigate(`/products/${variantId}`);
+                      };
+                      const MediaTag = variantId ? 'button' : 'span';
+                      return (
+                        <li
+                          key={item.id || item.variant_id || variantId || name}
+                          className={`dx-item${lineCancelled ? ' is-cancelled' : ''}`}
+                        >
+                          <MediaTag
+                            {...(variantId
+                              ? {
+                                  type: 'button',
+                                  onClick: goToProduct,
+                                  'aria-label': `View ${name}`,
+                                }
+                              : {})}
+                            className={`dx-item__media${lineCancelled ? ' is-cancelled' : ''}${
+                              variantId ? ' is-link' : ''
+                            }`}
+                          >
+                            {image ? (
+                              <img src={image} alt="" loading="lazy" decoding="async" />
+                            ) : (
+                              <Leaf size={20} aria-hidden />
+                            )}
+                            {lineCancelled ? (
+                              <span className="dx-item__cancel-mark" aria-hidden>
+                                <X size={14} strokeWidth={3} />
+                              </span>
+                            ) : null}
+                          </MediaTag>
+                          <span className="dx-item__copy">
+                            {variantId ? (
+                              <button type="button" className="dx-item__name" onClick={goToProduct}>
+                                {name}
+                              </button>
+                            ) : (
+                              <strong>{name}</strong>
+                            )}
+                            <small>{T.qty(qty)}</small>
+                            {lineCancelled ? (
+                              <small className="dx-item__cancelled-label">{T.cancelledItem}</small>
+                            ) : null}
+                            {rated ? (
+                              <small className="dx-item__rated">
+                                <Star size={12} aria-hidden />
+                                {rating ? T.youRated(rating) : T.reviewSubmitted}
+                              </small>
+                            ) : null}
+                          </span>
+                          <span className="dx-item__end">
+                            <strong>{formatRupee(lineTotal)}</strong>
+                            {unit * qty > lineTotal ? (
+                              <s className="dx-item__was">{formatRupee(unit * qty)}</s>
+                            ) : null}
+                            {!rated && variantId && canReview ? (
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                leadingIcon={<Star size={14} aria-hidden />}
+                                onClick={() => openProductReview(item)}
+                              >
+                                {T.rate}
+                              </Button>
+                            ) : null}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : (
+                  <p className="dx-note">{T.noItems}</p>
+                )}
               </DetailCard>
 
               {orderReturns.length > 0 ? (
@@ -554,64 +724,69 @@ export default function OrderDetails() {
                 </DetailCard>
               ) : null}
 
-              <DetailCard
-                id="order-track"
-                title={T.trackOrder}
-                icon={Truck}
-                action={
-                  canTrackLive ? (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      loading={trackingLoading}
-                      leadingIcon={<RefreshCw size={14} />}
-                      onClick={refreshTracking}
-                    >
-                      {T.refresh}
-                    </Button>
-                  ) : null
-                }
-              >
-                {eta || currentLocation ? (
-                  <div className="dx-link dx-link--static">
-                    <span className="dx-link__icon" aria-hidden>
-                      <MapPin size={18} />
-                    </span>
-                    <span className="dx-link__copy">
-                      {eta ? <strong>{T.arrivingBy(eta)}</strong> : <strong>{currentLocation}</strong>}
-                      {eta && currentLocation ? <span>{currentLocation}</span> : null}
-                    </span>
-                  </div>
-                ) : null}
-                <Timeline items={trackingTimeline} />
-                {liveTracking?.trackingNumber ? (
-                  <p className="dx-note">
-                    {liveTracking.carrier ? `${liveTracking.carrier} · ` : ''}
-                    AWB {liveTracking.trackingNumber}
-                    {liveTracking.lastUpdated ? ` · Updated ${liveTracking.lastUpdated}` : ''}
-                  </p>
-                ) : null}
-                {agent ? (
-                  <PersonCard
-                    fallback={<Truck size={18} />}
-                    name={agent.name}
-                    role="Delivery partner"
-                    meta={agent.phone}
-                    action={
-                      agent.phone ? (
-                        <Button
-                          href={`tel:${agent.phone}`}
-                          variant="secondary"
-                          size="sm"
-                          leadingIcon={<Phone size={14} />}
-                        >
-                          {T.call}
-                        </Button>
-                      ) : null
-                    }
-                  />
-                ) : null}
-              </DetailCard>
+              {!isCancelledOrder ? (
+                <>
+                {refundTrack}
+                <DetailCard
+                  id="order-track"
+                  title={T.trackOrder}
+                  icon={Truck}
+                  action={
+                    canTrackLive ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        loading={trackingLoading}
+                        leadingIcon={<RefreshCw size={14} />}
+                        onClick={refreshTracking}
+                      >
+                        {T.refresh}
+                      </Button>
+                    ) : null
+                  }
+                >
+                  {eta || currentLocation ? (
+                    <div className="dx-link dx-link--static">
+                      <span className="dx-link__icon" aria-hidden>
+                        <MapPin size={18} />
+                      </span>
+                      <span className="dx-link__copy">
+                        {eta ? <strong>{T.arrivingBy(eta)}</strong> : <strong>{currentLocation}</strong>}
+                        {eta && currentLocation ? <span>{currentLocation}</span> : null}
+                      </span>
+                    </div>
+                  ) : null}
+                  <Timeline items={trackingTimeline} />
+                  {liveTracking?.trackingNumber ? (
+                    <p className="dx-note">
+                      {liveTracking.carrier ? `${liveTracking.carrier} · ` : ''}
+                      AWB {liveTracking.trackingNumber}
+                      {liveTracking.lastUpdated ? ` · Updated ${liveTracking.lastUpdated}` : ''}
+                    </p>
+                  ) : null}
+                  {agent ? (
+                    <PersonCard
+                      fallback={<Truck size={18} />}
+                      name={agent.name}
+                      role="Delivery partner"
+                      meta={agent.phone}
+                      action={
+                        agent.phone ? (
+                          <Button
+                            href={`tel:${agent.phone}`}
+                            variant="secondary"
+                            size="sm"
+                            leadingIcon={<Phone size={14} />}
+                          >
+                            {T.call}
+                          </Button>
+                        ) : null
+                      }
+                    />
+                  ) : null}
+                </DetailCard>
+                </>
+              ) : null}
             </DetailLayout>
           </>
         )}

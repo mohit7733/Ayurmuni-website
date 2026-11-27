@@ -53,6 +53,7 @@ import {
   getAppointmentIds,
   getAppointmentPatientId,
   isAppointmentInPast,
+  isJoinClosedAppointmentStatus,
   resolveAppointmentDateTime,
   resolveAppointmentLookupId,
 } from '../consult/appointmentUtils';
@@ -223,7 +224,6 @@ export default function AppointmentDetails() {
   }, [shouldShowReviewModal]);
 
   const callStatus = String(appointment?.call_status || '').toLowerCase();
-  const isLive = callStatus === 'in_progress';
   const schedule = resolveAppointmentDateTime({
     date: appointment?.appointment_date,
     time: appointment?.start_time,
@@ -257,6 +257,11 @@ export default function AppointmentDetails() {
     medicines.length > 0 ||
     Boolean(prescriptionIdOf(detail)) ||
     Boolean(detail?.prescription);
+  // Hide join once the visit is completed/cancelled, the call ended, or an Rx exists.
+  const isLive =
+    callStatus === 'in_progress' &&
+    !hasPrescription &&
+    !isJoinClosedAppointmentStatus(status);
   const showPrescriptionCta =
     hasPrescription &&
     ['completed', 'cancelled', 'missed', 'expired', 'no_show', 'noshow'].includes(status);
@@ -427,6 +432,7 @@ export default function AppointmentDetails() {
         entityType: 'doctor',
         entityName: doctor?.doctor_name || doctorDisplayName(doctor) || 'Doctor',
         entitySubtitle: specialization,
+        entityImage: doctorImage(doctor) || '',
         appointmentId: lookup,
         initialRating: rating,
       },

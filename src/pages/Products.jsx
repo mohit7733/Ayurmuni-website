@@ -383,7 +383,7 @@ export default function Products() {
                     <ul className="am-product-grid">
                       {filteredAndSortedProducts.map((item) => (
                         <li key={item.variant_id || item.id}>
-                          <ProductCard item={item} cartButton />
+                          <ProductCard item={item} />
                         </li>
                       ))}
                     </ul>
