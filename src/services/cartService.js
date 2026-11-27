@@ -26,7 +26,21 @@ export const getVariantIdFromItem = (item) =>
   ).trim();
 
 export const getCartLineId = (item) =>
-  String(item?.id ?? item?.cart_item_id ?? '').trim();
+  String(item?.cart_item_id ?? item?.id ?? '').trim();
+
+/** Cart line id for a variant already in my_cart; empty when not in cart. */
+export const findCartItemIdByVariant = (cartData, variantId) => {
+  const id = String(variantId ?? '').trim();
+  if (!id) return '';
+  const root = cartData?.data ?? cartData ?? {};
+  const lines = Array.isArray(root?.my_cart?.items) ? root.my_cart.items : [];
+  for (const line of lines) {
+    if (getVariantIdFromItem(line) !== id) continue;
+    const lineId = getCartLineId(line);
+    if (lineId && lineId !== id) return lineId;
+  }
+  return '';
+};
 
 export const cartMetrics = (data) => {
   const variantQuantities = {};

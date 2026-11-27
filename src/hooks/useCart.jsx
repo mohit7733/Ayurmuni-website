@@ -1,5 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { addUpdateCart, cartMetrics, getAllCart } from '../services/cartService';
+import {
+  addUpdateCart,
+  cartMetrics,
+  findCartItemIdByVariant,
+  getAllCart,
+} from '../services/cartService';
 import { isAuthenticated, requireAuth } from '../services/guestAuth';
 import { showSuccessToast } from '../config/key';
 import { invalidateApiCache, subscribeApiSession } from '../services/apiClient';
@@ -18,10 +23,15 @@ export function CartProvider({ children }) {
   // Only the newest cart read may write state: rapid qty changes each call fetchCart.
   const cartRequestRef = useRef(0);
   const quantitiesRef = useRef({});
+  const cartDataRef = useRef(null);
 
   useEffect(() => {
     quantitiesRef.current = variantQuantities;
   }, [variantQuantities]);
+
+  useEffect(() => {
+    cartDataRef.current = cartData;
+  }, [cartData]);
 
   const applyMetrics = useCallback((response) => {
     const metrics = cartMetrics(response);
@@ -68,12 +78,27 @@ export function CartProvider({ children }) {
       if (!variantId) return false;
       const previousQty = Number(quantitiesRef.current[variantId]) || 0;
       const nextQty = Math.max(0, Number(newQty) || 0);
+      // Only send cart_item_id when this variant is already in my_cart.
+      // First add: POST cart/?variant_id=…&quantity=…
+      // Update:     POST cart/?variant_id=…&quantity=…&cart_item_id=…
+      let cartItemId = '';
+      if (previousQty > 0) {
+        const fromItem = String(item?.cart_item_id ?? '').trim();
+        cartItemId =
+          (fromItem && fromItem !== variantId ? fromItem : '') ||
+          findCartItemIdByVariant(cartDataRef.current, variantId);
+        // Cart page lines use id as the cart line id (not the variant id).
+        if (!cartItemId && (item?.source === 'cart' || item?.source === 'prescribed')) {
+          const lineId = String(item?.id ?? '').trim();
+          if (lineId && lineId !== variantId) cartItemId = lineId;
+        }
+      }
       setAddingVariantId(variantId);
       try {
         const response = await addUpdateCart({
           variant_id: variantId,
           quantity: nextQty,
-          cart_item_id: item?.cart_item_id || item?.id,
+          ...(cartItemId ? { cart_item_id: cartItemId } : {}),
           ...(item?.source === 'prescribed' ? { source: 'prescribed' } : {}),
         });
         if (response?.success === false) {

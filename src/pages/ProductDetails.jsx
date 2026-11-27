@@ -386,6 +386,37 @@ export default function ProductDetails({ medicine = false } = {}) {
     });
   };
 
+  /** When the variant is already in cart, +/- syncs immediately (same as medicine cards). */
+  const changeCartQty = async (nextQty) => {
+    if (!(await requireAuth('Please login to add items to cart'))) return;
+    if (!cartVariantId) return;
+    const next = Math.max(0, Number(nextQty) || 0);
+    // Rx qty can only go down on the cart page — block decreases on detail.
+    if (needsRx && next < cartQty) return;
+    if (next > cartQty) {
+      if (needsRx) {
+        showPrescriptionRequired({
+          variantId: cartVariantId,
+          productName: product?.name || active?.name,
+        });
+        return;
+      }
+      const block = getAddQtyBlockMessage(active, next);
+      if (block) {
+        showSuccessToast(block, 'error');
+        return;
+      }
+    }
+    setPendingCta('add');
+    const ok = await syncCartQuantity({ ...active, variant_id: cartVariantId }, next);
+    setPendingCta(null);
+    if (!ok) {
+      showSuccessToast('Try again to add into cart', 'error');
+      return;
+    }
+    setQty(next > 0 ? next : 1);
+  };
+
   const addToCart = async (goToCart = false) => {
     if (!(await requireAuth('Please login to add items to cart'))) return;
     if (!cartVariantId) return;
@@ -779,17 +810,30 @@ export default function ProductDetails({ medicine = false } = {}) {
                 <button
                   type="button"
                   aria-label={T.decreaseQty}
-                  disabled={out || qty <= 1}
-                  onClick={() => setQty((current) => (current > 1 ? current - 1 : 1))}
+                  disabled={out || ctaBusy || needsRx || (cartQty === 0 && qty <= 1)}
+                  onClick={() => {
+                    if (needsRx) return;
+                    if (cartQty > 0) {
+                      changeCartQty(Math.max(0, cartQty - 1));
+                      return;
+                    }
+                    setQty((current) => (current > 1 ? current - 1 : 1));
+                  }}
                 >
                   <Minus size={14} aria-hidden />
                 </button>
-                <span aria-live="polite">{qty}</span>
+                <span aria-live="polite">{ctaBusy ? '…' : cartQty > 0 ? cartQty : qty}</span>
                 <button
                   type="button"
                   aria-label={T.increaseQty}
-                  disabled={out || atMax}
-                  onClick={increaseQty}
+                  disabled={out || ctaBusy || atMax}
+                  onClick={() => {
+                    if (cartQty > 0) {
+                      changeCartQty(cartQty + 1);
+                      return;
+                    }
+                    increaseQty();
+                  }}
                 >
                   <Plus size={14} aria-hidden />
                 </button>

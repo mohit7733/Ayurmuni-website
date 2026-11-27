@@ -218,11 +218,13 @@ export default function Cart() {
     const oldQty = Math.max(0, Number(item.quantity) || 0);
     const lockedQty = isPrescribed && !approvedUpload;
 
-    if (approvedUpload && action === "plus") return;
-
     if (lockedQty && action === "remove") return;
 
-    if (rxRequired && !approvedUpload && (isPrescribed || action === "plus")) {
+    // Increase on Rx / approved-upload lines opens the same prescription modal as product pages.
+    if (
+      action === "plus" &&
+      (approvedUpload || (rxRequired && !isPrescribed))
+    ) {
       showPrescriptionRequired({
         variantId: item.variant_id,
         productName: item.name,
@@ -388,39 +390,33 @@ export default function Cart() {
           ) : null}
         </div>
         <div className="cp-line__side">
-          {approvedUpload ? (
-            <span className="cp-qty" aria-label={`Quantity ${item.quantity}`}>
-              Qty {item.quantity}
-            </span>
-          ) : (
-            <div
-              className="cp-stepper"
-              role="group"
-              aria-label={`Quantity of ${item.name || "item"}`}
+          <div
+            className="cp-stepper"
+            role="group"
+            aria-label={`Quantity of ${item.name || "item"}`}
+          >
+            <button
+              type="button"
+              aria-label={T.decreaseQty}
+              disabled={adding || (lockedQty && item.quantity <= 1)}
+              onClick={() => changeQty(item, "minus")}
             >
-              <button
-                type="button"
-                aria-label={T.decreaseQty}
-                disabled={adding || (lockedQty && item.quantity <= 1)}
-                onClick={() => changeQty(item, "minus")}
-              >
-                {!lockedQty && Number(item.quantity) <= 1 ? (
-                  <Trash2 size={14} aria-hidden />
-                ) : (
-                  <Minus size={14} aria-hidden />
-                )}
-              </button>
-              <span aria-live="polite">{adding ? "…" : item.quantity}</span>
-              <button
-                type="button"
-                aria-label={T.increaseQty}
-                disabled={adding || item._isOutOfStock}
-                onClick={() => changeQty(item, "plus")}
-              >
-                <Plus size={14} aria-hidden />
-              </button>
-            </div>
-          )}
+              {!lockedQty && Number(item.quantity) <= 1 ? (
+                <Trash2 size={14} aria-hidden />
+              ) : (
+                <Minus size={14} aria-hidden />
+              )}
+            </button>
+            <span aria-live="polite">{adding ? "…" : item.quantity}</span>
+            <button
+              type="button"
+              aria-label={T.increaseQty}
+              disabled={adding || item._isOutOfStock}
+              onClick={() => changeQty(item, "plus")}
+            >
+              <Plus size={14} aria-hidden />
+            </button>
+          </div>
           <span className="cp-line__total">
             {formatRupee(Number(item.price) * Number(item.quantity))}
           </span>
