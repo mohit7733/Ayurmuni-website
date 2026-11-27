@@ -26,6 +26,67 @@ export const INVOICE_ALLOWED = [
   'returned',
 ];
 export const RETURN_ALLOWED = ['delivered', 'completed'];
+
+const isFlagTrue = (value) => value === true || value === 'true' || value === 1 || value === '1';
+
+/** Delivery date when the order has one, otherwise the date it was placed. */
+export const orderReturnAnchor = (order) =>
+  order?.delivered_at || order?.completed_at || order?.created_at || '';
+
+export const itemIsReturnableFlag = (item) =>
+  isFlagTrue(item?.variant?.is_returnable ?? item?.is_returnable);
+
+export const itemReturnableDays = (item) => {
+  const n = Number(item?.variant?.returnable_days ?? item?.returnable_days);
+  return Number.isFinite(n) ? n : 0;
+};
+
+/** True while now is still inside delivery (or order date) plus `returnable_days`. */
+export const isWithinReturnWindow = (order, days) => {
+  if (!(Number(days) > 0)) return false;
+  const start = new Date(orderReturnAnchor(order)).getTime();
+  if (!Number.isFinite(start)) return false;
+  return Date.now() <= start + Number(days) * 24 * 60 * 60 * 1000;
+};
+
+export const isOrderLineReturnable = (item, order) =>
+  itemIsReturnableFlag(item) && isWithinReturnWindow(order, itemReturnableDays(item));
+
+/** Lines the customer can still return: `is_returnable` and inside `returnable_days`. */
+export const getReturnableOrderItems = (order) =>
+  resolveOrderItems(order).filter((item) => isOrderLineReturnable(item, order));
+
+const lineIdentityKeys = (line) =>
+  [
+    line?.id,
+    line?.order_item_id,
+    line?.sku_code,
+    line?.variant_id,
+    line?.variant?.variant_id,
+    line?.variant?.id,
+  ]
+    .filter((value) => value != null && String(value).trim() !== '')
+    .map(String);
+
+/** Whether a return-picker row is one of the order lines that are still returnable. */
+export const isReturnPickerItemAllowed = (item, returnableLines) => {
+  const keys = new Set((returnableLines || []).flatMap(lineIdentityKeys));
+  if (!keys.size) return false;
+  const raw = item?.raw && typeof item.raw === 'object' ? item.raw : {};
+  const candidates = [
+    item?.orderItemId,
+    item?.orderLineId,
+    raw.order_item_id,
+    raw.id,
+    raw.item_id,
+    raw.sku_code,
+    raw.variant_id,
+    raw.variant?.variant_id,
+    raw.variant?.id,
+  ];
+  return candidates.some((value) => value != null && keys.has(String(value)));
+};
+
 /** Statuses whose order may already have return requests to list. */
 export const RETURN_LIST_STATUSES = ['delivered', 'completed', 'returned'];
 export const TRACKING_ALLOWED = [
@@ -294,21 +355,107 @@ export const buildPaymentRows = (order) => {
   };
 };
 
-export const getRefundInfo = (order) => {
-  const amount = Number(
-    order?.refund_amount ?? order?.refunded_amount ?? order?.refund?.amount ?? order?.refund?.refund_amount ?? 0,
-  );
+const asPaymentRecord = (value) =>
+  value && typeof value === 'object' && !Array.isArray(value) ? value : null;
+
+/** Nested `payment` on the order, or the latest attempt when the API returns a list. */
+export const getOrderPaymentDetail = (order) => {
+  const raw = order?.payment;
+  let record = asPaymentRecord(raw);
+  if (!record && Array.isArray(raw)) {
+    record =
+      asPaymentRecord(raw.find((item) => /fail|declin|reject|expir/i.test(String(item?.status || '')))) ||
+      asPaymentRecord(raw[raw.length - 1]);
+  }
   const status = String(
-    order?.refund_status ?? order?.refund?.status ?? order?.refund?.refund_status ?? '',
+    record?.status || record?.payment_status || order?.payment_status || '',
   ).trim();
-  const method = String(
-    order?.refund_method ?? order?.refund?.method ?? order?.refund?.refund_method ?? '',
+  const reason = String(
+    record?.failure_reason ||
+      record?.reason ||
+      order?.payment_failure_reason ||
+      order?.failure_reason ||
+      '',
   ).trim();
-  if (!status && !(Number.isFinite(amount) && amount > 0)) return null;
+  const failed = /fail|declin|reject|expir/i.test(status);
+  const expiresAt = record?.expires_at || '';
+  const expiresTime = expiresAt ? new Date(expiresAt).getTime() : NaN;
+  const expired = Number.isFinite(expiresTime) && expiresTime < Date.now();
+  return { record, status, reason, failed, expiresAt, expired };
+};
+
+/** Short payment status for an order row: label, badge tone, and failure reason. */
+export const orderPaymentStatusView = (order) => {
+  const detail = getOrderPaymentDetail(order);
+  const status = detail.status.toLowerCase().replace(/\s+/g, '_');
+  if (!status) return null;
+  if (detail.failed) {
+    return { label: 'Payment failed', tone: 'danger', reason: detail.reason, failed: true };
+  }
+  if (/refund/.test(status)) return { label: 'Refunded', tone: 'info', reason: '', failed: false };
+  if (/paid|success|capture|complete/.test(status)) {
+    return { label: 'Paid', tone: 'success', reason: '', failed: false };
+  }
+  if (/pend|initiat|created|process|authoriz|unpaid/.test(status)) {
+    return { label: 'Payment pending', tone: 'warning', reason: '', failed: false };
+  }
+  if (/cancel/.test(status)) {
+    return { label: 'Payment cancelled', tone: 'danger', reason: detail.reason, failed: false };
+  }
+  return {
+    label: status.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+    tone: 'neutral',
+    reason: detail.reason,
+    failed: false,
+  };
+};
+
+export const refundStatusLabel = (status) =>
+  String(status || '')
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+    .trim();
+
+export const refundStatusTone = (status) => {
+  const value = String(status || '').toLowerCase();
+  if (/fail|reject|declin/.test(value)) return 'danger';
+  if (/approv|success|complete|refunded|paid/.test(value)) return 'success';
+  if (/initiat|pend|process|request/.test(value)) return 'warning';
+  return 'info';
+};
+
+export const getRefundInfo = (order) => {
+  const refund = order?.refund && typeof order.refund === 'object' && !Array.isArray(order.refund) ? order.refund : null;
+  const historyRaw = Array.isArray(refund?.status_history)
+    ? refund.status_history
+    : Array.isArray(order?.refund_status_history)
+      ? order.refund_status_history
+      : [];
+  const history = historyRaw
+    .map((entry) => ({
+      status: String(entry?.status || '').trim(),
+      createdAt: entry?.created_at || entry?.createdAt || '',
+    }))
+    .filter((entry) => entry.status)
+    .sort((a, b) => {
+      const left = new Date(a.createdAt).getTime();
+      const right = new Date(b.createdAt).getTime();
+      if (!Number.isFinite(left) || !Number.isFinite(right)) return 0;
+      return left - right;
+    });
+  const latest = history[history.length - 1];
+  const status = String(refund?.status ?? order?.refund_status ?? latest?.status ?? '').trim();
+  const amount = Number(
+    order?.refund_amount ?? order?.refunded_amount ?? refund?.amount ?? refund?.refund_amount ?? 0,
+  );
+  const method = String(order?.refund_method ?? refund?.method ?? refund?.refund_method ?? '').trim();
+  if (!status && !(Number.isFinite(amount) && amount > 0) && !history.length) return null;
   return {
     amount: Number.isFinite(amount) && amount > 0 ? amount : null,
     status,
+    latestStatus: latest?.status || status,
     method,
+    history,
   };
 };
 

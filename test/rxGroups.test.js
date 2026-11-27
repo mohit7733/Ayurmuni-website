@@ -8,6 +8,7 @@ import {
   getVerifyCta,
   groupRxLines,
   groupSubtotal,
+  isApprovedUploadLine,
   isUploadRxLine,
   pickPrescribedItems,
   previewItemsFor,
@@ -42,6 +43,13 @@ describe('cart rx grouping', () => {
     expect(isUploadRxLine({ rx_group: { source: 'UPLOAD' } })).toBe(true);
     expect(isUploadRxLine({ rx_source: 'doctor' })).toBe(false);
     expect(isUploadRxLine({})).toBe(false);
+  });
+
+  it('treats an approved uploaded line as quantity-locked upward', () => {
+    expect(isApprovedUploadLine({ rx_source: 'upload', rx_group: { status: 'approved' } })).toBe(true);
+    expect(isApprovedUploadLine({ rx_source: 'upload', rx_status: 'approved' })).toBe(true);
+    expect(isApprovedUploadLine({ rx_source: 'upload', rx_group: { status: 'pending_review' } })).toBe(false);
+    expect(isApprovedUploadLine({ rx_source: 'doctor', rx_group: { status: 'approved' } })).toBe(false);
   });
 
   it('groups uploads by prescription_request_id and doctors by group id', () => {

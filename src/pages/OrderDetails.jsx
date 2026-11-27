@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
+  CircleAlert,
   CreditCard,
   Download,
   Headphones,
@@ -67,7 +68,11 @@ import {
   formatDeliveryAddress,
   formatOrderDateTime,
   getDeliveryAgent,
+  getOrderPaymentDetail,
   getRefundInfo,
+  refundStatusLabel,
+  refundStatusTone,
+  getReturnableOrderItems,
   INVOICE_ALLOWED,
   resolveOrderItems,
   RETURN_ALLOWED,
@@ -134,11 +139,17 @@ export default function OrderDetails() {
   const canListReturns = RETURN_LIST_STATUSES.includes(status);
   // One return request per order: once raised, its status replaces the "Return" action.
   const latestReturn = orderReturns[0] ?? null;
-  const canReturn = RETURN_ALLOWED.includes(status) && returnsChecked && orderReturns.length === 0;
+  const returnableItems = useMemo(() => getReturnableOrderItems(order), [order]);
+  const canReturn =
+    RETURN_ALLOWED.includes(status) &&
+    returnsChecked &&
+    orderReturns.length === 0 &&
+    returnableItems.length > 0;
   const canTrackLive = TRACKING_ALLOWED.includes(status);
   const orderCode = order?.order_code || order?.order_number || orderId;
   const trackingSteps = useMemo(() => buildOrderTrackingSteps(order), [order]);
   const payment = useMemo(() => buildPaymentRows(order), [order]);
+  const paymentDetail = useMemo(() => getOrderPaymentDetail(order), [order]);
   const refund = useMemo(() => getRefundInfo(order), [order]);
   const agent = useMemo(() => getDeliveryAgent(order, liveTracking), [order, liveTracking]);
   const eta =
@@ -326,6 +337,31 @@ export default function OrderDetails() {
       ? String(value).toUpperCase()
       : words(value);
   const paymentMethod = method(order?.payment_method || order?.payment_type);
+  const refundTimeline = (refund?.history || []).map((entry, index, list) => ({
+    key: `${entry.status}-${entry.createdAt}-${index}`,
+    title: refundStatusLabel(entry.status),
+    time: formatOrderDateTime(entry.createdAt),
+    state:
+      index === list.length - 1
+        ? refundStatusTone(entry.status) === 'danger'
+          ? 'failed'
+          : 'current'
+        : 'done',
+  }));
+  const refundTrack = refundTimeline.length ? (
+    <DetailCard
+      id="order-refund-progress"
+      title={T.refund}
+      icon={RefreshCw}
+      meta={refund.amount != null ? formatRupee(refund.amount) : undefined}
+    >
+      <Timeline items={refundTimeline} />
+    </DetailCard>
+  ) : null;
+  const paymentStatusLabel = paymentDetail.failed
+    ? T.paymentFailed
+    : words(paymentDetail.status);
+  const paymentRecord = paymentDetail.record;
 
   return (
     <AppShell tab="profile">
@@ -365,6 +401,11 @@ export default function OrderDetails() {
                     {itemCount} {itemCount === 1 ? 'item' : 'items'}
                   </MetaChip>
                   {paymentMethod ? <MetaChip icon={CreditCard}>{paymentMethod}</MetaChip> : null}
+                  {paymentDetail.failed ? (
+                    <MetaChip icon={CircleAlert} tone="danger">
+                      {T.paymentFailed}
+                    </MetaChip>
+                  ) : null}
                   {eta ? <MetaChip icon={Truck}>{T.arrivingBy(eta)}</MetaChip> : null}
                 </>
               }
@@ -463,7 +504,17 @@ export default function OrderDetails() {
                       items={[
                         { label: T.placedOn, value: formatOrderDateTime(order.created_at) },
                         { label: T.paymentMethod, value: paymentMethod },
-                        { label: T.paymentStatus, value: words(order.payment_status) },
+                        {
+                          label: T.paymentStatus,
+                          value: paymentStatusLabel,
+                          tone: paymentDetail.failed ? 'danger' : undefined,
+                        },
+                        {
+                          label: T.failureReason,
+                          value: paymentDetail.failed ? paymentDetail.reason : '',
+                          wide: true,
+                          tone: 'danger',
+                        },
                         { label: T.shippingMethod, value: words(order.shipping_method) },
                       ]}
                     />
@@ -474,7 +525,7 @@ export default function OrderDetails() {
                       <InfoGrid
                         columns={2}
                         items={[
-                          { label: T.refundStatus, value: words(refund.status) },
+                          { label: T.refundStatus, value: refundStatusLabel(refund.latestStatus || refund.status) },
                           { label: T.refundAmount, value: refund.amount != null ? formatRupee(refund.amount) : '' },
                           { label: T.refundMethod, value: words(refund.method), wide: true },
                         ]}
@@ -496,10 +547,47 @@ export default function OrderDetails() {
                 </>
               }
             >
-              {isCancelledOrder ? (
-                <DetailCard id="order-track" title={T.trackOrder} icon={Truck}>
-                  <Timeline items={trackingTimeline} />
+              {paymentDetail.failed ? (
+                <DetailCard
+                  id="order-payment-failed"
+                  title={T.paymentFailed}
+                  icon={CircleAlert}
+                  tone="danger"
+                >
+                  <p className="dx-prose">{paymentDetail.reason || T.paymentFailedFallback}</p>
+                  <InfoGrid
+                    items={[
+                      {
+                        label: T.paymentAmount,
+                        value:
+                          paymentRecord?.amount != null && paymentRecord.amount !== ''
+                            ? formatRupee(paymentRecord.amount)
+                            : '',
+                      },
+                      {
+                        label: T.paymentAttempted,
+                        value: formatOrderDateTime(paymentRecord?.created_at),
+                      },
+                      {
+                        label: T.paymentFailedOn,
+                        value: formatOrderDateTime(paymentRecord?.updated_at),
+                      },
+                      {
+                        label: paymentDetail.expired ? T.paymentExpiredAt : T.paymentExpiresAt,
+                        value: formatOrderDateTime(paymentDetail.expiresAt),
+                      },
+                    ]}
+                  />
                 </DetailCard>
+              ) : null}
+
+              {isCancelledOrder ? (
+                <>
+                  {refundTrack}
+                  <DetailCard id="order-track" title={T.trackOrder} icon={Truck}>
+                    <Timeline items={trackingTimeline} />
+                  </DetailCard>
+                </>
               ) : null}
 
               <DetailCard
@@ -637,6 +725,8 @@ export default function OrderDetails() {
               ) : null}
 
               {!isCancelledOrder ? (
+                <>
+                {refundTrack}
                 <DetailCard
                   id="order-track"
                   title={T.trackOrder}
@@ -695,6 +785,7 @@ export default function OrderDetails() {
                     />
                   ) : null}
                 </DetailCard>
+                </>
               ) : null}
             </DetailLayout>
           </>

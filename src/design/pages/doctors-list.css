@@ -258,7 +258,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.dl-card__facts { list-style: none; display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0 0; padding: 0; }
+.dl-card__facts { list-style: none;align-items: center; display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0 0; padding: 0; }
 .dl-card__facts li {
   display: inline-flex;
   align-items: center;

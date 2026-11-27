@@ -38,7 +38,13 @@ import {
   orderStatusTone,
 } from '../content/orders';
 import { formatOrderId } from '../utils/formatDisplayId';
-import { formatOrderDateTime } from '../utils/orderDetailUtils';
+import {
+  formatOrderDateTime,
+  getRefundInfo,
+  orderPaymentStatusView,
+  refundStatusLabel,
+  refundStatusTone,
+} from '../utils/orderDetailUtils';
 import Skeleton from '../components/skeletons/Block';
 import '../design/pages/orders.css';
 
@@ -246,7 +252,13 @@ export default function OrderHistory() {
               />
             ) : (
               <div className="or-list">
-                {list.map((item) => (
+                {list.map((item) => {
+                  const pay = orderPaymentStatusView(item.raw);
+                  const refund = getRefundInfo(item.raw);
+                  const refundLabel = refund?.latestStatus ? refundStatusLabel(refund.latestStatus) : '';
+                  // A refund already explains the money. Skip a second "Refunded" or "Paid" pill.
+                  const payBadge = pay && !(refundLabel && /refund|paid|success/i.test(pay.label)) ? pay : null;
+                  return (
                   <button
                     key={item.id}
                     type="button"
@@ -274,16 +286,24 @@ export default function OrderHistory() {
                         ) : null}
                         {paymentLabel(item.raw) ? <span>{paymentLabel(item.raw)}</span> : null}
                       </p>
+                      {payBadge?.reason ? <p className="or-row__pay-reason">{payBadge.reason}</p> : null}
                     </div>
                     <div className="or-row__aside">
                       <Badge tone={orderStatusTone(item.status)}>
                         {orderStatusLabel(item.status)}
                       </Badge>
+                      {payBadge ? <Badge tone={payBadge.tone}>{payBadge.label}</Badge> : null}
+                      {refundLabel ? (
+                        <span className={`or-row__refund is-${refundStatusTone(refund.latestStatus)}`}>
+                          {refundLabel}
+                        </span>
+                      ) : null}
                       <strong className="or-row__amount">{item.amount}</strong>
                     </div>
                     <ChevronRight className="or-row__chev" size={18} aria-hidden />
                   </button>
-                ))}
+                  );
+                })}
               </div>
             )}
           </>

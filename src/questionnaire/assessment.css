@@ -11,7 +11,7 @@
   min-height: calc(100dvh - var(--am-header-h));
 }
 
-.auth-shell--assessment .quest > .quest-loader {
+.auth-shell--assessment .quest>.quest-loader {
   display: grid;
   flex: 1 1 0;
   min-height: 0;
@@ -147,6 +147,10 @@
   padding-left: 76px;
 }
 
+.assess-hero__title {
+  font-size: 48px !important;
+}
+
 .assess-hero__promise span {
   display: inline-flex;
   align-items: center;
@@ -176,7 +180,7 @@
   text-align: center;
 }
 
-.assess-sheet__heading > span {
+.assess-sheet__heading>span {
   color: var(--am-primary);
   font-size: var(--am-text-2xs);
   font-weight: var(--am-weight-bold);
@@ -316,7 +320,7 @@
   line-height: var(--am-leading-snug);
 }
 
-.assess-card__copy > span {
+.assess-card__copy>span {
   max-width: 48ch;
   color: var(--am-text-muted);
   font-size: var(--am-text-sm);
@@ -358,11 +362,7 @@
   font-weight: var(--am-weight-bold);
 }
 
-.assess-card.medical .assess-card__action {
-  font-size: var(--am-text-base);
-  font-weight: 800;
-  letter-spacing: 0.01em;
-}
+
 
 .assess-card__action svg {
   transition: transform var(--am-dur-fast) var(--am-ease-out);
@@ -529,8 +529,7 @@
     min-height: 100%;
     flex-direction: column;
     justify-content: center;
-    padding: clamp(var(--am-space-8), 5vw, var(--am-space-16))
-      clamp(var(--am-space-6), 4vw, var(--am-space-12));
+    padding: clamp(var(--am-space-8), 5vw, var(--am-space-16)) clamp(var(--am-space-6), 4vw, var(--am-space-12));
   }
 
   .assess-hero__inner {
@@ -566,8 +565,7 @@
     justify-content: center;
     gap: var(--am-space-5);
     margin: 0;
-    padding: clamp(var(--am-space-8), 5vw, var(--am-space-16))
-      clamp(var(--am-space-6), 5vw, var(--am-space-12));
+    padding: clamp(var(--am-space-8), 5vw, var(--am-space-16)) clamp(var(--am-space-6), 5vw, var(--am-space-12));
     border: 0;
     border-radius: 0;
     box-shadow: none;
@@ -604,7 +602,7 @@
     padding: var(--am-space-5);
   }
 
-  .assess-card__copy > span {
+  .assess-card__copy>span {
     max-width: 58ch;
   }
 
@@ -629,6 +627,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .assess-card,
   .assess-card::after,
   .assess-card__action svg,
@@ -639,13 +638,12 @@
 }
 
 @media (min-width: 901px) {
+
   .auth-shell--assessment .assess,
   .auth-shell--assessment section.quest.quest {
     box-sizing: border-box;
-    width: min(
-      calc(100% - (2 * var(--am-gutter))),
-      calc(var(--am-container-max) - (2 * var(--am-gutter)))
-    );
+    width: min(calc(100% - (2 * var(--am-gutter))),
+        calc(var(--am-container-max) - (2 * var(--am-gutter))));
     max-width: calc(var(--am-container-max) - (2 * var(--am-gutter)));
     height: calc(100% - var(--am-space-4));
     min-height: 0;
@@ -661,8 +659,7 @@
   .auth-shell--assessment .assess-sheet {
     min-height: 0;
     overflow-y: auto;
-    padding: clamp(var(--am-space-5), 3vh, var(--am-space-10))
-      clamp(var(--am-space-4), 3vw, var(--am-space-8));
+    padding: clamp(var(--am-space-5), 3vh, var(--am-space-10)) clamp(var(--am-space-4), 3vw, var(--am-space-8));
   }
 
   .auth-shell--assessment .assess-card,
@@ -786,7 +783,7 @@
     font-size: var(--am-text-base);
   }
 
-  .auth-shell--assessment .assess-card__copy > span {
+  .auth-shell--assessment .assess-card__copy>span {
     font-size: var(--am-text-xs);
   }
 
@@ -817,6 +814,7 @@
 }
 
 @media (max-width: 900px) and (max-height: 680px) {
+
   .auth-shell--assessment .assess-hero__promise,
   .auth-shell--assessment .assess-tip {
     display: none;
@@ -826,7 +824,7 @@
     padding-bottom: var(--am-space-5);
   }
 
-  .auth-shell--assessment .assess-card__copy > span {
+  .auth-shell--assessment .assess-card__copy>span {
     display: -webkit-box;
     overflow: hidden;
     -webkit-box-orient: vertical;
@@ -929,14 +927,14 @@
   padding: 18px 28px 24px;
 }
 
-.note-body > p {
+.note-body>p {
   margin: 0;
   color: #3e5149;
   font-size: 14.5px;
   line-height: 1.65;
 }
 
-.note-body > p strong:first-child {
+.note-body>p strong:first-child {
   color: #14362d;
   font-weight: 650;
 }
@@ -1005,6 +1003,7 @@
     opacity: 0;
     transform: translateY(12px) scale(0.985);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);

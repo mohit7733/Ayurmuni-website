@@ -68,7 +68,7 @@ export default function SuggestedDoctorCard({ item, fallbackSpeciality = 'Ayurve
   const verified = Boolean(item?.is_verified);
   const dietitian = isDietitian(item);
   const bios = Array.isArray(item?.specialized_bio)
-    ? item.specialized_bio.map((bio) => String(bio || '').trim()).filter(Boolean).slice(0, 5)
+    ? item.specialized_bio.map((bio) => String(bio || '').trim()).filter(Boolean).slice(0, 8)
     : [];
   const fav = useDoctorFavFlag(item);
   const [imgFailed, setImgFailed] = useState(false);

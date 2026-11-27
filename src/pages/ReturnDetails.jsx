@@ -19,6 +19,7 @@ import { formatRupee, resolveImageUrl } from '../home/catalog';
 import { requireAuth } from '../services/guestAuth';
 import {
   getReasonLabel,
+  getRefundPayoutState,
   getRefundStage,
   getReturnById,
   getReturnStatusMeta,
@@ -73,7 +74,10 @@ export default function ReturnDetails() {
   const terminalBad = status === 'rejected' || status === 'cancelled';
   const stepIndex = getReturnStepIndex(status);
   const refundRequest = data?.refundRequest ?? null;
-  const refundStage = getRefundStage(status, String(refundRequest?.status ?? ''));
+  const payout = getRefundPayoutState(refundRequest);
+  const refundStage = payout.failed
+    ? 1
+    : getRefundStage(status, payout.gateway || String(refundRequest?.admin_status ?? ''));
   const itemsTotal = (data?.items ?? []).reduce((sum, item) => sum + item.sellingPrice * item.quantity, 0);
   const refundAmount = Number(refundRequest?.amount ?? refundRequest?.refund_amount ?? 0) || itemsTotal;
   const refundReference = String(
@@ -109,22 +113,26 @@ export default function ReturnDetails() {
 
   const refundHeadline = terminalBad
     ? 'No refund for this request'
-    : refundStage === 2
-      ? 'Refund credited'
-      : refundStage === 1
-        ? 'Refund on the way'
-        : 'Refund after pickup & quality check';
+    : payout.failed
+      ? 'Refund failed'
+      : refundStage === 2
+        ? 'Refund credited'
+        : refundStage === 1
+          ? 'Refund on the way'
+          : 'Refund after pickup & quality check';
   const refundHint = terminalBad
     ? data?.reviewNote || meta.hint
-    : refundStage === 2
-      ? refundedAt
-        ? `Credited on ${formatOrderDateTime(refundedAt)}`
-        : 'The amount has been credited to you.'
-      : refundStage === 1
-        ? refund.upi_id || refund.account_number
-          ? 'Usually reflects in 1-3 business days.'
-          : 'Usually reflects in 5-7 business days.'
-        : 'We start the refund once the returned items are checked.';
+    : payout.failed
+      ? payout.reason || 'The refund could not be completed.'
+      : refundStage === 2
+        ? refundedAt
+          ? `Credited on ${formatOrderDateTime(refundedAt)}`
+          : 'The amount has been credited to you.'
+        : refundStage === 1
+          ? refund.upi_id || refund.account_number
+            ? 'Usually reflects in 1-3 business days.'
+            : 'Usually reflects in 5-7 business days.'
+          : 'We start the refund once the returned items are checked.';
 
   const timeline = RETURN_STEPS.map((step, idx) => {
     const sub =
@@ -213,14 +221,20 @@ export default function ReturnDetails() {
                             {formatRupee(refundAmount, { decimals: 2 })}
                           </strong>
                         </div>
-                        <StatusPill tone={terminalBad ? 'neutral' : refundStage === 2 ? 'success' : 'warning'}>
+                        <StatusPill
+                          tone={
+                            terminalBad ? 'neutral' : payout.failed ? 'danger' : refundStage === 2 ? 'success' : 'warning'
+                          }
+                        >
                           {terminalBad
                             ? 'Not applicable'
-                            : refundStage === 2
-                              ? 'Credited'
-                              : refundStage === 1
-                                ? 'Processing'
-                                : 'Pending'}
+                            : payout.failed
+                              ? 'Failed'
+                              : refundStage === 2
+                                ? 'Credited'
+                                : refundStage === 1
+                                  ? 'Processing'
+                                  : 'Pending'}
                         </StatusPill>
                       </div>
                       <p className="dx-prose">
@@ -231,10 +245,18 @@ export default function ReturnDetails() {
                       {!terminalBad ? (
                         <ol className="rt-stages">
                           {REFUND_STAGES.map((label, idx) => {
-                            const reached = idx === 0 ? stepIndex >= 1 || refundStage > 0 : refundStage >= idx;
+                            const failedStep = payout.failed && idx === 1;
+                            const reached = payout.failed
+                              ? idx <= 1
+                              : idx === 0
+                                ? stepIndex >= 1 || refundStage > 0
+                                : refundStage >= idx;
                             return (
-                              <li key={label} className={reached ? 'is-on' : undefined}>
-                                <span>{label}</span>
+                              <li
+                                key={label}
+                                className={failedStep ? 'is-failed' : reached ? 'is-on' : undefined}
+                              >
+                                <span>{failedStep ? 'Refund failed' : label}</span>
                               </li>
                             );
                           })}
@@ -291,8 +313,9 @@ export default function ReturnDetails() {
                 <ul className="dx-items">
                   {data.items.map((item) => {
                     const line = findLine(item.orderItemId, item.variantId);
-                    const image = line ? resolveImageUrl(line?.variant || line) : '';
-                    const name = line?.variant?.variant_title || line?.product_name || item.skuCode || 'Item';
+                    const image = item.image || (line ? resolveImageUrl(line?.variant || line) : '');
+                    const name =
+                      item.name || line?.variant?.variant_title || line?.product_name || item.skuCode || 'Item';
                     return (
                       <li key={item.id || item.orderItemId} className="dx-item">
                         <span className="dx-item__media">
@@ -318,12 +341,11 @@ export default function ReturnDetails() {
               </DetailCard>
 
               <DetailCard id="return-reason" title="Reason for return" icon={AlertCircle}>
-                {data.reasonCode ? (
+                {data.reason || data.reasonCode ? (
                   <p className="dx-prose">
-                    <strong>{getReasonLabel(data.reasonCode, data.reasonCode)}</strong>
+                    <strong>{data.reason || getReasonLabel(data.reasonCode, data.reasonCode)}</strong>
                   </p>
                 ) : null}
-                {data.reason ? <p className="dx-prose">{data.reason}</p> : null}
                 {data.media.length ? (
                   <div className="rt-photos">
                     {data.media.map((m) => (

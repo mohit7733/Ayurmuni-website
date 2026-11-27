@@ -63,8 +63,8 @@ export default function AssessmentType() {
           <div className="assess-hero__copy">
             <span className="assess-hero__icon"><HeartPulse size={25} aria-hidden /></span>
             <div>
-              <h1>Personalize your care</h1>
-              <p>Choose a short assessment and get recommendations shaped around you.</p>
+              <h1 className="assess-hero__title">Discover what your body needs</h1>
+              <p>Two quick assessments for care that's truly yours.</p>
             </div>
           </div>
           <div className="assess-hero__promise">
@@ -119,7 +119,7 @@ export default function AssessmentType() {
                 <ShieldCheck size={14} aria-hidden /> Private &amp; secure
               </span>
               <span className="assess-card__copy">
-                <strong>Check in on your health</strong>
+                <strong>Check in on your Vikriti</strong>
                 <span>
                   Share relevant health details to help tailor your wellness plan and care
                   recommendations.
@@ -130,7 +130,7 @@ export default function AssessmentType() {
                 <span><Check size={14} aria-hidden /> Better care context</span>
               </span>
               <span className="assess-card__action">
-                Start Health Assessment <ArrowRight size={18} aria-hidden />
+                Start Vikriti Assessment <ArrowRight size={18} aria-hidden />
               </span>
             </button>
           ) : null}

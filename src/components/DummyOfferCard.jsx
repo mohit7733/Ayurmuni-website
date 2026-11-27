@@ -75,7 +75,7 @@ export default function DummyOfferCard({ item, kind = 'lab', onClick, cta, tone 
   if (kind === 'package') {
     const plan = readOfferPlan(item);
     const discount = planDiscount(plan);
-    const lines = plan.includes.slice(0, 2);
+    const lines = plan.includes.slice(0, 4);
     const more = Math.max(0, plan.includes.length - lines.length);
     const saving = plan.mrp > plan.price ? plan.mrp - plan.price : 0;
     const banner = Boolean(plan.image) && !imageFailed;

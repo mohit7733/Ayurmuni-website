@@ -38,8 +38,8 @@ export const CONSULT_COPY = {
     },
     {
       id: 'cost',
-      title: 'Cost Effective',
-      text: 'We provide medical assistance on non urgent queries for free. Fee starting at ₹50 for faster response to queries.',
+      title: 'Holistic Wellness Approach',
+      text: 'We provide medical assistance through video consultations with MD Ayurveda doctors, treating the root cause with care personalised to your body and lifestyle.',
     },
   ],
   recentTitle: 'Recent Consultation',

@@ -656,6 +656,28 @@
   vertical-align: middle;
 }
 .or-page--history .or-row__aside { gap: 6px; }
+.or-row__badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.or-row__pay-reason {
+  margin: 0;
+  color: #991b1b;
+  font-size: var(--am-text-xs);
+  line-height: 1.4;
+}
+.or-row__refund {
+  font-size: 12px;
+  font-weight: var(--am-weight-semibold);
+  line-height: 1.3;
+  text-align: right;
+}
+.or-row__refund.is-success { color: var(--am-success); }
+.or-row__refund.is-warning { color: var(--am-warning, #b45309); }
+.or-row__refund.is-danger { color: #991b1b; }
+.or-row__refund.is-info { color: var(--am-text-soft); }
 .or-page--history .or-row__amount {
   font-family: var(--am-font-display);
   font-size: var(--am-text-lg);

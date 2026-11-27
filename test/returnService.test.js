@@ -44,6 +44,41 @@ describe('returnService endpoints', () => {
     apiClient.mockResolvedValueOnce({ success: true, data: {} });
     expect((await svc.getReturnById('r1')).data).toBeNull();
   });
+
+  it('reads a nested return_request and a failed payout', async () => {
+    apiClient.mockResolvedValueOnce({
+      success: true,
+      data: {
+        return_request: {
+          id: '46ccbed8-6b66-410a-8c35-b2cdfc2e2b21',
+          status: 'approved',
+          items: [
+            {
+              id: 'line',
+              product_name: 'Trifala Churna',
+              quantity: 3,
+              selling_price: '2.00',
+              cover_image: 'https://cdn/trifala.jpg',
+            },
+          ],
+          refund_request: {
+            amount: '6.00',
+            gateway_status: 'failed',
+            failed_reason: 'Cashfree Payouts credentials are not configured.',
+            payout: { status: 'failed' },
+          },
+        },
+      },
+    });
+    const out = await svc.getReturnById('46ccbed8');
+    expect(out.data.status).toBe('approved');
+    expect(out.data.items[0]).toMatchObject({ name: 'Trifala Churna', quantity: 3, sellingPrice: 2 });
+    expect(svc.getRefundPayoutState(out.data.refundRequest)).toEqual({
+      gateway: 'failed',
+      failed: true,
+      reason: 'Cashfree Payouts credentials are not configured.',
+    });
+  });
 });
 
 describe('normalizeReturnEligibility', () => {

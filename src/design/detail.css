@@ -283,6 +283,11 @@
   background: var(--am-gold-50);
   color: var(--am-gold-700);
 }
+.dx-chip--danger {
+  border-color: rgba(185, 28, 28, 0.28);
+  background: #fef2f2;
+  color: #991b1b;
+}
 .dx-chip--plain {
   border-color: var(--dx-tile-line);
   background: #fff;
@@ -362,6 +367,14 @@
 .dx-card--accent {
   border-color: rgba(201, 165, 90, 0.45);
   background: linear-gradient(180deg, #fffdf7 0%, #fbf4e3 100%);
+}
+.dx-card--danger {
+  border-color: rgba(185, 28, 28, 0.28);
+  background: linear-gradient(180deg, #fff 0%, #fef2f2 100%);
+}
+.dx-card--danger .dx-prose {
+  color: #991b1b;
+  font-weight: var(--am-weight-semibold);
 }
 .dx-card__head {
   display: flex;

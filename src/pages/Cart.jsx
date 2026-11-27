@@ -24,6 +24,7 @@ import {
   buildDoctorDetailRoute,
   buildUploadVerifyRoute,
   groupRxLines,
+  isApprovedUploadLine,
   groupSubtotal,
   toggleGroupSelection,
 } from "../cart/rxGroups";
@@ -211,13 +212,17 @@ export default function Cart() {
 
   const changeQty = async (item, action) => {
     const isPrescribed = item.source === "prescribed";
+    const approvedUpload = isApprovedUploadLine(item);
     const rxRequired =
       isPrescriptionRequired(item) || item.prescription_required;
     const oldQty = Math.max(0, Number(item.quantity) || 0);
+    const lockedQty = isPrescribed && !approvedUpload;
 
-    if (isPrescribed && action === "remove") return;
+    if (approvedUpload && action === "plus") return;
 
-    if (rxRequired && (isPrescribed || action === "plus")) {
+    if (lockedQty && action === "remove") return;
+
+    if (rxRequired && !approvedUpload && (isPrescribed || action === "plus")) {
       showPrescriptionRequired({
         variantId: item.variant_id,
         productName: item.name,
@@ -225,11 +230,11 @@ export default function Cart() {
       return;
     }
 
-    if (isPrescribed && action === "minus" && oldQty <= 1) return;
+    if (lockedQty && action === "minus" && oldQty <= 1) return;
 
     const nextQty =
       action === "minus"
-        ? Math.max(isPrescribed ? 1 : 0, oldQty - 1)
+        ? Math.max(lockedQty ? 1 : 0, oldQty - 1)
         : oldQty + 1;
     const stockMsg = getAddQtyBlockMessage(item, nextQty, { cartLine: true });
     if (stockMsg) {
@@ -237,7 +242,7 @@ export default function Cart() {
       return;
     }
 
-    if (isPrescribed && action === "plus") {
+    if (lockedQty && action === "plus") {
       const doctorQty =
         doctorQtyRef.current[item.id] ??
         (Number(item.prescribed_quantity) || oldQty);
@@ -312,6 +317,8 @@ export default function Cart() {
   const renderLine = (item) => {
     const adding = addingVariantId === item.variant_id;
     const isPrescribed = item.source === "prescribed";
+    const approvedUpload = isApprovedUploadLine(item);
+    const lockedQty = isPrescribed && !approvedUpload;
     const mrp = mrpOf(item);
     const off = mrp ? Math.round(((mrp - Number(item.price)) / mrp) * 100) : 0;
     return (
@@ -381,33 +388,39 @@ export default function Cart() {
           ) : null}
         </div>
         <div className="cp-line__side">
-          <div
-            className="cp-stepper"
-            role="group"
-            aria-label={`Quantity of ${item.name || "item"}`}
-          >
-            <button
-              type="button"
-              aria-label={T.decreaseQty}
-              disabled={adding || (isPrescribed && item.quantity <= 1)}
-              onClick={() => changeQty(item, "minus")}
+          {approvedUpload ? (
+            <span className="cp-qty" aria-label={`Quantity ${item.quantity}`}>
+              Qty {item.quantity}
+            </span>
+          ) : (
+            <div
+              className="cp-stepper"
+              role="group"
+              aria-label={`Quantity of ${item.name || "item"}`}
             >
-              {!isPrescribed && Number(item.quantity) <= 1 ? (
-                <Trash2 size={14} aria-hidden />
-              ) : (
-                <Minus size={14} aria-hidden />
-              )}
-            </button>
-            <span aria-live="polite">{adding ? "…" : item.quantity}</span>
-            <button
-              type="button"
-              aria-label={T.increaseQty}
-              disabled={adding || item._isOutOfStock}
-              onClick={() => changeQty(item, "plus")}
-            >
-              <Plus size={14} aria-hidden />
-            </button>
-          </div>
+              <button
+                type="button"
+                aria-label={T.decreaseQty}
+                disabled={adding || (lockedQty && item.quantity <= 1)}
+                onClick={() => changeQty(item, "minus")}
+              >
+                {!lockedQty && Number(item.quantity) <= 1 ? (
+                  <Trash2 size={14} aria-hidden />
+                ) : (
+                  <Minus size={14} aria-hidden />
+                )}
+              </button>
+              <span aria-live="polite">{adding ? "…" : item.quantity}</span>
+              <button
+                type="button"
+                aria-label={T.increaseQty}
+                disabled={adding || item._isOutOfStock}
+                onClick={() => changeQty(item, "plus")}
+              >
+                <Plus size={14} aria-hidden />
+              </button>
+            </div>
+          )}
           <span className="cp-line__total">
             {formatRupee(Number(item.price) * Number(item.quantity))}
           </span>

@@ -11,7 +11,7 @@ import { loadPackageKinds, loadPackagesWithStatus } from "../services/packageSer
 import "../design/pages/packages-premium.css";
 
 const TRUST = ["Experienced practitioners", "Personalised guidance", "Care led by experts"];
-const MAX_LIST = 3;
+const MAX_LIST = 4;
 
 const iconFor = (name) => {
   const label = String(name || "").toLowerCase();

@@ -107,11 +107,10 @@ export default function DoctorListCard({ item, fallbackSpeciality = 'Ayurveda' }
         </button>
         {verified ? <BadgeCheck size={15} aria-label="Verified" /> : null}
       </h3>
-      <DietitianBadge doctor={item} />
       {credential ? <p className="dl-card__cred">{credential}</p> : null}
 
       <ul className="dl-card__facts">
-        {experience ? (
+        {/* {experience ? (
           <li>
             <Briefcase size={12} aria-hidden />
             {experience}
@@ -122,10 +121,20 @@ export default function DoctorListCard({ item, fallbackSpeciality = 'Ayurveda' }
             <MapPin size={12} aria-hidden />
             <span>{location}</span>
           </li>
-        ) : null}
+        ) : null} */}
+        <DietitianBadge doctor={item} />
         <li className={`dl-card__avail${availability === 'Available' ? ' is-on' : ''}`}>
           <span>{availability}</span>
         </li>
+      </ul>
+
+      <ul className="hm-doc-card__specialized-bio" aria-label="Specialized Bio" style={{ margin: '16px 4px' }}>
+        {item.specialized_bio.length ?
+          item.specialized_bio.map((bio) => (
+            <li key={bio} className="hm-doc-card__specialized-bio-item">
+              <span>{bio}</span>
+            </li>
+          )) : null}
       </ul>
 
       <div className="dl-card__foot">

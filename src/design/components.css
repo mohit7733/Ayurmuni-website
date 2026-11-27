@@ -1712,7 +1712,7 @@
 }
 .am-review__text {
   margin: 0;
-  min-height: calc(1.4em * 2);
+  /* min-height: calc(1.4em * 2); */
   color: var(--am-text-soft);
   font-size: 13.5px;
   line-height: 1.4;
@@ -3779,15 +3779,15 @@
     min-width: 0;
   }
 
-  .am-flip-doc .hm-doc-card__specialized-bio {
+  /* .am-flip-doc .hm-doc-card__specialized-bio {
     gap: 3px;
     max-height: 2.8em;
     overflow: hidden;
-  }
+  } */
 
-  .am-flip-doc .hm-doc-card__specialized-bio-item:nth-child(n + 2) {
+  /* .am-flip-doc .hm-doc-card__specialized-bio-item:nth-child(n + 2) {
     display: none;
-  }
+  } */
 
   .am-flip-doc .hm-doc-card__specialized-bio-item span {
     white-space: nowrap;

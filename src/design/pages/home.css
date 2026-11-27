@@ -656,7 +656,7 @@
 
 /* Keep carousel arrows on the photo band — not over name / credentials. */
 .am-rail-scroller:has(.hm-doc-rail) .am-rail-scroller__btn {
-  top: 90px;
+  top: 50%;
   transform: translateY(-50%);
 }
 
