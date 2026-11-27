@@ -24,19 +24,7 @@ const browserWindow = () => {
     return null;
   }
 };
-const bookedConsultationKeys = new Set();
-const CONSULT_BOOKED_PREFIX = 'meta_consult_booked_';
 
-const browserWindow = () => {
-  try {
-    if (typeof window !== 'undefined') return window;
-    return globalThis.window || null;
-  } catch {
-    return null;
-  }
-};
-
-export const isMetaPixelConfigured = () => Boolean(PIXEL_ID) && Boolean(browserWindow());
 export const isMetaPixelConfigured = () => Boolean(PIXEL_ID) && Boolean(browserWindow());
 
 const asNumber = (value) => {
